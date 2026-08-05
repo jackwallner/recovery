@@ -1,56 +1,8 @@
-# All deliver-supported locales (incl. 11 added in fastlane 2.234+).
-# Enables appInfo + version localizations on upload when missing in ASC.
+# Only en-US is populated in fastlane/metadata/ so far. `deliver` creates a
+# localization for every language listed here, so listing the full 50 would push
+# empty listings into ASC. Add locales here as their metadata lands.
 languages([
-  "ar-SA",
-  "bn-BD",
-  "ca",
-  "cs",
-  "da",
-  "de-DE",
-  "el",
-  "en-AU",
-  "en-CA",
-  "en-GB",
-  "en-US",
-  "es-ES",
-  "es-MX",
-  "fi",
-  "fr-CA",
-  "fr-FR",
-  "gu-IN",
-  "he",
-  "hi",
-  "hr",
-  "hu",
-  "id",
-  "it",
-  "ja",
-  "kn-IN",
-  "ko",
-  "ml-IN",
-  "mr-IN",
-  "ms",
-  "nl-NL",
-  "no",
-  "or-IN",
-  "pa-IN",
-  "pl",
-  "pt-BR",
-  "pt-PT",
-  "ro",
-  "ru",
-  "sk",
-  "sl-SI",
-  "sv",
-  "ta-IN",
-  "te-IN",
-  "th",
-  "tr",
-  "uk",
-  "ur-PK",
-  "vi",
-  "zh-Hans",
-  "zh-Hant"
+  "en-US"
 ])
 
 # Draft version is set via Fastfile from ASC_APP_VERSION (see asc-ensure-draft-version).

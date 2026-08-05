@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import urllib.error
@@ -11,7 +12,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 META = ROOT / "fastlane" / "metadata"
-LOCALES = json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"]
+# Every locale ASC supports. Only the ones actually staged in fastlane/metadata/
+# are validated — `deliver` uploads what is on disk (see fastlane/Deliverfile),
+# so an unwritten locale is a gap in the ASO plan, not a broken upload. Set
+# RECHARGE_REQUIRE_ALL_LOCALES=1 to hold the full set to the standard again.
+SUPPORTED_LOCALES = json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"]
+LOCALES = (
+    SUPPORTED_LOCALES
+    if os.environ.get("RECHARGE_REQUIRE_ALL_LOCALES") == "1"
+    else sorted(path.name for path in META.iterdir() if path.is_dir())
+)
 REQUIRED = (
     "name", "subtitle", "keywords", "description", "promotional_text",
     "release_notes", "support_url", "marketing_url", "privacy_url",
