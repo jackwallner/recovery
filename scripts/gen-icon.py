@@ -47,7 +47,11 @@ def draw_ring(draw, size):
     inset = size * RING_INSET
     width = size * RING_WIDTH
     box = (inset, inset, size - inset, size - inset)
-    radius = (size - 2 * inset) / 2
+    outer_radius = (size - 2 * inset) / 2
+    # PIL grows an arc's width *inward* from the bounding box, so the stroke's
+    # centreline sits half a width inside the box, not on it. Placing the caps
+    # on the box radius leaves them floating off the ends.
+    centre_radius = outer_radius - width / 2
     cx = cy = size / 2
 
     draw.arc(box, START_ANGLE, START_ANGLE + SWEEP, fill=(255, 255, 255), width=int(width))
@@ -57,8 +61,8 @@ def draw_ring(draw, size):
         rad = math.radians(angle)
         rounded_cap(
             draw,
-            cx + radius * math.cos(rad),
-            cy + radius * math.sin(rad),
+            cx + centre_radius * math.cos(rad),
+            cy + centre_radius * math.sin(rad),
             width / 2,
             (255, 255, 255),
         )
