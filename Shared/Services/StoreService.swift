@@ -181,6 +181,19 @@ public final class StoreService: NSObject, ObservableObject {
         configureIfNeeded()
         isLoadingProducts = true
         defer { isLoadingProducts = false }
+        #if DEBUG
+        // Screenshot mode already replaces HealthKit with fixtures; the store is
+        // the last real dependency the paywall has. Without this, every headless
+        // paywall render is the "couldn't load plans" empty state — see
+        // `screenshotPackages` for why StoreKit Testing cannot fill the gap.
+        if ScreenshotConfig.isEnabled {
+            products = Self.screenshotPackages()
+            currentOffering = nil
+            lastError = nil
+            await refreshIntroEligibility()
+            return
+        }
+        #endif
         #if targetEnvironment(simulator)
         // RevenueCat is never configured on simulator (see `configureIfNeeded`),
         // so ask StoreKit Testing directly. Under `xcodebuild test` the scheme's
@@ -396,6 +409,82 @@ public final class StoreService: NSObject, ObservableObject {
         #endif
     }
 
+    #if DEBUG
+    /// The paywall catalogue used under `RECHARGE_SCREENSHOT_MODE`.
+    ///
+    /// StoreKit Testing was the intended source and does not work here: with the
+    /// `.storekit` file referenced from the scheme's Test action *and* from a
+    /// test plan (every relative-path spelling tried, plus `SKTestSession` from
+    /// the UI-test runner), the app under test still reaches the live
+    /// `storekitd` and `Product.products(for:)` returns an empty array. So a
+    /// headless run could only ever render the empty state, which exercises
+    /// none of the plan-card layout the screenshot and the UI test exist to
+    /// check.
+    ///
+    /// Prices, periods, and the one-week trial mirror `Recharge.storekit` and
+    /// App Store Connect. Keep them in step: this is what `RechargeUITests` and
+    /// the App Store paywall screenshot both render.
+    private static func screenshotPackages() -> [Package] {
+        let locale = Locale(identifier: "en_US")
+        let freeWeek = TestStoreProductDiscount(
+            identifier: "trial",
+            price: 0,
+            localizedPriceString: "$0.00",
+            paymentMode: .freeTrial,
+            subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .week),
+            numberOfPeriods: 1,
+            type: .introductory
+        )
+        let lifetime = TestStoreProduct(
+            localizedTitle: "Recharge Pro Lifetime",
+            price: 29.99,
+            currencyCode: "USD",
+            localizedPriceString: "$29.99",
+            productIdentifier: RechargeProduct.lifetime,
+            productType: .nonConsumable,
+            localizedDescription: "Unlock Recharge Pro forever",
+            locale: locale
+        )
+        let yearly = TestStoreProduct(
+            localizedTitle: "Recharge Pro Yearly",
+            price: 14.99,
+            currencyCode: "USD",
+            localizedPriceString: "$14.99",
+            productIdentifier: RechargeProduct.yearly,
+            productType: .autoRenewableSubscription,
+            localizedDescription: "Unlock Recharge Pro yearly — save 37%",
+            subscriptionGroupIdentifier: "RechargePro",
+            subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .year),
+            introductoryDiscount: freeWeek,
+            locale: locale
+        )
+        let monthly = TestStoreProduct(
+            localizedTitle: "Recharge Pro Monthly",
+            price: 1.99,
+            currencyCode: "USD",
+            localizedPriceString: "$1.99",
+            productIdentifier: RechargeProduct.monthly,
+            productType: .autoRenewableSubscription,
+            localizedDescription: "Unlock Recharge Pro monthly",
+            subscriptionGroupIdentifier: "RechargePro",
+            subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .month),
+            introductoryDiscount: freeWeek,
+            locale: locale
+        )
+        return [lifetime, yearly, monthly]
+            .map { product in
+                Package(
+                    identifier: product.productIdentifier,
+                    packageType: Self.packageType(for: product.productIdentifier),
+                    storeProduct: product.toStoreProduct(),
+                    offeringIdentifier: "default",
+                    webCheckoutUrl: nil
+                )
+            }
+            .sorted { $0.rechargePackageKind.rawValue < $1.rechargePackageKind.rawValue }
+    }
+    #endif
+
     #if targetEnvironment(simulator)
     /// Hydrates `products` from StoreKit Testing so the *real* paywall view
     /// renders under `xcodebuild test`, rather than the "couldn't load plans"
@@ -437,6 +526,8 @@ public final class StoreService: NSObject, ObservableObject {
         }
     }
 
+    #endif
+
     private static func packageType(for identifier: String) -> PackageType {
         switch identifier {
         case RechargeProduct.lifetime: .lifetime
@@ -445,7 +536,6 @@ public final class StoreService: NSObject, ObservableObject {
         default: .custom
         }
     }
-    #endif
 }
 
 extension StoreService: PurchasesDelegate {

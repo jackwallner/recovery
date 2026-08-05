@@ -11,7 +11,7 @@ echo "==> Bump build $CURRENT_BUILD -> $NEXT_BUILD"
 sed -i '' -E "s/(CURRENT_PROJECT_VERSION:[[:space:]]*\")$CURRENT_BUILD/\1$NEXT_BUILD/" project.yml
 
 echo "==> Generate project"
-# Always via scripts/xcgen.sh in this repo (test-plan + scheme patching).
+# Always via scripts/xcgen.sh in this repo.
 ./scripts/xcgen.sh
 
 # The live RevenueCat key never lands in the repo. Substitute it for the archive
