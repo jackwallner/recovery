@@ -11,9 +11,9 @@ public enum RechargeProduct {
     /// Bundle-prefixed, matching App Store Connect. StoreKit will not vend bare
     /// identifiers like "yearly", so the local `.storekit` file has to use the
     /// same form the real catalogue does.
-    public static let lifetime = "com.jackwallner.recharge.lifetime"
-    public static let yearly = "com.jackwallner.recharge.yearly"
-    public static let monthly = "com.jackwallner.recharge.monthly"
+    public static let lifetime = "com.jackwallner.recovery.lifetime"
+    public static let yearly = "com.jackwallner.recovery.yearly"
+    public static let monthly = "com.jackwallner.recovery.monthly"
     public static let all: [String] = [lifetime, yearly, monthly]
 }
 
@@ -151,7 +151,7 @@ public final class StoreService: NSObject, ObservableObject {
     @Published public private(set) var introEligibilityResolved = false
 
     private static let groupDefaults = UserDefaults(suiteName: rechargeAppGroupID)
-    private let logger = Logger(subsystem: "com.jackwallner.recharge", category: "Store")
+    private let logger = Logger(subsystem: "com.jackwallner.recovery", category: "Store")
     private var isConfigured = false
     private var paywallImpressionsThisSession: Set<String> = []
 

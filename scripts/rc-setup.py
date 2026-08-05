@@ -11,11 +11,11 @@ import urllib.error
 import urllib.request
 
 BASE = "https://api.revenuecat.com/v2"
-BUNDLE_ID = "com.jackwallner.recharge"
+BUNDLE_ID = "com.jackwallner.recovery"
 PRODUCTS = (
-    ("com.jackwallner.recharge.monthly", "Monthly", "subscription", "$rc_monthly"),
-    ("com.jackwallner.recharge.yearly", "Yearly", "subscription", "$rc_annual"),
-    ("com.jackwallner.recharge.pro.lifetime", "Lifetime", "one_time", "$rc_lifetime"),
+    ("com.jackwallner.recovery.monthly", "Monthly", "subscription", "$rc_monthly"),
+    ("com.jackwallner.recovery.yearly", "Yearly", "subscription", "$rc_annual"),
+    ("com.jackwallner.recovery.lifetime", "Lifetime", "one_time", "$rc_lifetime"),
 )
 
 

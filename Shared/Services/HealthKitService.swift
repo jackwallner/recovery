@@ -5,7 +5,7 @@ import os
 import WatchKit
 #endif
 
-private let healthLogger = Logger(subsystem: "com.jackwallner.recharge", category: "HealthKit")
+private let healthLogger = Logger(subsystem: "com.jackwallner.recovery", category: "HealthKit")
 
 /// Every HealthKit read the app makes, and the observer that wakes it when a
 /// workout lands.

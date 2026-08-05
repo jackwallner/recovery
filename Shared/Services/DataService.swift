@@ -39,7 +39,7 @@ public enum DataService {
         return try! ModelContainer(for: schema, configurations: [inMemory])
     }()
 
-    private static let logger = Logger(subsystem: "com.jackwallner.recharge", category: "DataService")
+    private static let logger = Logger(subsystem: "com.jackwallner.recovery", category: "DataService")
 
     private static func makeContainer(schema: Schema, url: URL) -> ModelContainer? {
         let config = ModelConfiguration("Recharge", schema: schema, url: url, cloudKitDatabase: .none)

@@ -9,13 +9,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib
 
-BUNDLE = "com.jackwallner.recharge"
+BUNDLE = "com.jackwallner.recovery"
 # App Store Connect reference names are internal and immutable after creation.
 # User-facing group and product names come from localized products.json files.
 GROUP_REFERENCE_NAME = "Recharge Pro"
 SUBS = [
-    ("com.jackwallner.recharge.monthly", "Recharge Pro Monthly", "ONE_MONTH", "1.99", "Monthly access to Recharge Pro."),
-    ("com.jackwallner.recharge.yearly", "Recharge Pro Yearly", "ONE_YEAR", "14.99", "Yearly access to Recharge Pro."),
+    ("com.jackwallner.recovery.monthly", "Recharge Pro Monthly", "ONE_MONTH", "1.99", "Monthly access to Recharge Pro."),
+    ("com.jackwallner.recovery.yearly", "Recharge Pro Yearly", "ONE_YEAR", "14.99", "Yearly access to Recharge Pro."),
 ]
 TIERS = {
     "IND": ("4.99", "0.69"), "PAK": ("4.99", "0.69"), "BGD": ("4.99", "0.69"), "IDN": ("4.99", "0.69"),

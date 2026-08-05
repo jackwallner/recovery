@@ -13,7 +13,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "com.jackwallner.recharge.lifetime",
+      "productID": "com.jackwallner.recovery.lifetime",
       "referenceName": "Recharge Pro Lifetime",
       "type": "NonConsumable"
     }
@@ -58,7 +58,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "com.jackwallner.recharge.monthly",
+          "productID": "com.jackwallner.recovery.monthly",
           "recurringSubscriptionPeriod": "P1M",
           "referenceName": "Recharge Pro Monthly",
           "subscriptionGroupID": "31555001",
@@ -83,7 +83,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "com.jackwallner.recharge.yearly",
+          "productID": "com.jackwallner.recovery.yearly",
           "recurringSubscriptionPeriod": "P1Y",
           "referenceName": "Recharge Pro Yearly",
           "subscriptionGroupID": "31555001",

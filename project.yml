@@ -71,7 +71,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery
         INFOPLIST_FILE: Recharge/Info.plist
         CODE_SIGN_ENTITLEMENTS: Recharge/Recharge.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -91,7 +91,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge.watch
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.watch
         INFOPLIST_FILE: RechargeWatch/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWatch/RechargeWatch.entitlements
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
@@ -109,7 +109,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.widget
         INFOPLIST_FILE: RechargeWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWidget/RechargeWidget.entitlements
     dependencies:
@@ -124,7 +124,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge.watch.widget
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.watch.widget
         INFOPLIST_FILE: RechargeWatchWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWatchWidget/RechargeWatchWidget.entitlements
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
@@ -153,7 +153,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.tests
 
   RechargeUITests:
     type: bundle.ui-testing
@@ -163,7 +163,7 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recharge.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.uitests
         TEST_TARGET_NAME: Recharge
     dependencies:
       - target: Recharge

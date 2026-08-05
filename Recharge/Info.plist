@@ -34,7 +34,7 @@
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.jackwallner.recharge.refresh</string>
+		<string>com.jackwallner.recovery.refresh</string>
 	</array>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>

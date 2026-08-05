@@ -3,7 +3,7 @@ import SwiftData
 import WidgetKit
 import os
 
-private let engineLogger = Logger(subsystem: "com.jackwallner.recharge", category: "Engine")
+private let engineLogger = Logger(subsystem: "com.jackwallner.recovery", category: "Engine")
 
 /// The phone-side orchestrator: import workouts, score them, persist, and
 /// publish the snapshot every other surface reads.
