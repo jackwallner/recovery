@@ -12,7 +12,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UDID="${1:-$(agent-sim udid recharge)}"
-BUNDLE="com.jackwallner.recharge"
+BUNDLE="com.jackwallner.recovery"
 RAW="$ROOT/Screenshots/raw"
 mkdir -p "$RAW"
 

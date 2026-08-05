@@ -3,7 +3,7 @@ import Foundation
 /// App Group identifier. Declared at module level (not inside the `@MainActor`
 /// `DataService`) so widget and complication targets can reach it from any
 /// isolation context.
-public let rechargeAppGroupID = "group.com.jackwallner.recharge"
+public let rechargeAppGroupID = "group.com.jackwallner.recovery"
 
 /// The compact record the phone writes and every other surface reads.
 ///

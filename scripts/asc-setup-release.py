@@ -9,8 +9,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib
 
-BUNDLE = "com.jackwallner.recharge"
-PRODUCT_ID = "com.jackwallner.recharge.pro.lifetime"
+BUNDLE = "com.jackwallner.recovery"
+PRODUCT_ID = "com.jackwallner.recovery.lifetime"
 # App Store Connect's internal reference name is immutable after creation.
 # The localized customer-facing name is Recharge Pro Lifetime.
 PRODUCT_REFERENCE_NAME = "Recharge Pro Lifetime"

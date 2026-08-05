@@ -18,7 +18,7 @@ public enum NotificationService {
     public static let routeKey = "route"
     public static let readyRouteValue = "today"
 
-    private static let logger = Logger(subsystem: "com.jackwallner.recharge", category: "Notifications")
+    private static let logger = Logger(subsystem: "com.jackwallner.recovery", category: "Notifications")
 
     @discardableResult
     public static func requestAuthorization() async -> Bool {

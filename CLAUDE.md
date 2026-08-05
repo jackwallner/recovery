@@ -12,12 +12,12 @@ differs from the app name (cf. `~/health` = VO2 Max, `~/vitals` = Total Calories
 - RevenueCat; gate on **any** active entitlement, never a hardcoded string
 
 ## Targets / bundle IDs
-- `Recharge` — `com.jackwallner.recharge`
+- `Recharge` — `com.jackwallner.recovery`
 - `RechargeWatch` — `.watch`
 - `RechargeWidget` — `.widget`
 - `RechargeWatchWidget` — `.watch.widget`
 - `RechargeTests` — `.tests`, `RechargeUITests` — `.uitests`
-- App Group: `group.com.jackwallner.recharge`
+- App Group: `group.com.jackwallner.recovery`
 
 ## Architecture
 
@@ -97,7 +97,7 @@ disprove. `RechargeUITests.xctestplan` carries the reference; `patch-schemes.py`
 adds the belt-and-braces scheme entry.
 
 StoreKit product identifiers are bundle-prefixed
-(`com.jackwallner.recharge.yearly`) in both `Recharge.storekit` and
+(`com.jackwallner.recovery.yearly`) in both `Recharge.storekit` and
 `RechargeProduct`. Bare identifiers like `yearly` are silently not vended.
 
 ## App-specific notes

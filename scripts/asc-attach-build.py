@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib  # noqa: E402
 
-BUNDLE = "com.jackwallner.recharge"
+BUNDLE = "com.jackwallner.recovery"
 
 
 def main() -> None:

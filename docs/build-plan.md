@@ -13,8 +13,8 @@ what order. Nothing here reopens positioning.
 | Repo dir | `~/recovery` (unchanged; dir name != app name is normal in this fleet, cf. `~/health` = VO2 Max, `~/vitals` = Total Calories) |
 | Xcode project / scheme | `Recharge` |
 | Slug (bundle + sim lease owner) | `recharge` |
-| Bundle IDs | `com.jackwallner.recharge`, `.watch`, `.widget`, `.watch.widget`, `.tests`, `.uitests` |
-| App Group | `group.com.jackwallner.recharge` |
+| Bundle IDs | `com.jackwallner.recovery`, `.watch`, `.widget`, `.watch.widget`, `.tests`, `.uitests` |
+| App Group | `group.com.jackwallner.recovery` |
 | First pass ends at | a TestFlight build |
 | Model scope in v1 | all four profiles, including the RPE input |
 | Watch hero | hours countdown (Garmin's behavior), with a complication style setting |

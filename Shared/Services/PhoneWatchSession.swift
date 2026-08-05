@@ -5,7 +5,7 @@ import os
 import WatchKit
 #endif
 
-private let connectivityLogger = Logger(subsystem: "com.jackwallner.recharge", category: "Connectivity")
+private let connectivityLogger = Logger(subsystem: "com.jackwallner.recovery", category: "Connectivity")
 
 /// Watch → phone writes for the effort (RPE) answer.
 ///

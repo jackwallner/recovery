@@ -8,7 +8,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.jackwallner.recharge</string>
+		<string>group.com.jackwallner.recovery</string>
 	</array>
 </dict>
 </plist>

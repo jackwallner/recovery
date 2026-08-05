@@ -15,10 +15,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib
 
-BUNDLE = "com.jackwallner.recharge"
+BUNDLE = "com.jackwallner.recovery"
 USA_PRICES = {
-    "com.jackwallner.recharge.monthly": "1.99",
-    "com.jackwallner.recharge.yearly": "14.99",
+    "com.jackwallner.recovery.monthly": "1.99",
+    "com.jackwallner.recovery.yearly": "14.99",
 }
 
 # When True, post the equalized price point for EVERY territory (price change);

@@ -4,7 +4,7 @@ public extension Notification.Name {
     /// Posted when a countdown reaches Ready — the app's one genuinely good
     /// moment. The host may open the enjoyment funnel shortly afterwards.
     static let rechargePositiveMomentForReview =
-        Notification.Name("com.jackwallner.recharge.positiveMomentForReview")
+        Notification.Name("com.jackwallner.recovery.positiveMomentForReview")
 }
 
 /// How the user last resolved the review / feedback prompt.

@@ -10,14 +10,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib  # noqa: E402
 
-BUNDLE = "com.jackwallner.recharge"
+BUNDLE = "com.jackwallner.recovery"
 VERSION = "1.0.0"
 BUILD = "30"
 LOCALES = set(json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"])
 PRODUCTS = {
-    "com.jackwallner.recharge.monthly",
-    "com.jackwallner.recharge.yearly",
-    "com.jackwallner.recharge.pro.lifetime",
+    "com.jackwallner.recovery.monthly",
+    "com.jackwallner.recovery.yearly",
+    "com.jackwallner.recovery.lifetime",
 }
 
 
