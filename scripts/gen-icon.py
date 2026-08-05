@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Recharge app icon: a countdown ring with a bolt in its opening.
+"""Recharge app icon: a countdown ring with an hourglass in its opening.
 
 Fleet design language (soft diagonal gradient, one confident white glyph,
 generous negative space), with the app's own idea: a countdown ring that has
 most of the way to go, so the icon reads as "time left" rather than a generic
-heart or flame. The gap in the ring is the point; the bolt names the app.
+heart or flame. The gap in the ring is the point; the hourglass names the app.
 """
 import math
 import os
@@ -43,6 +43,14 @@ def rounded_cap(draw, cx, cy, r, fill):
     draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=fill)
 
 
+def rounded_polyline(draw, points, width, fill):
+    """Draw a stroked path with the same round treatment as the ring."""
+    draw.line(points, fill=fill, width=int(width), joint="curve")
+    radius = width / 2
+    for x, y in points:
+        rounded_cap(draw, x, y, radius, fill)
+
+
 def draw_ring(draw, size):
     inset = size * RING_INSET
     width = size * RING_WIDTH
@@ -68,35 +76,34 @@ def draw_ring(draw, size):
         )
 
 
-# Classic six-point bolt, normalised to x, y in [-1, 1]. The two long diagonals
-# are deliberately parallel so the limbs read as one consistent stroke.
-BOLT = [
-    (0.45, -1.00),   # top tip
-    (-0.75, 0.10),   # left shoulder, just below the waist
-    (-0.05, 0.10),   # waist notch
-    (-0.45, 1.00),   # bottom tip
-    (0.75, -0.10),   # right shoulder, just above the waist
-    (0.05, -0.10),   # waist notch
+# A compact hourglass outline, normalised to x, y in [-1, 1]. The ring is the
+# timer; this inner glyph makes the countdown meaning survive the 40pt icon.
+HOURGLASS = [
+    (-0.78, -1.00),  # top-left bar
+    (0.78, -1.00),   # top-right bar
+    (0.16, 0.00),    # right waist
+    (0.78, 1.00),    # bottom-right bar
+    (-0.78, 1.00),   # bottom-left bar
+    (-0.16, 0.00),   # left waist
 ]
-BOLT_HALF_HEIGHT = 0.145
-BOLT_HALF_WIDTH = 0.098
+HOURGLASS_HALF_HEIGHT = 0.135
+HOURGLASS_HALF_WIDTH = 0.085
+HOURGLASS_STROKE = 0.030
 
 
 def draw_marker(draw, size):
-    """A bolt in the ring's opening: the app's own name, at the ring's weight.
+    """An hourglass in the ring's opening, at the ring's weight.
 
-    Sized so its furthest tip sits at 0.152*size from the centre, comfortably
-    inside the ring's inner opening (0.185*size), and heavy enough to survive
-    the downscale to a 40pt home-screen icon.
+    The outline leaves the gradient visible through the glass and is sized to
+    remain legible after the downscale to a 40pt home-screen icon.
     """
     cx = cy = size / 2
-    draw.polygon(
-        [
-            (cx + x * size * BOLT_HALF_WIDTH, cy + y * size * BOLT_HALF_HEIGHT)
-            for x, y in BOLT
-        ],
-        fill=(255, 255, 255),
-    )
+    points = [
+        (cx + x * size * HOURGLASS_HALF_WIDTH, cy + y * size * HOURGLASS_HALF_HEIGHT)
+        for x, y in HOURGLASS
+    ]
+    points.append(points[0])
+    rounded_polyline(draw, points, size * HOURGLASS_STROKE, (255, 255, 255))
 
 
 def main():
