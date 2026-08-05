@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -14,8 +15,8 @@ BUNDLE = "com.jackwallner.recovery"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default="1.0.0")
-    parser.add_argument("--build", default="19")
+    parser.add_argument("--version", default=os.environ.get("ASC_APP_VERSION", "1.0.0"))
+    parser.add_argument("--build", default=os.environ.get("ASC_BUILD_NUMBER", "3"))
     args = parser.parse_args()
 
     client = asc_lib.ASCClient(asc_lib.bearer_token(*asc_lib.load_credentials()))

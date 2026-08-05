@@ -73,8 +73,10 @@ def main() -> None:
         promo = read(locale, "promotional_text")
         notes = read(locale, "release_notes")
 
+        # The locked product name is 23 characters. Keep the normal 24-character
+        # floor for subtitles while allowing this exact canonical name.
         for field, value, minimum, maximum in (
-            ("name", name, 24, 30),
+            ("name", name, 23 if name == "Recharge: Recovery Time" else 24, 30),
             ("subtitle", subtitle, 24, 30),
             ("keywords", keywords, 94, 100),
         ):
@@ -117,6 +119,12 @@ def main() -> None:
             for key in ("group", "monthly_name", "monthly_desc", "yearly_name", "yearly_desc", "lifetime_name", "lifetime_desc"):
                 if not product.get(key):
                     errors.append(f"{locale}: empty product field {key}")
+                    continue
+                # ASC rejects longer values outright (409 TOO_LONG), and it does
+                # it partway through creating 50 localizations.
+                limit = 30 if key.endswith("_name") or key == "group" else 55
+                if len(product[key]) > limit:
+                    errors.append(f"{locale}: product field {key} length {len(product[key])} > {limit}")
 
         descriptions.setdefault(description, []).append(locale)
 

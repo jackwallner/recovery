@@ -66,11 +66,44 @@ def bearer_token(key_id: str, issuer_id: str, key_path: str) -> str:
     )
 
 
+# A token is good for 20 minutes. Re-mint well before that: the setup scripts
+# make hundreds of calls (175 territories x every product) and a run that
+# outlives its token dies partway through, leaving the catalogue half-built.
+TOKEN_MAX_AGE = 900
+RETRYABLE_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+
 class ASCClient:
     def __init__(self, token: str):
         self.token = token
+        self._issued_at = time.time()
+
+    def _refresh_token(self) -> None:
+        self.token = bearer_token(*load_credentials())
+        self._issued_at = time.time()
 
     def request(self, method: str, path: str, body: dict | None = None) -> dict:
+        if time.time() - self._issued_at > TOKEN_MAX_AGE:
+            self._refresh_token()
+        refreshed = False
+        for attempt in range(5):
+            try:
+                return self._send(method, path, body)
+            except urllib.error.HTTPError as e:
+                if e.code == 401 and not refreshed:
+                    # A 401 on a token we thought was fresh: re-mint and retry.
+                    refreshed = True
+                    self._refresh_token()
+                    continue
+                # ASC returns a bare 500 often enough on reads that failing the
+                # run over one would leave the catalogue half-built. Back off.
+                if e.code in RETRYABLE_STATUSES and attempt < 4:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise RuntimeError(f"{method} {path} -> {e.code}: {e.read().decode()}") from e
+        raise AssertionError("unreachable")
+
+    def _send(self, method: str, path: str, body: dict | None) -> dict:
         url = f"{API}{path}"
         data = json.dumps(body).encode() if body is not None else None
         req = urllib.request.Request(
@@ -82,19 +115,16 @@ class ASCClient:
                 "Content-Type": "application/json",
             },
         )
-        try:
-            for attempt in range(4):
-                try:
-                    with urllib.request.urlopen(req, timeout=120) as resp:
-                        raw = resp.read().decode()
-                        return json.loads(raw) if raw else {}
-                except (http.client.RemoteDisconnected, urllib.error.URLError, socket.timeout):
-                    if attempt == 3:
-                        raise
-                    time.sleep(2 ** attempt)
-        except urllib.error.HTTPError as e:
-            err = e.read().decode()
-            raise RuntimeError(f"{method} {path} -> {e.code}: {err}") from e
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    raw = resp.read().decode()
+                    return json.loads(raw) if raw else {}
+            except (http.client.RemoteDisconnected, urllib.error.URLError, socket.timeout) as e:
+                if isinstance(e, urllib.error.HTTPError) or attempt == 3:
+                    raise
+                time.sleep(2 ** attempt)
+        raise AssertionError("unreachable")
 
     def get(self, path: str) -> dict:
         return self.request("GET", path)

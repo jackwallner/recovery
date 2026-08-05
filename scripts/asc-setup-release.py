@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Idempotently prepare Recharge 1.0 metadata, rating, IAP, and review info."""
+"""Idempotently prepare Recharge 1.0.0 metadata, rating, IAP, and review info."""
 from __future__ import annotations
 
 import json
@@ -225,7 +225,7 @@ def main() -> None:
     attrs = {
         "contactFirstName": "Jack",
         "contactLastName": "Wallner",
-        "contactPhone": "14257533411",
+        "contactPhone": "+1 425 753 3411",
         "contactEmail": "jackwallner@gmail.com",
         "demoAccountRequired": False,
         "notes": REVIEW_NOTES,
