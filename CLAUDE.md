@@ -117,11 +117,13 @@ StoreKit product identifiers are bundle-prefixed
 - **Screenshot mode:** `RECHARGE_SCREENSHOT_MODE=1` +
   `RECHARGE_SCREENSHOT_SCENE=<recovering|ready|history|settings|paywall|premiumActive|onboarding|watchRecovering|watchReady>`.
   Bypasses HealthKit entirely and seeds `ScreenshotFixtures`.
-- `RevenueCatConfig.apiKey` is a placeholder in the repo. The production key is
-  `RC_PUBLIC_KEY` in `~/.recovery_credentials` and must be substituted before a
-  Release archive. Never configure it on simulator.
-- App Store ID is not yet assigned; `AppStoreReviewLinks.appStoreID` is a
-  placeholder and must be filled once the ASC record exists.
+- `RevenueCatConfig.apiKey` is a placeholder in the repo. `scripts/testflight.sh`
+  substitutes `RC_PUBLIC_KEY` from `~/.recovery_credentials` for the archive and
+  restores the placeholder on exit, so the key never lands in a commit. Never
+  configure it on simulator.
+- **App Store ID is `6797089337`** (`com.jackwallner.recovery`). The ASC record
+  is still named "Recovery App Placeholder"; the real name, subtitle, and
+  keywords are in `fastlane/metadata/en-US/` and have not been uploaded yet.
 
 ## Open tuning questions
 1. Relative load is measured against the **median** of the person's sessions,

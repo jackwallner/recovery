@@ -3,9 +3,8 @@ import StoreKit
 
 /// App Store review deep links for Recharge.
 public enum AppStoreReviewLinks {
-    /// Filled in once the App Store Connect record exists. Until then the
-    /// storefront-agnostic URL still resolves to a search rather than a 404.
-    public static let appStoreID = "0000000000"
+    /// The App Store Connect record for `com.jackwallner.recovery`.
+    public static let appStoreID = "6797089337"
 
     public static let supportEmail = "support@jackwallner.com"
 
