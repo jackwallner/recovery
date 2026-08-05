@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+"""Validate Recharge App Store metadata before upload."""
+from __future__ import annotations
+
+import json
+import re
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+META = ROOT / "fastlane" / "metadata"
+LOCALES = json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"]
+REQUIRED = (
+    "name", "subtitle", "keywords", "description", "promotional_text",
+    "release_notes", "support_url", "marketing_url", "privacy_url",
+)
+PROHIBITED = (
+    r"\bdiagnoses?\b", r"\btreats?\b", r"\bcures?\b", r"\bprevents?\b",
+    r"\bguaranteed\b", r"\blongevity prediction\b", r"\bclinical accuracy\b",
+)
+
+
+def read(locale: str, field: str) -> str:
+    path = META / locale / f"{field}.txt"
+    return path.read_text(encoding="utf-8").strip() if path.exists() else ""
+
+
+def tokens(text: str) -> list[str]:
+    return [part.strip().lower().replace(" ", "") for part in re.split(r"[,，、]", text) if part.strip()]
+
+
+def indexed_words(text: str) -> set[str]:
+    return {word.lower() for word in re.findall(r"[\w']+", text, flags=re.UNICODE) if len(word) >= 2}
+
+
+def check_url(url: str) -> bool:
+    try:
+        request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "RechargeReleaseCheck/1.0"})
+        with urllib.request.urlopen(request, timeout=20) as response:
+            return 200 <= response.status < 400
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return False
+
+
+def main() -> None:
+    errors: list[str] = []
+    present = sorted(path.name for path in META.iterdir() if path.is_dir() and path.name != "review_information")
+    if present != sorted(LOCALES):
+        errors.append(f"locale set mismatch: expected {len(LOCALES)}, found {len(present)}")
+
+    descriptions: dict[str, list[str]] = {}
+    for locale in LOCALES:
+        folder = META / locale
+        for field in REQUIRED:
+            if not read(locale, field):
+                errors.append(f"{locale}: empty {field}.txt")
+        name = read(locale, "name")
+        subtitle = read(locale, "subtitle")
+        keywords = read(locale, "keywords")
+        description = read(locale, "description")
+        promo = read(locale, "promotional_text")
+        notes = read(locale, "release_notes")
+
+        for field, value, minimum, maximum in (
+            ("name", name, 24, 30),
+            ("subtitle", subtitle, 24, 30),
+            ("keywords", keywords, 94, 100),
+        ):
+            if not minimum <= len(value) <= maximum:
+                errors.append(f"{locale}: {field} length {len(value)}, expected {minimum}-{maximum}")
+        if len(description) > 4000:
+            errors.append(f"{locale}: description length {len(description)} > 4000")
+        if len(promo) > 170:
+            errors.append(f"{locale}: promotional text length {len(promo)} > 170")
+        if len(notes) > 4000:
+            errors.append(f"{locale}: release notes length {len(notes)} > 4000")
+
+        keyword_tokens = tokens(keywords)
+        if len(keyword_tokens) != len(set(keyword_tokens)):
+            errors.append(f"{locale}: duplicate keyword token")
+        indexed = indexed_words(f"{name} {subtitle}")
+        duplicates = sorted(token for token in keyword_tokens if token in indexed)
+        if duplicates:
+            errors.append(f"{locale}: keywords duplicate name/subtitle: {', '.join(duplicates)}")
+
+        description_lower = description.lower()
+        for pattern in PROHIBITED:
+            if re.search(pattern, description_lower) and "does not" not in description_lower:
+                errors.append(f"{locale}: prohibited health claim pattern {pattern}")
+
+        if "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" not in description:
+            errors.append(f"{locale}: missing Apple Standard EULA URL")
+        if "https://jackwallner.github.io/recharge/privacy-policy.html" not in description:
+            errors.append(f"{locale}: missing privacy URL")
+        if not all(price in description for price in ("1.99", "14.99", "29.99")) and not all(price in description for price in ("1,99", "14,99", "29,99")):
+            errors.append(f"{locale}: missing plan prices")
+        if locale == "en-US" and "7-day" not in description:
+            errors.append(f"{locale}: missing 7-day trial disclosure")
+
+        product_path = folder / "products.json"
+        if not product_path.exists():
+            errors.append(f"{locale}: missing products.json")
+        else:
+            product = json.loads(product_path.read_text(encoding="utf-8"))
+            for key in ("group", "monthly_name", "monthly_desc", "yearly_name", "yearly_desc", "lifetime_name", "lifetime_desc"):
+                if not product.get(key):
+                    errors.append(f"{locale}: empty product field {key}")
+
+        descriptions.setdefault(description, []).append(locale)
+
+    for text, locales in descriptions.items():
+        if len(locales) > 4 and text == read("en-US", "description"):
+            errors.append(f"English description reused in {len(locales)} locales")
+
+    urls = {
+        read("en-US", "support_url"),
+        read("en-US", "marketing_url"),
+        read("en-US", "privacy_url"),
+        "https://jackwallner.github.io/recharge/terms.html",
+    }
+    for url in sorted(urls):
+        if not check_url(url):
+            errors.append(f"unreachable URL: {url}")
+
+    if errors:
+        print("Metadata validation failed:", file=sys.stderr)
+        for error in errors:
+            print(f"  - {error}", file=sys.stderr)
+        raise SystemExit(1)
+    print(f"Metadata valid: {len(LOCALES)} locales, 24/24/94+ ASO fields, URLs and disclosures present")
+
+
+if __name__ == "__main__":
+    main()

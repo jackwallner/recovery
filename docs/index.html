@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Recharge: Recovery Time — Garmin-style recovery time for Apple Watch</title>
+    <meta
+      name="description"
+      content="A countdown after every hard session and a clear Ready when it runs out, built on Apple Health. No ring, no strap, no second hardware ecosystem."
+    />
+    <link rel="icon" href="icon_256.png" />
+    <style>
+      :root {
+        --amber: #ff9e33;
+        --coral: #ff7347;
+        --green: #3ec770;
+        --ink: #16181d;
+        --muted: #5f6672;
+        --line: #e6e8ec;
+        --bg: #ffffff;
+        --surface: #f6f7f9;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #f2f4f7;
+          --muted: #a2aab8;
+          --line: #2a2e36;
+          --bg: #101216;
+          --surface: #191c22;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      main { max-width: 720px; margin: 0 auto; padding: 56px 20px 80px; }
+      header { text-align: center; margin-bottom: 48px; }
+      .icon {
+        width: 104px; height: 104px; border-radius: 24px;
+        box-shadow: 0 8px 24px rgba(255, 130, 60, 0.28);
+      }
+      h1 { font-size: 2rem; margin: 20px 0 8px; letter-spacing: -0.02em; }
+      .tagline { font-size: 1.15rem; color: var(--muted); margin: 0 auto; max-width: 32ch; }
+      h2 { font-size: 1.2rem; margin: 40px 0 12px; letter-spacing: -0.01em; }
+      p { color: var(--muted); }
+      p.lead { color: var(--ink); }
+      ul { color: var(--muted); padding-left: 20px; }
+      li { margin-bottom: 8px; }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin: 16px 0;
+      }
+      .card h3 { margin: 0 0 6px; font-size: 1rem; }
+      .card p { margin: 0; font-size: 0.95rem; }
+      .states { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+      .state {
+        flex: 1 1 150px; text-align: center; padding: 18px 12px;
+        border-radius: 14px; border: 1px solid var(--line);
+      }
+      .state .big { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+      .state.recovering .big { color: var(--coral); }
+      .state.ready .big { color: var(--green); }
+      .state small { color: var(--muted); }
+      footer {
+        margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line);
+        font-size: 0.9rem; color: var(--muted); text-align: center;
+      }
+      footer a { color: var(--muted); }
+      .disclaimer { font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img class="icon" src="icon_256.png" alt="Recharge app icon" />
+        <h1>Recharge: Recovery Time</h1>
+        <p class="tagline">Garmin-style recovery time, on the Apple Watch you already own.</p>
+      </header>
+
+      <p class="lead">
+        Finish a hard session and Recharge starts a countdown. When it runs out,
+        you get a clear Ready. That is the whole app — the answer a Garmin gives
+        you after an activity, built on Apple Health. No ring, no strap, no second
+        hardware ecosystem to subscribe to.
+      </p>
+
+      <div class="states">
+        <div class="state recovering">
+          <div class="big">18h 40m</div>
+          <small>Recovering</small>
+        </div>
+        <div class="state recovering">
+          <div class="big">1h 20m</div>
+          <small>Ready soon</small>
+        </div>
+        <div class="state ready">
+          <div class="big">Ready</div>
+          <small>Go again</small>
+        </div>
+      </div>
+
+      <h2>Built for hybrid training</h2>
+      <p>
+        Most recovery apps run one universal number. Recharge runs a separate
+        curve for each kind of session, because an hour under a barbell and an
+        hour on the bike do not cost the same thing.
+      </p>
+
+      <div class="card">
+        <h3>Endurance</h3>
+        <p>Run, ride, row, swim. Heart-rate-reserve load from your workout heart rate.</p>
+      </div>
+      <div class="card">
+        <h3>Strength</h3>
+        <p>
+          Wrist heart rate is unreliable under grip and bar contact, so Recharge
+          asks you one question instead of guessing.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Mixed</h3>
+        <p>HYROX, CrossFit, circuits. Both systems taxed, so the longest window.</p>
+      </div>
+      <div class="card">
+        <h3>Easy</h3>
+        <p>Walks, yoga, mobility. Active recovery — never starts or extends a countdown.</p>
+      </div>
+
+      <h2>On your watch face</h2>
+      <p>
+        Four complication families — circular, rectangular, inline, and corner — in
+        the style you pick: the hours countdown, the estimated ready time, or just
+        the state.
+      </p>
+
+      <h2>Honest by design</h2>
+      <ul>
+        <li>A bounded window, not a false-precision number.</li>
+        <li>It tells you when it is still building your baseline.</li>
+        <li>It shows which signal produced the estimate, and how confident it is.</li>
+        <li>When a countdown ends it asks how you actually felt, and tunes your own bands from your answer.</li>
+      </ul>
+
+      <h2>Private</h2>
+      <p>
+        Recharge reads from Apple Health and writes nothing back. Your workouts,
+        heart data, and answers stay on your devices. No account, no sign-in, no
+        server.
+      </p>
+
+      <footer>
+        <p class="disclaimer">
+          Recharge gives a cardiovascular training estimate based on your recent
+          workout load. It is not medical advice and does not diagnose, treat,
+          cure, or prevent any condition. Not affiliated with, endorsed by, or
+          sponsored by Garmin, WHOOP, Oura, Polar, Coros, or Apple.
+        </p>
+        <p>
+          <a href="privacy-policy.html">Privacy</a> ·
+          <a href="terms.html">Terms</a> ·
+          <a href="support.html">Support</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
