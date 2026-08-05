@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.request
 from pathlib import Path
@@ -11,8 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 import asc_lib  # noqa: E402
 
 BUNDLE = "com.jackwallner.recovery"
-VERSION = "1.0.0"
-BUILD = "30"
+VERSION = os.environ.get("ASC_APP_VERSION", "1.0.0")
+BUILD = os.environ.get("ASC_BUILD_NUMBER", "3")
 LOCALES = set(json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"])
 PRODUCTS = {
     "com.jackwallner.recovery.monthly",
@@ -87,8 +88,8 @@ def main() -> None:
         sets = asc_lib.list_all(client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets")
         for screenshot_set in sets:
             screenshots += len(asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"))
-    # 6 iPhone 6.7" shots + 1 Apple Watch shot is the full submitted set.
-    check(screenshots == 7, f"canonical screenshot set present ({screenshots})", failures)
+    # The capture script supplies five iPhone 6.7" shots for the first listing.
+    check(screenshots == 5, f"canonical screenshot set present ({screenshots})", failures)
 
     all_products: set[str] = set()
     for group in asc_lib.list_all(client, f"/apps/{app_id}/subscriptionGroups"):

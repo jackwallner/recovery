@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Idempotently prepare Recharge 1.0 metadata, rating, IAP, and review info."""
+"""Idempotently prepare Recharge 1.0.0 metadata, rating, IAP, and review info."""
 from __future__ import annotations
 
 import json

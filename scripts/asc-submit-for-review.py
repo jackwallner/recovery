@@ -10,6 +10,7 @@ Usage: asc-submit-for-review.py [--version 1.0.0] [--dry-run]
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -22,7 +23,7 @@ PLATFORM = "IOS"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", default="1.0.0")
+    parser.add_argument("--version", default=os.environ.get("ASC_APP_VERSION", "1.0.0"))
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
