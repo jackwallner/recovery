@@ -50,12 +50,8 @@ schemes:
         RechargeUITests: [test]
     test:
       config: Debug
-      # A test plan is the only place a StoreKit configuration reaches the Test
-      # action — `storeKitConfiguration` below only lands on Launch, which
-      # `xcodebuild test` never runs. See scripts/xcgen.sh.
-      testPlans:
-        - path: RechargeUITests.xctestplan
-          defaultPlan: true
+      targets:
+        - RechargeUITests
     run:
       config: Debug
       storeKitConfiguration: Recharge.storekit

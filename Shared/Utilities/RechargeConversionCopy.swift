@@ -34,7 +34,16 @@ public enum RechargeConversionCopy {
     }
 
     /// Subordinate line under the billed amount.
-    public static func billedNote(trialLabel: String?, eligibleForTrial: Bool) -> String {
+    ///
+    /// `isRecurring` is false for the lifetime non-consumable: Apple 3.1.2
+    /// requires the terms shown to match what is actually charged, and there is
+    /// nothing to bill again or to cancel on a one-time purchase.
+    public static func billedNote(
+        trialLabel: String?,
+        eligibleForTrial: Bool,
+        isRecurring: Bool = true
+    ) -> String {
+        guard isRecurring else { return "One-time purchase · No subscription" }
         if eligibleForTrial, let trialLabel, !trialLabel.isEmpty {
             return "\(trialLabel.lowercased()) included · Cancel anytime"
         }

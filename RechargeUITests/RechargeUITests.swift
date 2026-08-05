@@ -47,18 +47,15 @@ final class RechargeUITests: XCTestCase {
     /// plan cards can be verified rather than the "couldn't load plans" state.
     /// Never sign off on paywall layout from a `simctl` screenshot.
     ///
-    /// **Known gap (2026-08-04):** StoreKit Testing is not activating under
-    /// `xcodebuild test` on this toolchain. The `.storekit` file is referenced
-    /// from `RechargeUITests.xctestplan` *and* patched into the scheme's
-    /// TestAction by `scripts/patch-schemes.py`, product IDs are bundle-prefixed
-    /// to match what App Store Connect will hold, and `Product.products(for:)`
-    /// still returns an empty array without throwing. Everything above the plan
-    /// region does render and is asserted below.
+    /// The plans come from `StoreService.screenshotPackages`, not StoreKit:
+    /// StoreKit Testing does not activate under `xcodebuild test` no matter how
+    /// the `.storekit` file is referenced, so it can never fill this in. See the
+    /// doc comment on `screenshotPackages`.
     ///
-    /// Rather than leave a permanently red suite, the plan assertions skip when
-    /// StoreKit vends nothing — a skip is visible, a silent pass would not be.
-    /// **The plan-card layout is therefore unverified.** Run the `Recharge`
-    /// scheme once from Xcode and eyeball it before shipping paywall changes.
+    /// That makes this a **layout** check — card order, price hierarchy, trial
+    /// copy, CTA, disclosure footer — against prices that mirror App Store
+    /// Connect. Real StoreKit price formatting (localised currency, PPP
+    /// territories) is still only observable on device.
     func testPaywallRendersRealProductsUnderStoreKitTesting() throws {
         let app = launch(scene: "paywall")
 
@@ -77,10 +74,9 @@ final class RechargeUITests: XCTestCase {
 
         attach(app, named: "paywall-layout")
 
-        let plansLoaded = app.staticTexts["Yearly"].waitForExistence(timeout: 15)
-        try XCTSkipUnless(
-            plansLoaded,
-            "StoreKit Testing supplied no products, so the plan cards could not be verified. See the doc comment on this test."
+        XCTAssertTrue(
+            app.staticTexts["Yearly"].waitForExistence(timeout: 15),
+            "the plan cards never rendered"
         )
 
         // Every plan must be present, or the pricing hierarchy Apple 3.1.2(c)

@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# `xcodegen generate` plus the one thing XcodeGen cannot express.
+# `xcodegen generate` for this repo.
 #
-# Use this instead of bare `xcodegen generate` in this repo.
+# This used to also inject the StoreKit configuration into every scheme's Test
+# action, on the theory that `xcodebuild test` would then serve the local
+# `.storekit` catalogue to the paywall. It does not: with the configuration
+# referenced from the Test action, from a test plan (every relative-path
+# spelling), and via `SKTestSession` in the UI-test runner, the app under test
+# still reaches the live `storekitd` and `Product.products(for:)` comes back
+# empty. The paywall UI test now renders `StoreService.screenshotPackages`
+# instead — see the doc comment there.
 #
-# XcodeGen writes `storeKitConfiguration` into the scheme's **Launch** action
-# only; there is no key that reaches the **Test** action. `xcodebuild test` runs
-# the Test action, so without this patch StoreKit Testing is inactive during
-# tests, `Product.products(for:)` returns nothing, and the paywall UI test sees
-# the "couldn't load plans" empty state — which is exactly the state that test
-# exists to prove we are not looking at.
+# StoreKit Testing still works for the **Launch** action, which XcodeGen writes
+# from `storeKitConfiguration:` in project.yml, so running the Recharge scheme
+# from Xcode gets the real local catalogue.
 #
-# The failure is loud (the test fails with a message naming this cause), so a
-# bare `xcodegen generate` degrades safely rather than silently.
+# Kept as a script so `testflight.sh` and muscle memory keep working.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 xcodegen generate
-python3 scripts/patch-schemes.py

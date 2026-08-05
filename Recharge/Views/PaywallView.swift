@@ -208,7 +208,8 @@ struct PaywallView: View {
                         .foregroundStyle(Theme.textPrimary)
                     Text(RechargeConversionCopy.billedNote(
                         trialLabel: trialLabel,
-                        eligibleForTrial: trialLabel != nil
+                        eligibleForTrial: trialLabel != nil,
+                        isRecurring: package.storeProduct.subscriptionPeriod != nil
                     ))
                     .font(.system(.caption2, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)

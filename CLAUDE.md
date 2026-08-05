@@ -89,12 +89,15 @@ The phone names the session needing an answer via the `pendingEffortSessionID`
 App Group key, because the Watch has no workout history of its own.
 
 ### Generating the project
-Use **`./scripts/xcgen.sh`**, not bare `xcodegen generate`. XcodeGen writes
-`storeKitConfiguration` into the scheme's Launch action only, and `xcodebuild
-test` runs the Test action — so without the extra step StoreKit Testing is
-inactive during tests and the paywall UI test sees the empty state it exists to
-disprove. `RechargeUITests.xctestplan` carries the reference; `patch-schemes.py`
-adds the belt-and-braces scheme entry.
+`./scripts/xcgen.sh` (a thin `xcodegen generate`; `testflight.sh` calls it).
+
+**StoreKit Testing does not activate under `xcodebuild test`.** The `.storekit`
+file was referenced from the scheme's Test action, from a test plan (every
+relative-path spelling), and started with `SKTestSession` from the UI-test
+runner; in all three the app under test reached the live `storekitd` and
+`Product.products(for:)` returned an empty array. The test plan and
+`patch-schemes.py` are gone. It still works for the **Launch** action, so
+running the Recharge scheme from Xcode gets the local catalogue.
 
 StoreKit product identifiers are bundle-prefixed
 (`com.jackwallner.recovery.yearly`) in both `Recharge.storekit` and
@@ -110,10 +113,13 @@ StoreKit product identifiers are bundle-prefixed
   (`ReviewPromptTracker.recordReadyMoment`), gated at two Ready moments so the
   loop has paid off twice before the ask.
 - **Paywall verification:** it renders empty under plain `simctl launch` — no
-  RevenueCat on simulator and no StoreKit catalogue. Only
+  RevenueCat on simulator and no StoreKit catalogue. Under screenshot mode the
+  plan cards come from `StoreService.screenshotPackages`, whose prices mirror
+  `Recharge.storekit` and ASC; keep them in step.
   `testPaywallRendersRealProductsUnderStoreKitTesting` in `RechargeUITests`
-  exercises the real layout. Never sign off on paywall spacing from a `simctl`
-  screenshot.
+  asserts all three cards and attaches the render. That covers **layout**;
+  localized/PPP price formatting is still only observable on device. Never sign
+  off on paywall spacing from a `simctl` screenshot.
 - **Screenshot mode:** `RECHARGE_SCREENSHOT_MODE=1` +
   `RECHARGE_SCREENSHOT_SCENE=<recovering|ready|history|settings|paywall|premiumActive|onboarding|watchRecovering|watchReady>`.
   Bypasses HealthKit entirely and seeds `ScreenshotFixtures`.
