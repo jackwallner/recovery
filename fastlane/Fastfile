@@ -1,0 +1,119 @@
+opt_out_usage
+
+default_platform(:ios)
+
+REVIEW_NOTES = <<~NOTES
+  Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
+
+  No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, and Active Energy, and never writes Health data. If the review device has no recorded workout, the app shows an explicit empty state rather than a number.
+
+  Core flow:
+  1. Launch app and grant Apple Health read access
+  2. Today shows the current countdown, or Ready, with the reasoning behind the estimate
+  3. History lists every scored session and the load and heart-rate coverage behind each one
+  4. Settings exposes the Watch complication style and the disclaimer
+  The Apple Watch app and its complications mirror the same countdown.
+
+  Recharge presents a cardiovascular training estimate only. It makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
+
+  Recharge Pro (IAP via RevenueCat) offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime purchase. Price, billing period, renewal behavior, Restore, Terms, and Privacy all appear at the purchase point. The app does not use non-exempt encryption.
+NOTES
+
+platform :ios do
+  desc "Download current metadata + screenshots from App Store Connect into /tmp/asc-live"
+  lane :download_state do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"]
+    )
+
+    sh("rm -rf /tmp/asc-live && mkdir -p /tmp/asc-live")
+
+    deliver(
+      api_key: api_key,
+      run_precheck_before_submit: false,
+      metadata_path: "/tmp/asc-live/metadata",
+      screenshots_path: "/tmp/asc-live/screenshots",
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      skip_metadata: false,
+      force: true
+    )
+  end
+
+  desc "Upload screenshots and metadata to App Store Connect (fastlane 2.234+)"
+  lane :upload_metadata do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"]
+    )
+
+    version = ENV["ASC_APP_VERSION"]
+    UI.user_error!("Set ASC_APP_VERSION (run: eval \"$(python3 scripts/asc-ensure-draft-version.py | grep '^export ')\")") unless version && !version.empty?
+
+    # No screenshots are staged yet — see scripts/capture-screenshots.sh.
+    skip_shots = ENV.fetch("SKIP_SCREENSHOTS", "true") == "true"
+
+    deliver(
+      api_key: api_key,
+      app_version: version,
+      skip_app_version_update: true,
+      force: true,
+      ignore_language_directory_validation: true,
+      precheck_include_in_app_purchases: false,
+      version_check_wait_retry_limit: 7,
+      skip_binary_upload: true,
+      skip_screenshots: skip_shots,
+      overwrite_screenshots: !skip_shots,
+      submit_for_review: false,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      app_review_information: {
+        first_name: "Jack",
+        last_name: "Wallner",
+        email: "jackwallner@gmail.com",
+        demo_user: "N/A — no login, no account system",
+        demo_password: "",
+        notes: REVIEW_NOTES
+      },
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
+    )
+  end
+
+  desc "Submit the draft version for App Store review (metadata already uploaded)"
+  lane :submit_review do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_API_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_filepath: ENV["ASC_KEY_PATH"]
+    )
+
+    version = ENV["ASC_APP_VERSION"]
+    UI.user_error!("Set ASC_APP_VERSION") unless version && !version.empty?
+    build_number = ENV["ASC_BUILD_NUMBER"]
+    UI.user_error!("Set ASC_BUILD_NUMBER") unless build_number && !build_number.empty?
+
+    deliver(
+      api_key: api_key,
+      app_version: version,
+      build_number: build_number,
+      skip_app_version_update: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true,
+      submit_for_review: true,
+      automatic_release: true,
+      run_precheck_before_submit: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      }
+    )
+  end
+end
