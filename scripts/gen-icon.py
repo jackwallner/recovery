@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Recharge app icon: a recovery ring closing on a filled arc.
+"""Recharge app icon: a countdown ring with a bolt in its opening.
 
 Fleet design language (soft diagonal gradient, one confident white glyph,
 generous negative space), with the app's own idea: a countdown ring that has
 most of the way to go, so the icon reads as "time left" rather than a generic
-heart or flame. The gap in the ring is the point.
+heart or flame. The gap in the ring is the point; the bolt names the app.
 """
 import math
 import os
@@ -68,14 +68,33 @@ def draw_ring(draw, size):
         )
 
 
+# Classic six-point bolt, normalised to x, y in [-1, 1]. The two long diagonals
+# are deliberately parallel so the limbs read as one consistent stroke.
+BOLT = [
+    (0.45, -1.00),   # top tip
+    (-0.75, 0.10),   # left shoulder, just below the waist
+    (-0.05, 0.10),   # waist notch
+    (-0.45, 1.00),   # bottom tip
+    (0.75, -0.10),   # right shoulder, just above the waist
+    (0.05, -0.10),   # waist notch
+]
+BOLT_HALF_HEIGHT = 0.145
+BOLT_HALF_WIDTH = 0.098
+
+
 def draw_marker(draw, size):
-    """A short bar at the centre: the hours figure, abstracted."""
-    width = size * 0.235
-    height = size * 0.072
+    """A bolt in the ring's opening: the app's own name, at the ring's weight.
+
+    Sized so its furthest tip sits at 0.152*size from the centre, comfortably
+    inside the ring's inner opening (0.185*size), and heavy enough to survive
+    the downscale to a 40pt home-screen icon.
+    """
     cx = cy = size / 2
-    draw.rounded_rectangle(
-        (cx - width / 2, cy - height / 2, cx + width / 2, cy + height / 2),
-        radius=height / 2,
+    draw.polygon(
+        [
+            (cx + x * size * BOLT_HALF_WIDTH, cy + y * size * BOLT_HALF_HEIGHT)
+            for x, y in BOLT
+        ],
         fill=(255, 255, 255),
     )
 
