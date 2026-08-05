@@ -17,13 +17,14 @@ PRODUCT_REFERENCE_NAME = "Recharge Pro Lifetime"
 PRODUCT_DESCRIPTION = "Unlock Recharge Pro forever. One payment."
 PRICE = "29.99"
 
-REVIEW_NOTES = """Recharge Daily Tracker is a read-only Apple Health cardio fitness viewer.
+# Kept in step with the REVIEW_NOTES heredoc in fastlane/Fastfile.
+REVIEW_NOTES = """Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
 
-No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, HRV, Sleep, Active Energy, and Cardio Fitness, and never writes Health data. If the review device has no recorded workout, the app shows an explicit empty state rather than a number. Recharge presents a cardiovascular training estimate only; it makes no diagnostic, treatment, or injury-prevention claim.
+No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, and Active Energy, and never writes Health data. If the review device has no recorded workout, the app shows an explicit empty state rather than a number. Recharge presents a cardiovascular training estimate only; it makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
 
-The app displays the latest Apple Health estimate, a personal target range, trend history, widgets, Watch complications, and a clearly labeled broad fitness-age estimate. It makes no diagnostic or treatment claims.
+Today shows the current countdown with the reasoning behind the estimate, History lists every scored session with the load and heart-rate coverage behind it, and Settings exposes the Watch complication style. The Apple Watch app and its complications mirror the same countdown.
 
-Recharge Pro offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime non-consumable. Terms, renewal disclosure, privacy, and restore controls appear at the purchase point. The app does not use non-exempt encryption."""
+Recharge Pro offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime non-consumable. Price, billing period, renewal behavior, restore, terms, and privacy all appear at the purchase point. The app does not use non-exempt encryption."""
 
 
 def main() -> None:

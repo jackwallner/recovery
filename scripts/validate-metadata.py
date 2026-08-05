@@ -92,7 +92,7 @@ def main() -> None:
 
         if "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" not in description:
             errors.append(f"{locale}: missing Apple Standard EULA URL")
-        if "https://jackwallner.github.io/recharge/privacy-policy.html" not in description:
+        if "https://jackwallner.github.io/recovery/privacy-policy.html" not in description:
             errors.append(f"{locale}: missing privacy URL")
         if not all(price in description for price in ("1.99", "14.99", "29.99")) and not all(price in description for price in ("1,99", "14,99", "29,99")):
             errors.append(f"{locale}: missing plan prices")
@@ -118,7 +118,7 @@ def main() -> None:
         read("en-US", "support_url"),
         read("en-US", "marketing_url"),
         read("en-US", "privacy_url"),
-        "https://jackwallner.github.io/recharge/terms.html",
+        "https://jackwallner.github.io/recovery/terms.html",
     }
     for url in sorted(urls):
         if not check_url(url):
