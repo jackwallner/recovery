@@ -12,6 +12,14 @@ struct TodayView: View {
     @State private var showEffortSheet = false
     @State private var showFeedbackSheet = false
 
+    /// The ring is a fixed 236pt frame with the largest text in the app inside
+    /// it. At an accessibility content size that text no longer fits, so the
+    /// ring grows with it rather than clipping the one number the screen exists
+    /// to show.
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private var ringSize: CGFloat { typeSize.isAccessibilitySize ? 300 : 236 }
+
     /// One-minute tick. The countdown is in hours, so anything faster is wasted
     /// work; a minute keeps the "1h 20m" tail honest.
     private let ticker = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
@@ -94,7 +102,7 @@ struct TodayView: View {
                     phase: phase,
                     lineWidth: 20
                 )
-                .frame(width: 236, height: 236)
+                .frame(width: ringSize, height: ringSize)
 
                 VStack(spacing: 4) {
                     if phase == .noRecentWorkout {
@@ -116,7 +124,7 @@ struct TodayView: View {
                             .font(Theme.bigNumber(50))
                             .monospacedDigit()
                             .lineLimit(1)
-                            .minimumScaleFactor(0.5)
+                            .minimumScaleFactor(0.4)
                             .foregroundStyle(Theme.textPrimary)
                         Text("left")
                             .font(.system(.subheadline, design: .rounded))

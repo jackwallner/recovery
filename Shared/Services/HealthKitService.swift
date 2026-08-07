@@ -22,6 +22,12 @@ public final class HealthKitService: ObservableObject {
 
     /// Requested in a single sheet. Splitting them across prompts is what makes
     /// HealthKit silently suppress the second one.
+    ///
+    /// Every type here has to be read by something the user can see, or the
+    /// permission sheet asks for more than the app does. VO2 max was in this set
+    /// and nothing consumed it, which put an unexplained Cardio Fitness row in
+    /// front of exactly the audience that reads the sheet carefully. Add it back
+    /// only alongside a feature that uses it and copy that names it.
     public static var readTypes: Set<HKObjectType> {
         [
             HKObjectType.workoutType(),
@@ -29,7 +35,6 @@ public final class HealthKitService: ObservableObject {
             HKQuantityType(.restingHeartRate),
             HKQuantityType(.heartRateVariabilitySDNN),
             HKQuantityType(.activeEnergyBurned),
-            HKQuantityType(.vo2Max),
             HKCategoryType(.sleepAnalysis)
         ]
     }
@@ -126,17 +131,24 @@ public final class HealthKitService: ObservableObject {
         public let sourceName: String
     }
 
-    public func fetchWorkouts(days: Int = HealthKitService.importDays) async -> [ImportedWorkout] {
+    /// Returns `nil` when the read did not happen — Health unavailable, query
+    /// failed, screenshot mode — as opposed to `[]`, which means the store
+    /// genuinely holds no qualifying workouts.
+    ///
+    /// The distinction is load-bearing. `RecoveryEngine.importWorkouts` deletes
+    /// stored records that no longer appear in Health, and a failed query that
+    /// looked like an empty one would wipe the user's entire history.
+    public func fetchWorkouts(days: Int = HealthKitService.importDays) async -> [ImportedWorkout]? {
         #if DEBUG
-        if ScreenshotConfig.isEnabled { return [] }
+        if ScreenshotConfig.isEnabled { return nil }
         #endif
-        guard HKHealthStore.isHealthDataAvailable() else { return [] }
+        guard HKHealthStore.isHealthDataAvailable() else { return nil }
 
         let start = DateHelpers.daysAgo(days)
         let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
 
-        let workouts: [HKWorkout] = await withCheckedContinuation { continuation in
+        let workouts: [HKWorkout]? = await withCheckedContinuation { continuation in
             let query = HKSampleQuery(
                 sampleType: HKObjectType.workoutType(),
                 predicate: predicate,
@@ -145,13 +157,15 @@ public final class HealthKitService: ObservableObject {
             ) { _, samples, error in
                 if let error {
                     healthLogger.error("Workout query failed: \(String(describing: error), privacy: .public)")
-                    continuation.resume(returning: [])
+                    continuation.resume(returning: nil)
                     return
                 }
                 continuation.resume(returning: samples as? [HKWorkout] ?? [])
             }
             store.execute(query)
         }
+
+        guard let workouts else { return nil }
 
         var results: [ImportedWorkout] = []
         results.reserveCapacity(workouts.count)
@@ -233,12 +247,6 @@ public final class HealthKitService: ObservableObject {
 
     public func fetchHeartRateVariability(days: Int = 30) async -> [(date: Date, value: Double)] {
         await quantitySeries(type: HKQuantityType(.heartRateVariabilitySDNN), unit: .secondUnit(with: .milli), days: days)
-    }
-
-    public func fetchVO2Max(days: Int = 180) async -> Double? {
-        let unit = HKUnit.literUnit(with: .milli)
-            .unitDivided(by: .gramUnit(with: .kilo).unitMultiplied(by: .minute()))
-        return await quantitySeries(type: HKQuantityType(.vo2Max), unit: unit, days: days).last?.value
     }
 
     private func quantitySeries(

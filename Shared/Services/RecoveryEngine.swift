@@ -60,8 +60,10 @@ public final class RecoveryEngine: ObservableObject {
     // MARK: - Import
 
     private func importWorkouts() async {
-        let imported = await HealthKitService.shared.fetchWorkouts()
-        guard !imported.isEmpty else { return }
+        // `nil` is a read that did not happen; `[]` is a store that genuinely
+        // has no workouts left. Only the second one may delete anything, or a
+        // revoked permission or a flaky query erases the user's history.
+        guard let imported = await HealthKitService.shared.fetchWorkouts() else { return }
 
         let existing = (try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? []
         var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
@@ -165,7 +167,28 @@ public final class RecoveryEngine: ObservableObject {
     /// Rescores every stored workout against the baseline as it stood *at that
     /// point in the history*, so a session is never judged against sessions that
     /// had not happened yet.
-    public func rescore() {
+    ///
+    /// A session whose countdown has already run out is **frozen**: the stored
+    /// record keeps the numbers, reasons, and `modelVersion` the app actually
+    /// showed the user, and history renders those rather than a fresh
+    /// calculation. Without this, today's readiness answer or tonight's sleep
+    /// import silently rewrites yesterday's estimate, and the model version on
+    /// the detail sheet can never explain an older result because the older
+    /// result no longer exists.
+    ///
+    /// Live countdowns are still recalculated, because a user who corrects their
+    /// max heart rate expects the number on screen to move. And an explicit
+    /// correction thaws what it corrects: a per-session edit — an effort answer,
+    /// a profile override — passes its own ID in `unfreezing`, while a change to
+    /// a model-wide assumption the app got wrong for *every* past session (the
+    /// HYROX/CrossFit curve, the maximum heart rate) passes `unfreezeAll`.
+    /// Calibration is deliberately not in that list: the feedback sheet promises
+    /// it tunes future bands, so it must not reach back.
+    public func rescore(
+        unfreezing unfrozenSessionID: String? = nil,
+        unfreezeAll: Bool = false,
+        now: Date = .now
+    ) {
         let settings = RechargeSettings.shared
         let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
             .sorted { $0.endDate < $1.endDate }
@@ -209,24 +232,37 @@ public final class RecoveryEngine: ObservableObject {
                 baseline: baseline,
                 context: recoveryContext,
                 calibration: settings.calibrationFactor,
-                now: .now
+                now: now
             )
 
             // Cache the load back onto the workout so the baseline for the next
             // session (and the weekly load view) does not have to recompute it.
+            // The chain always uses the freshly computed load, even for a frozen
+            // record, so a later session is never scored against a stale
+            // baseline.
             workout.sessionLoad = estimate.load.value
             workout.loadSource = estimate.load.source
 
+            let published: RecoveryEstimate
             if let record = statesByID[workout.healthKitUUID] {
-                record.update(from: estimate)
+                let isFrozen = record.readyAt <= now
+                    && !unfreezeAll
+                    && workout.healthKitUUID != unfrozenSessionID
+                if isFrozen {
+                    published = record.estimate
+                } else {
+                    record.update(from: estimate)
+                    published = estimate
+                }
             } else {
                 let record = RecoveryStateRecord(estimate: estimate)
                 context.insert(record)
                 statesByID[workout.healthKitUUID] = record
+                published = estimate
             }
 
             history.append((profile: session.profile, load: estimate.load.value, date: workout.endDate))
-            results.append(estimate)
+            results.append(published)
         }
 
         // Drop states whose workout no longer exists.
@@ -312,6 +348,18 @@ public final class RecoveryEngine: ObservableObject {
 
         WidgetCenter.shared.reloadAllTimelines()
 
+        // The Watch has its own App Group container, so writing the snapshot
+        // above reaches the iOS widgets and nothing on the wrist. This is the
+        // only path that does. Phone-only: this file is compiled into every
+        // target, but only the phone owns the model.
+        #if os(iOS)
+        PhoneWatchSession.shared.sendSnapshot(
+            snapshot,
+            pendingEffortSessionID: awaitingEffort?.healthKitUUID,
+            complicationStyle: RechargeSettings.shared.complicationStyle.rawValue
+        )
+        #endif
+
         if RechargeSettings.shared.notifyOnReady, StoreService.shared.isPro {
             NotificationService.scheduleReadyNotification(for: snapshot)
         } else {
@@ -341,7 +389,7 @@ public final class RecoveryEngine: ObservableObject {
         }
         workout.reportedEffort = min(max(effort, 1), 10)
         try? context.save()
-        rescore()
+        rescore(unfreezing: sessionID)
         publish()
     }
 
@@ -376,6 +424,24 @@ public final class RecoveryEngine: ObservableObject {
         guard let workout = (try? context.fetch(descriptor))?.first else { return }
         workout.profileOverride = profile
         try? context.save()
+        rescore(unfreezing: sessionID)
+        publish()
+    }
+
+    /// A model-wide assumption changed (the HYROX/CrossFit curve, the maximum
+    /// heart rate), so every stored session was scored on a premise the user has
+    /// now corrected. Thaw the lot and republish.
+    public func rescoreAfterModelSettingChange() {
+        rescore(unfreezeAll: true)
+        publish()
+    }
+
+    /// The Pro entitlement arrived (or went away) after the last refresh, so the
+    /// estimate and the App Group snapshot were calculated under the wrong tier.
+    /// Recalculate the live countdown and republish so the Watch, the widgets,
+    /// and the Ready notification agree with what the user just paid for.
+    public func entitlementDidChange() {
+        guard !ScreenshotConfig.isEnabled else { return }
         rescore()
         publish()
     }
@@ -385,6 +451,21 @@ public final class RecoveryEngine: ObservableObject {
     /// Acute (7-day) and chronic (28-day) load totals, the standard training
     /// stress pair. Shown, never used to make a claim.
     public func loadBalance(now: Date = .now) -> (acute: Double, chronic: Double) {
+        #if DEBUG
+        // Screenshot mode seeds estimates, not `WorkoutRecord`s, so the SwiftData
+        // fetch below returns nothing and the Pro capture would show 0 and 0
+        // beside a history of eight scored sessions. Derive it from the same
+        // fixtures the rest of the frame is built from.
+        if ScreenshotConfig.isEnabled {
+            let acute = ScreenshotFixtures.history(now: now)
+                .filter { $0.sessionEnd >= now.addingTimeInterval(-7 * 86_400) }
+                .reduce(0) { $0 + $1.load.value }
+            let chronic = ScreenshotFixtures.history(now: now)
+                .filter { $0.sessionEnd >= now.addingTimeInterval(-28 * 86_400) }
+                .reduce(0) { $0 + $1.load.value }
+            return (acute, chronic / 4)
+        }
+        #endif
         let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
         let acuteCutoff = now.addingTimeInterval(-7 * 86_400)
         let chronicCutoff = now.addingTimeInterval(-28 * 86_400)
@@ -435,8 +516,21 @@ public final class RecoveryEngine: ObservableObject {
         current = RecoveryResolver.current(in: estimates)
         awaitingFeedback = nil
         awaitingEffort = nil
-        RecoverySnapshotStore.save(ScreenshotFixtures.snapshot())
+        let snapshot = ScreenshotFixtures.snapshot()
+        RecoverySnapshotStore.save(snapshot)
         WidgetCenter.shared.reloadAllTimelines()
+        // Deliberately not `publish()`: that would derive the snapshot from the
+        // resolver and lose the curated fixture reasons the capture depends on.
+        // But the Watch still has to receive it, or a paired screenshot run
+        // shows a live countdown on the phone and an empty ring on the wrist —
+        // which is exactly how the missing transport went unnoticed.
+        #if os(iOS)
+        PhoneWatchSession.shared.sendSnapshot(
+            snapshot,
+            pendingEffortSessionID: ScreenshotConfig.wantsEffortPrompt ? "screenshot-0" : nil,
+            complicationStyle: RechargeSettings.shared.complicationStyle.rawValue
+        )
+        #endif
         lastRefresh = .now
     }
     #endif

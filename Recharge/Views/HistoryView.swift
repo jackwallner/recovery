@@ -35,7 +35,7 @@ struct HistoryView: View {
             .navigationTitle("History")
             .refreshable { await engine.refresh(force: true) }
             .sheet(item: $selected) { estimate in
-                EstimateDetailView(estimate: estimate)
+                EstimateDetailView(capturedEstimate: estimate)
                     .environmentObject(store)
                     .environmentObject(engine)
             }
@@ -178,15 +178,21 @@ private struct HistoryRow: View {
 // MARK: - Detail
 
 private struct EstimateDetailView: View {
-    let estimate: RecoveryEstimate
+    /// What the row was showing when it was tapped. Only ever a fallback: the
+    /// sheet renders the engine's live copy so an override recalculates the
+    /// header, the window, the reasons, and the numbers in place. Without that,
+    /// changing Endurance to Strength moved the segmented control and left every
+    /// figure on the sheet describing the estimate the app had already replaced.
+    let capturedEstimate: RecoveryEstimate
 
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
     @State private var showPaywall = false
-    /// Local mirror of the override. `estimate` is a captured value, so binding
-    /// the picker straight to it made the selection snap back after every tap.
-    @State private var overrideProfile: WorkoutProfile?
+
+    private var estimate: RecoveryEstimate {
+        engine.estimates.first { $0.sessionID == capturedEstimate.sessionID } ?? capturedEstimate
+    }
 
     var body: some View {
         NavigationStack {
@@ -296,11 +302,8 @@ private struct EstimateDetailView: View {
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                 Picker("Session type", selection: Binding(
-                    get: { overrideProfile ?? estimate.profile },
-                    set: {
-                        overrideProfile = $0
-                        engine.overrideProfile($0, forSessionID: estimate.sessionID)
-                    }
+                    get: { estimate.profile },
+                    set: { engine.overrideProfile($0, forSessionID: capturedEstimate.sessionID) }
                 )) {
                     ForEach(WorkoutProfile.allCases, id: \.self) { profile in
                         Text(profile.label).tag(profile)

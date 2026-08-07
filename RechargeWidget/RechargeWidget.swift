@@ -132,11 +132,19 @@ struct RechargeMediumWidgetView: View {
         HStack(spacing: 16) {
             ZStack {
                 CircularProgress(progress: entry.progress, phase: entry.phase, lineWidth: 8)
-                if entry.phase == .ready {
+                switch entry.phase {
+                case .ready:
                     Image(systemName: "checkmark")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Theme.ready)
-                } else {
+                case .noRecentWorkout:
+                    // `compactRemaining(0)` is the string "Ready", so falling
+                    // through to the countdown path would print Ready inside an
+                    // empty ring for a user who has never finished a workout.
+                    Image(systemName: Theme.symbol(for: .noRecentWorkout))
+                        .font(.system(size: 22))
+                        .foregroundStyle(Theme.idle)
+                case .readySoon, .recovering:
                     Text(CountdownFormat.compactRemaining(entry.remaining))
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .monospacedDigit()

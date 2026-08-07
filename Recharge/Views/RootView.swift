@@ -43,6 +43,17 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
             Task { await evaluateReviewPrompt(afterReadyMoment: true) }
         }
+        // A Ready notification and both widget families point at the countdown.
+        // Neither can assume the user was already looking at Today.
+        .onReceive(NotificationCenter.default.publisher(for: NotificationService.routeRequested)) { note in
+            guard (note.userInfo?[NotificationService.routeKey] as? String)
+                    == NotificationService.readyRouteValue else { return }
+            selectedTab = .today
+        }
+        .onOpenURL { url in
+            guard url.scheme == "recharge", url.host == "today" else { return }
+            selectedTab = .today
+        }
         .sheet(isPresented: $showWhatsNew) {
             WhatsNewSheet()
                 .environmentObject(store)
