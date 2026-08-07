@@ -50,9 +50,16 @@ struct WatchTodayView: View {
                 snapshot = WatchTodayView.currentSnapshot()
                 connectivity.activate()
             }
+            // A snapshot arriving from the phone has to repaint immediately.
+            // Waiting for the 60-second ticker means the user watches a stale
+            // countdown for up to a minute after raising their wrist.
+            .onChange(of: connectivity.snapshotRevision) { _, _ in
+                now = .now
+                snapshot = WatchTodayView.currentSnapshot()
+            }
             .sheet(isPresented: $showEffort) {
                 WatchEffortPrompt(activityLabel: snapshot.activityLabel) { effort in
-                    if let sessionID = pendingEffortSessionID {
+                    if let effort, let sessionID = pendingEffortSessionID {
                         connectivity.sendEffort(effort, forSessionID: sessionID)
                     }
                 }
@@ -119,7 +126,7 @@ struct WatchTodayView: View {
                     .foregroundStyle(Theme.textTertiary)
             }
 
-            if pendingEffortSessionID != nil {
+            if wantsEffortPrompt {
                 Button {
                     showEffort = true
                 } label: {
@@ -130,7 +137,39 @@ struct WatchTodayView: View {
                 .tint(Theme.recovering)
                 .padding(.top, 4)
             }
+
+            if let staleness = connectionNote {
+                Text(staleness)
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 2)
+            }
         }
+    }
+
+    private var wantsEffortPrompt: Bool {
+        #if DEBUG
+        // The `watchEffort` capture scene existed but nothing read it, so the
+        // scene rendered the plain recovering screen and could never prove the
+        // feature it was created for.
+        if ScreenshotConfig.wantsEffortPrompt { return true }
+        #endif
+        return pendingEffortSessionID != nil
+    }
+
+    /// An empty ring means "no workout" only if the phone has actually said so.
+    /// Until the two have talked, it means "I don't know yet", and saying so is
+    /// the difference between a bug report and a user who opens their phone.
+    private var connectionNote: String? {
+        #if DEBUG
+        if ScreenshotConfig.isEnabled { return nil }
+        #endif
+        guard let received = connectivity.lastSnapshotReceived else {
+            return "Open Recharge on your iPhone to sync."
+        }
+        guard Date.now.timeIntervalSince(received) > 6 * 3600 else { return nil }
+        return "Last synced \(CountdownFormat.remaining(Date.now.timeIntervalSince(received))) ago."
     }
 
     private var headline: String {
@@ -154,7 +193,9 @@ struct WatchTodayView: View {
 /// thing on either device.
 struct WatchEffortPrompt: View {
     let activityLabel: String
-    let onSelect: (Double) -> Void
+    /// `nil` means the user declined. The phone sheet has always had a Skip; the
+    /// Watch relied on an undiscoverable swipe-to-dismiss.
+    let onSelect: (Double?) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -164,6 +205,11 @@ struct WatchEffortPrompt: View {
                 Text("How hard was that \(activityLabel.isEmpty ? "session" : activityLabel)?")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                Text("Your answer goes to your iPhone and updates the estimate.")
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
 
                 ForEach([(4.0, "Easy"), (7.0, "Moderate"), (9.0, "Hard")], id: \.0) { effort, title in
@@ -178,6 +224,14 @@ struct WatchEffortPrompt: View {
                     .buttonStyle(.bordered)
                     .tint(Theme.recovering)
                 }
+
+                Button("Not now") {
+                    onSelect(nil)
+                    dismiss()
+                }
+                .font(.system(.caption, design: .rounded))
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.textSecondary)
             }
             .padding(.horizontal, 4)
         }

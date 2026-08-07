@@ -3,6 +3,15 @@
 Audit date: 2026-08-06, America/Los_Angeles
 Audit mode: user-perspective review only. No app code was changed.
 
+> **Remediation status, 2026-08-06 (later the same day).** A86-001, 002, 003,
+> 005, 006, 007, 008, 009, 010, and 011 are fixed; see "What was fixed" at the
+> foot of this file for the verification evidence, including the paired-device
+> proof that the Watch now receives the phone's model. A86-004 was re-examined
+> and rejected as a finding: the 72pt bottom padding is correct and the
+> "occlusion" is ordinary below-the-fold content on a screen whose hero ring is
+> 236pt tall. The remaining open items are the ones the audit itself flagged as
+> needing a real device or a product decision.
+
 ## Executive result
 
 The iPhone experience is visually coherent at the default text size, and the
@@ -1767,4 +1776,185 @@ Findings deliberately kept as risks rather than asserted failures:
   The headless paired run failed, and the source has no explicit transport, so
   this remains a release blocker until a real paired-device proof exists.
 
-No app fixes were made. This file is the complete audit handoff.
+No app fixes were made in the audit pass. This file is the complete audit
+handoff.
+
+---
+
+## What was fixed, 2026-08-06
+
+Verification: 112/112 logic tests (110 existing plus two new snapshot-transport
+cases) and 7/7 iOS UI tests pass. The Watch claim was checked on the leased
+paired pair, agent-sim-7 (iOS 26.5) and agent-sim-8 (watchOS 26.5, Apple Watch
+Series 11 46 mm).
+
+### A86-001, P0 — phone → Watch transport (fixed, proven on the pair)
+
+The root cause is one sentence the source never stated: **the iPhone and the
+Watch have separate App Group containers.** Everything the phone wrote to
+`group.com.jackwallner.recovery` reached the two iOS widgets and nothing on the
+wrist, and no code bridged the gap.
+
+`PhoneWatchSession` is now bidirectional. `RecoveryEngine.publish` hands the
+snapshot to `sendSnapshot`, which puts it in the WatchConnectivity application
+context — latest-value-wins, delivered in the background, replayed on
+activation. The Watch decodes it into its *own* App Group, so `WatchTodayView`
+and `RecoveryTimelineProvider` keep reading `RecoverySnapshotStore` unchanged.
+The complication style and the `isPro` mirror ride along, because the complication
+reads both from the same suite and neither was ever written on the Watch either.
+
+Four delivery paths, because one is not enough for a face complication:
+
+- application context on every publish;
+- the Watch reads `receivedApplicationContext` directly on activation, since the
+  delegate callback does not re-fire for something already delivered;
+- a `requestSnapshot` round trip when the phone is reachable, for the cold start
+  where nothing has been queued since install;
+- `sessionWatchStateDidChange` and activation-complete both republish, so a newly
+  paired or reinstalled Watch is fed without waiting for the next workout.
+
+The activation-ordering bug this surfaced is worth recording: the launch
+sequence is `activate()` → `refresh()` → `publish()`, and `WCSession` activation
+is asynchronous, so the *first* publish of every session was being dropped on the
+`activationState == .activated` guard. Activation completion now republishes.
+
+`WatchAppDelegate` activates the session at Watch launch rather than in
+`WatchTodayView.onAppear`, or the complication could only ever be as fresh as the
+last time the user opened the app.
+
+Evidence: with the phone in `recovering` screenshot mode and the Watch launched
+with **no** screenshot fixtures, the Watch App Group now holds the phone's
+snapshot (`readyAt` 2026-08-07 23:02 UTC, category hard, high confidence, the
+three fixture reasons) and the Watch app renders "18h left / Ready tomorrow at
+4:02 PM / Hard · run". The audit's reproduction previously ended in "No recent
+workout".
+
+Screenshot mode also pushes to the Watch now — not through `publish()`, which
+would lose the curated fixture reasons, but through the same transport. A paired
+capture run showing a live phone and an empty wrist is exactly how the missing
+transport went unnoticed.
+
+### A86-007, P1 — history is no longer rewritten
+
+`rescore` froze nothing; it rewrote every stored record including `calculatedAt`
+and `modelVersion`, which contradicted `RecoveryStateRecord`'s own doc comment
+and made the model-version row on the detail sheet meaningless.
+
+A session whose countdown has run out is now **frozen**: the record keeps what
+the app actually told the user, and history renders that rather than a fresh
+calculation. Live countdowns still recalculate, because a user who corrects their
+max heart rate expects the number on screen to move. Two deliberate thaws:
+
+- `rescore(unfreezing:)` for a per-session edit — an effort answer, a profile
+  override — so an explicit correction is never ignored;
+- `rescore(unfreezeAll:)` for a change to a model-wide assumption the app got
+  wrong for every past session (the HYROX/CrossFit curve, the maximum heart
+  rate).
+
+Calibration is deliberately **not** in that list. The feedback sheet promises it
+tunes future bands, so it must not reach back — which was the sharpest version of
+this complaint.
+
+The baseline chain always uses the freshly computed load even for a frozen
+record, so a later session is never scored against a stale baseline.
+
+### A86-005 / A86-006, P1 — changes now rescore and republish
+
+- `StoreService.isPro`'s `didSet` calls `RecoveryEngine.entitlementDidChange()`.
+  Entitlement usually resolves *after* the launch refresh, so the UI was flipping
+  to the Pro card while the estimate, the snapshot, the Watch, and the widgets
+  were all still the free calculation.
+- The HYROX/CrossFit picker and the max-heart-rate field call
+  `rescoreAfterModelSettingChange()`.
+- The max-heart-rate field accepted "250", stored zero, and left the number on
+  screen, so Settings said 250 while the model used its default. It now states
+  the accepted 120–230 range and says in orange when a value was rejected.
+
+### A86-003, P1 — Health permission race
+
+"Not now" is disabled while the request is in flight, so the delayed system sheet
+can no longer land on a page that never asked for it. The completion only
+advances `if page == 1`. A refusal now *stays* on the page carrying the
+explanation instead of advancing out from under it, and the copy points at the
+Health app rather than a Settings › Health row the app does not have.
+
+### A86-002, P0 — Dynamic Type
+
+The onboarding pages were a fixed `VStack` with `Spacer()`s that simply clipped.
+The explanation now scrolls while the decision stays pinned to the thumb zone,
+the decorative symbol is dropped at accessibility sizes, and the `largeTitle` is
+capped at `.accessibility2` — uncapped it ran to four full-width lines and pushed
+the copy off the screen entirely. Verified at
+accessibility-extra-extra-extra-large: previously the title truncated to "on the
+wat…" and the body ended in ellipses; both are now complete and reachable. The
+Today ring grows from 236pt to 300pt at accessibility sizes.
+
+### A86-009 / A86-010 / A86-011 and the rest
+
+- **Medium widget.** `compactRemaining(0)` returns the string "Ready", so
+  `.noRecentWorkout` fell through the countdown path and printed Ready inside an
+  empty ring. It now has its own branch. A regression test pins the invariant.
+- **Notification tap.** The delegate posts a route notification and `RootView`
+  selects Today. `onOpenURL` handles `recharge://today` from both widget
+  families, and the scheme is now actually registered in `Info.plist` — it never
+  was.
+- **Notification denial.** The `requestAuthorization` result was discarded, so a
+  user who tapped Don't Allow kept an enabled toggle that could never fire.
+  Settings now checks authorization and offers a link to iOS Settings.
+- **VO2 max.** Removed from `readTypes`, `fetchVO2Max` deleted, and the usage
+  string no longer names it. Nothing read it, and it put an unexplained Cardio
+  Fitness row in front of exactly the audience that reads the sheet carefully.
+- **Empty HealthKit import.** `fetchWorkouts` returned `[]` for both "no
+  workouts" and "the query failed", and the engine skipped the deletion pass
+  whenever it was empty. It now returns `[]?`: `nil` is a read that did not
+  happen, `[]` is a store that genuinely has none. Only the second may delete.
+- **watchEffort scene.** `ScreenshotConfig.wantsEffortPrompt` existed and nothing
+  read it, so the scene rendered the plain recovering screen. Now wired.
+  `WatchEffortPrompt` gained a "Not now" and a line saying the answer travels to
+  the iPhone.
+- **Watch sync state.** An empty ring meant "no workout" even when the two
+  devices had never talked. The Watch now says "Open Recharge on your iPhone to
+  sync" until a snapshot has arrived, and reports the age of the last one past
+  six hours.
+- **Estimate detail sheet.** It rendered a captured value, so an override moved
+  the segmented control and left every figure describing the estimate the app had
+  already replaced. It now reads the engine's live copy by session ID.
+- **Restore in Settings.** Produced no visible change at all — the outcome went to
+  `lastError`, which only the paywall rendered. It now shows progress and an
+  explicit result.
+- **`premiumActive` fixture.** Training load showed 0 and 0 beside eight scored
+  sessions, because the fixtures seed estimates and `loadBalance` reads
+  `WorkoutRecord`s. It now derives from the same fixtures: 420 this week, 164
+  four-week average.
+- **Settings footer.** "Your data stays on your devices" read as "nothing ever
+  leaves". It now says Health data stays local and purchase information is
+  handled by Apple and RevenueCat, matching the privacy policy.
+- **VoiceOver.** Onboarding titles are headings, the page dots announce "Page 1
+  of 4", and the decorative symbols are hidden.
+
+### A86-004 — rejected after re-examination
+
+The claim is that the floating tab bar covers content "at the initial scroll
+position". The content already carries 72pt of bottom padding *in addition to*
+the safe-area inset the tab bar contributes, so nothing is unreachable. What the
+audit saw is the fourth card down on a screen whose hero ring alone is 236pt:
+ordinary below-the-fold content, which scrolling reveals exactly as intended.
+Changing the layout on this basis would mean shrinking the hero to fit a
+disclaimer that has never been required to sit above the fold. Left as is.
+
+### Still open
+
+Unchanged from the audit, and genuinely needing a real device or a product
+decision rather than code:
+
+- localized and PPP price formatting, RevenueCat customer status, real restore,
+  and trial eligibility;
+- HealthKit behaviour after partial permission and re-prompt after denial;
+- sleep-sample overlap across multiple source apps, and duplicate third-party
+  workout imports (dedup is still by HealthKit UUID only);
+- localization: activity labels, reason copy, and category names are hard-coded
+  English;
+- the Garmin references in the welcome frame and the complication picker;
+- the two open tuning questions in the project guide (median-versus-percentile
+  baseline, and the provisional load floor);
+- the 51 Swift 6 main-actor warnings in `RechargeUITests`.

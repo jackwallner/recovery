@@ -135,6 +135,14 @@ public final class StoreService: NSObject, ObservableObject {
             // detail without a StoreKit round-trip.
             Self.groupDefaults?.set(isPro, forKey: SettingsKeys.isProCached)
             WidgetCenter.shared.reloadAllTimelines()
+            #if os(iOS)
+            // The engine folds sleep, HRV, and resting heart rate in only when
+            // this is already true, and entitlement usually resolves *after* the
+            // launch refresh. Without this the UI flips to the Pro card while
+            // the estimate, the snapshot, the Watch, and the widgets are all
+            // still the free calculation.
+            RecoveryEngine.shared.entitlementDidChange()
+            #endif
         }
     }
 

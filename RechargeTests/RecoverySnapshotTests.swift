@@ -75,4 +75,37 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.modelVersion, 99)
         XCTAssertEqual(decoded.hours, 20)
     }
+
+    // MARK: - Phone → Watch transport
+
+    /// The Watch and the iPhone have separate App Group containers, so the
+    /// snapshot reaches the wrist only by being encoded into a WatchConnectivity
+    /// application context and decoded on the other side. That is a plain
+    /// property-list `Data` value, and everything the Watch renders has to
+    /// survive the trip — including the optionals that distinguish a live
+    /// countdown from a finished one.
+    func testTheSnapshotSurvivesTheWatchConnectivityPayload() throws {
+        for snapshot in [
+            RecoverySnapshot(estimate: estimate(hours: 20), isPro: true),
+            RecoverySnapshot(estimate: estimate(hours: 0), isPro: false),
+            RecoverySnapshot.empty
+        ] {
+            let payload: [String: Any] = ["snapshot": try JSONEncoder().encode(snapshot)]
+            let data = try XCTUnwrap(payload["snapshot"] as? Data)
+            XCTAssertEqual(try JSONDecoder().decode(RecoverySnapshot.self, from: data), snapshot)
+        }
+    }
+
+    /// A never-synced Watch and a Watch told "you have no workouts" both hold
+    /// the empty snapshot, and its zero `remainingSeconds` formats as the word
+    /// "Ready". Any surface that renders a countdown string has to branch on the
+    /// phase first — the medium iOS widget did not, and printed Ready inside an
+    /// empty ring for a user who had never finished a workout.
+    func testTheEmptySnapshotMustNotBeRenderedThroughTheCountdownFormatter() {
+        let empty = RecoverySnapshot.empty
+        XCTAssertEqual(empty.phase(at: now), .noRecentWorkout)
+        XCTAssertEqual(empty.remainingSeconds(at: now), 0)
+        XCTAssertEqual(CountdownFormat.compactRemaining(empty.remainingSeconds(at: now)), "Ready")
+        XCTAssertEqual(CountdownFormat.phaseHeadline(empty.phase(at: now)), "No recent workout")
+    }
 }

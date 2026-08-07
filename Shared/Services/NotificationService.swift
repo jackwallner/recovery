@@ -18,6 +18,11 @@ public enum NotificationService {
     public static let routeKey = "route"
     public static let readyRouteValue = "today"
 
+    /// Posted when a tap should move the user to a tab. `RootView` listens.
+    /// A `Notification.Name` rather than a shared route object because the
+    /// delegate is nonisolated and the only consumer is one view.
+    public static let routeRequested = Notification.Name("rechargeRouteRequested")
+
     private static let logger = Logger(subsystem: "com.jackwallner.recovery", category: "Notifications")
 
     @discardableResult
@@ -101,8 +106,18 @@ public final class RechargeNotificationDelegate: NSObject, UNUserNotificationCen
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
+        let route = response.notification.request.content.userInfo[NotificationService.routeKey] as? String
         await MainActor.run {
             RecoveryEngine.shared.publish()
+            // The alert promised a Ready answer, so the tap has to land on it.
+            // Republishing alone leaves a user who was reading History exactly
+            // where they were, with nothing to show for the tap.
+            guard route == NotificationService.readyRouteValue else { return }
+            NotificationCenter.default.post(
+                name: NotificationService.routeRequested,
+                object: nil,
+                userInfo: [NotificationService.routeKey: NotificationService.readyRouteValue]
+            )
         }
     }
 }
