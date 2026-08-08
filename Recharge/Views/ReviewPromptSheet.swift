@@ -1,16 +1,20 @@
-import MessageUI
-import StoreKit
 import SwiftUI
+
+enum ReviewPromptDismissOutcome: Sendable {
+    case notNow
+    case openedWriteReview
+    case enjoyedMaybeLater
+}
 
 /// The enjoyment gate.
 ///
-/// Ask whether they like it *first*. Only a Yes reaches `requestReview()`; a No
-/// routes to feedback. Apple's prompt is a scarce resource — this pattern stops
-/// it being spent on someone who was about to complain.
+/// Ask whether they like it first. A Yes reaches the App Store review page; a
+/// No routes to feedback. Apple's native prompt is reserved for "Maybe later."
 struct ReviewPromptSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @Environment(\.requestReview) private var requestReview
+
+    let onFinish: (ReviewPromptDismissOutcome) -> Void
 
     @State private var stage = Stage.enjoyment
     @State private var feedbackText = ""
@@ -20,6 +24,10 @@ struct ReviewPromptSheet: View {
         case ratePitch
         case feedback
         case thanks
+    }
+
+    init(onFinish: @escaping (ReviewPromptDismissOutcome) -> Void = { _ in }) {
+        self.onFinish = onFinish
     }
 
     var body: some View {
@@ -40,7 +48,7 @@ struct ReviewPromptSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
                         if stage == .enjoyment { ReviewPromptTracker.markShown() }
-                        dismiss()
+                        finish(.notNow)
                     }
                 }
             }
@@ -87,20 +95,13 @@ struct ReviewPromptSheet: View {
 
             VStack(spacing: 10) {
                 primaryButton("Rate Recharge") {
-                    // Apple's sheet often silently no-ops, so also offer the
-                    // explicit write-review link from Settings.
-                    requestReview()
                     ReviewPromptTracker.markOpenedWriteReview()
-                    stage = .thanks
-                }
-                secondaryButton("Write a review") {
                     openURL(AppStoreReviewLinks.writeReviewURL)
-                    ReviewPromptTracker.markOpenedWriteReview()
-                    stage = .thanks
+                    finish(.openedWriteReview)
                 }
                 Button("Maybe later") {
                     ReviewPromptTracker.markSoftDeferred()
-                    dismiss()
+                    finish(.enjoyedMaybeLater)
                 }
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textTertiary)
@@ -185,5 +186,10 @@ struct ReviewPromptSheet: View {
                 .foregroundStyle(Theme.textPrimary)
         }
         .buttonStyle(.plain)
+    }
+
+    private func finish(_ outcome: ReviewPromptDismissOutcome) {
+        onFinish(outcome)
+        dismiss()
     }
 }

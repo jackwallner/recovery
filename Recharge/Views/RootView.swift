@@ -4,11 +4,13 @@ struct RootView: View {
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
+    @Environment(\.requestReview) private var requestReview
 
     @State private var selectedTab = Tab.today
     @State private var showWhatsNew = false
     @State private var showReviewPrompt = false
     @State private var showPaywall = false
+    @State private var pendingNativeReviewAfterDismiss = false
 
     enum Tab: Hashable {
         case today, history, settings
@@ -58,8 +60,8 @@ struct RootView: View {
             WhatsNewSheet()
                 .environmentObject(store)
         }
-        .sheet(isPresented: $showReviewPrompt) {
-            ReviewPromptSheet()
+        .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
+            ReviewPromptSheet(onFinish: handleReviewPromptFinish)
         }
         #if DEBUG
         .sheet(isPresented: $showPaywall) {
@@ -103,5 +105,15 @@ struct RootView: View {
         try? await Task.sleep(for: .seconds(afterReadyMoment ? 1.2 : 0.6))
         ReviewPromptTracker.markShown()
         showReviewPrompt = true
+    }
+
+    private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {
+        pendingNativeReviewAfterDismiss = outcome == .enjoyedMaybeLater
+    }
+
+    private func requestPendingNativeReview() {
+        guard pendingNativeReviewAfterDismiss else { return }
+        pendingNativeReviewAfterDismiss = false
+        requestReview()
     }
 }
