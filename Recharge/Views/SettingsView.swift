@@ -8,12 +8,14 @@ struct SettingsView: View {
     @EnvironmentObject private var engine: RecoveryEngine
 
     @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
     @State private var showPaywall = false
     @State private var showReviewPrompt = false
     @State private var maxHeartRateText = ""
     @State private var notificationsDenied = false
     @State private var restoreMessage: String?
     @State private var isRestoring = false
+    @State private var pendingNativeReviewAfterDismiss = false
 
     var body: some View {
         NavigationStack {
@@ -32,8 +34,10 @@ struct SettingsView: View {
                 PaywallView(source: "settings")
                     .environmentObject(store)
             }
-            .sheet(isPresented: $showReviewPrompt) {
-                ReviewPromptSheet()
+            .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
+                ReviewPromptSheet { outcome in
+                    pendingNativeReviewAfterDismiss = outcome == .enjoyedMaybeLater
+                }
             }
             .onAppear {
                 maxHeartRateText = settings.maxHeartRate > 0
@@ -275,6 +279,12 @@ struct SettingsView: View {
             // thing here rather than making the careful reader go and find it.
             Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition. Your Health data stays on your devices; only purchase information is handled by Apple and RevenueCat.")
         }
+    }
+
+    private func requestPendingNativeReview() {
+        guard pendingNativeReviewAfterDismiss else { return }
+        pendingNativeReviewAfterDismiss = false
+        requestReview()
     }
 
     private var versionString: String {
