@@ -1,1 +1,1 @@
-garmin,whoop,oura,polar,coros,garmin connect,training peaks,athlytic,hyrox,endurance,race day,tsb
+garmin,whoop,oura,coros,rest day,training load,readiness,overtraining,strain,endurance,race day

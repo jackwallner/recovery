@@ -22,6 +22,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+fastlane/metadata.bak.*
+# `deliver download_metadata` pulls the App Review contact's name, email, and
+# phone number. This repo is public because GitHub Pages serves the marketing
+# site from it, so those files must never be committed.
+fastlane/metadata/review_information/
 Screenshots/raw/
 
 # Secrets
