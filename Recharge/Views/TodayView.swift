@@ -35,6 +35,9 @@ struct TodayView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     hero
+                    if settings.hasDeferredHealthAccess {
+                        healthAccessCard
+                    }
                     if let estimate, estimate.producesCountdown || phase != .noRecentWorkout {
                         whyCard(estimate)
                     }
@@ -269,6 +272,38 @@ struct TodayView: View {
 
     // MARK: - Context (Pro)
 
+    private var healthAccessCard: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Connect Apple Health", systemImage: "heart.text.square.fill")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text("Recharge needs workout access before it can start a countdown. You can connect now, or manage access later in the Health app under Sharing, then Apps.")
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                Button("Request access") {
+                    Task { await requestHealthAccess() }
+                }
+                .font(.system(.footnote, design: .rounded, weight: .semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Theme.recovering, in: Capsule())
+                .foregroundStyle(.white)
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func requestHealthAccess() async {
+        do {
+            try await HealthKitService.shared.requestAuthorization()
+            settings.hasDeferredHealthAccess = false
+            await engine.refresh(force: true)
+        } catch {
+            settings.hasDeferredHealthAccess = true
+        }
+    }
+
     private var contextCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
@@ -287,7 +322,7 @@ struct TodayView: View {
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                 } else {
-                    Text("Recharge Pro folds your sleep, resting heart rate, and HRV into the estimate, and adapts the bands to your own history.")
+                    Text("Recharge Pro folds your sleep, resting heart rate, and HRV into the estimate within a bounded range.")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                     Button {

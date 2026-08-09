@@ -33,6 +33,18 @@ def main() -> None:
     app_id = app["id"]
     print(f"app {app_id}")
 
+    client.patch(
+        f"/apps/{app_id}",
+        {
+            "data": {
+                "type": "apps",
+                "id": app_id,
+                "attributes": {"contentRightsDeclaration": "DOES_NOT_USE_THIRD_PARTY_CONTENT"},
+            }
+        },
+    )
+    print("content rights declared")
+
     info = asc_lib.find_editable_app_info(client, app_id)
     if not info:
         raise SystemExit("error: editable appInfo not found")
@@ -111,7 +123,6 @@ def main() -> None:
     asc_lib.API = "https://api.appstoreconnect.apple.com/v2"
     existing_locs = asc_lib.list_all(client, f"/inAppPurchases/{iap_id}/inAppPurchaseLocalizations")
     asc_lib.API = "https://api.appstoreconnect.apple.com/v1"
-    existing_locales = {item["attributes"].get("locale") for item in existing_locs}
     locales = json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"]
     localization_by_locale = {item["attributes"].get("locale"): item for item in existing_locs}
     for locale in locales:
@@ -157,31 +168,34 @@ def main() -> None:
         point = next((item for item in points if item["attributes"].get("customerPrice") == PRICE), None)
         if not point:
             raise SystemExit(f"error: USA price point {PRICE} unavailable")
-        asc_lib.API = "https://api.appstoreconnect.apple.com/v1"
-        client.post(
-            "/inAppPurchasePriceSchedules",
-            {
-                "data": {
-                    "type": "inAppPurchasePriceSchedules",
-                    "relationships": {
-                        "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
-                        "baseTerritory": {"data": {"type": "territories", "id": "USA"}},
-                        "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${price0}"}]},
-                    },
-                },
-                "included": [
-                    {
-                        "type": "inAppPurchasePrices",
-                        "id": "${price0}",
-                        "attributes": {"startDate": None},
+        if schedule_exists:
+            print("IAP price schedule already exists")
+        else:
+            asc_lib.API = "https://api.appstoreconnect.apple.com/v1"
+            client.post(
+                "/inAppPurchasePriceSchedules",
+                {
+                    "data": {
+                        "type": "inAppPurchasePriceSchedules",
                         "relationships": {
-                            "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point["id"]}}
+                            "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iap_id}},
+                            "baseTerritory": {"data": {"type": "territories", "id": "USA"}},
+                            "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${price0}"}]},
                         },
-                    }
-                ],
-            },
-        )
-        print(f"IAP price {'updated' if schedule_exists else 'set'} ${PRICE}")
+                    },
+                    "included": [
+                        {
+                            "type": "inAppPurchasePrices",
+                            "id": "${price0}",
+                            "attributes": {"startDate": None},
+                            "relationships": {
+                                "inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": point["id"]}}
+                            },
+                        }
+                    ],
+                },
+            )
+            print(f"IAP price set ${PRICE}")
     finally:
         asc_lib.API = "https://api.appstoreconnect.apple.com/v1"
 

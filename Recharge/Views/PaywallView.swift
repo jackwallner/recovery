@@ -6,19 +6,15 @@ import SwiftUI
 /// surfaces.
 enum ProFeature: CaseIterable {
     case bodySignals
-    case personalBands
-    case history
     case weeklyLoad
-    case profiles
+    case sessionOverrides
     case readyAlerts
 
     var symbol: String {
         switch self {
         case .bodySignals: "waveform.path.ecg"
-        case .personalBands: "person.crop.circle.badge.checkmark"
-        case .history: "list.bullet.rectangle"
         case .weeklyLoad: "chart.bar.fill"
-        case .profiles: "figure.mixed.cardio"
+        case .sessionOverrides: "slider.horizontal.3"
         case .readyAlerts: "bell.badge"
         }
     }
@@ -26,10 +22,8 @@ enum ProFeature: CaseIterable {
     var title: String {
         switch self {
         case .bodySignals: "Sleep, HRV, and resting heart rate"
-        case .personalBands: "Bands tuned to your own history"
-        case .history: "Every estimate, and how it landed"
         case .weeklyLoad: "Weekly load against your 4-week average"
-        case .profiles: "Per-workout-type recovery curves"
+        case .sessionOverrides: "Correct a session's workout type"
         case .readyAlerts: "A notification the moment you're Ready"
         }
     }
@@ -38,14 +32,10 @@ enum ProFeature: CaseIterable {
         switch self {
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
-        case .personalBands:
-            "Recharge learns your own duration bands from what you tell it when a countdown runs out."
-        case .history:
-            "Re-classify a session, correct an estimate, and see the load and coverage behind every number."
         case .weeklyLoad:
             "How hard this week has been compared with your own four-week average."
-        case .profiles:
-            "Separate curves for endurance, lifting, and mixed sessions, with a per-session override."
+        case .sessionOverrides:
+            "Override a misclassified session and recalculate its estimate."
         case .readyAlerts:
             "Optional, and off by default."
         }
@@ -115,7 +105,7 @@ struct PaywallView: View {
             Text(RechargeConversionCopy.proName)
                 .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Make the countdown yours: your sleep, your heart data, your own recovery bands.")
+            Text("Add body signals, load trends, session corrections, and Ready alerts.")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -177,7 +167,7 @@ struct PaywallView: View {
     private func planCard(_ package: Package) -> some View {
         let isSelected = selected?.identifier == package.identifier
         let trialLabel = store.eligibleIntroLabel(for: package)
-        let isBestValue = package.rechargePackageKind == .yearly
+        let isPopular = package.rechargePackageKind == .yearly
 
         return Button {
             selected = package
@@ -192,8 +182,8 @@ struct PaywallView: View {
                         Text(package.rechargeDisplayName)
                             .font(.system(.headline, design: .rounded))
                             .foregroundStyle(Theme.textPrimary)
-                        if isBestValue {
-                            Text("BEST VALUE")
+                        if isPopular {
+                            Text("POPULAR")
                                 .font(.system(size: 9, weight: .bold, design: .rounded))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -217,16 +207,6 @@ struct PaywallView: View {
 
                 Spacer()
 
-                if let perMonth = package.rechargePricePerMonthLabel, isBestValue {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(perMonth)
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("/ month")
-                            .font(.system(.caption2, design: .rounded))
-                            .foregroundStyle(Theme.textTertiary)
-                    }
-                }
             }
             .padding(14)
             .background(

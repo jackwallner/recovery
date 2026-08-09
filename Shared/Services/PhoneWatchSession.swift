@@ -73,6 +73,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     private static let pendingQueueKey = "pendingEffortQueue"
     private static let lastSnapshotReceivedKey = "lastSnapshotReceived"
     private var clearTask: Task<Void, Never>?
+    private var isSnapshotRequestInFlight = false
 
     private override init() {
         super.init()
@@ -180,15 +181,42 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// enough for a user who just raised their wrist.
     private func requestSnapshotIfReachable() {
         let session = WCSession.default
-        guard session.activationState == .activated, session.isReachable else { return }
-        session.sendMessage([MessageKey.action: Action.requestSnapshot], replyHandler: { reply in
-            Task { @MainActor [weak self] in
-                self?.applyInboundSnapshot(reply)
-            }
-        }, errorHandler: { error in
-            // Not a user-facing failure: the application context still arrives.
-            connectivityLogger.info("Snapshot request failed: \(String(describing: error), privacy: .public)")
-        })
+        guard session.activationState == .activated,
+              session.isReachable,
+              !isSnapshotRequestInFlight
+        else { return }
+        isSnapshotRequestInFlight = true
+        session.sendMessage(
+            [MessageKey.action: Action.requestSnapshot],
+            replyHandler: Self.receiveSnapshotReply,
+            errorHandler: Self.receiveSnapshotError
+        )
+    }
+
+    /// WatchConnectivity invokes reply handlers on its delegate queue. Keep the
+    /// callback itself nonisolated, then narrow the property-list payload before
+    /// crossing to the main actor.
+    private nonisolated static func receiveSnapshotReply(_ payload: [String: Any]) {
+        let data = payload[MessageKey.snapshot] as? Data
+        let pending = payload[MessageKey.pendingEffortSessionID] as? String
+        let style = payload[MessageKey.complicationStyle] as? Int
+        Task { @MainActor in
+            PhoneWatchSession.shared.isSnapshotRequestInFlight = false
+            guard data != nil else { return }
+            var narrowed: [String: Any] = [:]
+            narrowed[MessageKey.snapshot] = data
+            narrowed[MessageKey.pendingEffortSessionID] = pending
+            narrowed[MessageKey.complicationStyle] = style
+            PhoneWatchSession.shared.applyInboundSnapshot(narrowed)
+        }
+    }
+
+    private nonisolated static func receiveSnapshotError(_ error: Error) {
+        // Not a user-facing failure: the application context still arrives.
+        connectivityLogger.info("Snapshot request failed: \(String(describing: error), privacy: .public)")
+        Task { @MainActor in
+            PhoneWatchSession.shared.isSnapshotRequestInFlight = false
+        }
     }
 
     /// Writes a phone-authored payload into the Watch's own App Group, which is

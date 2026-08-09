@@ -48,7 +48,6 @@ struct WatchTodayView: View {
             .onAppear {
                 now = .now
                 snapshot = WatchTodayView.currentSnapshot()
-                connectivity.activate()
             }
             // A snapshot arriving from the phone has to repaint immediately.
             // Waiting for the 60-second ticker means the user watches a stale

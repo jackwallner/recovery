@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class RechargeUITests: XCTestCase {
 
     override func setUp() {
@@ -84,6 +85,16 @@ final class RechargeUITests: XCTestCase {
         for plan in ["Yearly", "Monthly", "Lifetime"] {
             XCTAssertTrue(app.staticTexts[plan].exists, "\(plan) plan card is missing")
         }
+        for feature in [
+            "Sleep, HRV, and resting heart rate",
+            "Weekly load against your 4-week average",
+            "Correct a session's workout type",
+            "A notification the moment you're Ready",
+        ] {
+            XCTAssertTrue(app.staticTexts[feature].exists, "\(feature) is missing")
+        }
+        XCTAssertFalse(app.staticTexts["Bands tuned to your own history"].exists)
+        XCTAssertFalse(app.staticTexts["Every estimate, and how it landed"].exists)
         XCTAssertFalse(
             app.staticTexts["Couldn't load plans"].exists,
             "the paywall fell back to its empty state"
@@ -94,6 +105,8 @@ final class RechargeUITests: XCTestCase {
     func testSettingsExposesTheComplicationStyleSetting() {
         let app = launch(scene: "settings")
         XCTAssertTrue(app.staticTexts["Watch complication"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Apple Health"].exists)
+        XCTAssertTrue(app.buttons["Request Apple Health access"].exists)
         XCTAssertTrue(app.staticTexts["Style"].exists)
         attach(app, named: "settings")
     }

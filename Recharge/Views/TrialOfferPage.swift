@@ -32,7 +32,7 @@ struct TrialOfferPage: View {
                 .padding(.bottom, 18)
 
             VStack(alignment: .leading, spacing: 12) {
-                ForEach([ProFeature.bodySignals, .personalBands, .weeklyLoad], id: \.self) { feature in
+                ForEach([ProFeature.bodySignals, .weeklyLoad, .sessionOverrides], id: \.self) { feature in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 16))

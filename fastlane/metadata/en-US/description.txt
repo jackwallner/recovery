@@ -1,6 +1,6 @@
 Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready.
 
-That is the whole app. It is the answer a Garmin gives you after an activity, built for the Apple Watch you already own — no ring, no strap, no second hardware ecosystem to subscribe to.
+That is the whole app. It is the answer a Garmin gives you after an activity, built for the Apple Watch you already own. No ring, no strap, no second hardware ecosystem to subscribe to.
 
 WHAT YOU SEE
 
@@ -13,14 +13,14 @@ BUILT FOR HYBRID TRAINING
 
 Most recovery apps run one universal number. Recharge runs a separate curve for each kind of session, because an hour under a barbell and an hour on the bike do not cost the same thing:
 
-• Endurance — run, ride, row, swim. Heart-rate-reserve load from your workout heart rate.
-• Strength — lifting. Wrist heart rate is unreliable under grip and bar contact, so Recharge asks you one question instead of guessing.
-• Mixed — HYROX, CrossFit, circuits. Both systems taxed, so the longest window.
-• Easy — walks, yoga, mobility. Counted as active recovery. Never starts or extends a countdown.
+• Endurance: run, ride, row, swim. Heart-rate-reserve load from your workout heart rate.
+• Strength: lifting. Wrist heart rate is unreliable under grip and bar contact, so Recharge asks you one question instead of guessing.
+• Mixed: HYROX, CrossFit, circuits. Both systems taxed, so the longest window.
+• Easy: walks, yoga, mobility. Counted as active recovery. Never starts or extends a countdown.
 
 HONEST BY DESIGN
 
-Recharge shows you a bounded window, not a false-precision number. It tells you when it is still building your baseline. It shows which signal produced the estimate. And when a countdown runs out it asks how you actually felt, then tunes your own bands from your answer.
+Recharge shows you a bounded window, not a false-precision number. It tells you when it is still building your baseline. It shows which signal produced the estimate. When a countdown runs out, it asks how you actually felt and uses that answer to calibrate future estimates.
 
 FREE
 
@@ -33,10 +33,8 @@ FREE
 RECHARGE PRO
 
 • Sleep, resting heart rate, and HRV folded into the estimate
-• Recovery bands adapted to your own training history
-• Full history with the load and coverage behind every number
 • Weekly load against your own four-week average
-• Per-session type override and accuracy feedback
+• Per-session workout-type override
 • Optional notification the moment you are Ready
 
 Recharge Pro is available as a monthly or yearly subscription, or a one-time lifetime purchase.
