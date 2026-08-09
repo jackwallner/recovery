@@ -181,9 +181,8 @@ Fleet standard freemium, unchanged from the dossier's split:
 
 - **Free**: HealthKit import, countdown, Ready state, Watch app, all four
   complication families, iPhone explanation of the last estimate.
-- **Pro**: HRV / RHR / sleep context, personal baselines and adaptive bands,
-  per-workout-type profiles beyond the default, countdown history and accuracy
-  feedback, weekly load view.
+- **Pro**: HRV / RHR / sleep context, weekly load view, per-session workout-type
+  override, and optional Ready notifications.
 - Monthly / yearly / lifetime, 7-day trial, yearly-only single-decision onboarding
   trial page as the final onboarding screen, full three-plan paywall behind
   Settings and feature gates. Per `~/ios/paywalls/current-paywall-playbook.md` and

@@ -31,9 +31,9 @@ public enum PurchaseState {
 }
 
 public enum RevenueCatPackageKind: Int {
-    case lifetime = 0
-    case yearly = 1
-    case monthly = 2
+    case yearly = 0
+    case monthly = 1
+    case lifetime = 2
     case other = 3
 
     init(package: Package) {
@@ -81,13 +81,6 @@ public extension Package {
         return period.value == 1
             ? "\(storeProduct.localizedPriceString) / \(unit)"
             : "\(storeProduct.localizedPriceString) / \(period.value) \(unit)"
-    }
-
-    /// Per-month equivalent, e.g. "$1.25". Powers the "just $1.25/month, billed
-    /// yearly" framing so the annual figure feels small.
-    var rechargePricePerMonthLabel: String? {
-        guard storeProduct.subscriptionPeriod != nil else { return nil }
-        return storeProduct.localizedPricePerMonth
     }
 
     var rechargeIntroOfferLabel: String? {
@@ -172,7 +165,7 @@ public final class StoreService: NSObject, ObservableObject {
     public func start() {
         configureIfNeeded()
         #if DEBUG
-        if ScreenshotConfig.wantsPremiumActive { isPro = true }
+        if ScreenshotConfig.wantsPremiumActive || ScreenshotConfig.wantsReady { isPro = true }
         #endif
         Task { await updateCustomerProductStatus(fetchPolicy: .fetchCurrent) }
         Task { await fetchProducts() }

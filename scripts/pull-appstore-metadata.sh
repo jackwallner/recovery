@@ -50,10 +50,19 @@ fi
 
 FL="$(dirname "$0")/fastlane-bin.sh"
 chmod +x "$FL"
+if (( ${#DELIVER_EXTRA[@]} )); then
+  exec "$FL" deliver download_metadata \
+    --api_key_path "$TMPKEY" \
+    --metadata_path ./fastlane/metadata \
+    --force true \
+    --skip_screenshots true \
+    "${DELIVER_EXTRA[@]}" \
+    "$@"
+fi
+
 exec "$FL" deliver download_metadata \
   --api_key_path "$TMPKEY" \
   --metadata_path ./fastlane/metadata \
   --force true \
   --skip_screenshots true \
-  "${DELIVER_EXTRA[@]}" \
   "$@"

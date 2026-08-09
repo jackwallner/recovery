@@ -3,13 +3,13 @@ import SwiftUI
 enum ReviewPromptDismissOutcome: Sendable {
     case notNow
     case openedWriteReview
-    case enjoyedMaybeLater
+    case requestNativeReview
 }
 
 /// The enjoyment gate.
 ///
-/// Ask whether they like it first. A Yes reaches the App Store review page; a
-/// No routes to feedback. Apple's native prompt is reserved for "Maybe later."
+/// Ask whether they like it first. A Yes requests Apple's native rating prompt
+/// after this sheet closes. A No routes to feedback.
 struct ReviewPromptSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
@@ -95,13 +95,17 @@ struct ReviewPromptSheet: View {
 
             VStack(spacing: 10) {
                 primaryButton("Rate Recharge") {
+                    ReviewPromptTracker.markShown()
+                    finish(.requestNativeReview)
+                }
+                secondaryButton("Write a review") {
                     ReviewPromptTracker.markOpenedWriteReview()
                     openURL(AppStoreReviewLinks.writeReviewURL)
                     finish(.openedWriteReview)
                 }
-                Button("Maybe later") {
+                Button("Not now") {
                     ReviewPromptTracker.markSoftDeferred()
-                    finish(.enjoyedMaybeLater)
+                    finish(.notNow)
                 }
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textTertiary)

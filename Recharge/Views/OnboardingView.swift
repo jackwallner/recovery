@@ -75,7 +75,7 @@ struct OnboardingView: View {
             // Disabled while the sheet is in flight. Otherwise the user taps
             // Not now, the app advances, and the delayed system sheet lands on
             // top of a page that never asked for it.
-            secondaryAction: isRequestingHealth ? nil : { page = 2 },
+            secondaryAction: isRequestingHealth ? nil : { deferHealthAccess() },
             footnote: healthError,
             isBusy: isRequestingHealth
         )
@@ -88,6 +88,7 @@ struct OnboardingView: View {
         Task {
             do {
                 try await HealthKitService.shared.requestAuthorization()
+                settings.hasDeferredHealthAccess = false
                 await engine.refresh(force: true)
                 isRequestingHealth = false
                 if page == 1 { page = 2 }
@@ -99,6 +100,11 @@ struct OnboardingView: View {
                 isRequestingHealth = false
             }
         }
+    }
+
+    private func deferHealthAccess() {
+        settings.hasDeferredHealthAccess = true
+        page = 2
     }
 
     // MARK: - Page 3

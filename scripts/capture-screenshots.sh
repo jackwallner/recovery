@@ -12,30 +12,38 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UDID="${1:-$(agent-sim udid recharge)}"
+WATCH_UDID="${2:-$(agent-sim watch-udid recharge 2>/dev/null || true)}"
 BUNDLE="com.jackwallner.recovery"
+WATCH_BUNDLE="com.jackwallner.recovery.watch"
 RAW="$ROOT/Screenshots/raw"
 mkdir -p "$RAW"
+find "$RAW" -maxdepth 1 -type f -name '*.png' -delete
 
 # Scene -> output name. Order is the App Store order: the first three frames have
 # to be independently understandable because they can appear in search results.
 SCENES=(
-  "recovering:01-countdown"
+  "premiumActive:01-countdown"
   "ready:02-ready"
   "history:03-history"
-  "premiumActive:04-pro"
+  "paywall:04-pro"
   "settings:05-settings"
 )
 
-APP=$(find ~/Library/Developer/Xcode/DerivedData/Recharge-*/Build/Products \
-  -maxdepth 2 -name "Recharge.app" -path "*iphonesimulator*" | head -1)
+APP="${RECHARGE_APP_PATH:-}"
+if [[ -z "$APP" ]]; then
+  APP=$(find ~/Library/Developer/Xcode/DerivedData ~/Library/Developer/XcodeBuildMCP/workspaces \
+    -type d -name "Recharge.app" -path "*/Build/Products/*iphonesimulator*" -print0 \
+    | xargs -0 ls -td 2>/dev/null | head -1)
+fi
 [[ -n "$APP" ]] || { echo "error: build Recharge for the simulator first" >&2; exit 1; }
-
-xcrun simctl install "$UDID" "$APP"
 
 for entry in "${SCENES[@]}"; do
   scene="${entry%%:*}"
   name="${entry##*:}"
-  xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
+  # A clean install prevents SwiftUI scroll restoration from carrying the
+  # previous scene's offset into the next App Store frame.
+  xcrun simctl uninstall "$UDID" "$BUNDLE" 2>/dev/null || true
+  xcrun simctl install "$UDID" "$APP"
   SIMCTL_CHILD_RECHARGE_SCREENSHOT_MODE=1 \
   SIMCTL_CHILD_RECHARGE_SCREENSHOT_SCENE="$scene" \
     xcrun simctl launch "$UDID" "$BUNDLE" >/dev/null
@@ -43,6 +51,20 @@ for entry in "${SCENES[@]}"; do
   xcrun simctl io "$UDID" screenshot "$RAW/$name.png" >/dev/null 2>&1
   echo "captured $name ($scene)"
 done
+
+if [[ -n "$WATCH_UDID" ]]; then
+  WATCH_APP=$(find "$APP" -name "RechargeWatch.app" -type d | head -1)
+  if [[ -n "$WATCH_APP" ]]; then
+    xcrun simctl uninstall "$WATCH_UDID" "$WATCH_BUNDLE" 2>/dev/null || true
+    xcrun simctl install "$WATCH_UDID" "$WATCH_APP"
+    SIMCTL_CHILD_RECHARGE_SCREENSHOT_MODE=1 \
+    SIMCTL_CHILD_RECHARGE_SCREENSHOT_SCENE="watchRecovering" \
+      xcrun simctl launch "$WATCH_UDID" "$WATCH_BUNDLE" >/dev/null
+    sleep 5
+    xcrun simctl io "$WATCH_UDID" screenshot "$RAW/06-watch.png" >/dev/null 2>&1
+    echo "captured 06-watch (watchRecovering)"
+  fi
+fi
 
 xcrun simctl terminate "$UDID" "$BUNDLE" 2>/dev/null || true
 python3 "$ROOT/scripts/normalize-screenshots.py"

@@ -30,7 +30,7 @@ struct RechargeApp: App {
                     // Recharge reads and why before asking. Firing the system
                     // sheet at launch would put the permission dialog in front
                     // of a user who has not seen a single screen yet.
-                    if settings.hasCompletedSetup {
+                    if settings.hasCompletedSetup, !settings.hasDeferredHealthAccess {
                         await HealthKitService.shared.synchronizeAuthorization()
                     }
                     await engine.refresh(force: true)

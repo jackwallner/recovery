@@ -48,6 +48,13 @@ public final class RechargeSettings: ObservableObject {
         didSet { defaults.set(hasCompletedSetup, forKey: "hasCompletedSetup") }
     }
 
+    /// The user explicitly skipped Health access during onboarding. Persisting
+    /// this prevents the app from asking again on the next launch and gives the
+    /// main UI a stable state from which to offer reconnection.
+    @Published public var hasDeferredHealthAccess: Bool {
+        didSet { defaults.set(hasDeferredHealthAccess, forKey: "hasDeferredHealthAccess") }
+    }
+
     @Published public var lastWhatsNewVersionShown: String? {
         didSet {
             if let version = lastWhatsNewVersionShown {
@@ -136,6 +143,7 @@ public final class RechargeSettings: ObservableObject {
         self.defaults = defaults
 
         self.hasCompletedSetup = defaults.bool(forKey: "hasCompletedSetup")
+        self.hasDeferredHealthAccess = defaults.bool(forKey: "hasDeferredHealthAccess")
         self.lastWhatsNewVersionShown = defaults.string(forKey: "lastWhatsNewVersionShown")
         self.appearance = AppAppearance(rawValue: defaults.integer(forKey: "appearance")) ?? .system
 
@@ -188,6 +196,7 @@ public final class RechargeSettings: ObservableObject {
         appearance = .system
         complicationStyle = .countdown
         hasCompletedSetup = !ScreenshotConfig.wantsOnboarding
+        hasDeferredHealthAccess = false
         useContextSignals = true
     }
 }

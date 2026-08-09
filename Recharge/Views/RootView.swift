@@ -108,7 +108,7 @@ struct RootView: View {
     }
 
     private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {
-        pendingNativeReviewAfterDismiss = outcome == .enjoyedMaybeLater
+        pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
     }
 
     private func requestPendingNativeReview() {

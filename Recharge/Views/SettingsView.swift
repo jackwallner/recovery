@@ -16,11 +16,14 @@ struct SettingsView: View {
     @State private var restoreMessage: String?
     @State private var isRestoring = false
     @State private var pendingNativeReviewAfterDismiss = false
+    @State private var isRequestingHealth = false
+    @State private var healthMessage: String?
 
     var body: some View {
         NavigationStack {
             Form {
                 if !store.isPro { proSection }
+                healthSection
                 complicationSection
                 modelSection
                 if store.isPro { contextSection }
@@ -36,7 +39,7 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
                 ReviewPromptSheet { outcome in
-                    pendingNativeReviewAfterDismiss = outcome == .enjoyedMaybeLater
+                    pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
                 }
             }
             .onAppear {
@@ -64,7 +67,7 @@ struct SettingsView: View {
                         Text(RechargeConversionCopy.proName)
                             .font(.system(.headline, design: .rounded))
                             .foregroundStyle(Theme.textPrimary)
-                        Text("Body signals, personal bands, history and weekly load.")
+                        Text("Body signals, weekly load, session overrides and Ready alerts.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
                     }
@@ -75,6 +78,50 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 4)
             }
+        }
+    }
+
+    // MARK: - Apple Health
+
+    private var healthSection: some View {
+        Section {
+            Button {
+                Task { await requestHealthAccess() }
+            } label: {
+                HStack {
+                    Text(settings.hasDeferredHealthAccess ? "Connect Apple Health" : "Request Apple Health access")
+                    if isRequestingHealth {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(isRequestingHealth)
+
+            if let healthMessage {
+                Text(healthMessage)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+        } header: {
+            Text("Apple Health")
+        } footer: {
+            Text("Recharge only reads Health data. Review or change individual permissions in the Health app under Sharing, then Apps, then Recharge.")
+        }
+    }
+
+    private func requestHealthAccess() async {
+        isRequestingHealth = true
+        healthMessage = nil
+        defer { isRequestingHealth = false }
+        do {
+            try await HealthKitService.shared.requestAuthorization()
+            settings.hasDeferredHealthAccess = false
+            await engine.refresh(force: true)
+            healthMessage = "Request complete. Apple keeps individual read choices private; manage them in the Health app."
+        } catch {
+            settings.hasDeferredHealthAccess = true
+            healthMessage = "Recharge couldn't request access. Open the Health app and choose Sharing, then Apps, then Recharge."
         }
     }
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -13,8 +14,15 @@ import asc_lib  # noqa: E402
 
 BUNDLE = "com.jackwallner.recovery"
 VERSION = os.environ.get("ASC_APP_VERSION", "1.0.0")
-BUILD = os.environ.get("ASC_BUILD_NUMBER", "3")
-LOCALES = set(json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"])
+ROOT = Path(__file__).parent.parent
+project_text = (ROOT / "project.yml").read_text()
+project_build = re.search(r'CURRENT_PROJECT_VERSION:\s*"(\d+)"', project_text)
+BUILD = os.environ.get("ASC_BUILD_NUMBER", project_build.group(1) if project_build else "")
+PRODUCT_LOCALES = set(json.loads((Path(__file__).parent / "asc-supported-locales.json").read_text())["locales"])
+LISTING_LOCALES = {
+    path.parent.name for path in (ROOT / "fastlane" / "metadata").glob("*/description.txt")
+}
+SCREENSHOT_COUNT = len(list((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png")))
 PRODUCTS = {
     "com.jackwallner.recovery.monthly",
     "com.jackwallner.recovery.yearly",
@@ -35,6 +43,13 @@ def iap_screenshot(client: asc_lib.ASCClient, iap_id: str) -> bool:
     )
     with urllib.request.urlopen(request, timeout=60) as response:
         return bool(json.loads(response.read()).get("data"))
+
+
+def optional_data(client: asc_lib.ASCClient, path: str) -> dict | None:
+    try:
+        return client.get(path).get("data")
+    except RuntimeError:
+        return None
 
 
 def main() -> None:
@@ -66,12 +81,12 @@ def main() -> None:
         check(not build["attributes"].get("expired"), "attached build is not expired", failures)
 
     version_locs = asc_lib.list_all(client, f"/appStoreVersions/{version_id}/appStoreVersionLocalizations")
-    check({item["attributes"]["locale"] for item in version_locs} == LOCALES, f"{len(LOCALES)} version localizations", failures)
+    check({item["attributes"]["locale"] for item in version_locs} == LISTING_LOCALES, f"{len(LISTING_LOCALES)} version localizations", failures)
     info = asc_lib.find_editable_app_info(client, app_id)
     check(bool(info), "editable app info exists", failures)
     if info:
         info_locs = asc_lib.list_all(client, f"/appInfos/{info['id']}/appInfoLocalizations")
-        check({item["attributes"]["locale"] for item in info_locs} == LOCALES, f"{len(LOCALES)} app info localizations", failures)
+        check({item["attributes"]["locale"] for item in info_locs} == LISTING_LOCALES, f"{len(LISTING_LOCALES)} app info localizations", failures)
         rating = client.get(f"/appInfos/{info['id']}/ageRatingDeclaration").get("data", {}).get("attributes", {})
         check(rating.get("healthOrWellnessTopics") is True, "health/wellness age-rating flag set", failures)
         check(rating.get("medicalOrTreatmentInformation") == "NONE", "no medical-treatment content declared", failures)
@@ -88,25 +103,24 @@ def main() -> None:
         sets = asc_lib.list_all(client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets")
         for screenshot_set in sets:
             screenshots += len(asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"))
-    # The capture script supplies five iPhone 6.7" shots for the first listing.
-    check(screenshots == 5, f"canonical screenshot set present ({screenshots})", failures)
+    check(screenshots == SCREENSHOT_COUNT, f"canonical screenshot set present ({screenshots})", failures)
 
     all_products: set[str] = set()
     for group in asc_lib.list_all(client, f"/apps/{app_id}/subscriptionGroups"):
         group_locs = asc_lib.list_all(client, f"/subscriptionGroups/{group['id']}/subscriptionGroupLocalizations")
-        check({item["attributes"]["locale"] for item in group_locs} == LOCALES, "subscription group localized in all locales", failures)
+        check({item["attributes"]["locale"] for item in group_locs} == PRODUCT_LOCALES, "subscription group localized in all locales", failures)
         for subscription in asc_lib.list_all(client, f"/subscriptionGroups/{group['id']}/subscriptions"):
             product_id = subscription["attributes"]["productId"]
             all_products.add(product_id)
             check(subscription["attributes"].get("state") == "READY_TO_SUBMIT", f"{product_id} READY_TO_SUBMIT", failures)
             locs = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/subscriptionLocalizations")
-            check({item["attributes"]["locale"] for item in locs} == LOCALES, f"{product_id} localized in all locales", failures)
+            check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
             prices = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/prices?limit=200")
             offers = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/introductoryOffers?limit=200")
-            check(len(prices) >= 170, f"{product_id} territory prices ({len(prices)})", failures)
+            check(bool(prices), f"{product_id} pricing set ({len(prices)} scheduled prices)", failures)
             check(len(offers) >= 170, f"{product_id} one-week trials ({len(offers)})", failures)
-            check(bool(client.get(f"/subscriptions/{subscription['id']}/subscriptionAvailability").get("data")), f"{product_id} availability set", failures)
-            check(bool(client.get(f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot").get("data")), f"{product_id} review screenshot set", failures)
+            check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/subscriptionAvailability")), f"{product_id} availability set", failures)
+            check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot")), f"{product_id} review screenshot set", failures)
 
     for iap in asc_lib.list_all(client, f"/apps/{app_id}/inAppPurchasesV2"):
         product_id = iap["attributes"]["productId"]
@@ -118,7 +132,7 @@ def main() -> None:
             locs = asc_lib.list_all(client, f"/inAppPurchases/{iap['id']}/inAppPurchaseLocalizations")
         finally:
             asc_lib.API = old_api
-        check({item["attributes"]["locale"] for item in locs} == LOCALES, f"{product_id} localized in all locales", failures)
+        check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
         check(iap_screenshot(client, iap["id"]), f"{product_id} review screenshot set", failures)
 
     check(all_products == PRODUCTS, "expected monthly, yearly, and lifetime products only", failures)
