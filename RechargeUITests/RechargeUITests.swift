@@ -70,8 +70,10 @@ final class RechargeUITests: XCTestCase {
         // words on the button), Restore, and the compliance footer.
         XCTAssertTrue(app.buttons["Continue with Recharge Pro"].exists)
         XCTAssertTrue(app.buttons["Restore"].exists)
-        XCTAssertTrue(app.buttons["Terms"].exists)
-        XCTAssertTrue(app.buttons["Privacy"].exists)
+        // Terms and Privacy are SwiftUI `Link`s, which surface as links rather
+        // than buttons. Querying `buttons` here never matches.
+        XCTAssertTrue(app.links["Terms"].exists)
+        XCTAssertTrue(app.links["Privacy"].exists)
 
         attach(app, named: "paywall-layout")
 
