@@ -119,7 +119,10 @@ struct WatchTodayView: View {
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
 
-            if snapshot.hasSession, let category = snapshot.category {
+            // Gated on the phase, not on `hasSession`: past the staleness cutoff
+            // the headline says there is no recent workout, and naming the
+            // session that no longer counts contradicts it.
+            if phase != .noRecentWorkout, let category = snapshot.category {
                 Text("\(category.shortLabel) · \(snapshot.activityLabel)")
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)

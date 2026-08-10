@@ -16,7 +16,24 @@ struct TrialOfferPage: View {
 
     private var package: Package? { store.yearlyPackage }
 
+    /// The whole page is one scroll view pinned to at least the height of its
+    /// container, so at normal sizes the `Spacer()`s still distribute exactly as
+    /// they did and nothing scrolls. Without it, an accessibility content size
+    /// overflows the fixed stack and SwiftUI resolves that by *truncating*: the
+    /// headline, the price, the trial length, and the purchase button itself all
+    /// rendered ellipsized, which is an informed-consent failure and not just a
+    /// layout defect.
     var body: some View {
+        GeometryReader { proxy in
+            ScrollView {
+                content
+                    .frame(minHeight: proxy.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 12)
 
@@ -27,8 +44,13 @@ struct TrialOfferPage: View {
 
             Text(headline)
                 .font(.system(.title, design: .rounded, weight: .bold))
+                // As on the onboarding pages: capping the headline keeps it large
+                // without letting it crowd out the terms that have to be read
+                // before the button is pressed.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 18)
 
             VStack(alignment: .leading, spacing: 12) {
@@ -48,21 +70,8 @@ struct TrialOfferPage: View {
 
             Spacer()
 
-            // Largest pricing element on the page, per Apple 3.1.2(c).
-            if let package {
-                VStack(spacing: 3) {
-                    Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
-                        .font(.system(.title3, design: .rounded, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                    Text(RechargeConversionCopy.billedNote(
-                        trialLabel: store.eligibleIntroLabel(for: package),
-                        eligibleForTrial: store.isEligibleForIntroOffer(package)
-                    ))
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
-                }
+            price
                 .padding(.bottom, 14)
-            }
 
             Button {
                 Task { await purchase() }
@@ -109,6 +118,47 @@ struct TrialOfferPage: View {
         .task {
             store.trackPaywallImpression(id: "onboarding_trial")
             if store.products.isEmpty { await store.fetchProducts() }
+        }
+    }
+
+    /// Largest pricing element on the page, per Apple 3.1.2(c). When the
+    /// catalogue has not arrived it explains why the button is dead instead:
+    /// silence there strands a user who has already decided to subscribe.
+    @ViewBuilder
+    private var price: some View {
+        if let package {
+            VStack(spacing: 3) {
+                Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(RechargeConversionCopy.billedNote(
+                    trialLabel: store.eligibleIntroLabel(for: package),
+                    eligibleForTrial: store.isEligibleForIntroOffer(package)
+                ))
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+            }
+        } else if store.isLoadingProducts {
+            VStack(spacing: 8) {
+                ProgressView()
+                Text("Loading the offer…")
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+        } else {
+            VStack(spacing: 6) {
+                Text("Couldn't load the offer")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(store.lastError ?? "Check your connection and try again.")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                Button("Try again") {
+                    Task { await store.fetchProducts() }
+                }
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+            }
         }
     }
 

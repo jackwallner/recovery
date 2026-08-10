@@ -26,13 +26,28 @@ public enum RecoveryResolver {
         return estimates.max { $0.sessionEnd < $1.sessionEnd }
     }
 
+    /// A session older than this tells the user nothing useful about today.
+    public static let stalenessCutoff: TimeInterval = 4 * 86_400
+
     /// Phase for a whole set of estimates.
     public static func phase(in estimates: [RecoveryEstimate], now: Date = .now) -> RecoveryPhase {
         guard let current = current(in: estimates, now: now) else { return .noRecentWorkout }
-        // A session older than four days tells the user nothing useful about
-        // today, so it reads as "no recent workout" rather than a stale Ready.
-        if now.timeIntervalSince(current.sessionEnd) > 4 * 86_400 { return .noRecentWorkout }
+        // Past the cutoff it reads as "no recent workout" rather than a stale Ready.
+        if now.timeIntervalSince(current.sessionEnd) > stalenessCutoff { return .noRecentWorkout }
         return current.phase(at: now)
+    }
+
+    /// The estimate a screen is allowed to *explain*: its window, confidence,
+    /// reasons, and the session that set it.
+    ///
+    /// `current` deliberately keeps returning a stale estimate so history and
+    /// the snapshot have something to carry. A screen that shows the phase must
+    /// not also narrate it: past the cutoff the hero says there is no recent
+    /// workout, and a window plus reasons beside it hands the user two
+    /// different answers to the same question.
+    public static func explanation(in estimates: [RecoveryEstimate], now: Date = .now) -> RecoveryEstimate? {
+        guard phase(in: estimates, now: now) != .noRecentWorkout else { return nil }
+        return current(in: estimates, now: now)
     }
 
     /// Estimates whose countdown has expired since they were last acknowledged.

@@ -161,6 +161,11 @@ private struct HistoryRow: View {
                         .font(.system(.title3, design: .rounded, weight: .bold))
                         .monospacedDigit()
                         .foregroundStyle(Theme.textPrimary)
+                        // The dash is a deliberate classification, not missing
+                        // data, and VoiceOver reads the glyph as nothing at all.
+                        .accessibilityLabel(estimate.producesCountdown
+                                            ? CountdownFormat.hours(estimate.hours)
+                                            : "No countdown")
                     ConfidencePips(confidence: estimate.confidence, showsLabel: false)
                 }
             }

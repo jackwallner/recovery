@@ -24,10 +24,15 @@ struct TodayView: View {
     /// work; a minute keeps the "1h 20m" tail honest.
     private let ticker = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
-    private var estimate: RecoveryEstimate? { engine.current }
-
     private var phase: RecoveryPhase {
         RecoveryResolver.phase(in: engine.estimates, now: now)
+    }
+
+    /// The estimate this screen may narrate. Nil once the last session is old
+    /// enough to have driven the phase to `noRecentWorkout`, so the window,
+    /// confidence, and Why card cannot contradict the hero.
+    private var explained: RecoveryEstimate? {
+        RecoveryResolver.explanation(in: engine.estimates, now: now)
     }
 
     var body: some View {
@@ -38,8 +43,8 @@ struct TodayView: View {
                     if settings.hasDeferredHealthAccess {
                         healthAccessCard
                     }
-                    if let estimate, estimate.producesCountdown || phase != .noRecentWorkout {
-                        whyCard(estimate)
+                    if let explained {
+                        whyCard(explained)
                     }
                     if engine.awaitingEffort != nil {
                         effortCard
@@ -143,18 +148,18 @@ struct TodayView: View {
                     .foregroundStyle(Theme.textPrimary)
                     .multilineTextAlignment(.center)
 
-                if let estimate, estimate.producesCountdown {
+                if let explained, explained.producesCountdown {
                     // Past tense once it has expired: "Window 18 to 25h" beside a
                     // green Ready ring reads as a live figure it no longer is.
                     Text(phase == .ready
-                         ? "Estimate was \(CountdownFormat.window(low: estimate.windowLowHours, high: estimate.windowHighHours))"
-                         : "Window \(CountdownFormat.window(low: estimate.windowLowHours, high: estimate.windowHighHours))")
+                         ? "Estimate was \(CountdownFormat.window(low: explained.windowLowHours, high: explained.windowHighHours))"
+                         : "Window \(CountdownFormat.window(low: explained.windowLowHours, high: explained.windowHighHours))")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textTertiary)
                 }
 
-                if let estimate {
-                    ConfidencePips(confidence: estimate.confidence)
+                if let explained {
+                    ConfidencePips(confidence: explained.confidence)
                         .padding(.top, 2)
                 }
             }
@@ -164,14 +169,16 @@ struct TodayView: View {
     }
 
     private var progress: Double {
-        guard let estimate, estimate.producesCountdown else { return phase == .noRecentWorkout ? 0 : 1 }
-        let total = estimate.hours * 3600
+        // A stale estimate is not explained, so it must not paint a full ring
+        // beside the "no workout yet" hero either.
+        guard let explained, explained.producesCountdown else { return phase == .noRecentWorkout ? 0 : 1 }
+        let total = explained.hours * 3600
         guard total > 0 else { return 1 }
-        return min(max(1 - estimate.remainingSeconds(at: now) / total, 0), 1)
+        return min(max(1 - explained.remainingSeconds(at: now) / total, 0), 1)
     }
 
     private var remaining: TimeInterval {
-        estimate?.remainingSeconds(at: now) ?? 0
+        explained?.remainingSeconds(at: now) ?? 0
     }
 
     private var readyLine: String {
@@ -181,12 +188,12 @@ struct TodayView: View {
         case .ready:
             return "Ready for another hard session."
         case .readySoon, .recovering:
-            guard let estimate else { return CountdownFormat.phaseDetail(phase) }
+            guard let explained else { return CountdownFormat.phaseDetail(phase) }
             // A low-confidence estimate should not print a minute-precise clock
             // time it cannot support.
-            let time = estimate.confidence <= .low
-                ? CountdownFormat.readySoftly(estimate.readyAt, now: now)
-                : CountdownFormat.readyAt(estimate.readyAt, now: now)
+            let time = explained.confidence <= .low
+                ? CountdownFormat.readySoftly(explained.readyAt, now: now)
+                : CountdownFormat.readyAt(explained.readyAt, now: now)
             return "Ready \(time)"
         }
     }

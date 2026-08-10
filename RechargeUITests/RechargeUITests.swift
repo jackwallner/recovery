@@ -7,11 +7,14 @@ final class RechargeUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launch(scene: String? = nil) -> XCUIApplication {
+    private func launch(scene: String? = nil, contentSize: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         if let scene {
             app.launchEnvironment["RECHARGE_SCREENSHOT_MODE"] = "1"
             app.launchEnvironment["RECHARGE_SCREENSHOT_SCENE"] = scene
+        }
+        if let contentSize {
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize]
         }
         app.launch()
         return app
@@ -117,6 +120,43 @@ final class RechargeUITests: XCTestCase {
         let app = launch(scene: "history")
         XCTAssertTrue(app.staticTexts["Run"].firstMatch.waitForExistence(timeout: 15))
         attach(app, named: "history")
+    }
+
+    /// The purchase decision has to survive the largest accessibility text size.
+    ///
+    /// The trial page used to be a fixed `VStack`, and at this content size the
+    /// stack overflowed the screen: SwiftUI resolved that by ellipsizing every
+    /// text in it, so the headline, the price, the trial length, and the button
+    /// label itself were all cut off. A user cannot consent to a subscription
+    /// they cannot read. The page now scrolls, so each of those has to be
+    /// reachable and hittable.
+    func testTheTrialOfferIsLegibleAtTheLargestTextSize() {
+        let app = launch(
+            scene: "onboarding",
+            contentSize: "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+        )
+
+        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 10))
+        app.buttons["Not now"].tap()
+        XCTAssertTrue(app.buttons["I understand"].waitForExistence(timeout: 10))
+        app.buttons["I understand"].tap()
+
+        let cta = app.buttons["Continue with Recharge Pro"].firstMatch
+        XCTAssertTrue(cta.waitForExistence(timeout: 10), "the trial page never appeared")
+        attach(app, named: "trial-offer-accessibility-xxxl")
+
+        // Existence is not enough: an element the layout has pushed off the
+        // screen still exists. It has to be scrollable into reach and pressable.
+        if !cta.isHittable { app.swipeUp() }
+        XCTAssertTrue(cta.isHittable, "the purchase button cannot be reached")
+
+        let price = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] %@", "per year")
+        ).firstMatch
+        XCTAssertTrue(price.exists, "the billed amount is missing")
+        attach(app, named: "trial-offer-accessibility-xxxl-cta")
     }
 
     /// App Review 1.4.1: the non-diagnostic disclaimer has to be present and
