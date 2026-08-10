@@ -3,6 +3,12 @@ import SwiftUI
 /// The countdown, the ready time, the confidence, and the "why" — in that order.
 /// Everything else on this screen is subordinate to the number in the ring.
 struct TodayView: View {
+    /// Reported upwards so `RootView` never raises a review ask or a trial pitch
+    /// over a question this screen is already asking. SwiftUI drops the second
+    /// present, and a review prompt that never appeared has still spent its one
+    /// chance.
+    @Binding var isPresentingSheet: Bool
+
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
@@ -51,6 +57,7 @@ struct TodayView: View {
                     }
                     contextCard
                     loadCard
+                    freshness
                     disclaimer
                 }
                 .padding(.horizontal, 16)
@@ -82,7 +89,11 @@ struct TodayView: View {
                         activityLabel: workout.activityLabel,
                         durationMinutes: workout.durationMinutes
                     ) { effort in
-                        engine.recordEffort(effort, forSessionID: workout.healthKitUUID)
+                        if let effort {
+                            engine.recordEffort(effort, forSessionID: workout.healthKitUUID)
+                        } else {
+                            engine.declineEffort(forSessionID: workout.healthKitUUID)
+                        }
                     }
                 }
             }
@@ -97,7 +108,14 @@ struct TodayView: View {
                     }
                 }
             }
+            .onChange(of: showPaywall) { _, _ in publishSheetState() }
+            .onChange(of: showEffortSheet) { _, _ in publishSheetState() }
+            .onChange(of: showFeedbackSheet) { _, _ in publishSheetState() }
         }
+    }
+
+    private func publishSheetState() {
+        isPresentingSheet = showPaywall || showEffortSheet || showFeedbackSheet
     }
 
     // MARK: - Hero
@@ -382,6 +400,43 @@ struct TodayView: View {
                 .foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Freshness
+
+    /// When Health last answered.
+    ///
+    /// A failed workout query returns nothing rather than an empty store, which
+    /// is what stops a flaky read from erasing history — but it also means the
+    /// screen keeps the previous countdown and looks exactly as it does after a
+    /// successful import. A user who has just finished a session needs to be
+    /// able to tell those apart before deciding whether to wait or go and check
+    /// their permissions.
+    @ViewBuilder
+    private var freshness: some View {
+        if engine.isRefreshing {
+            freshnessLine("Checking Apple Health…", symbol: "arrow.triangle.2.circlepath", tint: Theme.textTertiary)
+        } else if engine.lastImportFailed {
+            freshnessLine(
+                "Couldn't read Apple Health. Pull down to try again.",
+                symbol: "exclamationmark.triangle.fill",
+                tint: Theme.recovering
+            )
+        } else if let imported = engine.lastSuccessfulImport {
+            freshnessLine(
+                "Updated \(CountdownFormat.elapsed(since: imported, now: now))",
+                symbol: "checkmark.circle",
+                tint: Theme.textTertiary
+            )
+        }
+    }
+
+    private func freshnessLine(_ text: String, symbol: String, tint: Color) -> some View {
+        Label(text, systemImage: symbol)
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
     }
 
     // MARK: - Disclaimer

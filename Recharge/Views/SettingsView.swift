@@ -83,8 +83,83 @@ struct SettingsView: View {
 
     // MARK: - Apple Health
 
+    /// What the app can actually observe about its Health access.
+    ///
+    /// iOS never reports whether a *read* was granted: a denial and an empty
+    /// store are identical from here, which is why the request result alone can
+    /// never answer "is Recharge working?". What the app can honestly report is
+    /// whether Health has answered with data, so the row is phrased as an
+    /// observation rather than a permission state.
+    private enum HealthStatus {
+        case notRequested
+        case reading(Date)
+        case failing
+        case noDataYet
+
+        var label: String {
+            switch self {
+            case .notRequested: "Not connected"
+            case .reading: "Reading Apple Health"
+            case .failing: "Can't read Apple Health"
+            case .noDataYet: "Connected, no workouts found"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .notRequested: "heart.text.square"
+            case .reading: "checkmark.circle.fill"
+            case .failing: "exclamationmark.triangle.fill"
+            case .noDataYet: "questionmark.circle"
+            }
+        }
+
+        var tint: Color {
+            switch self {
+            case .notRequested: Theme.textTertiary
+            case .reading: Theme.ready
+            case .failing: Theme.recovering
+            case .noDataYet: Theme.textSecondary
+            }
+        }
+
+        var detail: String {
+            switch self {
+            case .notRequested:
+                "Recharge has not asked for Health access on this device yet."
+            case .reading(let date):
+                "Last read \(CountdownFormat.elapsed(since: date))."
+            case .failing:
+                "The last read did not complete. Open the Health app, then Sharing, then Apps, then Recharge, and check that workouts are allowed."
+            case .noDataYet:
+                "Health answered but returned no qualifying workouts. If you have trained recently, check that workouts are allowed for Recharge in the Health app."
+            }
+        }
+    }
+
+    private var healthStatus: HealthStatus {
+        if settings.hasDeferredHealthAccess { return .notRequested }
+        if engine.lastImportFailed { return .failing }
+        guard let imported = engine.lastSuccessfulImport else { return .notRequested }
+        return engine.estimates.isEmpty ? .noDataYet : .reading(imported)
+    }
+
     private var healthSection: some View {
         Section {
+            let status = healthStatus
+            HStack(spacing: 10) {
+                Image(systemName: status.symbol)
+                    .foregroundStyle(status.tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(status.label)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(status.detail)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
             Button {
                 Task { await requestHealthAccess() }
             } label: {
@@ -98,6 +173,13 @@ struct SettingsView: View {
             }
             .disabled(isRequestingHealth)
 
+            Button("Open Health settings") {
+                // The read choices themselves only exist in the Health app, and
+                // the in-app request sheet never reappears once answered, so a
+                // user who denied has no other route back.
+                if let url = URL(string: "x-apple-health://") { openURL(url) }
+            }
+
             if let healthMessage {
                 Text(healthMessage)
                     .font(.system(.caption, design: .rounded))
@@ -106,7 +188,7 @@ struct SettingsView: View {
         } header: {
             Text("Apple Health")
         } footer: {
-            Text("Recharge only reads Health data. Review or change individual permissions in the Health app under Sharing, then Apps, then Recharge.")
+            Text("Recharge only reads Health data. Apple keeps individual read permissions private, so Recharge can report what it receives but never which categories you allowed. Review them in the Health app under Sharing, then Apps, then Recharge.")
         }
     }
 

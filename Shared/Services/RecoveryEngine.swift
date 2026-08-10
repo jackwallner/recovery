@@ -30,6 +30,14 @@ public final class RecoveryEngine: ObservableObject {
     @Published public private(set) var isRefreshing = false
     @Published public private(set) var lastRefresh: Date?
 
+    /// When Health last actually answered, as opposed to when the app last
+    /// tried. A failed query returns no workouts rather than an empty store, so
+    /// without this the screen keeps the previous countdown and a user who just
+    /// finished a session cannot tell an import from a silent failure.
+    @Published public private(set) var lastSuccessfulImport: Date?
+    /// True when the most recent workout read did not happen at all.
+    @Published public private(set) var lastImportFailed = false
+
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
     private init() {}
@@ -63,7 +71,12 @@ public final class RecoveryEngine: ObservableObject {
         // `nil` is a read that did not happen; `[]` is a store that genuinely
         // has no workouts left. Only the second one may delete anything, or a
         // revoked permission or a flaky query erases the user's history.
-        guard let imported = await HealthKitService.shared.fetchWorkouts() else { return }
+        guard let imported = await HealthKitService.shared.fetchWorkouts() else {
+            lastImportFailed = true
+            return
+        }
+        lastImportFailed = false
+        lastSuccessfulImport = .now
 
         let existing = (try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? []
         var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
@@ -277,8 +290,13 @@ public final class RecoveryEngine: ObservableObject {
         awaitingFeedback = RecoveryResolver.awaitingFeedback(
             in: results, answered: settings.answeredFeedbackSessions
         )
+        let declined = settings.declinedEffortSessions
         awaitingEffort = workouts
-            .filter { $0.wantsEffortInput && Date.now.timeIntervalSince($0.endDate) < 2 * 86_400 }
+            .filter {
+                $0.wantsEffortInput
+                    && Date.now.timeIntervalSince($0.endDate) < 2 * 86_400
+                    && !declined.contains($0.healthKitUUID)
+            }
             .max { $0.endDate < $1.endDate }
     }
 
@@ -390,6 +408,20 @@ public final class RecoveryEngine: ObservableObject {
         workout.reportedEffort = min(max(effort, 1), 10)
         try? context.save()
         rescore(unfreezing: sessionID)
+        publish()
+    }
+
+    /// Records that the user declined to rate a session, from either device, and
+    /// stops asking about it.
+    ///
+    /// `publish()` is what actually retires the request on the wrist: it clears
+    /// `pendingEffortSessionID` in the App Group and pushes the change to the
+    /// Watch, so a decline on one device is honoured on both.
+    public func declineEffort(forSessionID sessionID: String) {
+        let settings = RechargeSettings.shared
+        guard !settings.declinedEffortSessions.contains(sessionID) else { return }
+        settings.declinedEffortSessions.insert(sessionID)
+        if awaitingEffort?.healthKitUUID == sessionID { awaitingEffort = nil }
         publish()
     }
 
@@ -532,6 +564,11 @@ public final class RecoveryEngine: ObservableObject {
         )
         #endif
         lastRefresh = .now
+        // The capture bypasses HealthKit entirely, so the freshness stamp has to
+        // be seeded by hand or every screenshot shows an app that has never
+        // successfully read anything.
+        lastSuccessfulImport = .now
+        lastImportFailed = false
     }
     #endif
 }

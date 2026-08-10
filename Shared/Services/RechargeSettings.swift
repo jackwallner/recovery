@@ -103,6 +103,15 @@ public final class RechargeSettings: ObservableObject {
         didSet { defaults.set(Array(answeredFeedbackSessions), forKey: "answeredFeedbackSessions") }
     }
 
+    /// Sessions the user declined to rate, from either device.
+    ///
+    /// `Not now` on the Watch and `Skip` on the phone used to leave the request
+    /// pending, so the same question came back on every launch until the workout
+    /// aged out two days later. A decline is an answer.
+    @Published public var declinedEffortSessions: Set<String> {
+        didSet { defaults.set(Array(declinedEffortSessions), forKey: "declinedEffortSessions") }
+    }
+
     // MARK: - Pro features
 
     /// Pro: fold sleep, HRV, and resting heart rate into the estimate.
@@ -162,6 +171,7 @@ public final class RechargeSettings: ObservableObject {
             .contains(storedCalibration) ? storedCalibration : RecoveryCalibration.neutral
 
         self.answeredFeedbackSessions = Set(defaults.stringArray(forKey: "answeredFeedbackSessions") ?? [])
+        self.declinedEffortSessions = Set(defaults.stringArray(forKey: "declinedEffortSessions") ?? [])
         self.useContextSignals = defaults.object(forKey: "useContextSignals") as? Bool ?? true
         self.notifyOnReady = defaults.object(forKey: "notifyOnReady") as? Bool ?? false
         self.lastTrialOfferShownDate = defaults.object(forKey: "lastTrialOfferShownDate") as? Date

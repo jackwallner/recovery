@@ -64,13 +64,25 @@ struct PaywallView: View {
                     hero
                     features
                     plans
-                    cta
                     footer
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 28)
+                .padding(.bottom, 12)
             }
             .background(Theme.background)
+            // The hero, features, and three plan cards are taller than the sheet
+            // on every current iPhone, so a CTA at the end of the scroll view
+            // was below the fold on first presentation: the user could read the
+            // prices but could not see the action, and the auto-renew disclosure
+            // Apple 3.1.2 wants beside the button went with it. Pinning both
+            // keeps the decision and its terms on screen at every scroll offset.
+            .safeAreaInset(edge: .bottom) {
+                cta
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .padding(.bottom, 8)
+                    .background(.regularMaterial)
+            }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

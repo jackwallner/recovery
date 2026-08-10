@@ -55,6 +55,19 @@ public enum CountdownFormat {
         return "\(lowRounded) to \(highRounded)h"
     }
 
+    /// How long ago something happened: `just now`, `4m ago`, `2h 10m ago`.
+    /// Anything past a day stops counting hours, because "27h ago" is a figure
+    /// nobody reads as yesterday.
+    public static func elapsed(since date: Date, now: Date = .now) -> String {
+        let seconds = now.timeIntervalSince(date)
+        guard seconds >= 60 else { return "just now" }
+        if seconds >= 86_400 {
+            let days = Int(seconds / 86_400)
+            return days == 1 ? "yesterday" : "\(days)d ago"
+        }
+        return "\(remaining(seconds)) ago"
+    }
+
     // MARK: - Ready time
 
     /// `today at 7:30 PM`, `tomorrow at 7:30 AM`, `Thu at 7:30 AM`.

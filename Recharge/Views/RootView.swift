@@ -9,7 +9,13 @@ struct RootView: View {
     @State private var selectedTab = Tab.today
     @State private var showWhatsNew = false
     @State private var showReviewPrompt = false
+    @State private var showTrialOffer = false
     @State private var showPaywall = false
+    /// Today raises its own sheets (the readiness question, the effort question,
+    /// its paywall). SwiftUI will not present a second sheet over them, and a
+    /// review ask that silently fails to appear still spends the one chance the
+    /// funnel gets, so this file has to know when the tab below is busy.
+    @State private var todayIsPresentingSheet = false
     @State private var pendingNativeReviewAfterDismiss = false
 
     enum Tab: Hashable {
@@ -29,7 +35,7 @@ struct RootView: View {
 
     private var main: some View {
         TabView(selection: $selectedTab) {
-            TodayView()
+            TodayView(isPresentingSheet: $todayIsPresentingSheet)
                 .tabItem { Label("Today", systemImage: "hourglass") }
                 .tag(Tab.today)
 
@@ -43,7 +49,7 @@ struct RootView: View {
         }
         .task { await evaluateLaunchSurfaces() }
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
-            Task { await evaluateReviewPrompt(afterReadyMoment: true) }
+            Task { await evaluateReadyMomentSurfaces() }
         }
         // A Ready notification and both widget families point at the countdown.
         // Neither can assume the user was already looking at Today.
@@ -62,6 +68,10 @@ struct RootView: View {
         }
         .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
             ReviewPromptSheet(onFinish: handleReviewPromptFinish)
+        }
+        .sheet(isPresented: $showTrialOffer) {
+            TrialOfferSheet()
+                .environmentObject(store)
         }
         #if DEBUG
         .sheet(isPresented: $showPaywall) {
@@ -83,7 +93,8 @@ struct RootView: View {
     // MARK: - Launch surfaces
 
     /// One place decides what, if anything, interrupts the user at launch. The
-    /// ordering matters: an announcement and a review ask must never stack.
+    /// ordering matters: an announcement, a review ask, and a trial pitch must
+    /// never stack.
     private func evaluateLaunchSurfaces() async {
         guard !ScreenshotConfig.isEnabled else { return }
 
@@ -93,18 +104,59 @@ struct RootView: View {
             return
         }
         await evaluateReviewPrompt(afterReadyMoment: false)
+        if !showReviewPrompt { evaluateTrialOffer() }
+    }
+
+    /// A countdown reaching Ready is the app's one genuine win, and the only
+    /// honest place to ask for anything. Two things want that moment, and the
+    /// readiness question owns it first, so they run in priority order and stop
+    /// at the first one that fires.
+    private func evaluateReadyMomentSurfaces() async {
+        await evaluateReviewPrompt(afterReadyMoment: true)
+        if !showReviewPrompt { evaluateTrialOffer() }
     }
 
     private func evaluateReviewPrompt(afterReadyMoment: Bool) async {
-        guard !showWhatsNew, !showReviewPrompt else { return }
+        guard !isPresentingSomething else { return }
         let eligible = afterReadyMoment
             ? ReviewPromptTracker.shouldShowAfterReadyMoment(hasCompletedSetup: settings.hasCompletedSetup)
             : ReviewPromptTracker.shouldShowForEngagedUse(hasCompletedSetup: settings.hasCompletedSetup)
         guard eligible else { return }
         // A beat after the Ready state lands, so the win registers first.
         try? await Task.sleep(for: .seconds(afterReadyMoment ? 1.2 : 0.6))
+        // The sleep is long enough for the readiness sheet to have appeared in
+        // the meantime, so the guard has to be re-checked, not just entered.
+        guard !isPresentingSomething else { return }
         ReviewPromptTracker.markShown()
         showReviewPrompt = true
+    }
+
+    /// The passive trial offer: the same single decision from onboarding, shown
+    /// again to someone who skipped it and has since seen the app work.
+    ///
+    /// Gated on the 14-day cooldown in `RechargeSettings`, on RevenueCat having
+    /// actually answered (a pitch raised before entitlements resolve can land in
+    /// front of someone who is already Pro), and on a real package being
+    /// loaded, because an interruption that says "couldn't load the offer" is
+    /// worse than no interruption at all.
+    private func evaluateTrialOffer() {
+        guard !ScreenshotConfig.isEnabled,
+              settings.hasCompletedSetup,
+              !isPresentingSomething,
+              !store.isPro,
+              store.customerInfo != nil,
+              store.yearlyPackage != nil,
+              settings.passiveTrialOfferAllowed()
+        else { return }
+        settings.lastTrialOfferShownDate = .now
+        showTrialOffer = true
+    }
+
+    /// Every sheet this file or Today can raise. The readiness question belongs
+    /// to `TodayView`, but it is the one surface that has to win the moment a
+    /// countdown expires, so nothing here may talk over it.
+    private var isPresentingSomething: Bool {
+        showWhatsNew || showReviewPrompt || showTrialOffer || todayIsPresentingSheet
     }
 
     private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {

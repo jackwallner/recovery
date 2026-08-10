@@ -30,6 +30,16 @@ final class CountdownFormatTests: XCTestCase {
         }
     }
 
+    func testElapsedReadsAsAFreshnessStamp() {
+        let now = RecoveryFixtures.now
+        XCTAssertEqual(CountdownFormat.elapsed(since: now, now: now), "just now")
+        XCTAssertEqual(CountdownFormat.elapsed(since: now.addingTimeInterval(-30), now: now), "just now")
+        XCTAssertEqual(CountdownFormat.elapsed(since: now.addingTimeInterval(-4 * 60), now: now), "4m ago")
+        XCTAssertEqual(CountdownFormat.elapsed(since: now.addingTimeInterval(-2 * 3600), now: now), "2h ago")
+        XCTAssertEqual(CountdownFormat.elapsed(since: now.addingTimeInterval(-25 * 3600), now: now), "yesterday")
+        XCTAssertEqual(CountdownFormat.elapsed(since: now.addingTimeInterval(-3 * 86_400), now: now), "3d ago")
+    }
+
     func testWindowCollapsesWhenRoundingMakesBothEndsEqual() {
         XCTAssertEqual(CountdownFormat.window(low: 17.9, high: 18.1), "18h")
         XCTAssertEqual(CountdownFormat.window(low: 18, high: 28), "18 to 28h")
