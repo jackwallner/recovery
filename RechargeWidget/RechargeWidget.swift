@@ -166,7 +166,9 @@ struct RechargeMediumWidgetView: View {
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(2)
-                if let category = entry.snapshot.category, entry.snapshot.hasSession {
+                // Not `hasSession`: past the staleness cutoff the headline reads
+                // "No workout", and naming the old session contradicts it.
+                if let category = entry.snapshot.category, entry.phase != .noRecentWorkout {
                     Text("\(category.shortLabel) · \(entry.snapshot.activityLabel)")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundStyle(Theme.textTertiary)

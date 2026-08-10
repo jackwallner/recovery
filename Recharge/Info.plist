@@ -36,7 +36,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, and sleep from Apple Health to estimate how long your next hard session is likely to be worth waiting for. Recharge never writes Health data.</string>
+	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, and sleep from Apple Health to estimate how long your next hard session is likely to be worth waiting for. Recharge never writes Health data.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Recharge does not write any data to Apple Health.</string>
 	<key>UIBackgroundModes</key>

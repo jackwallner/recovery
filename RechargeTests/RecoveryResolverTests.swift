@@ -87,6 +87,38 @@ final class RecoveryResolverTests: XCTestCase {
         XCTAssertEqual(RecoveryResolver.phase(in: [ancient], now: now), .noRecentWorkout)
     }
 
+    // MARK: - What a screen may explain
+
+    func testAStaleSessionIsStillCurrentButNoLongerExplained() {
+        // Nine days old, and its 20-hour window long since expired. History and
+        // the snapshot still need it; Today must not narrate it beside a
+        // "no workout yet" hero.
+        let ancient = estimate(id: "ancient", hoursFromNow: -100, endedHoursAgo: 24 * 9)
+        XCTAssertEqual(RecoveryResolver.current(in: [ancient], now: now)?.sessionID, "ancient")
+        XCTAssertNil(RecoveryResolver.explanation(in: [ancient], now: now))
+    }
+
+    func testARecentSessionIsExplained() {
+        let live = estimate(id: "live", hoursFromNow: 6)
+        let expired = estimate(id: "expired", hoursFromNow: -2, endedHoursAgo: 22)
+        XCTAssertEqual(RecoveryResolver.explanation(in: [live], now: now)?.sessionID, "live")
+        XCTAssertEqual(RecoveryResolver.explanation(in: [expired], now: now)?.sessionID, "expired")
+    }
+
+    func testAnEasySessionWithNoCountdownIsStillExplained() {
+        // The walk that deliberately produced no countdown is exactly the case
+        // the Why card exists to explain.
+        let walk = estimate(id: "walk", hoursFromNow: 0, hours: 0, profile: .easy)
+        XCTAssertEqual(RecoveryResolver.explanation(in: [walk], now: now)?.sessionID, "walk")
+    }
+
+    func testExplanationAgreesWithThePhaseAcrossTheStalenessBoundary() {
+        let insideCutoff = estimate(id: "inside", hoursFromNow: -50, endedHoursAgo: 24 * 3.9)
+        let outsideCutoff = estimate(id: "outside", hoursFromNow: -50, endedHoursAgo: 24 * 4.1)
+        XCTAssertNotNil(RecoveryResolver.explanation(in: [insideCutoff], now: now))
+        XCTAssertNil(RecoveryResolver.explanation(in: [outsideCutoff], now: now))
+    }
+
     func testReadySoonBoundaryIsExactlyTwoHours() {
         let justInside = estimate(id: "a", hoursFromNow: 1.99)
         let justOutside = estimate(id: "b", hoursFromNow: 2.01)
