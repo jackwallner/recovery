@@ -58,8 +58,13 @@ struct WatchTodayView: View {
             }
             .sheet(isPresented: $showEffort) {
                 WatchEffortPrompt(activityLabel: snapshot.activityLabel) { effort in
-                    if let effort, let sessionID = pendingEffortSessionID {
+                    guard let sessionID = pendingEffortSessionID else { return }
+                    if let effort {
                         connectivity.sendEffort(effort, forSessionID: sessionID)
+                    } else {
+                        // A decline is an answer. Without this the request stays
+                        // pending and the button comes back on every launch.
+                        connectivity.declineEffort(forSessionID: sessionID)
                     }
                 }
             }
@@ -83,7 +88,9 @@ struct WatchTodayView: View {
             VStack(spacing: 0) {
                 switch phase {
                 case .noRecentWorkout:
-                    Image(systemName: "figure.run.circle")
+                    Image(systemName: hasHeardFromPhone || snapshot.hasSession
+                          ? "figure.run.circle"
+                          : "antenna.radiowaves.left.and.right")
                         .font(.system(size: 24))
                         .foregroundStyle(Theme.idle)
                 case .ready:
@@ -163,23 +170,34 @@ struct WatchTodayView: View {
     /// An empty ring means "no workout" only if the phone has actually said so.
     /// Until the two have talked, it means "I don't know yet", and saying so is
     /// the difference between a bug report and a user who opens their phone.
+    private var hasHeardFromPhone: Bool {
+        #if DEBUG
+        if ScreenshotConfig.isEnabled { return true }
+        #endif
+        return connectivity.lastSnapshotReceived != nil
+    }
+
     private var connectionNote: String? {
         #if DEBUG
         if ScreenshotConfig.isEnabled { return nil }
         #endif
         guard let received = connectivity.lastSnapshotReceived else {
-            return "Open Recharge on your iPhone to sync."
+            return "Open Recharge on your iPhone if this doesn't clear."
         }
         guard Date.now.timeIntervalSince(received) > 6 * 3600 else { return nil }
         return "Last synced \(CountdownFormat.remaining(Date.now.timeIntervalSince(received))) ago."
     }
 
     private var headline: String {
+        // Cold start: the phone's snapshot takes a moment to arrive, and until
+        // it does the Watch knows nothing. Announcing "No recent workout" in
+        // that window tells the user their data is gone when it is merely late.
+        if !hasHeardFromPhone && !snapshot.hasSession { return "Syncing with iPhone" }
         switch phase {
-        case .noRecentWorkout: "No recent workout"
-        case .ready: "Ready for another hard session"
+        case .noRecentWorkout: return "No recent workout"
+        case .ready: return "Ready for another hard session"
         case .readySoon, .recovering:
-            snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: now))" } ?? "Recovering"
+            return snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: now))" } ?? "Recovering"
         }
     }
 
@@ -227,7 +245,9 @@ struct WatchEffortPrompt: View {
                     .tint(Theme.recovering)
                 }
 
-                Button("Not now") {
+                // Named to match the phone sheet, and now durable on both: the
+                // request does not come back for this session.
+                Button("Skip") {
                     onSelect(nil)
                     dismiss()
                 }

@@ -26,7 +26,6 @@ final class RechargeUITests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
-
     func testAppLaunches() {
         let app = launch()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 20))
@@ -68,17 +67,31 @@ final class RechargeUITests: XCTestCase {
             "the paywall never appeared"
         )
 
-        // Everything outside the plan region is StoreKit-independent, so it is
-        // asserted unconditionally: the neutral CTA (Apple 3.1.2(c) — no pricing
-        // words on the button), Restore, and the compliance footer.
-        XCTAssertTrue(app.buttons["Continue with Recharge Pro"].exists)
-        XCTAssertTrue(app.buttons["Restore"].exists)
-        // Terms and Privacy are SwiftUI `Link`s, which surface as links rather
-        // than buttons. Querying `buttons` here never matches.
-        XCTAssertTrue(app.links["Terms"].exists)
-        XCTAssertTrue(app.links["Privacy"].exists)
+        // The neutral CTA (Apple 3.1.2(c): no pricing words on the button) is
+        // pinned rather than parked at the end of the scroll view, because the
+        // hero, features, and three plan cards are taller than the sheet. It has
+        // to be pressable on the first frame, with no scrolling: this assertion
+        // is the regression guard for a purchase surface that showed prices but
+        // hid its action.
+        let cta = app.buttons["Continue with Recharge Pro"].firstMatch
+        XCTAssertTrue(cta.exists, "the paywall CTA is missing")
+        XCTAssertTrue(cta.isHittable, "the paywall CTA is not reachable without scrolling")
 
         attach(app, named: "paywall-layout")
+
+        // Restore, Terms, and Privacy only have to be reachable, not visible on
+        // the first frame. Terms and Privacy are SwiftUI `Link`s, whose element
+        // type is not stable across OS versions: they were links, and on the
+        // current simulator they are not, which is what quietly broke this test.
+        // Match on the label alone rather than betting on the type again.
+        app.swipeUp()
+        XCTAssertTrue(app.buttons["Restore"].waitForExistence(timeout: 5))
+        for legal in ["Terms", "Privacy"] {
+            XCTAssertTrue(
+                app.descendants(matching: .any).matching(identifier: legal).firstMatch.exists,
+                "\(legal) is not reachable on the paywall"
+            )
+        }
 
         XCTAssertTrue(
             app.staticTexts["Yearly"].waitForExistence(timeout: 15),

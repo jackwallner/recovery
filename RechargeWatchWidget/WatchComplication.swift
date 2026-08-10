@@ -107,8 +107,12 @@ enum ComplicationCopy {
         case .noRecentWorkout:
             return "No workout"
         case .ready:
+            // Not "Ready to train": on a glance surface with no room for the
+            // qualifier, that reads as clearance to train rather than as an
+            // estimate about training load, which is the only thing the model
+            // knows. Every other surface says "hard session"; so does this one.
             return entry.snapshot.activityLabel.isEmpty
-                ? "Ready to train"
+                ? "Ready for a hard session"
                 : "After your \(entry.snapshot.activityLabel)"
         case .readySoon, .recovering:
             switch entry.style {
@@ -127,7 +131,9 @@ enum ComplicationCopy {
     static func inline(_ entry: RecoveryEntry) -> String {
         switch entry.phase {
         case .noRecentWorkout: "No workout"
-        case .ready: "Ready to train"
+        // The inline slot has room for one word, and "Ready" is the token every
+        // other surface already uses for an expired estimate.
+        case .ready: "Ready"
         case .readySoon, .recovering:
             switch entry.style {
             case .countdown: "\(CountdownFormat.compactRemaining(entry.remaining)) to ready"

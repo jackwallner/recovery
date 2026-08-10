@@ -54,6 +54,10 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
     public enum Action {
         public static let recordEffort = "recordEffort"
+        /// Watch → phone: "I am not rating this one." Travels the same three
+        /// routes as an answer, because a decline that never arrives means the
+        /// phone keeps re-issuing the request.
+        public static let declineEffort = "declineEffort"
         /// Watch → phone: "I have just launched, send me the current model."
         /// Covers the cold start where no application context has been queued
         /// since the app was installed.
@@ -108,17 +112,42 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// recorded either way, and a "couldn't send" toast for something the system
     /// will deliver in a minute is just noise.
     public func sendEffort(_ effort: Double, forSessionID sessionID: String) {
-        let payload: [String: Any] = [
-            MessageKey.action: Action.recordEffort,
-            MessageKey.sessionID: sessionID,
-            MessageKey.effort: effort,
-            MessageKey.sentAt: Date.now.timeIntervalSince1970
-        ]
+        send(
+            payload: [
+                MessageKey.action: Action.recordEffort,
+                MessageKey.sessionID: sessionID,
+                MessageKey.effort: effort,
+                MessageKey.sentAt: Date.now.timeIntervalSince1970
+            ],
+            confirmation: "Saved."
+        )
+    }
 
+    /// Tells the phone to stop asking about this session, and retires the
+    /// request locally straight away so the button disappears on the tap rather
+    /// than on the round trip.
+    public func declineEffort(forSessionID sessionID: String) {
+        UserDefaults(suiteName: rechargeAppGroupID)?.removeObject(forKey: "pendingEffortSessionID")
+        snapshotRevision &+= 1
+        send(
+            payload: [
+                MessageKey.action: Action.declineEffort,
+                MessageKey.sessionID: sessionID,
+                MessageKey.sentAt: Date.now.timeIntervalSince1970
+            ],
+            confirmation: nil
+        )
+    }
+
+    /// Always reports success to the user: the payload is durably recorded
+    /// either way, and a "couldn't send" toast for something the system will
+    /// deliver in a minute is just noise. `confirmation` is nil for a decline,
+    /// which needs no reassurance that anything was saved.
+    private func send(payload: [String: Any], confirmation: String?) {
         let session = WCSession.default
         guard session.activationState == .activated else {
             enqueue(payload)
-            confirm("Saved. Will sync with iPhone.")
+            confirm(confirmation.map { _ in "Saved. Will sync with iPhone." })
             return
         }
 
@@ -132,15 +161,16 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
                     self?.enqueue(payload)
                 }
             }
-            confirm("Saved.")
+            confirm(confirmation)
         } else {
             // FIFO, survives termination, drains when the phone reappears.
             session.transferUserInfo(payload)
-            confirm("Saved. Will sync with iPhone.")
+            confirm(confirmation.map { _ in "Saved. Will sync with iPhone." })
         }
     }
 
-    private func confirm(_ message: String) {
+    private func confirm(_ message: String?) {
+        guard let message else { return }
         WKInterfaceDevice.current().play(.success)
         statusMessage = message
         clearTask?.cancel()
@@ -252,11 +282,20 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     // MARK: - Phone side
 
     #if os(iOS)
-    /// Applies an inbound effort answer and recalculates immediately.
-    fileprivate func apply(action: String, sessionID: String, effort: Double) {
-        guard action == Action.recordEffort else { return }
-        connectivityLogger.info("Effort \(effort, privacy: .public) received for session \(sessionID, privacy: .public)")
-        RecoveryEngine.shared.recordEffort(effort, forSessionID: sessionID)
+    /// Applies an inbound effort answer, or a decline, and recalculates
+    /// immediately.
+    fileprivate func apply(action: String, sessionID: String, effort: Double?) {
+        switch action {
+        case Action.recordEffort:
+            guard let effort else { return }
+            connectivityLogger.info("Effort \(effort, privacy: .public) received for session \(sessionID, privacy: .public)")
+            RecoveryEngine.shared.recordEffort(effort, forSessionID: sessionID)
+        case Action.declineEffort:
+            connectivityLogger.info("Effort declined for session \(sessionID, privacy: .public)")
+            RecoveryEngine.shared.declineEffort(forSessionID: sessionID)
+        default:
+            return
+        }
     }
 
     /// Pushes the model to the Watch. Called from `RecoveryEngine.publish`, so
@@ -421,14 +460,15 @@ extension PhoneWatchSession: WCSessionDelegate {
 
     /// `[String: Any]` is not `Sendable`, so the payload is narrowed to the
     /// three values we actually use before it crosses onto the main actor.
+    /// The effort is optional because a decline carries no rating.
     private nonisolated func forward(_ payload: [String: Any]) {
         guard let action = payload[MessageKey.action] as? String,
-              let sessionID = payload[MessageKey.sessionID] as? String,
-              let effort = payload[MessageKey.effort] as? Double
+              let sessionID = payload[MessageKey.sessionID] as? String
         else {
             connectivityLogger.error("Ignoring malformed connectivity payload")
             return
         }
+        let effort = payload[MessageKey.effort] as? Double
         Task { @MainActor [weak self] in
             self?.apply(action: action, sessionID: sessionID, effort: effort)
         }

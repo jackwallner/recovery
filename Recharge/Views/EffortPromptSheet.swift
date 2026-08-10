@@ -12,7 +12,9 @@ import SwiftUI
 struct EffortPromptSheet: View {
     let activityLabel: String
     let durationMinutes: Double
-    let onSelect: (Double) -> Void
+    /// `nil` means Skip: a decline, which retires the request rather than
+    /// leaving it to be asked again on the next launch.
+    let onSelect: (Double?) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -78,7 +80,10 @@ struct EffortPromptSheet: View {
             .background(Theme.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Skip") { dismiss() }
+                    Button("Skip") {
+                        onSelect(nil)
+                        dismiss()
+                    }
                 }
             }
         }

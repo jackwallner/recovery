@@ -112,6 +112,24 @@ StoreKit product identifiers are bundle-prefixed
 - **Review funnel trigger:** a countdown reaching Ready
   (`ReviewPromptTracker.recordReadyMoment`), gated at two Ready moments so the
   loop has paid off twice before the ask.
+- **`RootView` is the only place that may interrupt.** What's New, the review
+  ask, and the passive trial offer are evaluated in that order and stop at the
+  first one that fires; all of them yield to a sheet Today is already showing,
+  which it reports through `isPresentingSheet`. SwiftUI silently drops a second
+  present, and a review prompt that never appeared has still spent the one
+  chance the funnel gets. The trial offer additionally needs the 14-day
+  `passiveTrialOfferAllowed` cooldown, a resolved `customerInfo`, and a loaded
+  package.
+- **What a screen may explain:** `RecoveryResolver.current` keeps returning a
+  stale estimate so history and the snapshot have something to carry;
+  `RecoveryResolver.explanation` is what a screen showing the phase may narrate.
+  Past the four-day cutoff they diverge, and using `current` there puts a live
+  window beside a "no workout yet" hero.
+- **Freshness is user-visible.** A failed HealthKit query returns nothing rather
+  than an empty store, so `RecoveryEngine.lastSuccessfulImport` /
+  `lastImportFailed` drive the Today footer and the Settings Health status row.
+  iOS never reports read authorization, so that row reports what Health
+  *returned*, never which categories were granted.
 - **Paywall verification:** it renders empty under plain `simctl launch` — no
   RevenueCat on simulator and no StoreKit catalogue. Under screenshot mode the
   plan cards come from `StoreService.screenshotPackages`, whose prices mirror
