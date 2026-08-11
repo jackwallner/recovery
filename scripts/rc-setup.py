@@ -17,6 +17,7 @@ PRODUCTS = (
     ("com.jackwallner.recovery.yearly", "Yearly", "subscription", "$rc_annual"),
     ("com.jackwallner.recovery.lifetime", "Lifetime", "one_time", "$rc_lifetime"),
 )
+PACKAGE_NAMES = {"$rc_monthly": "Monthly", "$rc_annual": "Annual", "$rc_lifetime": "Lifetime"}
 
 
 def request(method: str, path: str, body: dict | None = None) -> dict:
@@ -117,7 +118,20 @@ def main() -> None:
     )["items"]
     packages_by_key = {package["lookup_key"]: package for package in packages}
     for identifier, _, _, package_key in PRODUCTS:
-        package = packages_by_key[package_key]
+        package = packages_by_key.get(package_key)
+        if package is None:
+            # A brand-new RevenueCat project ships a `default` offering with no
+            # packages in it at all. Build 9 went to TestFlight in exactly that
+            # state: offerings resolved, `availablePackages` was empty, and the
+            # paywall told users to check their connection. Create what is
+            # missing rather than dying on a KeyError.
+            package = request(
+                "POST",
+                f"/projects/{project_id}/offerings/{offering['id']}/packages",
+                {"lookup_key": package_key, "display_name": PACKAGE_NAMES[package_key]},
+            )
+            packages_by_key[package_key] = package
+            print(f"created package: {package_key}")
         attached_items = request(
             "GET", f"/projects/{project_id}/packages/{package['id']}/products?limit=100"
         )["items"]
