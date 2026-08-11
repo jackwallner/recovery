@@ -1,53 +1,124 @@
 import SwiftUI
 
-/// Four pages: what it is, what it needs, what it is not, and one decision.
+/// Setup, in six kinds of page: what it is, what it needs, what Health already
+/// told us, the handful of questions Health could not answer, what the number
+/// means, and one decision.
 ///
-/// The last page is the single-decision trial offer, per the fleet playbook —
-/// one thumb-zone button, one skip, no plan grid. The full three-plan paywall
-/// stays behind Settings and the feature gates.
+/// Two structural rules hold across all of them, and both were bugs before they
+/// were rules:
+///
+/// - **The buttons never move.** Every page ends in the same `OnboardingActions`
+///   block, and that block reserves the secondary row whether or not the page
+///   has one. A "Not now" that appears on page two used to shove the primary
+///   button up by its own height, so the thumb landed on nothing.
+/// - **The step list is frozen once, not derived continuously.** The questions
+///   depend on what Health supplied, and answering one removes it from
+///   `AthleteProfile.gaps`. Recomputing the array from the profile would delete
+///   the page the user is standing on.
 struct OnboardingView: View {
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
 
-    @State private var page = 0
+    @State private var index = 0
     @State private var isRequestingHealth = false
     @State private var healthError: String?
+    /// Set when the user leaves the Health page, in either direction. Until then
+    /// the flow past it is unknown, because Health is what decides which
+    /// questions are left to ask.
+    @State private var hasResolvedHealth = false
+    @State private var questions: [ProfileQuestion] = []
+    @State private var healthSummary: HealthReadout?
 
-    private let lastPage = 3
+    private enum Step: Hashable {
+        case welcome
+        case health
+        case readout
+        case question(ProfileQuestion)
+        case honesty
+        case offer
+    }
+
+    private var steps: [Step] {
+        var steps: [Step] = [.welcome, .health]
+        guard hasResolvedHealth else { return steps }
+        // A readout page with nothing on it is worse than no readout page.
+        if healthSummary?.isEmpty == false { steps.append(.readout) }
+        steps += questions.map(Step.question)
+        steps += [.honesty, .offer]
+        return steps
+    }
+
+    private var step: Step { steps[min(index, steps.count - 1)] }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $page) {
-                welcome.tag(0)
-                healthAccess.tag(1)
-                honesty.tag(2)
-                trialOffer.tag(3)
+            TabView(selection: $index) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { position, step in
+                    page(for: step).tag(position)
+                }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
 
-            pageDots
-                .padding(.bottom, 10)
+            progress
+                .padding(.horizontal, 28)
+                .padding(.bottom, 12)
         }
         .background(Theme.background)
-        .animation(.easeInOut(duration: 0.25), value: page)
+        .animation(.easeInOut(duration: 0.25), value: index)
+        .animation(.easeInOut(duration: 0.25), value: steps.count)
     }
 
-    private var pageDots: some View {
-        HStack(spacing: 7) {
-            ForEach(0...lastPage, id: \.self) { index in
-                Circle()
-                    .fill(index == page ? Theme.recovering : Theme.ringTrack)
-                    .frame(width: 7, height: 7)
+    /// A bar rather than dots, because the number of steps is not known until
+    /// Health has answered and a row of dots that grows by three mid-flow reads
+    /// as a mistake.
+    private var progress: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.ringTrack)
+                Capsule()
+                    .fill(Theme.recovering)
+                    .frame(width: proxy.size.width * fraction)
             }
         }
-        // Four unlabelled circles tell VoiceOver nothing about where the user is
-        // in a four-step flow.
+        .frame(height: 4)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Page \(page + 1) of \(lastPage + 1)")
+        .accessibilityLabel("Step \(index + 1) of \(plannedStepCount)")
     }
 
-    // MARK: - Page 1
+    /// Until Health answers, the flow is measured against its longest possible
+    /// shape: welcome, Health, the readout, every question, the explanation, and
+    /// the offer.
+    ///
+    /// Resolving Health can only ever *remove* questions, so the bar can only
+    /// jump forward. Using the two known steps as the denominator instead would
+    /// show a half-finished setup on the first screen of seven.
+    private var plannedStepCount: Int {
+        hasResolvedHealth ? steps.count : 5 + ProfileQuestion.allCases.count
+    }
+
+    private var fraction: Double {
+        Double(index + 1) / Double(max(plannedStepCount, 1))
+    }
+
+    @ViewBuilder
+    private func page(for step: Step) -> some View {
+        switch step {
+        case .welcome: welcome
+        case .health: healthAccess
+        case .readout: readout
+        case .question(let question): questionPage(question)
+        case .honesty: honesty
+        case .offer: offer
+        }
+    }
+
+    private func advance() {
+        guard index + 1 < steps.count else { return }
+        index += 1
+    }
+
+    // MARK: - Welcome
 
     private var welcome: some View {
         OnboardingPage(
@@ -56,18 +127,18 @@ struct OnboardingView: View {
             title: "Recovery time,\non the watch you own",
             message: "Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready — the answer a Garmin gives you, from Apple Health.",
             primaryTitle: "Continue",
-            primaryAction: { page = 1 }
+            primaryAction: advance
         )
     }
 
-    // MARK: - Page 2
+    // MARK: - Health access
 
     private var healthAccess: some View {
         OnboardingPage(
             symbol: "heart.text.square.fill",
             tint: Theme.recoveringSecondary,
             title: "Recharge reads\nApple Health",
-            message: "Your workouts and heart rate build the estimate. Sleep, resting heart rate, and HRV sharpen it. Nothing is written back, and your Health data never leaves your devices.",
+            message: "Your workouts and heart rate build the estimate. Your date of birth sets the heart-rate range it is measured against. Sleep, resting heart rate, and HRV sharpen it. Nothing is written back, and your Health data never leaves your devices.",
             primaryTitle: isRequestingHealth ? "Requesting…" : "Connect Apple Health",
             primaryAction: requestHealthAccess,
             primaryDisabled: isRequestingHealth,
@@ -91,7 +162,7 @@ struct OnboardingView: View {
                 settings.hasDeferredHealthAccess = false
                 await engine.refresh(force: true)
                 isRequestingHealth = false
-                if page == 1 { page = 2 }
+                resolveHealth()
             } catch {
                 // A refusal is a legitimate choice, not an error state to shout
                 // about — but the explanation has to be readable, so stay on the
@@ -104,10 +175,40 @@ struct OnboardingView: View {
 
     private func deferHealthAccess() {
         settings.hasDeferredHealthAccess = true
-        page = 2
+        resolveHealth()
     }
 
-    // MARK: - Page 3
+    /// Freezes the rest of the flow: what Health managed to answer, and what is
+    /// therefore still worth asking.
+    private func resolveHealth() {
+        let profile = settings.athleteProfile
+        healthSummary = HealthReadout(profile: profile, analysis: engine.personalAnalysis)
+        questions = profile.gaps
+        hasResolvedHealth = true
+        advance()
+    }
+
+    // MARK: - Readout
+
+    private var readout: some View {
+        OnboardingReadoutPage(
+            summary: healthSummary ?? HealthReadout(profile: settings.athleteProfile, analysis: engine.personalAnalysis),
+            remainingQuestions: questions.count,
+            primaryAction: advance
+        )
+    }
+
+    // MARK: - Questions
+
+    private func questionPage(_ question: ProfileQuestion) -> some View {
+        ProfileQuestionPage(
+            question: question,
+            profile: $settings.athleteProfile,
+            onAnswer: advance
+        )
+    }
+
+    // MARK: - Honesty
 
     private var honesty: some View {
         OnboardingPage(
@@ -116,27 +217,89 @@ struct OnboardingView: View {
             title: "What the number\nactually means",
             message: "Recharge estimates when another hard session is likely to be reasonable, based on your recent workout load. It is a cardiovascular training estimate — not a measure of muscle repair, illness, or injury risk, and not medical advice.",
             primaryTitle: "I understand",
-            primaryAction: { page = 3 }
+            primaryAction: advance
         )
     }
 
-    // MARK: - Page 4
+    // MARK: - Offer
 
-    private var trialOffer: some View {
+    private var offer: some View {
         TrialOfferPage(
             onDecline: finish,
-            onPurchased: finish
+            onPurchased: finish,
+            declineTitle: "Get started with Standard",
+            showsPersonalization: true
         )
         .environmentObject(store)
+        .environmentObject(engine)
+        .environmentObject(settings)
     }
 
     private func finish() {
+        settings.hasAnsweredProfileQuestions = true
         settings.hasCompletedSetup = true
         settings.lastTrialOfferShownDate = .now
+        // The answers only reach a number through a rescore, and a user who
+        // upgrades on this very page would otherwise see their old windows until
+        // the next refresh.
+        engine.rescoreAfterModelSettingChange()
     }
 }
 
-// MARK: - Reusable page
+// MARK: - The action block every page ends in
+
+/// Primary button, then a secondary row that is laid out whether or not the page
+/// uses it.
+///
+/// The reservation is the point. Without it the primary button sits at a
+/// different height on every page, and the one on the Health page — the only one
+/// with a secondary action — jumps up by exactly the height of a subheadline the
+/// moment you reach it.
+private struct OnboardingActions: View {
+    let primaryTitle: String
+    let primaryAction: () -> Void
+    var tint: Color = Theme.recovering
+    var primaryDisabled = false
+    var isBusy = false
+    var secondaryTitle: String?
+    var secondaryAction: (() -> Void)?
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Button(action: primaryAction) {
+                HStack(spacing: 8) {
+                    if isBusy {
+                        ProgressView().tint(.white)
+                    }
+                    Text(primaryTitle)
+                        .font(.system(.headline, design: .rounded))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    tint.opacity(primaryDisabled ? 0.6 : 1),
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                )
+                .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .disabled(primaryDisabled)
+
+            // Always present, sometimes invisible. The placeholder text is a
+            // real string rather than a space so it reserves the same height at
+            // every Dynamic Type size.
+            Button(secondaryTitle ?? "Not now") { secondaryAction?() }
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
+                .opacity(secondaryTitle == nil ? 0 : 1)
+                .disabled(secondaryTitle == nil || secondaryAction == nil)
+                .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
+                .accessibilityHidden(secondaryTitle == nil)
+        }
+    }
+}
+
+// MARK: - Reusable explanatory page
 
 /// Explanation on top, one decision pinned to the thumb zone underneath.
 ///
@@ -205,6 +368,9 @@ private struct OnboardingPage: View {
             }
             .scrollBounceBehavior(.basedOnSize)
 
+            // The one thing that can still move the buttons, and only in a state
+            // the user just caused by being denied Health access. Showing the
+            // reason beats holding the layout still.
             if let footnote {
                 Text(footnote)
                     .font(.system(.caption, design: .rounded))
@@ -214,32 +380,264 @@ private struct OnboardingPage: View {
                     .padding(.bottom, 10)
             }
 
-            Button(action: primaryAction) {
-                HStack(spacing: 8) {
-                    if isBusy {
-                        ProgressView()
-                            .tint(.white)
-                    }
-                    Text(primaryTitle)
-                        .font(.system(.headline, design: .rounded))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(tint.opacity(primaryDisabled ? 0.6 : 1), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
-            .disabled(primaryDisabled)
-
-            if let secondaryTitle {
-                Button(secondaryTitle) { secondaryAction?() }
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
-                    .disabled(secondaryAction == nil)
-                    .padding(.top, 12)
-            }
+            OnboardingActions(
+                primaryTitle: primaryTitle,
+                primaryAction: primaryAction,
+                tint: tint,
+                primaryDisabled: primaryDisabled,
+                isBusy: isBusy,
+                secondaryTitle: secondaryTitle,
+                secondaryAction: secondaryAction
+            )
         }
         .padding(.horizontal, 28)
         .padding(.bottom, 16)
+    }
+}
+
+// MARK: - Health readout
+
+/// What Health answered, in the user's words rather than the model's.
+struct HealthReadout: Equatable {
+    var rows: [Row] = []
+
+    struct Row: Equatable, Identifiable {
+        let id: String
+        let symbol: String
+        let title: String
+        let detail: String
+    }
+
+    init(profile: AthleteProfile, analysis: PersonalRecoveryModel.Analysis) {
+        if analysis.qualifyingSessions > 0 {
+            let perWeek = String(format: "%.1f", analysis.sessionsPerWeek)
+            rows.append(Row(
+                id: "sessions",
+                symbol: "figure.run",
+                title: "\(analysis.qualifyingSessions) sessions in the last \(PersonalRecoveryModel.windowDays) days",
+                detail: "About \(perWeek) a week."
+            ))
+        }
+        if let primary = profile.primaryProfile {
+            rows.append(Row(
+                id: "profile",
+                symbol: "chart.bar.fill",
+                title: "Mostly \(primary.label.lowercased()) work",
+                detail: "Each type gets its own recovery curve."
+            ))
+        }
+        if profile.healthDerivedFields.contains(AthleteProfile.ageField),
+           let age = profile.age, let max = profile.predictedMaxHeartRate {
+            rows.append(Row(
+                id: "age",
+                symbol: "heart.fill",
+                title: "Age \(age), from your Health profile",
+                detail: "Sets an estimated \(Int(max)) bpm ceiling for intensity."
+            ))
+        }
+    }
+
+    var isEmpty: Bool { rows.isEmpty }
+}
+
+private struct OnboardingReadoutPage: View {
+    let summary: HealthReadout
+    let remainingQuestions: Int
+    let primaryAction: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    Text("Here's what\nHealth already knew")
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.bottom, 22)
+
+                    VStack(spacing: 12) {
+                        ForEach(summary.rows) { row in
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: row.symbol)
+                                    .font(.system(size: 17))
+                                    .foregroundStyle(Theme.recovering)
+                                    .frame(width: 24)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(row.title)
+                                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                        .foregroundStyle(Theme.textPrimary)
+                                    Text(row.detail)
+                                        .font(.system(.footnote, design: .rounded))
+                                        .foregroundStyle(Theme.textSecondary)
+                                }
+                                .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                    }
+
+                    Text(footer)
+                        .font(.system(.footnote, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 20)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, minHeight: 0)
+                .padding(.vertical, 12)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+
+            OnboardingActions(primaryTitle: "Continue", primaryAction: primaryAction)
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 16)
+    }
+
+    private var footer: String {
+        switch remainingQuestions {
+        case 0: "That's everything Recharge needs."
+        case 1: "One question left — Health can't answer this one."
+        default: "\(remainingQuestions) short questions left, for the things Health can't answer."
+        }
+    }
+}
+
+// MARK: - Question page
+
+/// One question, one screen, and the same action block underneath as every other
+/// page. Answering advances; the primary button is the way to skip.
+private struct ProfileQuestionPage: View {
+    let question: ProfileQuestion
+    @Binding var profile: AthleteProfile
+    let onAnswer: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    Text(question.title)
+                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Theme.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                        .padding(.bottom, 8)
+
+                    Text(question.detail)
+                        .font(.system(.footnote, design: .rounded))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 22)
+
+                    switch question {
+                    case .age: ageOptions
+                    case .experience: options(TrainingExperience.allCases, label: \.label, isSelected: { profile.experience == $0 }, select: { profile.experience = $0 })
+                    case .weeklyVolume: options(WeeklyVolume.allCases, label: \.label, isSelected: { profile.weeklyVolume == $0 }, select: { profile.weeklyVolume = $0 })
+                    case .bounceBack: options(BounceBackHabit.allCases, label: \.label, isSelected: { profile.bounceBack == $0 }, select: { profile.bounceBack = $0 })
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, minHeight: 0)
+                .padding(.vertical, 12)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+
+            OnboardingActions(
+                primaryTitle: hasAnswer ? "Continue" : "Skip this one",
+                primaryAction: onAnswer,
+                tint: hasAnswer ? Theme.recovering : Theme.idle
+            )
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 16)
+    }
+
+    private var hasAnswer: Bool {
+        switch question {
+        case .age: profile.age != nil
+        case .experience: profile.experience != nil
+        case .weeklyVolume: profile.weeklyVolume != nil
+        case .bounceBack: profile.bounceBack != nil
+        }
+    }
+
+    /// Ten-year bands rather than a wheel. The only thing age feeds is a
+    /// heart-rate ceiling and a gentle ramp, and neither can tell 34 from 36.
+    private var ageOptions: some View {
+        VStack(spacing: 10) {
+            ForEach(Self.ageBands, id: \.midpoint) { band in
+                optionRow(
+                    title: band.label,
+                    isSelected: profile.age == band.midpoint,
+                    action: { profile.age = band.midpoint }
+                )
+            }
+        }
+    }
+
+    private static let ageBands: [(label: String, midpoint: Int)] = [
+        ("Under 25", 21),
+        ("25 to 34", 30),
+        ("35 to 44", 40),
+        ("45 to 54", 50),
+        ("55 or over", 60)
+    ]
+
+    private func options<T: Hashable>(
+        _ values: [T],
+        label: KeyPath<T, String>,
+        isSelected: @escaping (T) -> Bool,
+        select: @escaping (T) -> Void
+    ) -> some View {
+        VStack(spacing: 10) {
+            ForEach(values, id: \.self) { value in
+                optionRow(
+                    title: value[keyPath: label],
+                    isSelected: isSelected(value),
+                    action: { select(value) }
+                )
+            }
+        }
+    }
+
+    private func optionRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isSelected ? Theme.recovering : Theme.textTertiary)
+                Text(title)
+                    .font(.system(.body, design: .rounded, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Theme.cardSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(isSelected ? Theme.recovering : .clear, lineWidth: 2)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }

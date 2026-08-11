@@ -72,6 +72,7 @@ struct RootView: View {
         .sheet(isPresented: $showTrialOffer) {
             TrialOfferSheet()
                 .environmentObject(store)
+                .environmentObject(engine)
         }
         #if DEBUG
         .sheet(isPresented: $showPaywall) {

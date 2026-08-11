@@ -104,6 +104,7 @@ final class RechargeUITests: XCTestCase {
             XCTAssertTrue(app.staticTexts[plan].exists, "\(plan) plan card is missing")
         }
         for feature in [
+            "A recharge time built from your own history",
             "Sleep, HRV, and resting heart rate",
             "Weekly load against your 4-week average",
             "Correct a session's workout type",
@@ -120,13 +121,45 @@ final class RechargeUITests: XCTestCase {
         attach(app, named: "paywall-with-plans")
     }
 
+    /// Scrolls a `Form` until `element` renders.
+    ///
+    /// Rows below the fold in a SwiftUI `Form` are not in the accessibility tree
+    /// at all, so `exists` is false for them and a settings assertion breaks
+    /// whenever a section is added above it — which says nothing about the row.
+    @discardableResult
+    private func scrollToFind(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        for _ in 0..<8 {
+            if element.exists { return true }
+            app.swipeUp()
+        }
+        return element.exists
+    }
+
     func testSettingsExposesTheComplicationStyleSetting() {
         let app = launch(scene: "settings")
-        XCTAssertTrue(app.staticTexts["Watch complication"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.staticTexts["Apple Health"].exists)
+        XCTAssertTrue(app.staticTexts["Apple Health"].waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["Request Apple Health access"].exists)
-        XCTAssertTrue(app.staticTexts["Style"].exists)
         attach(app, named: "settings")
+
+        XCTAssertTrue(scrollToFind(app.staticTexts["Watch complication"], in: app))
+        XCTAssertTrue(app.staticTexts["Style"].exists)
+    }
+
+    /// The tier split has to be legible from Settings: a free user is entitled
+    /// to know their countdown is the standard one rather than one about them.
+    func testSettingsNamesWhichRecoveryModelIsRunning() {
+        let app = launch(scene: "settings")
+        XCTAssertTrue(app.staticTexts["Recharge time"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Model"].exists)
+
+        // Scrolled to one at a time, in the order they appear. A row that was
+        // on screen for the previous assertion can be off the top by the time
+        // the next one is reached, so a single scroll and three `exists` checks
+        // would only ever be testing the scroll position.
+        for row in ["About you", "Training for", "Sessions a week", "Ready again after"] {
+            XCTAssertTrue(scrollToFind(app.staticTexts[row], in: app), "\(row) is missing from Settings")
+        }
+        attach(app, named: "settings-about-you")
     }
 
     func testHistoryListsScoredSessions() {
@@ -143,6 +176,95 @@ final class RechargeUITests: XCTestCase {
     /// label itself were all cut off. A user cannot consent to a subscription
     /// they cannot read. The page now scrolls, so each of those has to be
     /// reachable and hittable.
+    /// Walks onboarding to the offer page, tapping whatever primary button the
+    /// current step is showing.
+    ///
+    /// The step list is not fixed: it depends on what Apple Health managed to
+    /// answer, so the questions that remain vary. Driving it by "press the
+    /// primary action" rather than by a hardcoded script is the only way this
+    /// stays true, and it is also what the user does.
+    /// Every primary title onboarding can show, and *only* the primaries.
+    ///
+    /// "Not now" is deliberately absent. It is the Health page's secondary, and
+    /// including it made the frame check measure a different element on that one
+    /// page — which looked exactly like the layout bug the check exists to
+    /// catch. Under screenshot mode the Health request resolves instantly, so
+    /// pressing the real primary is both possible and the path a user takes.
+    private static let onboardingPrimaries = [
+        "Continue", "Connect Apple Health", "Skip this one", "I understand"
+    ]
+
+    @discardableResult
+    private func advanceToTheOffer(_ app: XCUIApplication) -> [CGRect] {
+        var primaryFrames: [CGRect] = []
+
+        for _ in 0..<12 {
+            if app.buttons["Continue with Recharge Pro"].firstMatch.exists { break }
+            guard let next = Self.onboardingPrimaries
+                .map({ app.buttons[$0].firstMatch })
+                .first(where: { $0.exists })
+            else { break }
+            // The page TabView slides for a quarter of a second, and an element
+            // caught mid-transition has no valid activation point — asking it
+            // for `isHittable` throws outright, and asking it for a frame gets
+            // one from halfway through the slide, which is precisely the
+            // measurement this helper must not take.
+            wait(
+                for: [expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: next)],
+                timeout: 10
+            )
+            primaryFrames.append(next.frame)
+            next.tap()
+            // The outgoing page's button still exists during the slide, so
+            // settle before picking the next one or the same button is tapped
+            // twice.
+            Thread.sleep(forTimeInterval: 0.6)
+        }
+        return primaryFrames
+    }
+
+    /// The regression guard for the reported bug: the primary button moved
+    /// between onboarding pages, because only the Health page carried a
+    /// secondary action and its height was not reserved anywhere else.
+    ///
+    /// Frames, not screenshots: this is a geometry claim, and a screenshot
+    /// cannot fail on a four-point shift.
+    func testTheOnboardingButtonStaysInOnePlace() {
+        let app = launch(scene: "onboarding")
+        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
+
+        let frames = advanceToTheOffer(app)
+        XCTAssertGreaterThanOrEqual(frames.count, 3, "onboarding ended before it could be measured")
+
+        guard let first = frames.first else { return XCTFail("no primary button was found") }
+        for frame in frames.dropFirst() {
+            XCTAssertEqual(frame.minY, first.minY, accuracy: 1, "the primary button moved between pages")
+            XCTAssertEqual(frame.height, first.height, accuracy: 1, "the primary button changed height")
+        }
+    }
+
+    /// The last onboarding decision is choosing a tier, not postponing one, so
+    /// the way past it reads as starting rather than declining.
+    func testTheFinalOnboardingDecisionOffersTheFreeTier() {
+        let app = launch(scene: "onboarding")
+        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
+        advanceToTheOffer(app)
+
+        XCTAssertTrue(
+            app.buttons["Continue with Recharge Pro"].firstMatch.waitForExistence(timeout: 10),
+            "the offer page never appeared"
+        )
+        let getStarted = app.buttons["Get started with Standard"].firstMatch
+        XCTAssertTrue(getStarted.exists, "the free path is not offered by name")
+        attach(app, named: "onboarding-offer")
+
+        getStarted.tap()
+        XCTAssertTrue(
+            app.tabBars.buttons["Today"].waitForExistence(timeout: 15),
+            "the free path did not finish setup"
+        )
+    }
+
     func testTheTrialOfferIsLegibleAtTheLargestTextSize() {
         let app = launch(
             scene: "onboarding",
@@ -150,11 +272,7 @@ final class RechargeUITests: XCTestCase {
         )
 
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
-        app.buttons["Continue"].tap()
-        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 10))
-        app.buttons["Not now"].tap()
-        XCTAssertTrue(app.buttons["I understand"].waitForExistence(timeout: 10))
-        app.buttons["I understand"].tap()
+        advanceToTheOffer(app)
 
         let cta = app.buttons["Continue with Recharge Pro"].firstMatch
         XCTAssertTrue(cta.waitForExistence(timeout: 10), "the trial page never appeared")

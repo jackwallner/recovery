@@ -10,8 +10,17 @@ import SwiftUI
 struct TrialOfferPage: View {
     let onDecline: () -> Void
     let onPurchased: () -> Void
+    /// "Not now" is right for a sheet that interrupted someone. At the end of
+    /// onboarding it is wrong: declining there is not postponing anything, it is
+    /// choosing the free tier and starting to use the app.
+    var declineTitle: String = "Not now"
+    /// Onboarding leads with what personalisation would actually do to this
+    /// user's numbers. The passive sheet leads with the feature list, because by
+    /// then they have seen the app work.
+    var showsPersonalization: Bool = false
 
     @EnvironmentObject private var store: StoreService
+    @EnvironmentObject private var engine: RecoveryEngine
     @State private var errorMessage: String?
 
     private var package: Package? { store.yearlyPackage }
@@ -53,8 +62,13 @@ struct TrialOfferPage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 18)
 
+            if showsPersonalization, let comparison {
+                personalizedComparison(comparison)
+                    .padding(.bottom, 18)
+            }
+
             VStack(alignment: .leading, spacing: 12) {
-                ForEach([ProFeature.bodySignals, .weeklyLoad, .sessionOverrides], id: \.self) { feature in
+                ForEach(features, id: \.self) { feature in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 16))
@@ -62,6 +76,7 @@ struct TrialOfferPage: View {
                         Text(feature.title)
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 0)
                     }
                 }
@@ -108,7 +123,7 @@ struct TrialOfferPage: View {
                     .padding(.top, 6)
             }
 
-            Button("Not now", action: onDecline)
+            Button(declineTitle, action: onDecline)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
                 .padding(.top, 12)
@@ -163,7 +178,93 @@ struct TrialOfferPage: View {
     }
 
     private var headline: String {
-        store.canPitchFreeTrial ? "Try Recharge Pro free" : "Go further with Recharge Pro"
+        guard showsPersonalization else {
+            return store.canPitchFreeTrial ? "Try Recharge Pro free" : "Go further with Recharge Pro"
+        }
+        return "Your own\nrecharge time"
+    }
+
+    /// Personalisation leads the onboarding list, because it is the thing the
+    /// previous four screens were about.
+    private var features: [ProFeature] {
+        showsPersonalization
+            ? [.personalizedTime, .bodySignals, .weeklyLoad]
+            : [.bodySignals, .weeklyLoad, .sessionOverrides]
+    }
+
+    // MARK: - The comparison
+
+    /// Standard hours against personalized hours, on a session the user actually
+    /// did wherever possible.
+    ///
+    /// Returns `nil` when personalisation would change nothing — a pitch that
+    /// promises a different number and then shows the same one twice is worse
+    /// than no pitch at all.
+    private var comparison: (label: String, standard: Double, personalized: Double, isExample: Bool)? {
+        let factor = engine.personalAnalysis.factor
+        guard engine.personalAnalysis.isPersonalised, abs(factor - 1) >= 0.03 else { return nil }
+
+        if let estimate = engine.estimates.first(where: { $0.producesCountdown }) {
+            let standard = estimate.standardHours
+            guard standard > 0 else { return nil }
+            return ("Your last \(estimate.activityLabel)", standard, standard * factor, false)
+        }
+        let reference = RecoveryCalculator.referenceHardSessionHours
+        return ("A hard 60-minute session", reference, reference * factor, true)
+    }
+
+    private func personalizedComparison(
+        _ comparison: (label: String, standard: Double, personalized: Double, isExample: Bool)
+    ) -> some View {
+        VStack(spacing: 10) {
+            Text(comparison.label + (comparison.isExample ? ", for example" : ""))
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+
+            HStack(spacing: 0) {
+                comparisonColumn(
+                    title: "Standard",
+                    value: CountdownFormat.hours(comparison.standard),
+                    tint: Theme.textSecondary
+                )
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.horizontal, 4)
+                comparisonColumn(
+                    title: "Yours",
+                    value: CountdownFormat.hours(comparison.personalized),
+                    tint: Theme.pro
+                )
+            }
+
+            ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).prefix(2), id: \.self) { line in
+                Text(line)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func comparisonColumn(title: String, value: String, tint: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .foregroundStyle(Theme.textTertiary)
+                .textCase(.uppercase)
+            Text(value)
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(tint)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func purchase() async {
@@ -185,12 +286,14 @@ struct TrialOfferPage: View {
 /// in the app's life. Respects the 14-day cooldown in `RechargeSettings`.
 struct TrialOfferSheet: View {
     @EnvironmentObject private var store: StoreService
+    @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             TrialOfferPage(onDecline: { dismiss() }, onPurchased: { dismiss() })
                 .environmentObject(store)
+                .environmentObject(engine)
                 .background(Theme.background)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

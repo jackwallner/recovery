@@ -84,6 +84,48 @@ public enum ScreenshotFixtures {
         )
     }
 
+    /// A settled Recharge Pro analysis, so the onboarding comparison card and
+    /// the Settings rows render the real shape rather than their empty states.
+    ///
+    /// Curated rather than derived: the fixture history carries estimates, not
+    /// the overnight day points the rebound signal reads, and inventing those
+    /// just to run the analysis over them would be a longer way to the same
+    /// hand-picked numbers.
+    public static func personalAnalysis() -> PersonalRecoveryModel.Analysis {
+        PersonalRecoveryModel.Analysis(
+            factor: 0.86,
+            prior: 0.97,
+            reboundFactor: 0.88,
+            reboundSamples: 6,
+            toleranceFactor: 0.91,
+            toleranceSamples: 4,
+            densityFactor: 0.95,
+            weeklyLoad: 268,
+            sessionsPerWeek: 4.7,
+            qualifyingSessions: 20,
+            evidenceWeight: 0.62
+        )
+    }
+
+    /// What Health would have supplied for the screenshot user. Experience and
+    /// bounce-back are deliberately left out: they are the two questions Health
+    /// can never answer, so leaving them open is what makes the onboarding
+    /// capture show the question pages.
+    public static func athleteProfile() -> AthleteProfile {
+        AthleteProfile(
+            age: 34,
+            sex: .male,
+            weeklyVolume: .fiveOrSix,
+            primaryProfile: .endurance,
+            healthDerivedFields: [
+                AthleteProfile.ageField,
+                AthleteProfile.sexField,
+                AthleteProfile.weeklyVolumeField,
+                AthleteProfile.primaryProfileField
+            ]
+        )
+    }
+
     /// Two weeks of finished estimates for the history screen. The leading
     /// session's age flips with the scene, so `ready` shows an expired countdown
     /// and `recovering` shows a live one from the same fixture set.

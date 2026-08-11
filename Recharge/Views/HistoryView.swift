@@ -274,10 +274,24 @@ private struct EstimateDetailView: View {
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 detailRow("Session load", String(format: "%.0f", estimate.load.value))
-                detailRow("Compared to your usual", String(format: "%.2f×", estimate.relativeLoad))
+                // The comparison a standard estimate makes is against a fixed
+                // population reference, not against the person, and labelling it
+                // "your usual" would be the one claim the free tier is not
+                // entitled to make.
+                detailRow(
+                    estimate.tier == .standard ? "Compared to a typical session" : "Compared to your usual",
+                    String(format: "%.2f×", estimate.relativeLoad)
+                )
                 detailRow("Load from", estimate.load.source.label)
                 if estimate.load.source == .heartRate {
                     detailRow("Heart-rate coverage", "\(Int((estimate.load.heartRateCoverage * 100).rounded()))%")
+                }
+                detailRow("Estimate", estimate.tier.label)
+                if estimate.tier == .personalized, estimate.personalFactor != 1 {
+                    detailRow(
+                        "Your adjustment",
+                        String(format: "%+.0f%%", (estimate.personalFactor - 1) * 100)
+                    )
                 }
                 detailRow("Model version", "v\(estimate.modelVersion)")
             }
