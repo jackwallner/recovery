@@ -156,6 +156,13 @@ public final class StoreService: NSObject, ObservableObject {
     private var isConfigured = false
     private var paywallImpressionsThisSession: Set<String> = []
 
+    /// False when `products` was built by asking the store for the identifiers
+    /// directly rather than by reading a RevenueCat offering. Those packages are
+    /// synthesised locally, so they must be purchased as products: handing an
+    /// invented package to `purchase(package:)` attributes the transaction to an
+    /// offering that does not contain it.
+    private var usesOfferingPackages = false
+
     /// Dev/simulator override so paywall-gated surfaces can be exercised without
     /// a live key.
     private var localProOverride: Bool?
@@ -206,16 +213,72 @@ public final class StoreService: NSObject, ObservableObject {
         do {
             let offerings = try await Purchases.shared.offerings()
             let offering = offerings.rechargePaywallOffering
+            let packages = offering?.rechargeSortedPackages ?? []
+            guard !packages.isEmpty else {
+                // A configuration fault, not a network one: RevenueCat answered,
+                // and the offering it answered with has nothing attached. Build 9
+                // shipped into exactly this state — the `default` offering
+                // existed with zero packages — and the paywall told the user to
+                // check their connection. Ask the store for the three
+                // identifiers instead so a dashboard mistake cannot take the
+                // purchase flow down with it.
+                await hydrateDirectlyFromStore(
+                    reason: "offering \(offering?.identifier ?? "<none>") has no packages"
+                )
+                return
+            }
             currentOffering = offering
-            products = offering?.rechargeSortedPackages ?? []
+            products = packages
+            usesOfferingPackages = true
             lastError = nil
             await refreshIntroEligibility()
         } catch {
-            logger.error("Product fetch failed: \(String(describing: error), privacy: .public)")
-            lastError = "Couldn't load subscription options. Check your connection and try again."
+            logger.error("Offerings fetch failed: \(String(describing: error), privacy: .public)")
+            // Offerings need RevenueCat's network; the product catalogue often
+            // comes back from StoreKit's own cache even when it does not.
+            await hydrateDirectlyFromStore(reason: "offerings fetch failed")
+            if products.isEmpty {
+                lastError = "Couldn't load subscription options. Check your connection and try again."
+            }
         }
         #endif
     }
+
+    #if !targetEnvironment(simulator)
+    /// Last resort when the offering is unusable: ask for the three known
+    /// identifiers by hand.
+    ///
+    /// Still routed through `Purchases` rather than raw StoreKit, so the purchase
+    /// is recorded against the RevenueCat customer exactly as an offering-backed
+    /// one would be. Only the *presentation* loses its offering; entitlements do
+    /// not depend on it.
+    private func hydrateDirectlyFromStore(reason: String) async {
+        logger.error("Falling back to a direct product fetch: \(reason, privacy: .public)")
+        let storeProducts = await Purchases.shared.products(RechargeProduct.all)
+        guard !storeProducts.isEmpty else {
+            currentOffering = nil
+            products = []
+            usesOfferingPackages = false
+            lastError = "Subscription options aren't available right now. Please try again in a moment."
+            return
+        }
+        currentOffering = nil
+        usesOfferingPackages = false
+        products = storeProducts
+            .map { product in
+                Package(
+                    identifier: product.productIdentifier,
+                    packageType: Self.packageType(for: product.productIdentifier),
+                    storeProduct: product,
+                    offeringIdentifier: "default",
+                    webCheckoutUrl: nil
+                )
+            }
+            .sorted { $0.rechargePackageKind.rawValue < $1.rechargePackageKind.rawValue }
+        lastError = nil
+        await refreshIntroEligibility()
+    }
+    #endif
 
     public func refreshIntroEligibility() async {
         #if DEBUG
@@ -335,7 +398,9 @@ public final class StoreService: NSObject, ObservableObject {
         setLocalOverride(isPro: true)
         return .purchased
         #else
-        let result = try await Purchases.shared.purchase(package: product)
+        let result = usesOfferingPackages
+            ? try await Purchases.shared.purchase(package: product)
+            : try await Purchases.shared.purchase(product: product.storeProduct)
         apply(customerInfo: result.customerInfo)
         if result.userCancelled { return .cancelled }
         return result.customerInfo.hasRechargeProEntitlement ? .purchased : .pending
