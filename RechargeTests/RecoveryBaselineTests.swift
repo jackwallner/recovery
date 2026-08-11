@@ -7,7 +7,7 @@ final class RecoveryBaselineTests: XCTestCase {
     func testEmptyBaselineFallsBackToTheProfileBootstrap() {
         for profile in WorkoutProfile.allCases {
             let baseline = RecoveryBaseline(loads: [], profile: profile)
-            XCTAssertEqual(baseline.typicalLoad, profile.bootstrapTypicalLoad)
+            XCTAssertEqual(baseline.typicalLoad, profile.standardTypicalLoad)
             XCTAssertFalse(baseline.hasEnoughSamples)
         }
     }
@@ -101,7 +101,7 @@ final class RecoveryBaselineTests: XCTestCase {
     func testAUserWithNoHistoryAtAllStillProducesAUsableBaseline() {
         let baseline = RecoveryBaseline.build(from: [], for: .endurance, now: now)
         XCTAssertEqual(baseline.sampleCount, 0)
-        XCTAssertEqual(baseline.typicalLoad, WorkoutProfile.endurance.bootstrapTypicalLoad)
+        XCTAssertEqual(baseline.typicalLoad, WorkoutProfile.endurance.standardTypicalLoad)
         XCTAssertFalse(baseline.hasEnoughSamples)
     }
 }

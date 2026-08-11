@@ -42,12 +42,54 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 
 | File | Stage |
 |---|---|
-| `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. |
-| `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. |
-| `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, clamp. |
+| `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. Also `intensityFraction`, the HR-reserve quality proxy. |
+| `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. `.standard(for:)` is the no-samples population reference the free tier uses. |
+| `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
+| `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
+| `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
 | `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. |
 | `CountdownTimeline` | the entry schedule a decaying countdown needs. |
+
+### The two tiers
+`RecoveryTier` is stored on every estimate, because the two answer different
+questions and a history list that mixes them silently is lying by omission.
+
+- **Standard (free).** `RecoveryBaseline.standard(for:)`, no context, no
+  calibration, `RecoveryPersonalization.standard`. The same table for everyone:
+  session type, length, and intensity in, hours out. Confidence is capped at
+  medium and never reports `buildingBaseline` — there is no baseline being
+  built. Category labels drop the "for you".
+- **Personalized (Recharge Pro).** The person's own 42-day baseline, overnight
+  context, calibration, and the `PersonalRecoveryModel` multiplier.
+
+Age-predicted maximum heart rate (Tanaka, or Gulati for women) applies on
+**both** tiers. It is a measurement input, not a personalisation: scoring a
+58-year-old against a flat 185 bpm ceiling does not make the free estimate
+standard, it makes it wrong.
+
+`RecoveryEngine.rescore` runs two passes — the standard estimate for every
+session first, because `PersonalRecoveryModel` needs to know what window each
+session *would* have had, then the tier-appropriate one.
+
+### What the 30-day analysis actually measures
+Three independent signals, blended geometrically with the questionnaire prior on
+a weight that grows with evidence and caps at 0.70, then clamped to
+0.72...1.32:
+
+1. **Rebound.** How much of the day-after disturbance in resting heart rate and
+   HRV is still present on day two. The closest thing to a direct measurement of
+   individual recovery kinetics a wrist sensor can produce. Needs 3 samples.
+2. **Tolerance.** Whether sessions started *inside* a predicted window held
+   their usual intensity. Revealed preference. HR-reserve only, deliberately: an
+   RPE-derived intensity compared against a reserve fraction answers the
+   question with a change of units. Needs 3 samples.
+3. **Density.** Chronic weekly load against a population reference, on a log
+   scale. The classic activity-class adjustment, capped at a third of the
+   sample weight the observed signals reach.
+
+The prior is never fully discarded — it carries age, which nothing in the
+history can observe.
 
 Four profiles, each with its own curve: `endurance`, `strength`, `mixed`, `easy`.
 `easy` always returns zero hours, so an active-recovery walk can never start or
@@ -55,7 +97,10 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today.
+window disagrees with what the same session would produce today. Currently **2**
+(the standard/personalized split). `RecoveryEstimate` has a hand-written
+`init(from:)` so version-1 records decode as the unmultiplied standard windows
+they actually were.
 
 ### Things worth knowing before changing the model
 - **Monotonicity is structural, not incidental.** `RecoveryCalculator.curve` is a
@@ -80,6 +125,30 @@ refresh is enough. A countdown decays toward a fixed timestamp, so
 through the final two hours, an entry exactly at `readyAt`, and one after it so
 the face flips to Ready even if the system never refreshes. **Views must render
 from `entry.date`, never from `Date.now`.**
+
+### Onboarding reads Health before it asks anything
+The flow is welcome → Health → what Health found → the gap questions → what the
+number means → the tier decision. Two structural rules, both of which were bugs
+first:
+
+- **The buttons never move.** Every page ends in the same `OnboardingActions`
+  block, which reserves the secondary row whether or not the page uses one.
+  `testTheOnboardingButtonStaysInOnePlace` asserts the frames, not a screenshot.
+- **The step list is frozen once**, when the user leaves the Health page.
+  Answering a question removes it from `AthleteProfile.gaps`, so a continuously
+  derived array would delete the page the user is standing on. The progress bar
+  is measured against the longest possible flow until Health answers, so it can
+  only ever jump forward.
+
+`HKCharacteristicType(.dateOfBirth)` and `.biologicalSex` are in `readTypes`
+because age drives the heart-rate ceiling on both tiers. Same rule as before:
+nothing goes in that sheet unless something the user can see consumes it. VO2
+max is still out — the evidence tying it to *recovery rate* is weak, so it does
+not earn a row in the permission sheet.
+
+The last onboarding decision is "Continue with Recharge Pro" or "Get started
+with Standard". It is not a "Not now": declining there is choosing the free tier
+and starting to use the app, and the button says so.
 
 ### The RPE path is the only Watch → phone write
 Everything else runs phone → Watch. The effort tap has to go the other way, so it

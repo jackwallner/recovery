@@ -71,20 +71,32 @@ public enum SessionLoadCalculator {
 
     // MARK: - Sources
 
-    /// Heart-rate-reserve TRIMP. Needs an average heart rate, a resting figure,
-    /// a max, and enough sample coverage to believe the average.
-    static func heartRateLoad(for session: SessionInput) -> SessionLoad? {
+    /// Fraction of heart-rate reserve the session sustained, when the heart-rate
+    /// signal is trustworthy enough to say so.
+    ///
+    /// Deliberately heart-rate only, with no fall-through to reported effort.
+    /// `PersonalRecoveryModel` uses this to ask whether a session held its usual
+    /// intensity, and comparing a reserve fraction against an RPE-derived one
+    /// would answer that question with a change of units.
+    public static func intensityFraction(for session: SessionInput) -> Double? {
         guard session.heartRateCoverage >= minimumHeartRateCoverage,
               let average = session.averageHeartRate,
-              average > 0,
-              session.durationMinutes > 0
+              average > 0
         else { return nil }
 
         let resting = session.restingHeartRate ?? defaultRestingHeartRate
         let max = session.maxHeartRate ?? defaultMaxHeartRate
         guard max > resting else { return nil }
+        return min(Swift.max((average - resting) / (max - resting), 0), 1)
+    }
 
-        let reserve = min(Swift.max((average - resting) / (max - resting), 0), 1)
+    /// Heart-rate-reserve TRIMP. Needs an average heart rate, a resting figure,
+    /// a max, and enough sample coverage to believe the average.
+    static func heartRateLoad(for session: SessionInput) -> SessionLoad? {
+        guard session.durationMinutes > 0,
+              let reserve = intensityFraction(for: session)
+        else { return nil }
+
         let weighted = reserve * trimpWeightConstant * exp(trimpExponent * reserve)
         return SessionLoad(
             value: session.durationMinutes * weighted,

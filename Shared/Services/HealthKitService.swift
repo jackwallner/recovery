@@ -28,6 +28,11 @@ public final class HealthKitService: ObservableObject {
     /// and nothing consumed it, which put an unexplained Cardio Fitness row in
     /// front of exactly the audience that reads the sheet carefully. Add it back
     /// only alongside a feature that uses it and copy that names it.
+    /// Date of birth and biological sex earn their place the same way: age sets
+    /// the age-predicted maximum heart rate every session's intensity is
+    /// measured against, and sex selects the formula (Gulati for women, Tanaka
+    /// otherwise). Both are consumed on **both** tiers, and reading them is what
+    /// lets onboarding stop asking for what the phone already knows.
     public static var readTypes: Set<HKObjectType> {
         [
             HKObjectType.workoutType(),
@@ -35,7 +40,9 @@ public final class HealthKitService: ObservableObject {
             HKQuantityType(.restingHeartRate),
             HKQuantityType(.heartRateVariabilitySDNN),
             HKQuantityType(.activeEnergyBurned),
-            HKCategoryType(.sleepAnalysis)
+            HKCategoryType(.sleepAnalysis),
+            HKCharacteristicType(.dateOfBirth),
+            HKCharacteristicType(.biologicalSex)
         ]
     }
 
@@ -114,6 +121,43 @@ public final class HealthKitService: ObservableObject {
         @unknown default:
             isAuthorized = true
         }
+    }
+
+    // MARK: - Characteristics
+
+    /// What Health can tell us about the person rather than about a session.
+    public struct AthleteCharacteristics: Sendable {
+        public var age: Int?
+        public var sex: AthleteSex?
+    }
+
+    /// Reads date of birth and biological sex.
+    ///
+    /// Characteristics are a synchronous, throwing API rather than a query, and
+    /// a `nil` here is ambiguous in the usual HealthKit way: it means the user
+    /// never filled the field in *or* declined the read. Either way the answer
+    /// is the same — ask for it in onboarding — so the ambiguity never has to be
+    /// resolved.
+    public func fetchCharacteristics() -> AthleteCharacteristics {
+        #if DEBUG
+        if ScreenshotConfig.isEnabled { return AthleteCharacteristics(age: 34, sex: .male) }
+        #endif
+        guard HKHealthStore.isHealthDataAvailable() else { return AthleteCharacteristics() }
+
+        var characteristics = AthleteCharacteristics()
+        if let components = try? store.dateOfBirthComponents(),
+           let birthDate = Calendar.current.date(from: components) {
+            let years = Calendar.current.dateComponents([.year], from: birthDate, to: .now).year
+            if let years, (10...100).contains(years) { characteristics.age = years }
+        }
+        if let biologicalSex = try? store.biologicalSex().biologicalSex {
+            switch biologicalSex {
+            case .female: characteristics.sex = .female
+            case .male: characteristics.sex = .male
+            default: characteristics.sex = nil
+            }
+        }
+        return characteristics
     }
 
     // MARK: - Workouts
