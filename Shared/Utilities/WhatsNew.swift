@@ -8,7 +8,11 @@ import Foundation
 /// changed" pitch for an app they have never used.
 public enum WhatsNew {
     /// Bump when there is a new announcement to surface.
-    public static let currentVersion = "1.0"
+    ///
+    /// 1.1: the standard/personalized split. This one has to fire — the number
+    /// an existing user sees changes, and an unexplained change to the central
+    /// figure in the app is how trust in it goes.
+    public static let currentVersion = "1.1"
 
     public static func shouldShow(lastShown: String?) -> Bool {
         lastShown != currentVersion
@@ -24,18 +28,18 @@ public enum WhatsNew {
     public static let items: [Item] = [
         Item(
             symbol: "hourglass",
-            title: "Recovery time on your wrist",
-            detail: "A countdown after every qualifying workout, and a clear Ready mark when it runs out."
+            title: "A standard recharge time, free",
+            detail: "Session type, length, and intensity in, hours out — the same clear countdown for everyone, with no history required."
         ),
         Item(
-            symbol: "square.grid.2x2",
-            title: "Four complication families",
-            detail: "Circular, rectangular, inline, and corner — in the style you pick."
+            symbol: "person.crop.circle.badge.clock",
+            title: "Or one built from your own history",
+            detail: "Recharge Pro scores each session against your own baseline, then reads the last \(PersonalRecoveryModel.windowDays) days to set how fast your countdowns run."
         ),
         Item(
-            symbol: "figure.mixed.cardio",
-            title: "Built for hybrid training",
-            detail: "Separate curves for endurance, lifting, and mixed sessions, not one universal number."
+            symbol: "heart.text.square",
+            title: "Fewer questions, better numbers",
+            detail: "Recharge now reads your age from Apple Health to set the heart-rate range every session is measured against, and only asks for what Health can't answer."
         )
     ]
 }

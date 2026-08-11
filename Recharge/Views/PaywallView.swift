@@ -5,6 +5,9 @@ import SwiftUI
 /// trial page, and the What's New sheet, so the pitch can never drift between
 /// surfaces.
 enum ProFeature: CaseIterable {
+    /// The headline difference between the two tiers. Free is a standard table;
+    /// this is the one that reads the person's own history.
+    case personalizedTime
     case bodySignals
     case weeklyLoad
     case sessionOverrides
@@ -12,6 +15,7 @@ enum ProFeature: CaseIterable {
 
     var symbol: String {
         switch self {
+        case .personalizedTime: "person.crop.circle.badge.clock"
         case .bodySignals: "waveform.path.ecg"
         case .weeklyLoad: "chart.bar.fill"
         case .sessionOverrides: "slider.horizontal.3"
@@ -21,6 +25,7 @@ enum ProFeature: CaseIterable {
 
     var title: String {
         switch self {
+        case .personalizedTime: "A recharge time built from your own history"
         case .bodySignals: "Sleep, HRV, and resting heart rate"
         case .weeklyLoad: "Weekly load against your 4-week average"
         case .sessionOverrides: "Correct a session's workout type"
@@ -30,6 +35,8 @@ enum ProFeature: CaseIterable {
 
     var detail: String {
         switch self {
+        case .personalizedTime:
+            "The free estimate is the same table for everyone. Recharge Pro scores every session against your own \(RecoveryBaseline.historyDays)-day baseline, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
         case .weeklyLoad:

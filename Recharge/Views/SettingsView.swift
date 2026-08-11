@@ -24,8 +24,11 @@ struct SettingsView: View {
             Form {
                 if !store.isPro { proSection }
                 healthSection
+                recoveryTimeSection
                 complicationSection
                 modelSection
+                // Directly under Model, because that is what it feeds.
+                aboutYouSection
                 if store.isPro { contextSection }
                 aboutSection
                 #if DEBUG
@@ -227,6 +230,129 @@ struct SettingsView: View {
     }
 
     // MARK: - Model
+
+    // MARK: - Recovery time
+
+    /// Which model is producing the countdown, and what it is doing.
+    ///
+    /// Shown on both tiers on purpose. A free user is entitled to know their
+    /// number is the standard one rather than assuming it is about them, and it
+    /// is the honest version of the upgrade pitch: here is what your own data
+    /// says, and here is the number you are getting instead.
+    private var recoveryTimeSection: some View {
+        Section {
+            HStack {
+                Text("Model")
+                Spacer()
+                Text(store.isPro ? RecoveryTier.personalized.label : RecoveryTier.standard.label)
+                    .foregroundStyle(store.isPro ? Theme.pro : Theme.textSecondary)
+            }
+
+            if engine.personalAnalysis.isPersonalised {
+                HStack {
+                    Text(store.isPro ? "Your adjustment" : "Your data suggests")
+                    Spacer()
+                    Text(personalFactorLabel)
+                        .foregroundStyle(store.isPro ? Theme.textSecondary : Theme.pro)
+                }
+                ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).dropFirst(), id: \.self) { line in
+                    Text(line)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+            }
+
+            if !store.isPro {
+                Button("See Recharge Pro") { showPaywall = true }
+            }
+        } header: {
+            Text("Recharge time")
+        } footer: {
+            Text(store.isPro
+                ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
+                : "The standard estimate is the same table for everyone: session type, length, and intensity in, hours out. Recharge Pro scores each session against your own history instead.")
+        }
+    }
+
+    private var personalFactorLabel: String {
+        let percent = engine.personalAnalysis.percentDifference
+        if percent == 0 { return "Same as standard" }
+        return percent > 0 ? "+\(percent)% longer" : "\(percent)% shorter"
+    }
+
+    // MARK: - About you
+
+    /// The onboarding answers, editable forever after.
+    ///
+    /// A one-shot questionnaire is a trap: people turn 40, start lifting, and
+    /// double their weekly volume, and none of that should require a reinstall
+    /// to tell the app about. Rows Health filled in say so, because a user who
+    /// sees their own age here should know where it came from.
+    private var aboutYouSection: some View {
+        Section {
+            Picker("Age", selection: ageBinding) {
+                Text("Not set").tag(Int?.none)
+                ForEach(Self.ageBands, id: \.midpoint) { band in
+                    Text(band.label).tag(Int?.some(band.midpoint))
+                }
+            }
+            Picker("Training for", selection: $settings.athleteProfile.experience) {
+                Text("Not set").tag(TrainingExperience?.none)
+                ForEach(TrainingExperience.allCases, id: \.self) { value in
+                    Text(value.label).tag(TrainingExperience?.some(value))
+                }
+            }
+            Picker("Sessions a week", selection: $settings.athleteProfile.weeklyVolume) {
+                Text("Not set").tag(WeeklyVolume?.none)
+                ForEach(WeeklyVolume.allCases, id: \.self) { value in
+                    Text(value.label).tag(WeeklyVolume?.some(value))
+                }
+            }
+            Picker("Ready again after", selection: $settings.athleteProfile.bounceBack) {
+                Text("Not set").tag(BounceBackHabit?.none)
+                ForEach(BounceBackHabit.allCases, id: \.self) { value in
+                    Text(value.label).tag(BounceBackHabit?.some(value))
+                }
+            }
+        } header: {
+            Text("About you")
+        } footer: {
+            Text(aboutYouFooter)
+        }
+        // One handler for all four: every one of them changes a model-wide
+        // assumption, so every one has to thaw the stored estimates rather than
+        // sit in defaults being true and unused.
+        .onChange(of: settings.athleteProfile) { _, _ in
+            engine.rescoreAfterModelSettingChange()
+        }
+    }
+
+    private var ageBinding: Binding<Int?> {
+        Binding(
+            get: { settings.athleteProfile.age },
+            set: { newValue in
+                settings.athleteProfile.age = newValue
+                // Typed by hand now, so a later Health read must not silently
+                // move it back.
+                settings.athleteProfile.healthDerivedFields.remove(AthleteProfile.ageField)
+            }
+        )
+    }
+
+    private static let ageBands: [(label: String, midpoint: Int)] = [
+        ("Under 25", 21), ("25 to 34", 30), ("35 to 44", 40), ("45 to 54", 50), ("55 or over", 60)
+    ]
+
+    private var aboutYouFooter: String {
+        let derived = settings.athleteProfile.healthDerivedFields
+        let base = "Age sets the heart-rate range every session is measured against, on both tiers. The rest shape your Recharge Pro estimate until there is enough history to answer for itself."
+        guard !derived.isEmpty else { return base }
+        var found: [String] = []
+        if derived.contains(AthleteProfile.ageField) { found.append("your age") }
+        if derived.contains(AthleteProfile.weeklyVolumeField) { found.append("your weekly volume") }
+        guard !found.isEmpty else { return base }
+        return "Recharge read \(ListFormatterShim.join(found)) from Apple Health. \(base)"
+    }
 
     private var modelSection: some View {
         Section {
