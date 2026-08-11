@@ -38,6 +38,14 @@ public final class RecoveryEngine: ObservableObject {
     /// True when the most recent workout read did not happen at all.
     @Published public private(set) var lastImportFailed = false
 
+    /// The Recharge+ thirty-day analysis behind the current estimates.
+    ///
+    /// Computed even on the free tier, where it changes no number: the
+    /// onboarding pitch and the Settings comparison both have to be able to show
+    /// what personalisation *would* do, and a pitch built on invented figures is
+    /// not a pitch, it is a mock-up.
+    @Published public private(set) var personalAnalysis = PersonalRecoveryModel.Analysis.neutral
+
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
     private init() {}
@@ -60,9 +68,49 @@ public final class RecoveryEngine: ObservableObject {
 
         await importWorkouts()
         await importContext()
+        updateAthleteProfileFromHealth()
         rescore()
         publish()
         lastRefresh = .now
+    }
+
+    /// Fills in everything about the person that Health can answer, so
+    /// onboarding only ever asks for the rest.
+    ///
+    /// Safe to call on every refresh: `mergeHealthDerivedProfile` never
+    /// overwrites an answer the user typed, and publishes nothing when nothing
+    /// changed.
+    public func updateAthleteProfileFromHealth() {
+        let characteristics = HealthKitService.shared.fetchCharacteristics()
+        let derived = derivedTrainingProfile()
+        RechargeSettings.shared.mergeHealthDerivedProfile(
+            age: characteristics.age,
+            sex: characteristics.sex,
+            weeklyVolume: derived.volume,
+            primaryProfile: derived.primaryProfile
+        )
+    }
+
+    /// Weekly session count and dominant workout type, from the imported
+    /// history.
+    ///
+    /// Both stay `nil` until there is enough history to mean anything. A single
+    /// week of workouts would label a returning runner as a two-a-week trainee
+    /// and then quietly lengthen every window they get.
+    private func derivedTrainingProfile() -> (volume: WeeklyVolume?, primaryProfile: WorkoutProfile?) {
+        let windowDays = 28.0
+        let cutoff = DateHelpers.daysAgo(Int(windowDays))
+        let recent = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
+            .filter { $0.endDate >= cutoff && $0.effectiveProfile != .easy }
+        guard recent.count >= 6 else { return (nil, nil) }
+
+        let perWeek = Double(recent.count) / (windowDays / 7)
+        var counts: [WorkoutProfile: Int] = [:]
+        for workout in recent { counts[workout.effectiveProfile, default: 0] += 1 }
+        let dominant = counts.max { lhs, rhs in
+            lhs.value == rhs.value ? lhs.key.rawValue > rhs.key.rawValue : lhs.value < rhs.value
+        }?.key
+        return (WeeklyVolume.forSessionsPerWeek(perWeek), dominant)
     }
 
     // MARK: - Import
@@ -210,6 +258,11 @@ public final class RecoveryEngine: ObservableObject {
             current = nil
             awaitingFeedback = nil
             awaitingEffort = nil
+            // No sessions to observe, but the questionnaire still says something,
+            // and it is the whole of what a day-one Recharge+ user is shown.
+            personalAnalysis = PersonalRecoveryModel.analyse(
+                profile: settings.athleteProfile, sessions: [], days: [], now: now
+            )
             return
         }
 
@@ -221,32 +274,80 @@ public final class RecoveryEngine: ObservableObject {
         let existingStates = ((try? context.fetch(FetchDescriptor<RecoveryStateRecord>())) ?? [])
         var statesByID = Dictionary(existingStates.map { ($0.sessionID, $0) }, uniquingKeysWith: { first, _ in first })
 
+        // Pass one: the standard estimate for every session. It is what the free
+        // tier publishes, and the thirty-day analysis needs to know what window
+        // each session *would* have had before it can say whether the person
+        // training inside it held up.
+        let inputs = workouts.map { sessionInput(for: $0, settings: settings) }
+        let standardEstimates = inputs.map { session in
+            RecoveryCalculator.estimate(
+                for: session,
+                baseline: .standard(for: session.profile),
+                now: now
+            )
+        }
+
+        let isPro = StoreService.shared.isPro
+        let analysis = PersonalRecoveryModel.analyse(
+            profile: settings.athleteProfile,
+            sessions: zip(inputs, standardEstimates).map { session, standard in
+                PersonalRecoveryModel.HistorySession(
+                    id: session.id,
+                    profile: session.profile,
+                    endDate: session.endDate,
+                    load: standard.load.value,
+                    intensityFraction: SessionLoadCalculator.intensityFraction(for: session),
+                    standardHours: standard.hours
+                )
+            },
+            days: contexts.map {
+                PersonalRecoveryModel.DayPoint(
+                    date: $0.date,
+                    restingHeartRate: $0.restingHeartRate > 0 ? $0.restingHeartRate : nil,
+                    heartRateVariability: $0.heartRateVariability > 0 ? $0.heartRateVariability : nil
+                )
+            },
+            now: now
+        )
+        personalAnalysis = analysis
+        let personalization: RecoveryPersonalization = isPro
+            ? .personalized(factor: analysis.factor)
+            : .standard
+
         var history: [(profile: WorkoutProfile, load: Double, date: Date)] = []
         var results: [RecoveryEstimate] = []
 
-        for workout in workouts {
-            let session = sessionInput(for: workout, settings: settings)
-            let baseline = RecoveryBaseline.build(
-                from: history,
-                for: session.profile,
-                now: workout.endDate
-            )
-            let recoveryContext = settings.useContextSignals && StoreService.shared.isPro
-                ? contextFor(
-                    workout: workout,
-                    contextByKey: contextByKey,
-                    restingBaseline: restingBaseline,
-                    hrvBaseline: hrvBaseline
+        // Pass two: the estimate the user actually gets. On the free tier that is
+        // the standard one already computed — no personal baseline, no overnight
+        // context, no calibration, the same table for everyone.
+        for (index, workout) in workouts.enumerated() {
+            let session = inputs[index]
+            let estimate: RecoveryEstimate
+            if isPro {
+                let baseline = RecoveryBaseline.build(
+                    from: history,
+                    for: session.profile,
+                    now: workout.endDate
                 )
-                : .empty
-
-            let estimate = RecoveryCalculator.estimate(
-                for: session,
-                baseline: baseline,
-                context: recoveryContext,
-                calibration: settings.calibrationFactor,
-                now: now
-            )
+                let recoveryContext = settings.useContextSignals
+                    ? contextFor(
+                        workout: workout,
+                        contextByKey: contextByKey,
+                        restingBaseline: restingBaseline,
+                        hrvBaseline: hrvBaseline
+                    )
+                    : .empty
+                estimate = RecoveryCalculator.estimate(
+                    for: session,
+                    baseline: baseline,
+                    context: recoveryContext,
+                    calibration: settings.calibrationFactor,
+                    personalization: personalization,
+                    now: now
+                )
+            } else {
+                estimate = standardEstimates[index]
+            }
 
             // Cache the load back onto the workout so the baseline for the next
             // session (and the weekly load view) does not have to recompute it.
@@ -545,6 +646,7 @@ public final class RecoveryEngine: ObservableObject {
     #if DEBUG
     private func loadScreenshotFixtures() {
         estimates = ScreenshotFixtures.history()
+        personalAnalysis = ScreenshotFixtures.personalAnalysis()
         current = RecoveryResolver.current(in: estimates)
         awaitingFeedback = nil
         awaitingEffort = nil

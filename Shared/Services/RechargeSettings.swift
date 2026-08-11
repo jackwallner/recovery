@@ -114,6 +114,23 @@ public final class RechargeSettings: ObservableObject {
 
     // MARK: - Pro features
 
+    /// What Recharge knows about the person: whatever Health supplied, plus the
+    /// gap questions from onboarding.
+    ///
+    /// Stored on the free tier too. Age sets the heart-rate ceiling every
+    /// session is measured against, which is a measurement input rather than a
+    /// personalisation, and the answers have to survive until the user upgrades
+    /// or nobody would ever see them used.
+    @Published public var athleteProfile: AthleteProfile {
+        didSet { persistAthleteProfile() }
+    }
+
+    /// The user has been through the profile questions, so onboarding must not
+    /// ask again after an upgrade.
+    @Published public var hasAnsweredProfileQuestions: Bool {
+        didSet { defaults.set(hasAnsweredProfileQuestions, forKey: "hasAnsweredProfileQuestions") }
+    }
+
     /// Pro: fold sleep, HRV, and resting heart rate into the estimate.
     @Published public var useContextSignals: Bool {
         didSet { defaults.set(useContextSignals, forKey: "useContextSignals") }
@@ -170,6 +187,9 @@ public final class RechargeSettings: ObservableObject {
         self.calibrationFactor = (RecoveryCalibration.minimum...RecoveryCalibration.maximum)
             .contains(storedCalibration) ? storedCalibration : RecoveryCalibration.neutral
 
+        self.athleteProfile = defaults.data(forKey: "athleteProfile")
+            .flatMap { try? JSONDecoder().decode(AthleteProfile.self, from: $0) } ?? .empty
+        self.hasAnsweredProfileQuestions = defaults.bool(forKey: "hasAnsweredProfileQuestions")
         self.answeredFeedbackSessions = Set(defaults.stringArray(forKey: "answeredFeedbackSessions") ?? [])
         self.declinedEffortSessions = Set(defaults.stringArray(forKey: "declinedEffortSessions") ?? [])
         self.useContextSignals = defaults.object(forKey: "useContextSignals") as? Bool ?? true
@@ -189,8 +209,52 @@ public final class RechargeSettings: ObservableObject {
 
     /// The max heart rate the calculator should use, or `nil` to let it apply
     /// its own default.
+    ///
+    /// A value the user typed in Settings always wins. Failing that, the
+    /// age-predicted figure is far better than the blunt 185 bpm constant, and
+    /// it applies on both tiers: measuring a 58-year-old's session against a
+    /// 30-year-old's ceiling is not "standard", it is wrong.
     public var effectiveMaxHeartRate: Double? {
-        maxHeartRate > 0 ? maxHeartRate : nil
+        if maxHeartRate > 0 { return maxHeartRate }
+        return athleteProfile.predictedMaxHeartRate
+    }
+
+    private func persistAthleteProfile() {
+        guard let data = try? JSONEncoder().encode(athleteProfile) else { return }
+        defaults.set(data, forKey: "athleteProfile")
+    }
+
+    /// Merges what Health just reported without overwriting anything the user
+    /// answered by hand. Health is the source of truth for the fields it owns,
+    /// and silent about the rest.
+    public func mergeHealthDerivedProfile(
+        age: Int?,
+        sex: AthleteSex?,
+        weeklyVolume: WeeklyVolume?,
+        primaryProfile: WorkoutProfile?
+    ) {
+        var profile = athleteProfile
+        if let age {
+            profile.age = age
+            profile.healthDerivedFields.insert(AthleteProfile.ageField)
+        }
+        if let sex, sex != .unspecified {
+            profile.sex = sex
+            profile.healthDerivedFields.insert(AthleteProfile.sexField)
+        }
+        // Only fills a gap. Someone who told us they train five times a week
+        // during a deload should not be relabelled by a quiet fortnight.
+        if let weeklyVolume, profile.weeklyVolume == nil
+            || profile.healthDerivedFields.contains(AthleteProfile.weeklyVolumeField) {
+            profile.weeklyVolume = weeklyVolume
+            profile.healthDerivedFields.insert(AthleteProfile.weeklyVolumeField)
+        }
+        if let primaryProfile {
+            profile.primaryProfile = primaryProfile
+            profile.healthDerivedFields.insert(AthleteProfile.primaryProfileField)
+        }
+        guard profile != athleteProfile else { return }
+        athleteProfile = profile
     }
 
     public func recordFeedbackAnswered(_ sessionID: String) {
@@ -208,5 +272,6 @@ public final class RechargeSettings: ObservableObject {
         hasCompletedSetup = !ScreenshotConfig.wantsOnboarding
         hasDeferredHealthAccess = false
         useContextSignals = true
+        athleteProfile = ScreenshotFixtures.athleteProfile()
     }
 }

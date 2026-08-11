@@ -27,10 +27,10 @@ public struct RecoveryBaseline: Sendable, Equatable {
 
     public var hasEnoughSamples: Bool { sampleCount >= Self.minimumSamples }
 
-    /// Median session load, or the profile's bootstrap value when the user has
-    /// no usable history yet.
+    /// Median session load, or the profile's standard population reference when
+    /// the user has no usable history yet.
     public var typicalLoad: Double {
-        guard !loads.isEmpty else { return profile.bootstrapTypicalLoad }
+        guard !loads.isEmpty else { return profile.standardTypicalLoad }
         return percentile(0.5)
     }
 
@@ -52,6 +52,18 @@ public struct RecoveryBaseline: Sendable, Equatable {
         return loads[lower] + (loads[upper] - loads[lower]) * weight
     }
 
+    /// The population reference the free tier scores against: no samples, so
+    /// `typicalLoad` is the profile's standard reference and `quietThreshold` is
+    /// the absolute floor.
+    ///
+    /// This is what makes the standard estimate the same for everyone. A given
+    /// session type, length, and intensity produces the same number of hours
+    /// whoever did it — which is the honest thing for a tier that has been told
+    /// not to look at the person's history.
+    public static func standard(for profile: WorkoutProfile) -> RecoveryBaseline {
+        RecoveryBaseline(loads: [], profile: profile)
+    }
+
     /// Builds a baseline for `profile` from a mixed history. Falls back to the
     /// whole history when the profile itself is too sparse, so a user's first
     /// ever HYROX session is still scored against something real.
@@ -70,7 +82,7 @@ public struct RecoveryBaseline: Sendable, Equatable {
         }
 
         // Not enough same-profile history. Pooling across profiles is a worse
-        // comparison but a much better one than the bootstrap constant, so use
+        // comparison but a much better one than the standard reference, so use
         // it whenever it clears the threshold.
         let pooled = recent.map(\.load)
         if pooled.count >= minimumSamples {

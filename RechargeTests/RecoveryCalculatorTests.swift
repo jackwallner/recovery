@@ -293,10 +293,14 @@ final class RecoveryCalculatorTests: XCTestCase {
 
     // MARK: - Confidence
 
+    /// Only the personalized tier has a baseline to build. The standard tier
+    /// never reports it, which `testStandardTierNeverReportsBuildingBaseline`
+    /// pins down.
     func testNewUserIsLabelledAsBuildingBaseline() {
         let estimate = RecoveryCalculator.estimate(
             for: RecoveryFixtures.thresholdRun60,
             baseline: RecoveryFixtures.emptyBaseline(),
+            personalization: .personalized(factor: 1),
             now: now
         )
         XCTAssertEqual(estimate.confidence, .buildingBaseline)
@@ -328,11 +332,14 @@ final class RecoveryCalculatorTests: XCTestCase {
         XCTAssertGreaterThan(with.hours, without.hours, "an RPE 8 lift should outrank its own kcal estimate")
     }
 
+    /// High confidence is what knowing the person buys, so it is reachable only
+    /// on the personalized tier.
     func testGoodHeartRateCoverageAndFullContextIsHighConfidence() {
         let estimate = RecoveryCalculator.estimate(
             for: RecoveryFixtures.thresholdRun60,
             baseline: RecoveryFixtures.settledEnduranceBaseline(),
             context: RecoveryFixtures.goodContext,
+            personalization: .personalized(factor: 1),
             now: now
         )
         XCTAssertEqual(estimate.confidence, .high)

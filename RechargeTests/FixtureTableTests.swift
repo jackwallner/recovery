@@ -78,10 +78,50 @@ final class FixtureTableTests: XCTestCase {
         Swift.print(lines.joined(separator: "\n"))
     }
 
+    /// The free tier: every session against the fixed population reference, no
+    /// context, no calibration, no personal multiplier. This is the table a user
+    /// who never pays anything sees, so it is the one worth reading first.
+    private func standardRows() -> [Row] {
+        let cases: [(String, SessionInput)] = [
+            ("30-min easy walk", RecoveryFixtures.easyWalk30),
+            ("45-min easy run", RecoveryFixtures.easyRun45),
+            ("60-min threshold run", RecoveryFixtures.thresholdRun60),
+            ("90-min long run", RecoveryFixtures.longRun90),
+            ("45-min ride", RecoveryFixtures.ride45),
+            ("60-min lift, no HR", RecoveryFixtures.strengthNoHeartRate),
+            ("60-min lift, RPE 8", RecoveryFixtures.strengthWithEffort),
+            ("70-min HYROX", RecoveryFixtures.mixedHyrox)
+        ]
+        return cases.map { name, session in
+            Row(
+                name: name,
+                estimate: RecoveryCalculator.estimate(
+                    for: session, baseline: .standard(for: session.profile), now: now
+                )
+            )
+        }
+    }
+
     func testPrintFixtureTable() {
-        print("no context (free tier)", rows(context: .empty))
-        print("good context (slept well, HRV up)", rows(context: RecoveryFixtures.goodContext))
-        print("poor context (short sleep, HRV down)", rows(context: RecoveryFixtures.poorContext))
+        print("STANDARD tier — the same table for everyone", standardRows())
+        print("personalized, no context", rows(context: .empty))
+        print("personalized, good context (slept well, HRV up)", rows(context: RecoveryFixtures.goodContext))
+        print("personalized, poor context (short sleep, HRV down)", rows(context: RecoveryFixtures.poorContext))
+    }
+
+    /// The standard table has to read sensibly on its own: it is nobody's
+    /// personal history, so nothing but the ordering can vouch for it.
+    func testTheStandardTableReadsInTheOrderAHumanWouldExpect() {
+        let table = Dictionary(uniqueKeysWithValues: standardRows().map { ($0.name, $0.estimate.hours) })
+        func hours(_ name: String) -> Double { table[name] ?? -1 }
+
+        XCTAssertEqual(hours("30-min easy walk"), 0, "a walk must not start a countdown")
+        XCTAssertGreaterThan(hours("60-min threshold run"), hours("45-min easy run"))
+        XCTAssertGreaterThan(hours("90-min long run"), hours("45-min ride"))
+        XCTAssertGreaterThan(hours("60-min lift, RPE 8"), hours("60-min lift, no HR"))
+        for (name, value) in table where value > 0 {
+            XCTAssertLessThanOrEqual(value, RecoveryCalculator.maximumHours, name)
+        }
     }
 
     // MARK: - Cross-table sanity

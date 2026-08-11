@@ -59,12 +59,16 @@ public enum RecoveryCalculator {
     ///     nothing is known; the estimate still resolves, at lower confidence.
     ///   - calibration: the running personal factor from expired-countdown
     ///     feedback. `RecoveryCalibration.neutral` when there is none.
+    ///   - personalization: the Recharge+ multiplier from
+    ///     `PersonalRecoveryModel`. `.standard` for the free tier, which is the
+    ///     same table for everyone.
     ///   - now: the calculation instant. Injected so tests are deterministic.
     public static func estimate(
         for session: SessionInput,
         baseline: RecoveryBaseline,
         context: RecoveryContext = .empty,
         calibration: Double = RecoveryCalibration.neutral,
+        personalization: RecoveryPersonalization = .standard,
         now: Date = .now
     ) -> RecoveryEstimate {
         let load = SessionLoadCalculator.profiledLoad(for: session)
@@ -81,14 +85,19 @@ public enum RecoveryCalculator {
         if qualifies {
             let base = baseHours(forRelativeLoad: relative) * session.profile.windowMultiplier
             adjustment = contextAdjustment(context)
-            hours = min(max(base * (1 + adjustment) * clampCalibration(calibration), 0), maximumHours)
+            let personal = min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
+            hours = min(
+                max(base * (1 + adjustment) * clampCalibration(calibration) * personal, 0),
+                maximumHours
+            )
         }
 
         let confidence = confidence(
             load: load,
             baseline: baseline,
             context: context,
-            profile: session.profile
+            profile: session.profile,
+            tier: personalization.tier
         )
 
         return RecoveryEstimate(
@@ -112,8 +121,11 @@ public enum RecoveryCalculator {
                 context: context,
                 adjustment: adjustment,
                 qualifies: qualifies,
-                baseline: baseline
-            )
+                baseline: baseline,
+                personalization: personalization
+            ),
+            tier: personalization.tier,
+            personalFactor: qualifies ? personalization.factor : 1
         )
     }
 
@@ -130,6 +142,16 @@ public enum RecoveryCalculator {
         if relative < typicalCeiling { return .typical }
         if relative < hardCeiling { return .hard }
         return .unusuallyHard
+    }
+
+    /// The standard window for a canonical hard endurance session, straight off
+    /// the real curve.
+    ///
+    /// Conversion surfaces have to be able to show what personalisation does
+    /// before the user has any history to do it to, and an invented number on a
+    /// paywall is a number someone will hold the app to.
+    public static var referenceHardSessionHours: Double {
+        baseHours(forRelativeLoad: 1.6) * WorkoutProfile.endurance.windowMultiplier
     }
 
     /// Piecewise-linear, monotone non-decreasing, flat above the last anchor.
@@ -199,8 +221,24 @@ public enum RecoveryCalculator {
         load: SessionLoad,
         baseline: RecoveryBaseline,
         context: RecoveryContext,
-        profile: WorkoutProfile
+        profile: WorkoutProfile,
+        tier: RecoveryTier = .personalized
     ) -> RecoveryConfidence {
+        // "Building baseline" is a statement about a personal baseline that is
+        // still filling up. The standard tier is not building one — it is not
+        // using one — so reporting that forever would be a permanent excuse for
+        // a number that is exactly as good as it is ever going to get. It is
+        // capped at medium instead: the standard table cannot reach high, since
+        // high is what knowing the person buys.
+        if tier == .standard {
+            switch load.source {
+            case .duration: return .low
+            case .energy: return profile == .easy ? .medium : .low
+            case .reportedEffort: return .medium
+            case .heartRate: return load.heartRateCoverage < 0.75 ? .low : .medium
+            }
+        }
+
         guard baseline.hasEnoughSamples else { return .buildingBaseline }
 
         switch load.source {
@@ -229,9 +267,12 @@ public enum RecoveryCalculator {
         context: RecoveryContext,
         adjustment: Double,
         qualifies: Bool,
-        baseline: RecoveryBaseline
+        baseline: RecoveryBaseline,
+        personalization: RecoveryPersonalization = .standard
     ) -> [String] {
         var reasons: [String] = []
+        let tier = personalization.tier
+        let categoryLabel = category.label(for: tier)
 
         let minutes = Int(session.durationMinutes.rounded())
         if session.profile == .easy {
@@ -240,16 +281,28 @@ public enum RecoveryCalculator {
         }
 
         if !qualifies {
-            reasons.append("\(category.label.lowercased()): a \(minutes)-minute \(session.activityLabel) below your usual session load.")
+            let comparison = tier == .standard ? "below the level that starts a countdown" : "below your usual session load"
+            reasons.append("\(categoryLabel.lowercased()): a \(minutes)-minute \(session.activityLabel) \(comparison).")
             reasons.append("No countdown started.")
             return reasons
         }
 
-        reasons.append("\(category.label): \(minutes)-minute \(session.activityLabel).")
+        reasons.append("\(categoryLabel): \(minutes)-minute \(session.activityLabel).")
         reasons.append("Load estimated from \(load.source.label).")
 
-        if !baseline.hasEnoughSamples {
-            reasons.append("Still building your baseline from \(baseline.sampleCount) recent \(baseline.sampleCount == 1 ? "session" : "sessions").")
+        switch tier {
+        case .standard:
+            reasons.append("Standard estimate: the same table for everyone, from session type, length, and intensity.")
+        case .personalized:
+            if !baseline.hasEnoughSamples {
+                reasons.append("Still building your baseline from \(baseline.sampleCount) recent \(baseline.sampleCount == 1 ? "session" : "sessions").")
+            }
+            let percent = Int(((personalization.factor - 1) * 100).rounded())
+            if percent <= -3 {
+                reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern shortens this by about \(abs(percent))%.")
+            } else if percent >= 3 {
+                reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern lengthens this by about \(percent)%.")
+            }
         }
 
         if adjustment > 0.02 {

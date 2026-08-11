@@ -5,7 +5,52 @@ import Foundation
 /// Bumped whenever the calculator's numbers change. Stored on every estimate so
 /// history can explain why an old window disagrees with what the same session
 /// would produce today, and so the determinism test has something to pin to.
-public let recoveryModelVersion = 1
+///
+/// 2: the standard/personalized split. Version 1 scored every user against their
+/// own median session; the free tier now scores against a fixed population
+/// reference, and Recharge+ adds `PersonalRecoveryModel` on top.
+public let recoveryModelVersion = 2
+
+// MARK: - Tier
+
+/// Which of the two models produced an estimate.
+///
+/// Stored on every estimate, because the two answer subtly different questions
+/// and a history list that mixes them without saying so is lying by omission.
+public enum RecoveryTier: String, Codable, Sendable {
+    /// The same table for everyone: session type, duration, and intensity in,
+    /// hours out. No personal history, no overnight context, no calibration.
+    case standard
+    /// The person's own baseline, their thirty-day recovery analysis, overnight
+    /// context, and their calibration feedback.
+    case personalized
+
+    public var label: String {
+        switch self {
+        case .standard: "Standard"
+        case .personalized: "Personalized"
+        }
+    }
+}
+
+/// The Recharge+ multiplier, carried into the calculator as one value so the
+/// calculator itself stays free of any notion of entitlement.
+public struct RecoveryPersonalization: Sendable, Equatable {
+    public let tier: RecoveryTier
+    /// Multiplier on the standard window. Exactly 1 for `.standard`.
+    public let factor: Double
+
+    public static let standard = RecoveryPersonalization(tier: .standard, factor: 1)
+
+    public static func personalized(factor: Double) -> RecoveryPersonalization {
+        RecoveryPersonalization(tier: .personalized, factor: PersonalRecoveryModel.clamp(factor))
+    }
+
+    private init(tier: RecoveryTier, factor: Double) {
+        self.tier = tier
+        self.factor = factor
+    }
+}
 
 // MARK: - Profiles
 
@@ -56,13 +101,32 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Bootstrap "typical session" load for a user with no history yet, so a
-    /// first-ever workout still produces a sane relative load.
-    public var bootstrapTypicalLoad: Double {
+    /// The population reference a session is measured against when there is no
+    /// personal history to use: the whole of the standard tier, and the
+    /// bootstrap for a Recharge Pro user in their first few weeks.
+    ///
+    /// Each is one moderately trained adult's typical session, put through
+    /// `SessionLoadCalculator` rather than picked:
+    ///
+    /// | Profile | Reference session | Load |
+    /// |---|---|---|
+    /// | endurance | 50 min at 70% heart-rate reserve | ~86 |
+    /// | strength | 55 min at RPE 6.5 | ~107 |
+    /// | mixed | 50 min at RPE 7.5 | ~113 |
+    ///
+    /// These were 70 / 80 / 95, which were only ever meant to keep a first-ever
+    /// workout from dividing by zero. Load-bearing for every free user, they put
+    /// a routine 45-minute run at 0.79 of "typical" and both a 60-minute
+    /// threshold run and a 90-minute steady run at 2.25 — far enough up the
+    /// curve that two quite different sessions clipped to the same 42-hour
+    /// window. Raising the reference to a real typical session is what puts the
+    /// interesting range back in the middle of the curve, where it can separate
+    /// them.
+    public var standardTypicalLoad: Double {
         switch self {
-        case .endurance: 70
-        case .strength: 80
-        case .mixed: 95
+        case .endurance: 85
+        case .strength: 105
+        case .mixed: 115
         case .easy: 20
         }
     }
@@ -111,6 +175,19 @@ public enum LoadCategory: String, Codable, Sendable {
         case .typical: "Typical for you"
         case .hard: "Hard for you"
         case .unusuallyHard: "Unusually hard for you"
+        }
+    }
+
+    /// "For you" is only true when the comparison was against the person's own
+    /// sessions. On the standard tier the session is measured against a fixed
+    /// population reference, so the label has to drop the claim.
+    public func label(for tier: RecoveryTier) -> String {
+        guard tier == .standard else { return label }
+        switch self {
+        case .easy: return "Easy session"
+        case .typical: return "Typical session"
+        case .hard: return "Hard session"
+        case .unusuallyHard: return "Very hard session"
         }
     }
 
@@ -302,8 +379,19 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
     public let confidence: RecoveryConfidence
     public let reasons: [String]
     public let modelVersion: Int
+    /// Which model produced this. Defaults to `.standard` so an estimate decoded
+    /// from a version-1 record still reads back.
+    public let tier: RecoveryTier
+    /// The Recharge+ multiplier that was applied. Exactly 1 on the standard tier.
+    public let personalFactor: Double
 
     public var producesCountdown: Bool { hours > 0 }
+
+    /// The window this session would have had on the standard tier. Lets a
+    /// Recharge+ screen show what personalisation actually changed.
+    public var standardHours: Double {
+        personalFactor > 0 ? hours / personalFactor : hours
+    }
 
     public init(
         sessionID: String,
@@ -320,7 +408,9 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         category: LoadCategory,
         confidence: RecoveryConfidence,
         reasons: [String],
-        modelVersion: Int = recoveryModelVersion
+        modelVersion: Int = recoveryModelVersion,
+        tier: RecoveryTier = .standard,
+        personalFactor: Double = 1
     ) {
         self.sessionID = sessionID
         self.profile = profile
@@ -337,6 +427,32 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         self.confidence = confidence
         self.reasons = reasons
         self.modelVersion = modelVersion
+        self.tier = tier
+        self.personalFactor = personalFactor
+    }
+
+    /// `tier` and `personalFactor` arrived in model version 2. Records written
+    /// before it decode as what they actually were: a standard, unmultiplied
+    /// window.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionID = try container.decode(String.self, forKey: .sessionID)
+        profile = try container.decode(WorkoutProfile.self, forKey: .profile)
+        activityLabel = try container.decode(String.self, forKey: .activityLabel)
+        calculatedAt = try container.decode(Date.self, forKey: .calculatedAt)
+        sessionEnd = try container.decode(Date.self, forKey: .sessionEnd)
+        readyAt = try container.decode(Date.self, forKey: .readyAt)
+        hours = try container.decode(Double.self, forKey: .hours)
+        windowLowHours = try container.decode(Double.self, forKey: .windowLowHours)
+        windowHighHours = try container.decode(Double.self, forKey: .windowHighHours)
+        load = try container.decode(SessionLoad.self, forKey: .load)
+        relativeLoad = try container.decode(Double.self, forKey: .relativeLoad)
+        category = try container.decode(LoadCategory.self, forKey: .category)
+        confidence = try container.decode(RecoveryConfidence.self, forKey: .confidence)
+        reasons = try container.decode([String].self, forKey: .reasons)
+        modelVersion = try container.decode(Int.self, forKey: .modelVersion)
+        tier = try container.decodeIfPresent(RecoveryTier.self, forKey: .tier) ?? .standard
+        personalFactor = try container.decodeIfPresent(Double.self, forKey: .personalFactor) ?? 1
     }
 
     /// Phase at a given instant. Derived rather than stored so a cached estimate

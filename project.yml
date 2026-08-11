@@ -141,6 +141,8 @@ targets:
       - path: Shared/Utilities/RecoveryBaseline.swift
       - path: Shared/Utilities/RecoveryCalculator.swift
       - path: Shared/Utilities/RecoveryResolver.swift
+      - path: Shared/Utilities/AthleteProfile.swift
+      - path: Shared/Utilities/PersonalRecoveryModel.swift
       - path: Shared/Utilities/WorkoutClassifier.swift
       - path: Shared/Utilities/CountdownFormat.swift
       - path: Shared/Utilities/CountdownTimeline.swift
