@@ -31,7 +31,6 @@ public enum SettingsKeys {
     public static let complicationStyle = "complicationStyle"
     public static let ambiguousProfile = "ambiguousProfile"
     public static let maxHeartRate = "maxHeartRate"
-    public static let isProCached = "isProCached"
 }
 
 /// Every user preference, in App Group `UserDefaults` so the Watch app and both

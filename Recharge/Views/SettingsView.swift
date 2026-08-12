@@ -219,6 +219,14 @@ struct SettingsView: View {
                     Text(style.label).tag(style)
                 }
             }
+            // The setter reloads the iOS widgets, but the Watch has its own App
+            // Group and only ever learns the style from `sendSnapshot`, which
+            // nothing but `publish()` calls. Without this the wrist keeps the
+            // old style until some unrelated event republishes, under a footer
+            // promising it applies to all four families.
+            .onChange(of: settings.complicationStyle) { _, _ in
+                engine.publish()
+            }
             Text(settings.complicationStyle.detail)
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)

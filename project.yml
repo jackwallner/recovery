@@ -146,6 +146,7 @@ targets:
       - path: Shared/Utilities/WorkoutClassifier.swift
       - path: Shared/Utilities/CountdownFormat.swift
       - path: Shared/Utilities/CountdownTimeline.swift
+      - path: Shared/Utilities/ComplicationCopy.swift
       - path: Shared/Utilities/RechargeConversionCopy.swift
       - path: Shared/Utilities/DateHelpers.swift
     settings:

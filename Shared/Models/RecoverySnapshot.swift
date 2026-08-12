@@ -25,8 +25,10 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
     public var reasons: [String]
     public var calculatedAt: Date
     public var modelVersion: Int
-    /// Mirrors the live entitlement so extensions can gate Pro-only detail
-    /// without a StoreKit round-trip.
+    /// Which tier produced this window, carried so a surface that has no
+    /// StoreKit access can still say. Nothing on the wrist gates on it today:
+    /// the tier is already baked into `hours`, and a complication has no room
+    /// to explain the difference.
     public var isPro: Bool
 
     public static let empty = RecoverySnapshot()
