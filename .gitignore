@@ -19,6 +19,7 @@ xcuserdata/
 
 # fastlane
 fastlane/report.xml
+fastlane/README.md
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
