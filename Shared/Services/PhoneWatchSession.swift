@@ -267,8 +267,6 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         if let style = payload[MessageKey.complicationStyle] as? Int {
             defaults.set(style, forKey: SettingsKeys.complicationStyle)
         }
-        defaults.set(snapshot.isPro, forKey: SettingsKeys.isProCached)
-
         let now = Date.now
         defaults.set(now, forKey: Self.lastSnapshotReceivedKey)
         lastSnapshotReceived = now

@@ -157,12 +157,20 @@ private struct HistoryRow: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 3) {
-                    Text(estimate.producesCountdown ? CountdownFormat.hours(estimate.hours) : "—")
-                        .font(.system(.title3, design: .rounded, weight: .bold))
+                    // A bare dash was a deliberate classification that nobody
+                    // read as one. A history full of them looks like an import
+                    // that lost the numbers, and an easy session has no number
+                    // to lose: `easy` produces no window on either tier, so
+                    // there is no day-one figure being withheld here. Say so in
+                    // a word instead of punctuating it.
+                    Text(estimate.producesCountdown ? CountdownFormat.hours(estimate.hours) : "None")
+                        .font(.system(
+                            .title3,
+                            design: .rounded,
+                            weight: estimate.producesCountdown ? .bold : .semibold
+                        ))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.textPrimary)
-                        // The dash is a deliberate classification, not missing
-                        // data, and VoiceOver reads the glyph as nothing at all.
+                        .foregroundStyle(estimate.producesCountdown ? Theme.textPrimary : Theme.textSecondary)
                         .accessibilityLabel(estimate.producesCountdown
                                             ? CountdownFormat.hours(estimate.hours)
                                             : "No countdown")

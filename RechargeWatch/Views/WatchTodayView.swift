@@ -31,6 +31,13 @@ struct WatchTodayView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     ring
+                    // Above the headline, not below it. The effort tap is the
+                    // only Watch to phone write in the app, and after the ring,
+                    // the ready time, and the category line it sat off the
+                    // bottom of the screen: a user could open the Watch
+                    // specifically to answer, see an ordinary countdown, and
+                    // leave. The ring gives up the height it needs.
+                    if wantsEffortPrompt { effortButton }
                     detail
                     if let status = connectivity.statusMessage {
                         Text(status)
@@ -113,8 +120,25 @@ struct WatchTodayView: View {
                 }
             }
         }
-        .frame(width: 120, height: 120)
+        .frame(width: ringSize, height: ringSize)
         .padding(.top, 4)
+    }
+
+    /// The ring shrinks while a request is pending so the button below it lands
+    /// inside the first viewport on the smallest watch.
+    private var ringSize: CGFloat { wantsEffortPrompt ? 96 : 120 }
+
+    // MARK: - Effort
+
+    private var effortButton: some View {
+        Button {
+            showEffort = true
+        } label: {
+            Label("Rate effort", systemImage: "hand.raised.fill")
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+        }
+        .buttonStyle(.bordered)
+        .tint(Theme.recovering)
     }
 
     // MARK: - Detail
@@ -133,18 +157,6 @@ struct WatchTodayView: View {
                 Text("\(category.shortLabel) · \(snapshot.activityLabel)")
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
-            }
-
-            if wantsEffortPrompt {
-                Button {
-                    showEffort = true
-                } label: {
-                    Label("Rate effort", systemImage: "hand.raised.fill")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
-                }
-                .buttonStyle(.bordered)
-                .tint(Theme.recovering)
-                .padding(.top, 4)
             }
 
             if let staleness = connectionNote {

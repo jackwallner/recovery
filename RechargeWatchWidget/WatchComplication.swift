@@ -80,80 +80,32 @@ func loadComplicationStyle() -> ComplicationStyle {
 
 // MARK: - Shared copy
 
-/// One place decides what each style says, so all four families stay in step.
-enum ComplicationCopy {
-    /// The big value in the middle of a circular or corner slot.
-    static func primary(_ entry: RecoveryEntry) -> String {
-        switch entry.phase {
-        case .noRecentWorkout:
-            return "--"
-        case .ready:
-            return entry.style == .state ? "READY" : "Ready"
-        case .readySoon, .recovering:
-            switch entry.style {
-            case .countdown:
-                return CountdownFormat.compactRemaining(entry.remaining)
-            case .readyClock:
-                return entry.snapshot.readyAt.map(CountdownFormat.clock) ?? "--"
-            case .state:
-                return entry.phase == .readySoon ? "SOON" : "REC"
-            }
-        }
+/// The strings themselves live in `Shared/Utilities/ComplicationCopy.swift`, so
+/// the test target can compile them. These are the entry-shaped call sites.
+extension RecoveryEntry {
+    var primaryText: String {
+        ComplicationCopy.primary(
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+        )
     }
 
-    /// The line under it on rectangular, and the widget label on corner/inline.
-    static func secondary(_ entry: RecoveryEntry) -> String {
-        switch entry.phase {
-        case .noRecentWorkout:
-            return "No workout"
-        case .ready:
-            // Not "Ready to train": on a glance surface with no room for the
-            // qualifier, that reads as clearance to train rather than as an
-            // estimate about training load, which is the only thing the model
-            // knows. Every other surface says "hard session"; so does this one.
-            return entry.snapshot.activityLabel.isEmpty
-                ? "Ready for a hard session"
-                : "After your \(entry.snapshot.activityLabel)"
-        case .readySoon, .recovering:
-            switch entry.style {
-            case .countdown:
-                return entry.snapshot.readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
-            case .readyClock:
-                return CountdownFormat.compactRemaining(entry.remaining) + " left"
-            case .state:
-                return CountdownFormat.compactRemaining(entry.remaining) + " left"
-            }
-        }
+    var secondaryText: String {
+        ComplicationCopy.secondary(
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
+            activityLabel: snapshot.activityLabel
+        )
     }
 
-    /// Inline slots are a handful of characters wide and get no ring, so they
-    /// carry the shortest complete sentence available.
-    static func inline(_ entry: RecoveryEntry) -> String {
-        switch entry.phase {
-        case .noRecentWorkout: "No workout"
-        // The inline slot has room for one word, and "Ready" is the token every
-        // other surface already uses for an expired estimate.
-        case .ready: "Ready"
-        case .readySoon, .recovering:
-            switch entry.style {
-            case .countdown: "\(CountdownFormat.compactRemaining(entry.remaining)) to ready"
-            case .readyClock: entry.snapshot.readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
-            case .state: entry.phase == .readySoon ? "Ready soon" : "Recovering"
-            }
-        }
+    var inlineText: String {
+        ComplicationCopy.inline(
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+        )
     }
 
-    static func rectangularTitle(_ entry: RecoveryEntry) -> String {
-        switch entry.phase {
-        case .noRecentWorkout: "Recharge"
-        case .ready: "Ready"
-        case .readySoon, .recovering:
-            switch entry.style {
-            case .countdown: "Recover \(CountdownFormat.compactRemaining(entry.remaining))"
-            case .readyClock: entry.snapshot.readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
-            case .state: entry.phase == .readySoon ? "READY SOON" : "RECOVERING"
-            }
-        }
+    var rectangularTitleText: String {
+        ComplicationCopy.rectangularTitle(
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+        )
     }
 }
 
@@ -170,7 +122,7 @@ struct RecoveryCircularView: View {
                 VStack(spacing: 0) {
                     Image(systemName: Theme.symbol(for: entry.phase))
                         .font(.system(size: 15, weight: .semibold))
-                    Text(ComplicationCopy.primary(entry))
+                    Text(entry.primaryText)
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
@@ -181,7 +133,7 @@ struct RecoveryCircularView: View {
             Gauge(value: min(max(entry.progress, 0), 1)) {
                 Image(systemName: "hourglass")
             } currentValueLabel: {
-                Text(ComplicationCopy.primary(entry))
+                Text(entry.primaryText)
                     .font(.system(.body, design: .rounded, weight: .bold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
@@ -204,12 +156,12 @@ struct RecoveryRectangularView: View {
                 .widgetAccentable()
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(ComplicationCopy.rectangularTitle(entry))
+                Text(entry.rectangularTitleText)
                     .font(.system(.headline, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .monospacedDigit()
-                Text(ComplicationCopy.secondary(entry))
+                Text(entry.secondaryText)
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -225,7 +177,7 @@ struct RecoveryInlineView: View {
 
     var body: some View {
         // Inline renders as one text run beside the system's own glyph slot.
-        Label(ComplicationCopy.inline(entry), systemImage: Theme.symbol(for: entry.phase))
+        Label(entry.inlineText, systemImage: Theme.symbol(for: entry.phase))
     }
 }
 
@@ -236,11 +188,17 @@ struct RecoveryCornerView: View {
         if entry.phase == .ready || entry.phase == .noRecentWorkout {
             Image(systemName: Theme.symbol(for: entry.phase))
                 .font(.title2)
-                .widgetLabel { Text(ComplicationCopy.primary(entry)) }
+                .widgetLabel { Text(entry.primaryText) }
         } else {
-            Text(ComplicationCopy.primary(entry))
+            // The corner is the narrowest text region on a face and it carries
+            // the longest strings we produce: `readyClock` puts a whole clock
+            // here ("10:29 PM"), `countdown` puts "1h 20m". Without these it
+            // truncates, so it scales down the way every sibling family does.
+            Text(entry.primaryText)
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.55)
                 .widgetLabel {
                     // The curved label around a corner slot is a gauge, which is
                     // exactly the right shape for a countdown.

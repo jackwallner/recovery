@@ -124,9 +124,6 @@ public final class StoreService: NSObject, ObservableObject {
     @Published public private(set) var isPro: Bool = false {
         didSet {
             guard oldValue != isPro else { return }
-            // Mirror into the App Group so the complication can gate Pro-only
-            // detail without a StoreKit round-trip.
-            Self.groupDefaults?.set(isPro, forKey: SettingsKeys.isProCached)
             WidgetCenter.shared.reloadAllTimelines()
             #if os(iOS)
             // The engine folds sleep, HRV, and resting heart rate in only when
