@@ -266,6 +266,9 @@ public final class RechargeSettings: ObservableObject {
     }
 
     private func applyScreenshotOverridesIfNeeded() {
+        // `ScreenshotFixtures` only exists in DEBUG, and a Release build still
+        // type-checks this body even though `isEnabled` is a constant false.
+        #if DEBUG
         guard ScreenshotConfig.isEnabled else { return }
         appearance = .system
         complicationStyle = .countdown
@@ -273,5 +276,6 @@ public final class RechargeSettings: ObservableObject {
         hasDeferredHealthAccess = false
         useContextSignals = true
         athleteProfile = ScreenshotFixtures.athleteProfile()
+        #endif
     }
 }
