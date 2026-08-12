@@ -160,6 +160,14 @@ App Group key, because the Watch has no workout history of its own.
 ### Generating the project
 `./scripts/xcgen.sh` (a thin `xcodegen generate`; `testflight.sh` calls it).
 
+**A green test suite does not mean the archive builds.** `RechargeTests` builds
+Debug, where `ScreenshotFixtures` exists; Release drops it and every call site
+still has to type-check. That is how build 10 first failed to archive, in the
+widget extension, with the whole suite passing. Anything touching
+`ScreenshotConfig` or `ScreenshotFixtures` wants a
+`-configuration Release -destination generic/platform=iOS` build before you
+trust it.
+
 **StoreKit Testing does not activate under `xcodebuild test`.** The `.storekit`
 file was referenced from the scheme's Test action, from a test plan (every
 relative-path spelling), and started with `SKTestSession` from the UI-test
