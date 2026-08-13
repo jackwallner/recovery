@@ -69,7 +69,7 @@ def iap_screenshot(client: asc_lib.ASCClient, iap_id: str) -> bool:
         headers={"Authorization": f"Bearer {client.token}"},
     )
     with urllib.request.urlopen(request, timeout=60) as response:
-        return bool(json.loads(response.read()).get("data"))
+        return json.loads(response.read()).get("data")
 
 
 def main() -> None:
@@ -83,6 +83,7 @@ def main() -> None:
     image = Path(args.screenshot)
     if not image.is_file():
         raise SystemExit(f"error: no screenshot at {image}")
+    expected_checksum = hashlib.md5(image.read_bytes()).hexdigest()
 
     client = asc_lib.ASCClient(asc_lib.bearer_token(*asc_lib.load_credentials()))
     app_id = asc_lib.find_app(client, BUNDLE)["id"]
@@ -94,9 +95,13 @@ def main() -> None:
                 existing = client.get(f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot")
             except RuntimeError:
                 existing = {}
-            if existing.get("data"):
-                print(f"{product_id}: screenshot exists")
+            existing_data = existing.get("data")
+            if existing_data and existing_data["attributes"].get("sourceFileChecksum") == expected_checksum:
+                print(f"{product_id}: screenshot is current")
                 continue
+            if existing_data:
+                client.delete(f"/{existing_data['type']}/{existing_data['id']}")
+                print(f"{product_id}: replaced stale screenshot")
             upload_asset(
                 client,
                 "subscriptionAppStoreReviewScreenshots",
@@ -109,9 +114,13 @@ def main() -> None:
 
     for purchase in asc_lib.list_all(client, f"/apps/{app_id}/inAppPurchasesV2"):
         product_id = purchase["attributes"]["productId"]
-        if iap_screenshot(client, purchase["id"]):
-            print(f"{product_id}: screenshot exists")
+        existing_data = iap_screenshot(client, purchase["id"])
+        if existing_data and existing_data["attributes"].get("sourceFileChecksum") == expected_checksum:
+            print(f"{product_id}: screenshot is current")
             continue
+        if existing_data:
+            client.delete(f"/{existing_data['type']}/{existing_data['id']}")
+            print(f"{product_id}: replaced stale screenshot")
         upload_asset(
             client,
             "inAppPurchaseAppStoreReviewScreenshots",
