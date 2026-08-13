@@ -3,7 +3,7 @@
   "nonRenewingSubscriptions": [],
   "products": [
     {
-      "displayPrice": "29.99",
+      "displayPrice": "59.99",
       "familyShareable": false,
       "internalID": "31555103",
       "localizations": [
@@ -42,7 +42,7 @@
         {
           "adHocOffers": [],
           "codeOffers": [],
-          "displayPrice": "1.99",
+          "displayPrice": "5.99",
           "familyShareable": false,
           "groupNumber": 1,
           "internalID": "31555101",
@@ -67,7 +67,7 @@
         {
           "adHocOffers": [],
           "codeOffers": [],
-          "displayPrice": "14.99",
+          "displayPrice": "29.99",
           "familyShareable": false,
           "groupNumber": 2,
           "internalID": "31555102",
@@ -78,7 +78,7 @@
           },
           "localizations": [
             {
-              "description": "Unlock Recharge Pro yearly \u2014 save 37%",
+              "description": "Unlock Recharge Pro yearly, save 58%",
               "displayName": "Recharge Pro Yearly",
               "locale": "en_US"
             }

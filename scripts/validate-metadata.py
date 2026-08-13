@@ -20,7 +20,7 @@ SUPPORTED_LOCALES = json.loads((Path(__file__).parent / "asc-supported-locales.j
 LOCALES = (
     SUPPORTED_LOCALES
     if os.environ.get("RECHARGE_REQUIRE_ALL_LOCALES") == "1"
-    else sorted(path.name for path in META.iterdir() if path.is_dir())
+    else sorted(path.name for path in META.iterdir() if path.is_dir() and path.name != "review_information")
 )
 REQUIRED = (
     "name", "subtitle", "keywords", "description", "promotional_text",
@@ -30,6 +30,10 @@ PROHIBITED = (
     r"\bdiagnoses?\b", r"\btreats?\b", r"\bcures?\b", r"\bprevents?\b",
     r"\bguaranteed\b", r"\blongevity prediction\b", r"\bclinical accuracy\b",
 )
+EXPECTED_CATEGORIES = {
+    "primary_category": "HEALTH_AND_FITNESS",
+    "secondary_category": "SPORTS",
+}
 
 
 def read(locale: str, field: str) -> str:
@@ -56,6 +60,11 @@ def check_url(url: str) -> bool:
 
 def main() -> None:
     errors: list[str] = []
+    for field, expected in EXPECTED_CATEGORIES.items():
+        path = META / f"{field}.txt"
+        value = path.read_text(encoding="utf-8").strip() if path.exists() else ""
+        if value != expected:
+            errors.append(f"{field}: expected {expected}, found {value or 'empty'}")
     present = sorted(path.name for path in META.iterdir() if path.is_dir() and path.name != "review_information")
     if present != sorted(LOCALES):
         errors.append(f"locale set mismatch: expected {len(LOCALES)}, found {len(present)}")
@@ -106,8 +115,10 @@ def main() -> None:
             errors.append(f"{locale}: missing Apple Standard EULA URL")
         if "https://jackwallner.github.io/recovery/privacy-policy.html" not in description:
             errors.append(f"{locale}: missing privacy URL")
-        if not all(price in description for price in ("1.99", "14.99", "29.99")) and not all(price in description for price in ("1,99", "14,99", "29,99")):
-            errors.append(f"{locale}: missing plan prices")
+        if re.search(r"[$£€]\s?\d|\d+[.,]\d{2}\s*(?:per|/)", description):
+            errors.append(f"{locale}: description must not hardcode regional prices")
+        if "Prices are shown in the app before you buy and vary by region" not in description:
+            errors.append(f"{locale}: missing regional-price disclosure")
         if locale == "en-US" and "7-day" not in description:
             errors.append(f"{locale}: missing 7-day trial disclosure")
 

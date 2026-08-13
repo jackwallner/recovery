@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Normalize raw simulator captures into the sizes App Store Connect accepts.
+"""Compose raw simulator captures into App Store marketing screenshots.
 
 A pool iPhone 17 Pro captures 1206x2622. ASC wants 1320x2868 for the 6.9-inch
 (`APP_IPHONE_67`) set and 1284x2778 for the 6.5-inch (`APP_IPHONE_65`) set, both
-as RGB PNG with no alpha. Scaling rather than cropping keeps the layout honest —
+as RGB PNG with no alpha. Scaling rather than cropping keeps the layout honest,
 a cropped frame would hide exactly the safe-area problems the review is for.
 
-Raw captures are kept beside the normalized assets for design review.
+Raw captures are kept beside the composed assets for design review. Every frame
+has one headline and no marketing subheader. The screen content itself remains
+an unedited Simulator capture.
 """
 import os
 import sys
@@ -15,6 +17,16 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = os.path.join(ROOT, "Screenshots", "raw")
+BACKGROUND = os.path.join(ROOT, "Screenshots", "Artwork", "recharge-background.png")
+
+HEADLINES = {
+    "01-countdown.png": "Know when you're Ready",
+    "02-ready.png": "A clear Ready",
+    "03-history.png": "Every session, explained",
+    "04-pro.png": "Recovery, personalized",
+    "05-settings.png": "Built around your training",
+    "06-watch.png": "Recovery on your wrist",
+}
 
 SETS = {
     "APP_IPHONE_67": ((1320, 2868), os.path.join(ROOT, "Screenshots", "iphone-67")),
@@ -23,28 +35,9 @@ SETS = {
 }
 
 
-def normalize(path, size, out_dir):
-    with Image.open(path) as img:
-        # Flatten onto white first: ASC rejects any alpha channel, and a
-        # straight convert would leave transparent pixels black.
-        if img.mode in ("RGBA", "LA", "P"):
-            flat = Image.new("RGB", img.size, (255, 255, 255))
-            rgba = img.convert("RGBA")
-            flat.paste(rgba, mask=rgba.split()[-1])
-            img = flat
-        else:
-            img = img.convert("RGB")
-        resized = img.resize(size, Image.LANCZOS)
-
-    os.makedirs(out_dir, exist_ok=True)
-    out = os.path.join(out_dir, os.path.basename(path))
-    resized.save(out, "PNG")
-    return out
-
-
 def font(size, bold=False):
     candidates = [
-        "/System/Library/Fonts/SFNS.ttf" if bold else "/System/Library/Fonts/SFNSRounded.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf" if bold else "/System/Library/Fonts/SFNSRounded.ttf",
         "/System/Library/Fonts/SFNS.ttf",
     ]
     for candidate in candidates:
@@ -59,63 +52,92 @@ def centered_text(draw, canvas_width, y, value, text_font, fill, spacing=12):
     draw.multiline_text(((canvas_width - width) / 2, y), value, font=text_font, fill=fill, spacing=spacing, align="center")
 
 
+def background(size):
+    if not os.path.exists(BACKGROUND):
+        raise FileNotFoundError(f"missing generated artwork: {BACKGROUND}")
+    with Image.open(BACKGROUND) as source:
+        source = source.convert("RGB")
+        scale = max(size[0] / source.width, size[1] / source.height)
+        resized = source.resize((round(source.width * scale), round(source.height * scale)), Image.LANCZOS)
+        left = (resized.width - size[0]) // 2
+        top = (resized.height - size[1]) // 2
+        return resized.crop((left, top, left + size[0], top + size[1])).convert("RGBA")
+
+
+def shadowed_card(canvas, content, box, radius, border=0):
+    x, y, width, height = box
+    shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    shadow_draw.rounded_rectangle(
+        (x, y + 18, x + width, y + height + 18),
+        radius=radius,
+        fill=(25, 25, 35, 68),
+    )
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(30)))
+
+    frame = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    frame_draw = ImageDraw.Draw(frame)
+    frame_draw.rounded_rectangle((0, 0, width, height), radius=radius, fill=(18, 18, 20, 255))
+    inner = content.resize((width - border * 2, height - border * 2), Image.LANCZOS).convert("RGBA")
+    mask = Image.new("L", inner.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, inner.width, inner.height),
+        radius=max(1, radius - border),
+        fill=255,
+    )
+    frame.paste(inner, (border, border), mask)
+    canvas.alpha_composite(frame, (x, y))
+
+
+def compose_phone(path, size, out_dir):
+    width, height = size
+    canvas = background(size)
+    draw = ImageDraw.Draw(canvas)
+    headline = HEADLINES[os.path.basename(path)]
+    centered_text(draw, width, int(height * 0.055), headline, font(int(width * 0.073), True), (19, 19, 23))
+
+    with Image.open(path) as screen:
+        screen = screen.convert("RGB")
+        target_height = int(height * 0.785)
+        target_width = round(screen.width * target_height / screen.height)
+        max_width = int(width * 0.82)
+        if target_width > max_width:
+            target_width = max_width
+            target_height = round(screen.height * target_width / screen.width)
+
+    x = (width - target_width) // 2
+    y = int(height * 0.175)
+    border = max(6, width // 90)
+    shadowed_card(canvas, screen, (x, y, target_width, target_height), int(width * 0.075), border)
+
+    os.makedirs(out_dir, exist_ok=True)
+    out = os.path.join(out_dir, os.path.basename(path))
+    canvas.convert("RGB").save(out, "PNG")
+    return out
+
+
 def compose_watch(path, size, out_dir):
     width, height = size
-    canvas = Image.new("RGB", size, (248, 248, 252))
-    glow = Image.new("RGBA", size, (0, 0, 0, 0))
-    glow_draw = ImageDraw.Draw(glow)
-    glow_draw.ellipse(
-        (width * 0.08, height * 0.23, width * 0.92, height * 0.78),
-        fill=(255, 120, 64, 45),
-    )
-    canvas = Image.alpha_composite(canvas.convert("RGBA"), glow.filter(ImageFilter.GaussianBlur(width // 7)))
+    canvas = background(size)
     draw = ImageDraw.Draw(canvas)
-
-    centered_text(draw, width, int(height * 0.09), "Recovery time,\non your wrist", font(int(width * 0.10), True), (20, 20, 24), 8)
-    centered_text(
-        draw,
-        width,
-        int(height * 0.245),
-        "Raise your wrist for the countdown.\nNo second device required.",
-        font(int(width * 0.037)),
-        (95, 95, 105),
-        12,
-    )
+    centered_text(draw, width, int(height * 0.055), HEADLINES[os.path.basename(path)], font(int(width * 0.073), True), (19, 19, 23))
 
     with Image.open(path) as watch:
         watch = watch.convert("RGB")
-        target_width = int(width * 0.68)
+        target_width = int(width * 0.74)
         target_height = int(watch.height * target_width / watch.width)
-        watch = watch.resize((target_width, target_height), Image.LANCZOS)
 
     frame_padding = int(width * 0.035)
     frame_box_width = target_width + frame_padding * 2
     frame_box_height = target_height + frame_padding * 2
     frame_x = (width - frame_box_width) // 2
-    frame_y = int(height * 0.37)
-    shadow = Image.new("RGBA", size, (0, 0, 0, 0))
-    shadow_draw = ImageDraw.Draw(shadow)
-    shadow_draw.rounded_rectangle(
-        (frame_x, frame_y + 18, frame_x + frame_box_width, frame_y + frame_box_height + 18),
-        radius=int(width * 0.13),
-        fill=(0, 0, 0, 70),
-    )
-    canvas = Image.alpha_composite(canvas, shadow.filter(ImageFilter.GaussianBlur(28)))
-    draw = ImageDraw.Draw(canvas)
-    draw.rounded_rectangle(
-        (frame_x, frame_y, frame_x + frame_box_width, frame_y + frame_box_height),
-        radius=int(width * 0.13),
-        fill=(18, 18, 20, 255),
-    )
-    canvas.paste(watch.convert("RGBA"), (frame_x + frame_padding, frame_y + frame_padding))
-
-    centered_text(
-        ImageDraw.Draw(canvas),
-        width,
-        int(height * 0.86),
-        "Watch app and four complication families",
-        font(int(width * 0.036), True),
-        (35, 35, 40),
+    frame_y = int(height * 0.29)
+    shadowed_card(
+        canvas,
+        watch,
+        (frame_x, frame_y, frame_box_width, frame_box_height),
+        int(width * 0.13),
+        frame_padding,
     )
 
     os.makedirs(out_dir, exist_ok=True)
@@ -140,7 +162,7 @@ def main():
     for label, (size, out_dir) in SETS.items():
         for shot in shots:
             path = os.path.join(RAW, shot)
-            out = compose_watch(path, size, out_dir) if shot == "06-watch.png" else normalize(path, size, out_dir)
+            out = compose_watch(path, size, out_dir) if shot == "06-watch.png" else compose_phone(path, size, out_dir)
             print(f"{label} {size[0]}x{size[1]}  {out}")
     return 0
 
