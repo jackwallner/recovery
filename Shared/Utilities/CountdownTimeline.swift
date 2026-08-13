@@ -19,6 +19,7 @@ public enum CountdownTimeline {
     /// several times over anyway, and a 72-hour countdown at hourly granularity
     /// is already 70-odd entries.
     public static let maximumEntries = 80
+    private static let reservedFinalEntries = 2
 
     /// Instants the timeline should carry for a given snapshot.
     ///
@@ -39,7 +40,8 @@ public enum CountdownTimeline {
         // Hourly down to the last two hours.
         if remaining > 2 * 3600 {
             var cursor = nextHourBoundary(after: now)
-            while cursor < readyAt.addingTimeInterval(-2 * 3600), dates.count < maximumEntries {
+            while cursor < readyAt.addingTimeInterval(-2 * 3600),
+                  dates.count < maximumEntries - reservedFinalEntries {
                 dates.append(cursor)
                 cursor = cursor.addingTimeInterval(3600)
             }
@@ -48,7 +50,7 @@ public enum CountdownTimeline {
         // Every fifteen minutes through the final two hours, so "1h 20m" and the
         // Ready-soon colour are actually right on the wrist.
         var cursor = max(now, readyAt.addingTimeInterval(-2 * 3600))
-        while cursor < readyAt, dates.count < maximumEntries {
+        while cursor < readyAt, dates.count < maximumEntries - reservedFinalEntries {
             if cursor > now { dates.append(cursor) }
             cursor = cursor.addingTimeInterval(15 * 60)
         }
@@ -58,7 +60,7 @@ public enum CountdownTimeline {
         dates.append(readyAt)
         dates.append(readyAt.addingTimeInterval(60))
 
-        return Array(Set(dates)).sorted().prefix(maximumEntries).map { $0 }
+        return Array(Set(dates)).sorted()
     }
 
     /// When WidgetKit should come back for a fresh timeline.

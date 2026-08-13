@@ -384,14 +384,12 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
     public let tier: RecoveryTier
     /// The Recharge+ multiplier that was applied. Exactly 1 on the standard tier.
     public let personalFactor: Double
+    /// The same session scored through the Standard path. Stored explicitly
+    /// because removing only `personalFactor` does not undo a personal baseline,
+    /// overnight context, or calibration.
+    public let standardHours: Double
 
     public var producesCountdown: Bool { hours > 0 }
-
-    /// The window this session would have had on the standard tier. Lets a
-    /// Recharge+ screen show what personalisation actually changed.
-    public var standardHours: Double {
-        personalFactor > 0 ? hours / personalFactor : hours
-    }
 
     public init(
         sessionID: String,
@@ -410,7 +408,8 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         reasons: [String],
         modelVersion: Int = recoveryModelVersion,
         tier: RecoveryTier = .standard,
-        personalFactor: Double = 1
+        personalFactor: Double = 1,
+        standardHours: Double? = nil
     ) {
         self.sessionID = sessionID
         self.profile = profile
@@ -429,11 +428,12 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         self.modelVersion = modelVersion
         self.tier = tier
         self.personalFactor = personalFactor
+        self.standardHours = standardHours
+            ?? (personalFactor > 0 ? hours / personalFactor : hours)
     }
 
-    /// `tier` and `personalFactor` arrived in model version 2. Records written
-    /// before it decode as what they actually were: a standard, unmultiplied
-    /// window.
+    /// Tier metadata arrived in model version 2, and `standardHours` was added
+    /// later. Missing fields decode to the closest truthful legacy value.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sessionID = try container.decode(String.self, forKey: .sessionID)
@@ -453,6 +453,8 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         modelVersion = try container.decode(Int.self, forKey: .modelVersion)
         tier = try container.decodeIfPresent(RecoveryTier.self, forKey: .tier) ?? .standard
         personalFactor = try container.decodeIfPresent(Double.self, forKey: .personalFactor) ?? 1
+        standardHours = try container.decodeIfPresent(Double.self, forKey: .standardHours)
+            ?? (personalFactor > 0 ? hours / personalFactor : hours)
     }
 
     /// Phase at a given instant. Derived rather than stored so a cached estimate

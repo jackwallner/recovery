@@ -140,6 +140,12 @@ public final class StoreService: NSObject, ObservableObject {
     @Published public private(set) var isLoadingProducts = false
     @Published public private(set) var lastError: String?
 
+    /// True after RevenueCat has answered for the current customer, or a local
+    /// debug override has deliberately supplied the answer.
+    public var entitlementStatusResolved: Bool {
+        customerInfo != nil || localProOverride != nil
+    }
+
     /// Per-product intro-offer eligibility. The paywall reads this so it only
     /// advertises a free trial to users who will actually receive one — Apple
     /// 3.1.2 requires the offer shown to match what StoreKit will grant.
@@ -447,11 +453,20 @@ public final class StoreService: NSObject, ObservableObject {
     }
 
     public func apply(customerInfo: CustomerInfo) {
+        let wasResolved = entitlementStatusResolved
         self.customerInfo = customerInfo
         let active = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
         logger.info("Applied customerInfo — active: [\(active, privacy: .public)]")
         let hasActive = customerInfo.hasRechargeProEntitlement
-        if isPro != hasActive { isPro = hasActive }
+        if isPro != hasActive {
+            isPro = hasActive
+        } else if !wasResolved {
+            #if os(iOS)
+            // A first response for a free customer does not change `isPro`, so
+            // its didSet cannot rescore build-10 records with missing tier data.
+            RecoveryEngine.shared.entitlementDidChange()
+            #endif
+        }
     }
 
     // MARK: - Private

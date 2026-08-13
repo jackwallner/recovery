@@ -63,6 +63,7 @@ struct PaywallView: View {
     @State private var selected: Package?
     @State private var errorMessage: String?
     @State private var didPurchase = false
+    @State private var isRestoring = false
 
     var body: some View {
         NavigationStack {
@@ -310,10 +311,18 @@ struct PaywallView: View {
             HStack(spacing: 18) {
                 Button("Restore") {
                     Task {
+                        isRestoring = true
                         await store.restorePurchases()
-                        errorMessage = store.lastError
+                        isRestoring = false
+                        if store.isPro {
+                            dismiss()
+                        } else {
+                            errorMessage = store.lastError
+                                ?? "No active Recharge Pro purchase was found for this Apple ID."
+                        }
                     }
                 }
+                .disabled(isRestoring)
                 Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
                 Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
             }

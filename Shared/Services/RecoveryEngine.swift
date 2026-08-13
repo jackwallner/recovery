@@ -123,10 +123,21 @@ public final class RecoveryEngine: ObservableObject {
             lastImportFailed = true
             return
         }
-        lastImportFailed = false
-        lastSuccessfulImport = .now
 
         let existing = (try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? []
+        let importCutoff = DateHelpers.daysAgo(HealthKitService.importDays)
+        let recentExisting = existing.filter { $0.endDate >= importCutoff }
+        // HealthKit deliberately makes a denied read look like an empty store.
+        // If recent records already exist, treating that empty result as a
+        // deletion would erase the user's history after permission is revoked.
+        guard !imported.isEmpty || recentExisting.isEmpty else {
+            lastImportFailed = true
+            engineLogger.error("Health returned no workouts while recent cached records exist; preserving the cache")
+            return
+        }
+
+        lastImportFailed = false
+        lastSuccessfulImport = .now
         var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
         let ambiguousProfile = RechargeSettings.shared.ambiguousProfile
 
@@ -168,7 +179,6 @@ public final class RecoveryEngine: ObservableObject {
         // Workouts deleted in Health must disappear here too, or a countdown can
         // outlive the session that produced it.
         let liveUUIDs = Set(imported.map(\.uuid))
-        let importCutoff = DateHelpers.daysAgo(HealthKitService.importDays)
         for record in existing where record.endDate >= importCutoff && !liveUUIDs.contains(record.healthKitUUID) {
             context.delete(record)
         }
@@ -343,6 +353,7 @@ public final class RecoveryEngine: ObservableObject {
                     context: recoveryContext,
                     calibration: settings.calibrationFactor,
                     personalization: personalization,
+                    standardHours: standardEstimates[index].hours,
                     now: now
                 )
             } else {
@@ -359,9 +370,16 @@ public final class RecoveryEngine: ObservableObject {
 
             let published: RecoveryEstimate
             if let record = statesByID[workout.healthKitUUID] {
+                // Build 10 records are missing their tier fields. Keep an
+                // expired one frozen until RevenueCat answers, then rescore it
+                // once under the customer's actual tier.
                 let isFrozen = record.readyAt <= now
                     && !unfreezeAll
                     && workout.healthKitUUID != unfrozenSessionID
+                    && (
+                        record.hasCompleteTierMetadata
+                            || !StoreService.shared.entitlementStatusResolved
+                    )
                 if isFrozen {
                     published = record.estimate
                 } else {
@@ -577,6 +595,22 @@ public final class RecoveryEngine: ObservableObject {
         guard !ScreenshotConfig.isEnabled else { return }
         rescore()
         publish()
+    }
+
+    /// Advances time-based state without performing another HealthKit import.
+    /// The Today timer calls this so an open app asks for feedback and records a
+    /// Ready moment when the countdown expires, not on the next launch.
+    public func handleClockTick(now: Date = .now) {
+        awaitingFeedback = RecoveryResolver.awaitingFeedback(
+            in: estimates,
+            answered: RechargeSettings.shared.answeredFeedbackSessions,
+            now: now
+        )
+        guard let estimate = RecoveryResolver.current(in: estimates, now: now),
+              estimate.producesCountdown,
+              estimate.readyAt <= now
+        else { return }
+        ReviewPromptTracker.recordReadyMoment(sessionID: estimate.sessionID)
     }
 
     // MARK: - Weekly load (Pro)

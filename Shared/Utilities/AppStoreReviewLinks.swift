@@ -6,7 +6,7 @@ public enum AppStoreReviewLinks {
     /// The App Store Connect record for `com.jackwallner.recovery`.
     public static let appStoreID = "6797089337"
 
-    public static let supportEmail = "support@jackwallner.com"
+    public static let supportEmail = "jackwallner@gmail.com"
 
     /// Opens the App Store write-review page in the user's storefront. Apple
     /// routes correctly when the storefront is unknown.

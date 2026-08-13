@@ -69,7 +69,10 @@ struct TodayView: View {
             .navigationTitle("Recharge")
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await engine.refresh(force: true) }
-            .onReceive(ticker) { now = $0 }
+            .onReceive(ticker) { date in
+                now = date
+                engine.handleClockTick(now: date)
+            }
             .onAppear { now = .now }
             .task {
                 if engine.awaitingFeedback != nil { showFeedbackSheet = true }

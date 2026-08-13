@@ -115,6 +115,11 @@ public final class RecoveryStateRecord {
     public var relativeLoad: Double
     public var reasonsJoined: String
     public var modelVersion: Int
+    /// Added after model version 2 reached TestFlight. Optional fields let
+    /// SwiftData migrate those pre-release records without dropping the cache.
+    public var tierRaw: String?
+    public var personalFactor: Double?
+    public var standardHours: Double?
     public var userFeedbackRaw: String?
 
     public init(estimate: RecoveryEstimate) {
@@ -135,6 +140,9 @@ public final class RecoveryStateRecord {
         self.relativeLoad = estimate.relativeLoad
         self.reasonsJoined = estimate.reasons.joined(separator: "\u{1F}")
         self.modelVersion = estimate.modelVersion
+        self.tierRaw = estimate.tier.rawValue
+        self.personalFactor = estimate.personalFactor
+        self.standardHours = estimate.standardHours
         self.userFeedbackRaw = nil
     }
 
@@ -164,8 +172,17 @@ public final class RecoveryStateRecord {
             category: LoadCategory(rawValue: categoryRaw) ?? .typical,
             confidence: RecoveryConfidence(rawValue: confidenceRaw) ?? .low,
             reasons: reasonsJoined.isEmpty ? [] : reasonsJoined.components(separatedBy: "\u{1F}"),
-            modelVersion: modelVersion
+            modelVersion: modelVersion,
+            tier: tierRaw.flatMap(RecoveryTier.init(rawValue:)) ?? .standard,
+            personalFactor: personalFactor ?? 1,
+            standardHours: standardHours
         )
+    }
+
+    /// Build 10 did not persist these fields. The engine rescores those records
+    /// once so a personalized result is never relabelled as Standard.
+    public var hasCompleteTierMetadata: Bool {
+        tierRaw != nil && personalFactor != nil && standardHours != nil
     }
 
     public func update(from estimate: RecoveryEstimate) {
@@ -185,6 +202,9 @@ public final class RecoveryStateRecord {
         relativeLoad = estimate.relativeLoad
         reasonsJoined = estimate.reasons.joined(separator: "\u{1F}")
         modelVersion = estimate.modelVersion
+        tierRaw = estimate.tier.rawValue
+        personalFactor = estimate.personalFactor
+        standardHours = estimate.standardHours
     }
 }
 

@@ -220,7 +220,6 @@ struct RecoveryComplicationView: View {
     var body: some View {
         content
             .containerBackground(.fill.tertiary, for: .widget)
-            .widgetURL(URL(string: "recharge://today"))
     }
 
     @ViewBuilder

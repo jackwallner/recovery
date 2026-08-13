@@ -5,7 +5,7 @@ default_platform(:ios)
 REVIEW_NOTES = <<~NOTES
   Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
 
-  No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, and Active Energy, and never writes Health data. If the review device has no recorded workout, the app shows an explicit empty state rather than a number.
+  No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, Active Energy, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity. If the review device has no recorded workout, the app shows an explicit empty state rather than a number.
 
   Core flow:
   1. Launch app and grant Apple Health read access

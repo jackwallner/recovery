@@ -256,8 +256,17 @@ final class RechargeUITests: XCTestCase {
         )
         let getStarted = app.buttons["Get started with Standard"].firstMatch
         XCTAssertTrue(getStarted.exists, "the free path is not offered by name")
+        XCTAssertTrue(app.buttons["Restore"].exists, "restore is missing from the onboarding purchase point")
+        for legal in ["Terms", "Privacy"] {
+            XCTAssertTrue(
+                app.descendants(matching: .any).matching(identifier: legal).firstMatch.exists,
+                "\(legal) is missing from the onboarding purchase point"
+            )
+        }
         attach(app, named: "onboarding-offer")
 
+        if !getStarted.isHittable { app.swipeUp() }
+        XCTAssertTrue(getStarted.isHittable, "the free path cannot be reached")
         getStarted.tap()
         XCTAssertTrue(
             app.tabBars.buttons["Today"].waitForExistence(timeout: 15),

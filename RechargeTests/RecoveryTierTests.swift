@@ -112,6 +112,21 @@ final class RecoveryTierTests: XCTestCase {
         XCTAssertEqual(faster.standardHours, neutral.hours, accuracy: 0.001)
     }
 
+    func testAnExplicitStandardPassSurvivesOtherPersonalizedAdjustments() {
+        let estimate = RecoveryCalculator.estimate(
+            for: RecoveryFixtures.thresholdRun60,
+            baseline: RecoveryFixtures.settledEnduranceBaseline(),
+            context: RecoveryContext(sleepHours: 4.5),
+            calibration: 1.15,
+            personalization: .personalized(factor: 0.8),
+            standardHours: 23,
+            now: now
+        )
+
+        XCTAssertEqual(estimate.standardHours, 23)
+        XCTAssertNotEqual(estimate.hours / estimate.personalFactor, 23)
+    }
+
     func testThePersonalFactorIsClampedIntoItsBounds() {
         XCTAssertEqual(
             RecoveryPersonalization.personalized(factor: 0.1).factor,
@@ -202,5 +217,25 @@ final class RecoveryTierTests: XCTestCase {
         XCTAssertEqual(decoded.tier, .standard)
         XCTAssertEqual(decoded.personalFactor, 1)
         XCTAssertEqual(decoded.hours, 24)
+        XCTAssertEqual(decoded.standardHours, 24)
+    }
+
+    func testExplicitStandardWindowSurvivesCodableRoundTrip() throws {
+        let estimate = RecoveryCalculator.estimate(
+            for: RecoveryFixtures.thresholdRun60,
+            baseline: RecoveryFixtures.settledEnduranceBaseline(),
+            context: RecoveryContext(sleepHours: 4.5),
+            calibration: 1.15,
+            personalization: .personalized(factor: 0.8),
+            standardHours: 23,
+            now: now
+        )
+
+        let decoded = try JSONDecoder().decode(
+            RecoveryEstimate.self,
+            from: JSONEncoder().encode(estimate)
+        )
+        XCTAssertEqual(decoded.standardHours, 23)
+        XCTAssertEqual(decoded, estimate)
     }
 }

@@ -22,6 +22,7 @@ struct TrialOfferPage: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @State private var errorMessage: String?
+    @State private var isRestoring = false
 
     private var package: Package? { store.yearlyPackage }
 
@@ -123,6 +124,9 @@ struct TrialOfferPage: View {
                     .padding(.top, 6)
             }
 
+            purchaseFooter
+                .padding(.top, 10)
+
             Button(declineTitle, action: onDecline)
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
@@ -134,6 +138,19 @@ struct TrialOfferPage: View {
             store.trackPaywallImpression(id: "onboarding_trial")
             if store.products.isEmpty { await store.fetchProducts() }
         }
+    }
+
+    private var purchaseFooter: some View {
+        HStack(spacing: 16) {
+            Button("Restore") {
+                Task { await restore() }
+            }
+            .disabled(isRestoring)
+            Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
+        }
+        .font(.system(.caption, design: .rounded))
+        .foregroundStyle(Theme.textSecondary)
     }
 
     /// Largest pricing element on the page, per Apple 3.1.2(c). When the
@@ -278,6 +295,19 @@ struct TrialOfferPage: View {
             }
         } catch {
             errorMessage = store.purchaseFailedMessage(for: package)
+        }
+    }
+
+    private func restore() async {
+        isRestoring = true
+        errorMessage = nil
+        await store.restorePurchases()
+        isRestoring = false
+        if store.isPro {
+            onPurchased()
+        } else {
+            errorMessage = store.lastError
+                ?? "No active Recharge Pro purchase was found for this Apple ID."
         }
     }
 }
