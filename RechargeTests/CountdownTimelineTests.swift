@@ -57,7 +57,7 @@ final class CountdownTimelineTests: XCTestCase {
     // MARK: - The flip
 
     func testTheTimelineAlwaysCoversTheMomentTheCountdownExpires() {
-        for hours in [0.1, 0.9, 1.5, 4.0, 30.0] {
+        for hours in [0.1, 0.9, 1.5, 4.0, 30.0, 72.0] {
             let state = snapshot(hoursRemaining: hours)
             let dates = CountdownTimeline.entryDates(for: state, now: now)
             guard let readyAt = state.readyAt else { return XCTFail("fixture has no readyAt") }

@@ -15,12 +15,12 @@ PRODUCT_ID = "com.jackwallner.recovery.lifetime"
 # The localized customer-facing name is Recharge Pro Lifetime.
 PRODUCT_REFERENCE_NAME = "Recharge Pro Lifetime"
 PRODUCT_DESCRIPTION = "Unlock Recharge Pro forever. One payment."
-PRICE = "29.99"
+PRICE = "59.99"
 
 # Kept in step with the REVIEW_NOTES heredoc in fastlane/Fastfile.
 REVIEW_NOTES = """Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
 
-No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, and Active Energy, and never writes Health data. If the review device has no recorded workout, the app shows an explicit empty state rather than a number. Recharge presents a cardiovascular training estimate only; it makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
+No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, Active Energy, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity. If the review device has no recorded workout, the app shows an explicit empty state rather than a number. Recharge presents a cardiovascular training estimate only; it makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
 
 Today shows the current countdown with the reasoning behind the estimate, History lists every scored session with the load and heart-rate coverage behind it, and Settings exposes the Watch complication style. The Apple Watch app and its complications mirror the same countdown.
 
@@ -57,7 +57,7 @@ def main() -> None:
                 "id": info["id"],
                 "relationships": {
                     "primaryCategory": {"data": {"type": "appCategories", "id": "HEALTH_AND_FITNESS"}},
-                    "secondaryCategory": {"data": {"type": "appCategories", "id": "LIFESTYLE"}},
+                    "secondaryCategory": {"data": {"type": "appCategories", "id": "SPORTS"}},
                 },
             }
         },

@@ -18,6 +18,7 @@ struct ReviewPromptSheet: View {
 
     @State private var stage = Stage.enjoyment
     @State private var feedbackText = ""
+    @State private var feedbackError: String?
 
     private enum Stage {
         case enjoyment
@@ -133,12 +134,25 @@ struct ReviewPromptSheet: View {
                 .font(.system(.body, design: .rounded))
 
             primaryButton("Send") {
-                openURL(mailURL)
-                ReviewPromptTracker.markFeedbackSubmitted()
-                stage = .thanks
+                feedbackError = nil
+                openURL(mailURL) { accepted in
+                    guard accepted else {
+                        feedbackError = "Couldn't open Mail. Email \(AppStoreReviewLinks.supportEmail) directly."
+                        return
+                    }
+                    ReviewPromptTracker.markFeedbackSubmitted()
+                    stage = .thanks
+                }
             }
             .disabled(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .opacity(feedbackText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+
+            if let feedbackError {
+                Text(feedbackError)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+            }
         }
     }
 

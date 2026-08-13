@@ -207,7 +207,6 @@ struct RechargeWidgetEntryView: View {
     var body: some View {
         content
             .containerBackground(Theme.background, for: .widget)
-            .widgetURL(URL(string: "recharge://today"))
     }
 
     @ViewBuilder

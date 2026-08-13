@@ -69,6 +69,7 @@ public enum RecoveryCalculator {
         context: RecoveryContext = .empty,
         calibration: Double = RecoveryCalibration.neutral,
         personalization: RecoveryPersonalization = .standard,
+        standardHours: Double? = nil,
         now: Date = .now
     ) -> RecoveryEstimate {
         let load = SessionLoadCalculator.profiledLoad(for: session)
@@ -125,7 +126,8 @@ public enum RecoveryCalculator {
                 personalization: personalization
             ),
             tier: personalization.tier,
-            personalFactor: qualifies ? personalization.factor : 1
+            personalFactor: qualifies ? personalization.factor : 1,
+            standardHours: standardHours
         )
     }
 

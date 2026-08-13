@@ -30,13 +30,25 @@ struct RechargeApp: App {
                     // Recharge reads and why before asking. Firing the system
                     // sheet at launch would put the permission dialog in front
                     // of a user who has not seen a single screen yet.
-                    if settings.hasCompletedSetup, !settings.hasDeferredHealthAccess {
-                        await HealthKitService.shared.synchronizeAuthorization()
+                    if settings.hasCompletedSetup {
+                        if !settings.hasDeferredHealthAccess {
+                            await HealthKitService.shared.synchronizeAuthorization()
+                            await engine.refresh(force: true)
+                        } else {
+                            // Respect "Not now" while still restoring any cached
+                            // history that existed before access was deferred.
+                            engine.rescore()
+                            engine.publish()
+                        }
+                    } else if ScreenshotConfig.isEnabled {
+                        await engine.refresh(force: true)
                     }
-                    await engine.refresh(force: true)
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    guard phase == .active else { return }
+                    guard phase == .active,
+                          settings.hasCompletedSetup,
+                          !settings.hasDeferredHealthAccess
+                    else { return }
                     // Always refresh on foreground: "no data" and "denied" are
                     // indistinguishable for reads, so gating on `isAuthorized`
                     // would blank the screen after one flaky launch-time probe.
