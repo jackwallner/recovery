@@ -2,6 +2,8 @@
 """Read-only App Store Connect release readiness audit for Recharge 1.0.0."""
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import re
@@ -28,12 +30,29 @@ PRODUCTS = {
     "com.jackwallner.recovery.yearly",
     "com.jackwallner.recovery.lifetime",
 }
+SUBSCRIPTION_PRICES = {
+    "com.jackwallner.recovery.monthly": ("ONE_MONTH", "5.99"),
+    "com.jackwallner.recovery.yearly": ("ONE_YEAR", "29.99"),
+}
+LIFETIME_PRICE = "59.99"
 
 
 def check(condition: bool, message: str, failures: list[str]) -> None:
     print(("PASS" if condition else "FAIL") + f"  {message}")
     if not condition:
         failures.append(message)
+
+
+def metadata(locale: str, field: str) -> str:
+    return (ROOT / "fastlane" / "metadata" / locale / f"{field}.txt").read_text().strip()
+
+
+def price_point_territory(identifier: str) -> str | None:
+    try:
+        padded = identifier + "=" * (-len(identifier) % 4)
+        return json.loads(base64.b64decode(padded)).get("t")
+    except (ValueError, json.JSONDecodeError):
+        return None
 
 
 def iap_screenshot(client: asc_lib.ASCClient, iap_id: str) -> bool:
@@ -58,6 +77,7 @@ def main() -> None:
     app = asc_lib.find_app(client, BUNDLE)
     app_id = app["id"]
     attrs = app["attributes"]
+    check(attrs.get("name") == "Recharge: Recovery Time", "ASC app record name is current", failures)
     check(attrs.get("contentRightsDeclaration") == "DOES_NOT_USE_THIRD_PARTY_CONTENT", "content rights declared", failures)
 
     version = asc_lib.find_version_by_string(client, app_id, VERSION)
@@ -72,6 +92,7 @@ def main() -> None:
         "version is editable or queued for review",
         failures,
     )
+    check(version["attributes"].get("copyright") == (ROOT / "fastlane/metadata/copyright.txt").read_text().strip(), "copyright is current", failures)
 
     build = client.get(f"/appStoreVersions/{version_id}/build").get("data")
     check(bool(build), "build attached", failures)
@@ -79,17 +100,59 @@ def main() -> None:
         check(build["attributes"].get("version") == BUILD, f"build {BUILD} attached", failures)
         check(build["attributes"].get("processingState") == "VALID", "attached build is VALID", failures)
         check(not build["attributes"].get("expired"), "attached build is not expired", failures)
+        valid_builds = [
+            item for item in asc_lib.list_all(client, f"/builds?filter[app]={app_id}&limit=200")
+            if item["attributes"].get("processingState") == "VALID" and not item["attributes"].get("expired")
+        ]
+        newest_build = max(
+            (item["attributes"].get("version", "") for item in valid_builds),
+            key=lambda value: int(value) if value.isdigit() else -1,
+            default="",
+        )
+        check(build["attributes"].get("version") == newest_build, f"attached build is newest VALID build ({newest_build})", failures)
 
     version_locs = asc_lib.list_all(client, f"/appStoreVersions/{version_id}/appStoreVersionLocalizations")
     check({item["attributes"]["locale"] for item in version_locs} == LISTING_LOCALES, f"{len(LISTING_LOCALES)} version localizations", failures)
+    version_fields = {
+        "description": "description",
+        "keywords": "keywords",
+        "marketingUrl": "marketing_url",
+        "promotionalText": "promotional_text",
+        "supportUrl": "support_url",
+    }
+    for localization in version_locs:
+        locale = localization["attributes"]["locale"]
+        for asc_field, local_field in version_fields.items():
+            check(
+                localization["attributes"].get(asc_field) == metadata(locale, local_field),
+                f"{locale} {local_field} matches canonical metadata",
+                failures,
+            )
     info = asc_lib.find_editable_app_info(client, app_id)
     check(bool(info), "editable app info exists", failures)
     if info:
         info_locs = asc_lib.list_all(client, f"/appInfos/{info['id']}/appInfoLocalizations")
         check({item["attributes"]["locale"] for item in info_locs} == LISTING_LOCALES, f"{len(LISTING_LOCALES)} app info localizations", failures)
+        info_fields = {
+            "name": "name",
+            "subtitle": "subtitle",
+            "privacyPolicyUrl": "privacy_url",
+        }
+        for localization in info_locs:
+            locale = localization["attributes"]["locale"]
+            for asc_field, local_field in info_fields.items():
+                check(
+                    localization["attributes"].get(asc_field) == metadata(locale, local_field),
+                    f"{locale} {local_field} matches canonical metadata",
+                    failures,
+                )
         rating = client.get(f"/appInfos/{info['id']}/ageRatingDeclaration").get("data", {}).get("attributes", {})
         check(rating.get("healthOrWellnessTopics") is True, "health/wellness age-rating flag set", failures)
         check(rating.get("medicalOrTreatmentInformation") == "NONE", "no medical-treatment content declared", failures)
+        primary = client.get(f"/appInfos/{info['id']}/primaryCategory").get("data", {})
+        secondary = client.get(f"/appInfos/{info['id']}/secondaryCategory").get("data", {})
+        check(primary.get("id") == "HEALTH_AND_FITNESS", "primary category is Health & Fitness", failures)
+        check(secondary.get("id") == "SPORTS", "secondary category is Sports", failures)
 
     review = client.get(f"/appStoreVersions/{version_id}/appStoreReviewDetail").get("data")
     check(bool(review), "review information present", failures)
@@ -98,12 +161,40 @@ def main() -> None:
         check(not review_attrs.get("demoAccountRequired"), "no demo account required", failures)
         check(bool(review_attrs.get("notes")), "review notes present", failures)
 
-    screenshots = 0
+    screenshot_counts: dict[str, int] = {}
+    live_screenshots: list[dict] = []
     for localization in version_locs:
         sets = asc_lib.list_all(client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets")
         for screenshot_set in sets:
-            screenshots += len(asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"))
-    check(screenshots == SCREENSHOT_COUNT, f"canonical screenshot set present ({screenshots})", failures)
+            count = len(asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"))
+            if count:
+                display_type = screenshot_set["attributes"]["screenshotDisplayType"]
+                screenshot_counts[display_type] = screenshot_counts.get(display_type, 0) + count
+                if display_type == "APP_IPHONE_67":
+                    live_screenshots.extend(
+                        asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots")
+                    )
+    check(
+        screenshot_counts == {"APP_IPHONE_67": SCREENSHOT_COUNT},
+        f"canonical 6.9-inch screenshot set present ({screenshot_counts})",
+        failures,
+    )
+    expected_paths = sorted((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png"))
+    expected_names = [path.name for path in expected_paths]
+    expected_checksums = [hashlib.md5(path.read_bytes()).hexdigest() for path in expected_paths]
+    live_attrs = [item["attributes"] for item in live_screenshots]
+    check([item.get("fileName") for item in live_attrs] == expected_names, "screenshot order and filenames are current", failures)
+    check([item.get("sourceFileChecksum") for item in live_attrs] == expected_checksums, "screenshot checksums match local artwork", failures)
+    check(
+        all(item.get("imageAsset", {}).get("width") == 1320 and item.get("imageAsset", {}).get("height") == 2868 for item in live_attrs),
+        "screenshots are 1320x2868",
+        failures,
+    )
+    check(
+        all(item.get("assetDeliveryState", {}).get("state") == "COMPLETE" for item in live_attrs),
+        "screenshot processing is complete",
+        failures,
+    )
 
     all_products: set[str] = set()
     for group in asc_lib.list_all(client, f"/apps/{app_id}/subscriptionGroups"):
@@ -113,11 +204,34 @@ def main() -> None:
             product_id = subscription["attributes"]["productId"]
             all_products.add(product_id)
             check(subscription["attributes"].get("state") == "READY_TO_SUBMIT", f"{product_id} READY_TO_SUBMIT", failures)
+            expected_period, expected_price = SUBSCRIPTION_PRICES[product_id]
+            check(subscription["attributes"].get("subscriptionPeriod") == expected_period, f"{product_id} period is current", failures)
+            check(bool(subscription["attributes"].get("reviewNote")), f"{product_id} review note present", failures)
             locs = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/subscriptionLocalizations")
             check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
             prices = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/prices?limit=200")
             offers = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/introductoryOffers?limit=200")
             check(bool(prices), f"{product_id} pricing set ({len(prices)} scheduled prices)", failures)
+            usa_schedule = client.get(
+                f"/subscriptions/{subscription['id']}/prices?filter[territory]=USA&include=subscriptionPricePoint&limit=200"
+            )
+            price_points = {
+                item["id"]: item["attributes"].get("customerPrice")
+                for item in usa_schedule.get("included", [])
+                if item.get("type") == "subscriptionPricePoints"
+            }
+            new_customer_prices = [
+                (
+                    item["attributes"].get("startDate") or "",
+                    price_points.get(
+                        (item.get("relationships", {}).get("subscriptionPricePoint", {}).get("data") or {}).get("id")
+                    ),
+                )
+                for item in usa_schedule.get("data", [])
+                if not item["attributes"].get("preserved")
+            ]
+            current_usa_price = max(new_customer_prices, default=("", None))[1]
+            check(current_usa_price == expected_price, f"{product_id} new-customer USA price is ${expected_price}", failures)
             check(len(offers) >= 170, f"{product_id} one-week trials ({len(offers)})", failures)
             check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/subscriptionAvailability")), f"{product_id} availability set", failures)
             check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot")), f"{product_id} review screenshot set", failures)
@@ -126,6 +240,8 @@ def main() -> None:
         product_id = iap["attributes"]["productId"]
         all_products.add(product_id)
         check(iap["attributes"].get("state") == "READY_TO_SUBMIT", f"{product_id} READY_TO_SUBMIT", failures)
+        check(iap["attributes"].get("inAppPurchaseType") == "NON_CONSUMABLE", f"{product_id} is non-consumable", failures)
+        check(bool(iap["attributes"].get("reviewNote")), f"{product_id} review note present", failures)
         old_api = asc_lib.API
         try:
             asc_lib.API = "https://api.appstoreconnect.apple.com/v2"
@@ -134,15 +250,38 @@ def main() -> None:
             asc_lib.API = old_api
         check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
         check(iap_screenshot(client, iap["id"]), f"{product_id} review screenshot set", failures)
+        manual_prices = client.get(
+            f"/inAppPurchasePriceSchedules/{iap['id']}/manualPrices?include=inAppPurchasePricePoint&limit=200"
+        )
+        usa_points = [
+            item for item in manual_prices.get("included", [])
+            if item.get("type") == "inAppPurchasePricePoints" and price_point_territory(item["id"]) == "USA"
+        ]
+        check(
+            len(usa_points) == 1 and usa_points[0]["attributes"].get("customerPrice") == LIFETIME_PRICE,
+            f"{product_id} USA price is ${LIFETIME_PRICE}",
+            failures,
+        )
 
     check(all_products == PRODUCTS, "expected monthly, yearly, and lifetime products only", failures)
     availability = client.get(f"/apps/{app_id}/appAvailabilityV2").get("data", {})
     check(availability.get("attributes", {}).get("availableInNewTerritories") is True, "available in new territories", failures)
+    old_api = asc_lib.API
+    try:
+        asc_lib.API = "https://api.appstoreconnect.apple.com/v2"
+        territories = asc_lib.list_all(
+            client,
+            f"/appAvailabilities/{availability['id']}/territoryAvailabilities?limit=200",
+        )
+    finally:
+        asc_lib.API = old_api
+    check(len(territories) == 175 and all(item["attributes"].get("available") for item in territories), "available in all 175 territories", failures)
 
     if failures:
         print(f"\nNot ready: {len(failures)} failed check(s)", file=sys.stderr)
         raise SystemExit(1)
-    print("\nASC release is ready for the manual Submit for Review action.")
+    print("\nAutomated ASC release checks passed.")
+    print("MANUAL  Confirm the Regulated Medical Device declaration in the App Store Connect UI before submission.")
 
 
 if __name__ == "__main__":

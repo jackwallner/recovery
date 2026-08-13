@@ -500,9 +500,9 @@ public final class StoreService: NSObject, ObservableObject {
         )
         let lifetime = TestStoreProduct(
             localizedTitle: "Recharge Pro Lifetime",
-            price: 29.99,
+            price: 59.99,
             currencyCode: "USD",
-            localizedPriceString: "$29.99",
+            localizedPriceString: "$59.99",
             productIdentifier: RechargeProduct.lifetime,
             productType: .nonConsumable,
             localizedDescription: "Unlock Recharge Pro forever",
@@ -510,12 +510,12 @@ public final class StoreService: NSObject, ObservableObject {
         )
         let yearly = TestStoreProduct(
             localizedTitle: "Recharge Pro Yearly",
-            price: 14.99,
+            price: 29.99,
             currencyCode: "USD",
-            localizedPriceString: "$14.99",
+            localizedPriceString: "$29.99",
             productIdentifier: RechargeProduct.yearly,
             productType: .autoRenewableSubscription,
-            localizedDescription: "Unlock Recharge Pro yearly — save 37%",
+            localizedDescription: "Unlock Recharge Pro yearly, save 58%",
             subscriptionGroupIdentifier: "RechargePro",
             subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .year),
             introductoryDiscount: freeWeek,
@@ -523,9 +523,9 @@ public final class StoreService: NSObject, ObservableObject {
         )
         let monthly = TestStoreProduct(
             localizedTitle: "Recharge Pro Monthly",
-            price: 1.99,
+            price: 5.99,
             currencyCode: "USD",
-            localizedPriceString: "$1.99",
+            localizedPriceString: "$5.99",
             productIdentifier: RechargeProduct.monthly,
             productType: .autoRenewableSubscription,
             localizedDescription: "Unlock Recharge Pro monthly",
