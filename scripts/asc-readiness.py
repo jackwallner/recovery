@@ -25,6 +25,8 @@ LISTING_LOCALES = {
     path.parent.name for path in (ROOT / "fastlane" / "metadata").glob("*/description.txt")
 }
 SCREENSHOT_COUNT = len(list((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png")))
+REVIEW_SCREENSHOT = ROOT / "fastlane" / "screenshots" / "en-US" / "04-pro.png"
+REVIEW_SCREENSHOT_CHECKSUM = hashlib.md5(REVIEW_SCREENSHOT.read_bytes()).hexdigest()
 PRODUCTS = {
     "com.jackwallner.recovery.monthly",
     "com.jackwallner.recovery.yearly",
@@ -55,13 +57,13 @@ def price_point_territory(identifier: str) -> str | None:
         return None
 
 
-def iap_screenshot(client: asc_lib.ASCClient, iap_id: str) -> bool:
+def iap_screenshot(client: asc_lib.ASCClient, iap_id: str) -> dict | None:
     request = urllib.request.Request(
         f"https://api.appstoreconnect.apple.com/v2/inAppPurchases/{iap_id}/appStoreReviewScreenshot",
         headers={"Authorization": f"Bearer {client.token}"},
     )
     with urllib.request.urlopen(request, timeout=60) as response:
-        return bool(json.loads(response.read()).get("data"))
+        return json.loads(response.read()).get("data")
 
 
 def optional_data(client: asc_lib.ASCClient, path: str) -> dict | None:
@@ -234,7 +236,14 @@ def main() -> None:
             check(current_usa_price == expected_price, f"{product_id} new-customer USA price is ${expected_price}", failures)
             check(len(offers) >= 170, f"{product_id} one-week trials ({len(offers)})", failures)
             check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/subscriptionAvailability")), f"{product_id} availability set", failures)
-            check(bool(optional_data(client, f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot")), f"{product_id} review screenshot set", failures)
+            review_screenshot = optional_data(client, f"/subscriptions/{subscription['id']}/appStoreReviewScreenshot")
+            check(bool(review_screenshot), f"{product_id} review screenshot set", failures)
+            if review_screenshot:
+                check(
+                    review_screenshot["attributes"].get("sourceFileChecksum") == REVIEW_SCREENSHOT_CHECKSUM,
+                    f"{product_id} review screenshot matches current paywall",
+                    failures,
+                )
 
     for iap in asc_lib.list_all(client, f"/apps/{app_id}/inAppPurchasesV2"):
         product_id = iap["attributes"]["productId"]
@@ -249,7 +258,14 @@ def main() -> None:
         finally:
             asc_lib.API = old_api
         check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
-        check(iap_screenshot(client, iap["id"]), f"{product_id} review screenshot set", failures)
+        review_screenshot = iap_screenshot(client, iap["id"])
+        check(bool(review_screenshot), f"{product_id} review screenshot set", failures)
+        if review_screenshot:
+            check(
+                review_screenshot["attributes"].get("sourceFileChecksum") == REVIEW_SCREENSHOT_CHECKSUM,
+                f"{product_id} review screenshot matches current paywall",
+                failures,
+            )
         manual_prices = client.get(
             f"/inAppPurchasePriceSchedules/{iap['id']}/manualPrices?include=inAppPurchasePricePoint&limit=200"
         )
