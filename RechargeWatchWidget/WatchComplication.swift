@@ -50,7 +50,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<RecoveryEntry>) -> Void) {
         let now = Date.now
-        let snapshot = RecoverySnapshotStore.load()
+        let snapshot = snapshotForTimeline(at: now)
         let style = loadComplicationStyle()
 
         let entries = CountdownTimeline.entryDates(for: snapshot, now: now).map {
@@ -65,9 +65,24 @@ struct RecoveryTimelineProvider: TimelineProvider {
     private func currentEntry(at date: Date) -> RecoveryEntry {
         RecoveryEntry(
             date: date,
-            snapshot: RecoverySnapshotStore.load(),
+            snapshot: snapshotForTimeline(at: date),
             style: loadComplicationStyle()
         )
+    }
+
+    private func snapshotForTimeline(at date: Date) -> RecoverySnapshot {
+        let snapshot = RecoverySnapshotStore.load()
+#if DEBUG
+        // The capture app seeds the fixture in the App Group. The watch
+        // simulator may keep a cached empty timeline until the next reload,
+        // so the debug-only fallback keeps the production complication view
+        // honest while making the screenshot deterministic.
+        if !snapshot.hasSession,
+           UserDefaults(suiteName: rechargeAppGroupID)?.bool(forKey: "rechargeScreenshotMode") == true {
+            return ScreenshotFixtures.snapshot(now: date)
+        }
+#endif
+        return snapshot
     }
 }
 

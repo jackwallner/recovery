@@ -1,5 +1,6 @@
 import SwiftUI
 import WatchKit
+import WidgetKit
 
 @main
 struct RechargeWatchApp: App {
@@ -24,6 +25,15 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate {
     func applicationDidFinishLaunching() {
         Task { @MainActor in
             PhoneWatchSession.shared.activate()
+#if DEBUG
+            if ScreenshotConfig.isEnabled {
+                UserDefaults(suiteName: rechargeAppGroupID)?.set(true, forKey: "rechargeScreenshotMode")
+                RecoverySnapshotStore.save(ScreenshotFixtures.snapshot())
+                WidgetCenter.shared.reloadAllTimelines()
+            } else {
+                UserDefaults(suiteName: rechargeAppGroupID)?.removeObject(forKey: "rechargeScreenshotMode")
+            }
+#endif
         }
     }
 

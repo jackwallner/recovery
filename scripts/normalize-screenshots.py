@@ -25,7 +25,7 @@ HEADLINES = {
     "03-history.png": "Every session, explained",
     "04-pro.png": "Recovery, personalized",
     "05-settings.png": "Built around your training",
-    "06-watch.png": "Recovery on your wrist",
+    "06-watch.png": "Your recovery, at a glance",
 }
 
 SETS = {
@@ -138,6 +138,28 @@ def compose_watch(path, size, out_dir):
         (frame_x, frame_y, frame_box_width, frame_box_height),
         int(width * 0.13),
         frame_padding,
+    )
+
+    # Call out the actual top-left circular complication without adding a
+    # marketing label or editing the simulator capture itself. The outline is
+    # deliberately restrained so the face remains the hero.
+    inner_x = frame_x + frame_padding
+    inner_y = frame_y + frame_padding
+    scale = target_width / watch.width
+    highlight = (
+        round(inner_x + watch.width * 0.01 * scale),
+        round(inner_y + watch.height * 0.01 * scale),
+        round(inner_x + watch.width * 0.26 * scale),
+        round(inner_y + watch.height * 0.23 * scale),
+    )
+    glow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
+    glow_draw.ellipse(highlight, outline=(255, 125, 70, 150), width=max(12, width // 150))
+    canvas.alpha_composite(glow.filter(ImageFilter.GaussianBlur(max(8, width // 95))))
+    ImageDraw.Draw(canvas).ellipse(
+        highlight,
+        outline=(255, 125, 70, 235),
+        width=max(5, width // 260),
     )
 
     os.makedirs(out_dir, exist_ok=True)
