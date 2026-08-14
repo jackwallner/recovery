@@ -34,7 +34,7 @@ public enum WhatsNew {
         Item(
             symbol: "person.crop.circle.badge.clock",
             title: "Or one built from your own history",
-            detail: "Recharge Pro scores each session against your own baseline, then reads the last \(PersonalRecoveryModel.windowDays) days to set how fast your countdowns run."
+            detail: "Recharge+ scores each session against your own baseline, then reads the last \(PersonalRecoveryModel.windowDays) days to set how fast your countdowns run."
         ),
         Item(
             symbol: "heart.text.square",

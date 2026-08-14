@@ -5,7 +5,7 @@ import WidgetKit
 import os
 @preconcurrency import RevenueCat
 
-/// Recharge Pro product identifiers. Must match App Store Connect and
+/// Recharge+ product identifiers. Must match App Store Connect and
 /// `Recharge.storekit`.
 public enum RechargeProduct {
     /// Bundle-prefixed, matching App Store Connect. StoreKit will not vend bare
@@ -514,36 +514,36 @@ public final class StoreService: NSObject, ObservableObject {
             type: .introductory
         )
         let lifetime = TestStoreProduct(
-            localizedTitle: "Recharge Pro Lifetime",
+            localizedTitle: "Recharge+ Lifetime",
             price: 59.99,
             currencyCode: "USD",
             localizedPriceString: "$59.99",
             productIdentifier: RechargeProduct.lifetime,
             productType: .nonConsumable,
-            localizedDescription: "Unlock Recharge Pro forever",
+            localizedDescription: "Unlock Recharge+ forever",
             locale: locale
         )
         let yearly = TestStoreProduct(
-            localizedTitle: "Recharge Pro Yearly",
+            localizedTitle: "Recharge+ Yearly",
             price: 29.99,
             currencyCode: "USD",
             localizedPriceString: "$29.99",
             productIdentifier: RechargeProduct.yearly,
             productType: .autoRenewableSubscription,
-            localizedDescription: "Unlock Recharge Pro yearly, save 58%",
+            localizedDescription: "Unlock Recharge+ yearly, save 58%",
             subscriptionGroupIdentifier: "RechargePro",
             subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .year),
             introductoryDiscount: freeWeek,
             locale: locale
         )
         let monthly = TestStoreProduct(
-            localizedTitle: "Recharge Pro Monthly",
+            localizedTitle: "Recharge+ Monthly",
             price: 5.99,
             currencyCode: "USD",
             localizedPriceString: "$5.99",
             productIdentifier: RechargeProduct.monthly,
             productType: .autoRenewableSubscription,
-            localizedDescription: "Unlock Recharge Pro monthly",
+            localizedDescription: "Unlock Recharge+ monthly",
             subscriptionGroupIdentifier: "RechargePro",
             subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .month),
             introductoryDiscount: freeWeek,

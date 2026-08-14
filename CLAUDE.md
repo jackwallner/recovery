@@ -60,13 +60,26 @@ questions and a history list that mixes them silently is lying by omission.
   session type, length, and intensity in, hours out. Confidence is capped at
   medium and never reports `buildingBaseline` — there is no baseline being
   built. Category labels drop the "for you".
-- **Personalized (Recharge Pro).** The person's own 42-day baseline, overnight
+- **Personalized (Recharge+).** The person's own 42-day baseline, overnight
   context, calibration, and the `PersonalRecoveryModel` multiplier.
 
 Age-predicted maximum heart rate (Tanaka, or Gulati for women) applies on
 **both** tiers. It is a measurement input, not a personalisation: scoring a
 58-year-old against a flat 185 bpm ceiling does not make the free estimate
 standard, it makes it wrong.
+
+Every session is scored **both** ways on both tiers, and
+`RecoveryEngine.personalizedPreview` carries the most recent qualifying one:
+standard hours beside personalized hours, for the conversion surfaces. It is
+computed, never derived. Multiplying the standard hours by
+`personalAnalysis.factor` was the old version and it dropped the larger of the
+two effects — personalisation changes the *baseline* a session is measured
+against as well as applying the multiplier — so the card sometimes showed the
+same number twice and hid itself. It falls back to
+`PersonalizedPreview.reference` (the canonical hard session, a real point on the
+real curve) when there is no qualifying session or the two land on the same
+rounded hour, so there is always a difference on screen and it is always
+arithmetic.
 
 `RecoveryEngine.rescore` runs two passes — the standard estimate for every
 session first, because `PersonalRecoveryModel` needs to know what window each
@@ -146,9 +159,14 @@ nothing goes in that sheet unless something the user can see consumes it. VO2
 max is still out — the evidence tying it to *recovery rate* is weak, so it does
 not earn a row in the permission sheet.
 
-The last onboarding decision is "Continue with Recharge Pro" or "Get started
-with Standard". It is not a "Not now": declining there is choosing the free tier
-and starting to use the app, and the button says so.
+The last onboarding decision is "Continue with Recharge+" or "Get Started". It is
+not a "Not now": declining there is choosing the free tier and starting to use
+the app, and the button says so. "Get Started" sits **above** the CTA, in the
+same reserved secondary slot `OnboardingActions` gives every other page, so the
+primary button is the lowest thing on every screen of the flow (the Vitals /
+VO2 Max shape). The trial is named in a `Theme.pro` callout above the price and
+never on the button: Apple 3.1.2(c) weighs pricing elements against each other,
+and the billed amount has to stay the largest one.
 
 ### The RPE path is the only Watch → phone write
 Everything else runs phone → Watch. The effort tap has to go the other way, so it

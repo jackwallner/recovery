@@ -1,7 +1,7 @@
 import SwiftUI
 @preconcurrency import RevenueCat
 
-/// What Recharge Pro sells. One list, referenced by the paywall, the onboarding
+/// What Recharge+ sells. One list, referenced by the paywall, the onboarding
 /// trial page, and the What's New sheet, so the pitch can never drift between
 /// surfaces.
 enum ProFeature: CaseIterable {
@@ -36,7 +36,7 @@ enum ProFeature: CaseIterable {
     var detail: String {
         switch self {
         case .personalizedTime:
-            "The free estimate is the same table for everyone. Recharge Pro scores every session against your own \(RecoveryBaseline.historyDays)-day baseline, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
+            "The free estimate is the same table for everyone. Recharge+ scores every session against your own \(RecoveryBaseline.historyDays)-day baseline, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
         case .weeklyLoad:
@@ -318,7 +318,7 @@ struct PaywallView: View {
                             dismiss()
                         } else {
                             errorMessage = store.lastError
-                                ?? "No active Recharge Pro purchase was found for this Apple ID."
+                                ?? "No active Recharge+ purchase was found for this Apple ID."
                         }
                     }
                 }

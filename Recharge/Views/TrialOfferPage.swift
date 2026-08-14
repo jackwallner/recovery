@@ -63,8 +63,8 @@ struct TrialOfferPage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 18)
 
-            if showsPersonalization, let comparison {
-                personalizedComparison(comparison)
+            if showsPersonalization {
+                personalizedComparison(engine.personalizedPreview)
                     .padding(.bottom, 18)
             }
 
@@ -86,8 +86,13 @@ struct TrialOfferPage: View {
 
             Spacer()
 
+            trialCallout
+
             price
-                .padding(.bottom, 14)
+                .padding(.bottom, 12)
+
+            softExit
+                .padding(.bottom, 4)
 
             Button {
                 Task { await purchase() }
@@ -126,11 +131,6 @@ struct TrialOfferPage: View {
 
             purchaseFooter
                 .padding(.top, 10)
-
-            Button(declineTitle, action: onDecline)
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(Theme.textSecondary)
-                .padding(.top, 12)
         }
         .padding(.horizontal, 28)
         .padding(.bottom, 16)
@@ -138,6 +138,51 @@ struct TrialOfferPage: View {
             store.trackPaywallImpression(id: "onboarding_trial")
             if store.products.isEmpty { await store.fetchProducts() }
         }
+    }
+
+    /// The trial, said once and said plainly.
+    ///
+    /// Deliberately *not* on the button and deliberately smaller than the billed
+    /// amount below it. Apple 3.1.2(c) weighs pricing elements against each
+    /// other, so this is a labelled callout that names the offer and the fact
+    /// that nothing is charged today, not a headline competing with the price.
+    @ViewBuilder
+    private var trialCallout: some View {
+        if let package, let trialLabel = store.eligibleIntroLabel(for: package) {
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: "gift.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(trialLabel.replacingOccurrences(of: " free trial", with: " free"))
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                }
+                .foregroundStyle(Theme.pro)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Theme.pro.opacity(0.15), in: Capsule())
+
+                Text("You are not charged today.")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.bottom, 12)
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    /// The free path, above the CTA and de-emphasized.
+    ///
+    /// Below it, under the legal footer, it read as the last resort of someone
+    /// who had already failed to buy. Above it, it is the same secondary slot
+    /// every other onboarding page reserves, and the primary button lands where
+    /// the thumb has been going for the whole flow. Same shape as Vitals and
+    /// VO2 Max.
+    private var softExit: some View {
+        Button(declineTitle, action: onDecline)
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+            .foregroundStyle(Theme.textSecondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
     }
 
     private var purchaseFooter: some View {
@@ -196,7 +241,7 @@ struct TrialOfferPage: View {
 
     private var headline: String {
         guard showsPersonalization else {
-            return store.canPitchFreeTrial ? "Try Recharge Pro free" : "Go further with Recharge Pro"
+            return store.canPitchFreeTrial ? "Try Recharge+ free" : "Go further with Recharge+"
         }
         return "Your own\nrecharge time"
     }
@@ -214,34 +259,21 @@ struct TrialOfferPage: View {
     /// Standard hours against personalized hours, on a session the user actually
     /// did wherever possible.
     ///
-    /// Returns `nil` when personalisation would change nothing — a pitch that
-    /// promises a different number and then shows the same one twice is worse
-    /// than no pitch at all.
-    private var comparison: (label: String, standard: Double, personalized: Double, isExample: Bool)? {
-        let factor = engine.personalAnalysis.factor
-        guard engine.personalAnalysis.isPersonalised, abs(factor - 1) >= 0.03 else { return nil }
-
-        if let estimate = engine.estimates.first(where: { $0.producesCountdown }) {
-            let standard = estimate.standardHours
-            guard standard > 0 else { return nil }
-            return ("Your last \(estimate.activityLabel)", standard, standard * factor, false)
-        }
-        let reference = RecoveryCalculator.referenceHardSessionHours
-        return ("A hard 60-minute session", reference, reference * factor, true)
-    }
-
-    private func personalizedComparison(
-        _ comparison: (label: String, standard: Double, personalized: Double, isExample: Bool)
-    ) -> some View {
+    /// Always shown. `RecoveryEngine.personalizedPreview` scores the session both
+    /// ways for real — the personal baseline as well as the thirty-day
+    /// multiplier — and falls back to the canonical hard session when there is no
+    /// qualifying one yet, so there is always a difference to show and it is
+    /// always arithmetic rather than a mock-up.
+    private func personalizedComparison(_ preview: PersonalizedPreview) -> some View {
         VStack(spacing: 10) {
-            Text(comparison.label + (comparison.isExample ? ", for example" : ""))
+            Text(preview.label + (preview.isExample ? ", for example" : ""))
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
 
             HStack(spacing: 0) {
                 comparisonColumn(
                     title: "Standard",
-                    value: CountdownFormat.hours(comparison.standard),
+                    value: CountdownFormat.hours(preview.standardHours),
                     tint: Theme.textSecondary
                 )
                 Image(systemName: "arrow.right")
@@ -250,7 +282,7 @@ struct TrialOfferPage: View {
                     .padding(.horizontal, 4)
                 comparisonColumn(
                     title: "Yours",
-                    value: CountdownFormat.hours(comparison.personalized),
+                    value: CountdownFormat.hours(preview.personalizedHours),
                     tint: Theme.pro
                 )
             }
@@ -307,7 +339,7 @@ struct TrialOfferPage: View {
             onPurchased()
         } else {
             errorMessage = store.lastError
-                ?? "No active Recharge Pro purchase was found for this Apple ID."
+                ?? "No active Recharge+ purchase was found for this Apple ID."
         }
     }
 }

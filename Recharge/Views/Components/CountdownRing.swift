@@ -111,7 +111,7 @@ struct ProBadge: View {
     var body: some View {
         HStack(spacing: 3) {
             Image(systemName: "lock.fill")
-            Text("Pro")
+            Text("Recharge+")
         }
         .font(.system(size: 10, weight: .bold, design: .rounded))
         .padding(.horizontal, 7)

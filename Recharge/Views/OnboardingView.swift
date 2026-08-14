@@ -227,7 +227,7 @@ struct OnboardingView: View {
         TrialOfferPage(
             onDecline: finish,
             onPurchased: finish,
-            declineTitle: "Get started with Standard",
+            declineTitle: "Get Started",
             showsPersonalization: true
         )
         .environmentObject(store)
@@ -266,6 +266,23 @@ private struct OnboardingActions: View {
 
     var body: some View {
         VStack(spacing: 12) {
+            // Always present, sometimes invisible, and always *above* the
+            // primary. The placeholder text is a real string rather than a space
+            // so it reserves the same height at every Dynamic Type size, and
+            // sitting above means the primary button is the lowest thing on
+            // every page — including the offer, where the way out is "Get
+            // Started" and the CTA underneath it has to land in the same slot
+            // the thumb has been using all flow.
+            Button(secondaryTitle ?? "Not now") { secondaryAction?() }
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .opacity(secondaryTitle == nil ? 0 : 1)
+                .disabled(secondaryTitle == nil || secondaryAction == nil)
+                .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
+                .accessibilityHidden(secondaryTitle == nil)
+
             Button(action: primaryAction) {
                 HStack(spacing: 8) {
                     if isBusy {
@@ -284,17 +301,6 @@ private struct OnboardingActions: View {
             }
             .buttonStyle(.plain)
             .disabled(primaryDisabled)
-
-            // Always present, sometimes invisible. The placeholder text is a
-            // real string rather than a space so it reserves the same height at
-            // every Dynamic Type size.
-            Button(secondaryTitle ?? "Not now") { secondaryAction?() }
-                .font(.system(.subheadline, design: .rounded))
-                .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
-                .opacity(secondaryTitle == nil ? 0 : 1)
-                .disabled(secondaryTitle == nil || secondaryAction == nil)
-                .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
-                .accessibilityHidden(secondaryTitle == nil)
         }
     }
 }

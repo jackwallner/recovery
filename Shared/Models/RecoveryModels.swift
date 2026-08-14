@@ -103,7 +103,7 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
 
     /// The population reference a session is measured against when there is no
     /// personal history to use: the whole of the standard tier, and the
-    /// bootstrap for a Recharge Pro user in their first few weeks.
+    /// bootstrap for a Recharge+ user in their first few weeks.
     ///
     /// Each is one moderately trained adult's typical session, put through
     /// `SessionLoadCalculator` rather than picked:
@@ -162,6 +162,49 @@ public enum LoadSource: String, Codable, Sendable {
     }
 }
 
+/// One session scored both ways: the standard window beside the personalized
+/// one. What every Recharge+ conversion surface argues from.
+///
+/// The two figures are always computed, never derived by multiplying the
+/// standard hours by the thirty-day factor. Personalisation changes the
+/// *baseline* a session is measured against as well as applying the multiplier,
+/// and the derived version dropped the larger of the two effects.
+public struct PersonalizedPreview: Sendable, Equatable {
+    public let label: String
+    public let standardHours: Double
+    public let personalizedHours: Double
+    /// True when there was no qualifying session to use and the figures come
+    /// from the canonical hard endurance session instead. Surfaces have to say
+    /// so: "for example" is the difference between a projection and a claim
+    /// about the user's own training.
+    public let isExample: Bool
+
+    public init(label: String, standardHours: Double, personalizedHours: Double, isExample: Bool) {
+        self.label = label
+        self.standardHours = standardHours
+        self.personalizedHours = personalizedHours
+        self.isExample = isExample
+    }
+
+    /// The fallback for a user with no qualifying session yet: a real point on
+    /// the real curve, so even day one shows arithmetic rather than a mock-up.
+    public static func reference(factor: Double) -> PersonalizedPreview {
+        let hours = RecoveryCalculator.referenceHardSessionHours
+        return PersonalizedPreview(
+            label: "A hard 60-minute session",
+            standardHours: hours,
+            personalizedHours: hours * factor,
+            isExample: true
+        )
+    }
+
+    /// Whether the two figures would render as the same string. The conversion
+    /// card leads with the difference, so a surface has to be able to ask.
+    public var isVisiblyDifferent: Bool {
+        abs(personalizedHours - standardHours) >= 0.5
+    }
+}
+
 /// Where a session sits against the person's own recent history.
 public enum LoadCategory: String, Codable, Sendable {
     case easy
@@ -169,23 +212,31 @@ public enum LoadCategory: String, Codable, Sendable {
     case hard
     case unusuallyHard
 
+    /// One intensity ladder, four rungs.
+    ///
+    /// "Easy" and "Typical" were the original words and they were reading as two
+    /// different kinds of statement: one about how hard the session felt, one
+    /// about how it compared to something the label never named. Light /
+    /// Moderate / Hard / Very hard is a single scale, and the "for you" suffix
+    /// is what names the comparison.
     public var label: String {
         switch self {
-        case .easy: "Easy for you"
-        case .typical: "Typical for you"
+        case .easy: "Light for you"
+        case .typical: "Moderate for you"
         case .hard: "Hard for you"
-        case .unusuallyHard: "Unusually hard for you"
+        case .unusuallyHard: "Very hard for you"
         }
     }
 
     /// "For you" is only true when the comparison was against the person's own
     /// sessions. On the standard tier the session is measured against a fixed
-    /// population reference, so the label has to drop the claim.
+    /// population reference, so the label has to drop the claim and name the
+    /// comparison it did make instead.
     public func label(for tier: RecoveryTier) -> String {
         guard tier == .standard else { return label }
         switch self {
-        case .easy: return "Easy session"
-        case .typical: return "Typical session"
+        case .easy: return "Light session"
+        case .typical: return "Moderate session"
         case .hard: return "Hard session"
         case .unusuallyHard: return "Very hard session"
         }
@@ -193,8 +244,8 @@ public enum LoadCategory: String, Codable, Sendable {
 
     public var shortLabel: String {
         switch self {
-        case .easy: "Easy"
-        case .typical: "Typical"
+        case .easy: "Light"
+        case .typical: "Moderate"
         case .hard: "Hard"
         case .unusuallyHard: "Very hard"
         }

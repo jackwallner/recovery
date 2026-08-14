@@ -1,12 +1,12 @@
 import Foundation
 
-/// Pure copy helpers for Recharge Pro conversion CTAs.
+/// Pure copy helpers for Recharge+ conversion CTAs.
 ///
 /// StoreKit always purchases the same package — trial vs paid is *eligibility*,
 /// not a different product — so every pitch surface routes through here and
 /// stays honest for users who have already used their free trial.
 public enum RechargeConversionCopy {
-    public static let proName = "Recharge Pro"
+    public static let proName = "Recharge+"
 
     /// Primary button. Carries no pricing words at all: not the trial, not the
     /// price. Apple 3.1.2(c) weighs pricing elements against each other, and a
