@@ -25,6 +25,9 @@ LISTING_LOCALES = {
     path.parent.name for path in (ROOT / "fastlane" / "metadata").glob("*/description.txt")
 }
 SCREENSHOT_COUNT = len(list((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png")))
+WATCH_SCREENSHOT = ROOT / "Screenshots" / "raw" / "06-watch.png"
+WATCH_DISPLAY_TYPE = "APP_WATCH_SERIES_4"
+WATCH_SCREENSHOT_CHECKSUM = hashlib.md5(WATCH_SCREENSHOT.read_bytes()).hexdigest()
 REVIEW_SCREENSHOT = ROOT / "fastlane" / "screenshots" / "en-US" / "04-pro.png"
 REVIEW_SCREENSHOT_CHECKSUM = hashlib.md5(REVIEW_SCREENSHOT.read_bytes()).hexdigest()
 PRODUCTS = {
@@ -165,6 +168,7 @@ def main() -> None:
 
     screenshot_counts: dict[str, int] = {}
     live_screenshots: list[dict] = []
+    live_watch_screenshots: list[dict] = []
     for localization in version_locs:
         sets = asc_lib.list_all(client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets")
         for screenshot_set in sets:
@@ -176,9 +180,16 @@ def main() -> None:
                     live_screenshots.extend(
                         asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots")
                     )
+                if display_type == WATCH_DISPLAY_TYPE:
+                    live_watch_screenshots.extend(
+                        asc_lib.list_all(client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots")
+                    )
     check(
-        screenshot_counts == {"APP_IPHONE_67": SCREENSHOT_COUNT},
-        f"canonical 6.9-inch screenshot set present ({screenshot_counts})",
+        screenshot_counts == {
+            "APP_IPHONE_67": SCREENSHOT_COUNT,
+            WATCH_DISPLAY_TYPE: 1,
+        },
+        f"canonical iPhone and Apple Watch screenshot sets present ({screenshot_counts})",
         failures,
     )
     expected_paths = sorted((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png"))
@@ -195,6 +206,31 @@ def main() -> None:
     check(
         all(item.get("assetDeliveryState", {}).get("state") == "COMPLETE" for item in live_attrs),
         "screenshot processing is complete",
+        failures,
+    )
+    watch_attrs = [item["attributes"] for item in live_watch_screenshots]
+    check(
+        [item.get("fileName") for item in watch_attrs] == [WATCH_SCREENSHOT.name],
+        "Apple Watch screenshot is current",
+        failures,
+    )
+    check(
+        [item.get("sourceFileChecksum") for item in watch_attrs] == [WATCH_SCREENSHOT_CHECKSUM],
+        "Apple Watch screenshot checksum matches the raw face capture",
+        failures,
+    )
+    check(
+        all(
+            item.get("imageAsset", {}).get("width") == 368
+            and item.get("imageAsset", {}).get("height") == 448
+            for item in watch_attrs
+        ),
+        "Apple Watch screenshot is 368x448",
+        failures,
+    )
+    check(
+        all(item.get("assetDeliveryState", {}).get("state") == "COMPLETE" for item in watch_attrs),
+        "Apple Watch screenshot processing is complete",
         failures,
     )
 

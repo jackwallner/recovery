@@ -61,8 +61,17 @@ if [[ -n "$WATCH_UDID" ]]; then
     SIMCTL_CHILD_RECHARGE_SCREENSHOT_SCENE="watchRecovering" \
       xcrun simctl launch "$WATCH_UDID" "$WATCH_BUNDLE" >/dev/null
     sleep 5
+    # The watch app launch seeds the deterministic fixture. Return to the
+    # active face so this is proof of the WidgetKit complication, not only the
+    # full watch app screen.
+    command -v axe >/dev/null || {
+      echo "error: axe is required to capture the watch face" >&2
+      exit 1
+    }
+    axe button home --udid "$WATCH_UDID" >/dev/null
+    sleep 3
     xcrun simctl io "$WATCH_UDID" screenshot "$RAW/06-watch.png" >/dev/null 2>&1
-    echo "captured 06-watch (watchRecovering)"
+    echo "captured 06-watch (watch face complication)"
   fi
 fi
 
