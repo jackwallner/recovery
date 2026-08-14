@@ -17,6 +17,19 @@ public enum RecoveryCalculator {
     /// user's percentiles say. Roughly a 20-minute walk.
     public static let absoluteCountdownFloor: Double = 18
 
+    /// The shortest countdown a qualifying session may produce.
+    ///
+    /// Garmin documents its recovery time as spanning "a minimum of 6 hours to a
+    /// maximum of 4 days" (Edge 840 and fēnix 7 owner's manuals), and the floor
+    /// is the half that matters here. A session either earns a countdown or it
+    /// does not; one that does and then returns three hours is Ready before
+    /// bedtime, which reads as the app having quietly ignored the workout. It is
+    /// applied after every other adjustment so nothing — thin context, a
+    /// calibration factor, a personal multiplier — can push a real session below
+    /// it. Monotonicity survives: a maximum against a constant is still
+    /// non-decreasing in load.
+    public static let minimumCountdownHours: Double = 6
+
     /// Hard ceiling on any single estimate. Garmin caps around four days; we are
     /// more conservative because we have less signal.
     public static let maximumHours: Double = 72
@@ -88,7 +101,7 @@ public enum RecoveryCalculator {
             adjustment = contextAdjustment(context)
             let personal = min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
             hours = min(
-                max(base * (1 + adjustment) * clampCalibration(calibration) * personal, 0),
+                max(base * (1 + adjustment) * clampCalibration(calibration) * personal, minimumCountdownHours),
                 maximumHours
             )
         }

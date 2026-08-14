@@ -422,4 +422,51 @@ final class RecoveryCalculatorTests: XCTestCase {
         XCTAssertTrue(estimate.reasons.first?.contains("run") == true)
         XCTAssertTrue(estimate.reasons.first?.contains("60-minute") == true)
     }
+
+    /// Garmin documents its recovery time as spanning "a minimum of 6 hours to a
+    /// maximum of 4 days" (Edge 840 and fenix 7 owner's manuals). The floor is
+    /// the half that matters: a session either earns a countdown or it does not,
+    /// and one that earns a three-hour countdown at 6pm is Ready before bedtime,
+    /// which reads as the app having ignored the workout.
+    func testEveryQualifyingSessionClearsTheDocumentedSixHourFloor() {
+        for profile in [WorkoutProfile.endurance, .strength, .mixed] {
+            for minutes in stride(from: 10.0, through: 240.0, by: 10.0) {
+                for reserve in stride(from: 0.2, through: 0.95, by: 0.05) {
+                    let session = RecoveryFixtures.session(
+                        id: "s", profile: profile, minutes: minutes,
+                        averageHR: 52 + reserve * (188 - 52), coverage: 0.95
+                    )
+                    let estimate = RecoveryCalculator.estimate(
+                        for: session, baseline: .standard(for: profile)
+                    )
+                    guard estimate.producesCountdown else { continue }
+                    XCTAssertGreaterThanOrEqual(
+                        estimate.hours, RecoveryCalculator.minimumCountdownHours - 0.001,
+                        "\(profile) \(Int(minutes))min at \(Int(reserve * 100))% reserve"
+                    )
+                }
+            }
+        }
+    }
+
+    /// The floor must not flatten the curve: two sessions that differ in load
+    /// still have to differ in hours once both are clear of it.
+    func testTheFloorDoesNotFlattenTheCurveAboveIt() {
+        func hours(_ reserve: Double) -> Double {
+            RecoveryCalculator.estimate(
+                for: RecoveryFixtures.session(
+                    id: "s", profile: .endurance, minutes: 60,
+                    averageHR: 52 + reserve * (188 - 52), coverage: 0.95
+                ),
+                baseline: .standard(for: .endurance)
+            ).hours
+        }
+        var previous = 0.0
+        for reserve in stride(from: 0.3, through: 0.95, by: 0.05) {
+            let value = hours(reserve)
+            XCTAssertGreaterThanOrEqual(value, previous, "hours fell at reserve \(reserve)")
+            previous = value
+        }
+        XCTAssertGreaterThan(hours(0.85), hours(0.55), "the curve collapsed onto the floor")
+    }
 }

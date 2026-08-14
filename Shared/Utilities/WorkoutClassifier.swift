@@ -7,21 +7,34 @@ import Foundation
 /// the HYROX/CrossFit ambiguity is resolved.
 public enum WorkoutClassifier {
 
-    /// HealthKit activity type raw values we care about. HealthKit's enum is
-    /// stable across releases, so pinning the numbers here is safe and keeps
-    /// this file importable by the pure test target.
+    /// HealthKit activity type raw values. HealthKit's enum is stable across
+    /// releases, so pinning the numbers here is safe and keeps this file
+    /// importable by the pure test target.
+    ///
+    /// Pinning is safe; transcribing was not. The original table omitted
+    /// `australianFootball` (3), which shifted every value from `badminton` (4)
+    /// through `crossTraining` (11) up by one. Boxing arrived as an unmapped
+    /// code and was scored as endurance; basketball was read as the name one
+    /// slot below it and fell through to the default; a climb was read as
+    /// boxing. `WorkoutClassifierTests.testTheRawValuesMatchHealthKit` pins the
+    /// whole table against the SDK's own numbering so a future edit cannot
+    /// reintroduce a shift.
     public enum ActivityCode: UInt, Sendable {
         case americanFootball = 1
         case archery = 2
-        case badminton = 5
-        case baseball = 6
-        case basketball = 7
-        case boxing = 9
-        case climbing = 10
-        case cricket = 11
-        case crossTraining = 12
+        case australianFootball = 3
+        case badminton = 4
+        case baseball = 5
+        case basketball = 6
+        case bowling = 7
+        case boxing = 8
+        case climbing = 9
+        case cricket = 10
+        case crossTraining = 11
+        case curling = 12
         case cycling = 13
         case dance = 14
+        case danceInspiredTraining = 15
         case elliptical = 16
         case equestrianSports = 17
         case fencing = 18
@@ -36,6 +49,8 @@ public enum WorkoutClassifier {
         case lacrosse = 27
         case martialArts = 28
         case mindAndBody = 29
+        // Deprecated in iOS 11, but old records still carry it.
+        case mixedMetabolicCardioTraining = 30
         case paddleSports = 31
         case play = 32
         case preparationAndRecovery = 33
@@ -136,14 +151,17 @@ public enum WorkoutClassifier {
         case .crossTraining, .boxing, .kickboxing, .martialArts, .wrestling,
              .fencing, .basketball, .soccer, .rugby, .hockey, .lacrosse,
              .handball, .waterPolo, .squash, .racquetball, .tennis, .badminton,
-             .volleyball, .americanFootball, .cardioDance, .dance, .fitnessGaming,
-             .discSports, .pickleball, .tableTennis:
+             .volleyball, .americanFootball, .australianFootball, .cardioDance,
+             .dance, .danceInspiredTraining, .fitnessGaming, .discSports,
+             .pickleball, .tableTennis, .baseball, .softball, .cricket,
+             .equestrianSports, .mixedMetabolicCardioTraining:
             return .mixed
 
         // Easy / active recovery: never starts a countdown.
         case .walking, .wheelchairWalkPace, .yoga, .pilates, .barre, .flexibility,
              .mindAndBody, .taiChi, .preparationAndRecovery, .cooldown, .transition,
-             .golf, .archery, .fishing, .hunting, .play, .socialDance:
+             .golf, .archery, .fishing, .hunting, .play, .socialDance,
+             .bowling, .curling:
             return .easy
 
         // Everything else defaults to endurance: it is the middle curve and the

@@ -48,7 +48,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 | `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
 | `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
-| `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. |
+| `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. All 84 raw values are pinned and tested against the SDK's own numbering; the table was silently off by one from `badminton` (4) through `crossTraining` (11) for the app's whole life, because it omitted `australianFootball` (3). |
 | `CountdownTimeline` | the entry schedule a decaying countdown needs. |
 
 ### The two tiers
@@ -110,10 +110,53 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **2**
-(the standard/personalized split). `RecoveryEstimate` has a hand-written
+window disagrees with what the same session would produce today. Currently **3**
+(the load ladder and the six-hour floor). `RecoveryEstimate` has a hand-written
 `init(from:)` so version-1 records decode as the unmultiplied standard windows
 they actually were.
+
+### The load ladder is an order of trust, and for strength it was wrong
+Heart rate, then reported effort, then energy, then duration. For endurance that
+order is right. For **strength** it produced the worst bug the model has had: the
+same 60-minute lift scored 5.3 hours with a clean heart-rate trace, 7.2 hours
+from energy alone, and 24 hours once the user answered the effort prompt. More
+information made the number smaller, and answering the question the app itself
+asked was punished with a shorter window.
+
+Every signal under-reads a lifting session, each in its own way, so
+`SessionLoadCalculator.strengthLoad` takes the **maximum** across heart rate,
+effort, energy, and the duration-only guess rather than the first available one.
+`durationLoad` is in that maximum as the floor, not as a last resort: sixty
+minutes of resistance work costs what it costs, and a heart-rate trace reading a
+third of the energy-derived figure is the sensor being wrong.
+
+**Mixed deliberately does not include energy in its maximum.** Court and combat
+sports hold the optical signal, so heart rate there is a real measurement rather
+than a systematic under-read, and letting the coarse energy inference outbid it
+turned a 90-minute social tennis match into a 36-hour window.
+`testEnergyDoesNotOutbidHeartRateOnAMixedSession` pins that.
+
+Measured across a 36-session x 5-persona matrix, the window a user gets now
+varies by a mean of 1.23x across sensor-availability scenarios, against 4.7x
+before. Strength is exactly 1.00x.
+
+### The six-hour floor is Garmin's, and it is sourced
+`RecoveryCalculator.minimumCountdownHours` is 6, because Garmin documents its
+recovery time as spanning "a minimum of 6 hours to a maximum of 4 days" (Edge 840
+and fenix 7 owner's manuals). A session either earns a countdown or it does not;
+one that earns three hours at 6pm is Ready before bedtime, which reads as the app
+having quietly ignored the workout. It is applied after every other adjustment,
+and monotonicity survives because a maximum against a constant is still
+non-decreasing.
+
+The **maximum** deliberately stays at 72h against Garmin's documented 96h. We
+have less signal and the conservative end is the safer one for a health app.
+
+Firstbeat publishes **no** strength-training method at all — the EPOC/Training
+Effect white papers are entirely HR-driven cardio, and the recovery-time
+hours-mapping itself was never published. So the strength handling above is a
+design decision defended by internal consistency, not a number copied from a
+reference. Say so rather than implying otherwise.
 
 ### Things worth knowing before changing the model
 - **Monotonicity is structural, not incidental.** `RecoveryCalculator.curve` is a

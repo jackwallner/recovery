@@ -9,7 +9,16 @@ import Foundation
 /// 2: the standard/personalized split. Version 1 scored every user against their
 /// own median session; the free tier now scores against a fixed population
 /// reference, and Recharge+ adds `PersonalRecoveryModel` on top.
-public let recoveryModelVersion = 2
+///
+/// 3: the load ladder and the floor. Strength now takes the highest available
+/// signal instead of the first one it trusts, so a lift no longer scores three
+/// different windows depending on which sensor worked; the energy inference is
+/// floored for strength, where kilocalories per minute under-read for reasons
+/// unrelated to how hard the session was; and every qualifying session clears
+/// six hours, the minimum Garmin documents for the same feature. Windows for
+/// strength sessions roughly doubled; endurance is unchanged except below the
+/// floor.
+public let recoveryModelVersion = 3
 
 // MARK: - Tier
 
@@ -95,7 +104,12 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
     public var assumedEffort: Double {
         switch self {
         case .endurance: 5
-        case .strength: 6
+        // Was 6, which made the blind guess the *largest* signal for a lifting
+        // session: 60 minutes of it produced more load than the same session's
+        // energy reading. A fallback has to sit at or below what the informed
+        // sources say for a typical session of the type, or having no data pays
+        // better than having some.
+        case .strength: 5
         case .mixed: 7
         case .easy: 2
         }
