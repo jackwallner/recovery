@@ -43,7 +43,7 @@ Pro replaces that table with you: every session is scored against your own 42-da
 • Per-session workout-type override
 • Optional notification the moment you are Ready
 
-Recharge Pro is available as a monthly or yearly subscription, or a one-time lifetime purchase.
+Recharge+ is available as a monthly or yearly subscription, or a one-time lifetime purchase.
 
 • Monthly and yearly subscriptions include a 7-day free trial for eligible new subscribers
 • Lifetime is a one-time purchase with no subscription or renewal

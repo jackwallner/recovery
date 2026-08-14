@@ -207,6 +207,15 @@ struct TodayView: View {
         case .noRecentWorkout:
             return "Finish a workout and your estimate appears here."
         case .ready:
+            // A session that never started a countdown lands here too, because
+            // "no countdown running" and "the countdown finished" are the same
+            // phase. They are not the same sentence: "Ready for another hard
+            // session" an hour after a walk reads as the end of a window that
+            // never began, which is the single most confusing thing this screen
+            // can say. Name what actually happened instead.
+            if let explained, !explained.producesCountdown {
+                return "Your \(explained.activityLabel) \(relativeSessionTime(explained)) didn't start a countdown."
+            }
             return "Ready for another hard session."
         case .readySoon, .recovering:
             guard let explained else { return CountdownFormat.phaseDetail(phase) }
@@ -222,7 +231,7 @@ struct TodayView: View {
     private var accessibilitySummary: String {
         switch phase {
         case .noRecentWorkout: "No recent workout."
-        case .ready: "Ready for another hard session."
+        case .ready: readyLine
         default: "\(CountdownFormat.remaining(remaining)) left. \(readyLine)."
         }
     }
@@ -350,7 +359,7 @@ struct TodayView: View {
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                 } else {
-                    Text("Recharge Pro folds your sleep, resting heart rate, and HRV into the estimate within a bounded range.")
+                    Text("Recharge+ folds your sleep, resting heart rate, and HRV into the estimate within a bounded range.")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                     Button {

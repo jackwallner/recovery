@@ -25,14 +25,20 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if engine.estimates.isEmpty {
-                    empty
-                } else {
+                if !engine.estimates.isEmpty {
                     list
+                } else if isStillImporting {
+                    importing
+                } else {
+                    empty
                 }
             }
             .background(Theme.background)
             .navigationTitle("History")
+            // Inline, as on Today and across the fleet: a large title draws its
+            // own opaque bar over the page background as soon as the list
+            // scrolls, and the tinted background is meant to run edge to edge.
+            .navigationBarTitleDisplayMode(.inline)
             .refreshable { await engine.refresh(force: true) }
             .sheet(item: $selected) { estimate in
                 EstimateDetailView(capturedEstimate: estimate)
@@ -46,6 +52,29 @@ struct HistoryView: View {
         }
     }
 
+    /// The first import walks \(HealthKitService.importDays) days of workouts and
+    /// runs a heart-rate query against each one, which takes long enough to see.
+    /// Saying "no estimates yet" during it is a false statement about the user's
+    /// own history at the one moment they are deciding whether the app works.
+    private var isStillImporting: Bool {
+        engine.isRefreshing || (engine.lastSuccessfulImport == nil && !engine.lastImportFailed)
+    }
+
+    private var importing: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+            Text("Reading your history")
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(Theme.textPrimary)
+            Text("Recharge is scoring the last \(HealthKitService.importDays) days of workouts from Apple Health.")
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     private var empty: some View {
         VStack(spacing: 12) {
             Image(systemName: "list.bullet.rectangle")
@@ -54,7 +83,9 @@ struct HistoryView: View {
             Text("No estimates yet")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Finish a workout and Recharge will score it here.")
+            Text(engine.lastImportFailed
+                 ? "Recharge couldn't read Apple Health. Grant access under Health › Sharing › Apps, then pull to refresh."
+                 : "Nothing in the last \(HealthKitService.importDays) days of Apple Health to score. Finish a workout and it will appear here.")
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -349,7 +380,7 @@ private struct EstimateDetailView: View {
                         Text("Correct this session")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
-                        Text("Pro lets you re-classify a session and tell Recharge when an estimate was off.")
+                        Text("Recharge+ lets you re-classify a session and tell Recharge when an estimate was off.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.leading)

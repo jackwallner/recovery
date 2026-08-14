@@ -8,13 +8,13 @@
       "internalID": "31555103",
       "localizations": [
         {
-          "description": "Unlock Recharge Pro forever",
-          "displayName": "Recharge Pro Lifetime",
+          "description": "Unlock Recharge+ forever",
+          "displayName": "Recharge+ Lifetime",
           "locale": "en_US"
         }
       ],
       "productID": "com.jackwallner.recovery.lifetime",
-      "referenceName": "Recharge Pro Lifetime",
+      "referenceName": "Recharge+ Lifetime",
       "type": "NonConsumable"
     }
   ],
@@ -32,12 +32,12 @@
       "id": "31555001",
       "localizations": [
         {
-          "description": "Recharge Pro premium subscription",
-          "displayName": "Recharge Pro",
+          "description": "Recharge+ premium subscription",
+          "displayName": "Recharge+",
           "locale": "en_US"
         }
       ],
-      "name": "Recharge Pro",
+      "name": "Recharge+",
       "subscriptions": [
         {
           "adHocOffers": [],
@@ -53,14 +53,14 @@
           },
           "localizations": [
             {
-              "description": "Unlock Recharge Pro monthly",
-              "displayName": "Recharge Pro Monthly",
+              "description": "Unlock Recharge+ monthly",
+              "displayName": "Recharge+ Monthly",
               "locale": "en_US"
             }
           ],
           "productID": "com.jackwallner.recovery.monthly",
           "recurringSubscriptionPeriod": "P1M",
-          "referenceName": "Recharge Pro Monthly",
+          "referenceName": "Recharge+ Monthly",
           "subscriptionGroupID": "31555001",
           "type": "RecurringSubscription"
         },
@@ -78,14 +78,14 @@
           },
           "localizations": [
             {
-              "description": "Unlock Recharge Pro yearly, save 58%",
-              "displayName": "Recharge Pro Yearly",
+              "description": "Unlock Recharge+ yearly, save 58%",
+              "displayName": "Recharge+ Yearly",
               "locale": "en_US"
             }
           ],
           "productID": "com.jackwallner.recovery.yearly",
           "recurringSubscriptionPeriod": "P1Y",
-          "referenceName": "Recharge Pro Yearly",
+          "referenceName": "Recharge+ Yearly",
           "subscriptionGroupID": "31555001",
           "type": "RecurringSubscription"
         }

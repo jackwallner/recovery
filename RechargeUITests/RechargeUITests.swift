@@ -63,7 +63,7 @@ final class RechargeUITests: XCTestCase {
         let app = launch(scene: "paywall")
 
         XCTAssertTrue(
-            app.staticTexts["Recharge Pro"].firstMatch.waitForExistence(timeout: 25),
+            app.staticTexts["Recharge+"].firstMatch.waitForExistence(timeout: 25),
             "the paywall never appeared"
         )
 
@@ -73,7 +73,7 @@ final class RechargeUITests: XCTestCase {
         // to be pressable on the first frame, with no scrolling: this assertion
         // is the regression guard for a purchase surface that showed prices but
         // hid its action.
-        let cta = app.buttons["Continue with Recharge Pro"].firstMatch
+        let cta = app.buttons["Continue with Recharge+"].firstMatch
         XCTAssertTrue(cta.exists, "the paywall CTA is missing")
         XCTAssertTrue(cta.isHittable, "the paywall CTA is not reachable without scrolling")
 
@@ -199,7 +199,7 @@ final class RechargeUITests: XCTestCase {
         var primaryFrames: [CGRect] = []
 
         for _ in 0..<12 {
-            if app.buttons["Continue with Recharge Pro"].firstMatch.exists { break }
+            if app.buttons["Continue with Recharge+"].firstMatch.exists { break }
             guard let next = Self.onboardingPrimaries
                 .map({ app.buttons[$0].firstMatch })
                 .first(where: { $0.exists })
@@ -251,10 +251,10 @@ final class RechargeUITests: XCTestCase {
         advanceToTheOffer(app)
 
         XCTAssertTrue(
-            app.buttons["Continue with Recharge Pro"].firstMatch.waitForExistence(timeout: 10),
+            app.buttons["Continue with Recharge+"].firstMatch.waitForExistence(timeout: 10),
             "the offer page never appeared"
         )
-        let getStarted = app.buttons["Get started with Standard"].firstMatch
+        let getStarted = app.buttons["Get Started"].firstMatch
         XCTAssertTrue(getStarted.exists, "the free path is not offered by name")
         XCTAssertTrue(app.buttons["Restore"].exists, "restore is missing from the onboarding purchase point")
         for legal in ["Terms", "Privacy"] {
@@ -283,7 +283,7 @@ final class RechargeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
         advanceToTheOffer(app)
 
-        let cta = app.buttons["Continue with Recharge Pro"].firstMatch
+        let cta = app.buttons["Continue with Recharge+"].firstMatch
         XCTAssertTrue(cta.waitForExistence(timeout: 10), "the trial page never appeared")
         attach(app, named: "trial-offer-accessibility-xxxl")
 

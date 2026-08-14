@@ -84,7 +84,7 @@ public enum ScreenshotFixtures {
         )
     }
 
-    /// A settled Recharge Pro analysis, so the onboarding comparison card and
+    /// A settled Recharge+ analysis, so the onboarding comparison card and
     /// the Settings rows render the real shape rather than their empty states.
     ///
     /// Curated rather than derived: the fixture history carries estimates, not
@@ -104,6 +104,16 @@ public enum ScreenshotFixtures {
             sessionsPerWeek: 4.7,
             qualifyingSessions: 20,
             evidenceWeight: 0.62
+        )
+    }
+
+    /// The conversion card's two figures, fixed so the capture is reproducible.
+    public static func personalizedPreview() -> PersonalizedPreview {
+        PersonalizedPreview(
+            label: "Your last run",
+            standardHours: 21,
+            personalizedHours: 16,
+            isExample: false
         )
     }
 

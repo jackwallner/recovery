@@ -36,6 +36,9 @@ struct SettingsView: View {
                 #endif
             }
             .navigationTitle("Settings")
+            // Inline, as on Today, History, and the rest of the fleet: a large
+            // title draws its own bar over the page the moment the form scrolls.
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "settings")
                     .environmentObject(store)
@@ -271,14 +274,14 @@ struct SettingsView: View {
             }
 
             if !store.isPro {
-                Button("See Recharge Pro") { showPaywall = true }
+                Button("See Recharge+") { showPaywall = true }
             }
         } header: {
             Text("Recharge time")
         } footer: {
             Text(store.isPro
                 ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The standard estimate is the same table for everyone: session type, length, and intensity in, hours out. Recharge Pro scores each session against your own history instead.")
+                : "The standard estimate is the same table for everyone: session type, length, and intensity in, hours out. Recharge+ scores each session against your own history instead.")
         }
     }
 
@@ -353,7 +356,7 @@ struct SettingsView: View {
 
     private var aboutYouFooter: String {
         let derived = settings.athleteProfile.healthDerivedFields
-        let base = "Age sets the heart-rate range every session is measured against, on both tiers. The rest shape your Recharge Pro estimate until there is enough history to answer for itself."
+        let base = "Age sets the heart-rate range every session is measured against, on both tiers. The rest shape your Recharge+ estimate until there is enough history to answer for itself."
         guard !derived.isEmpty else { return base }
         var found: [String] = []
         if derived.contains(AthleteProfile.ageField) { found.append("your age") }
@@ -481,7 +484,7 @@ struct SettingsView: View {
                 }
             }
         } header: {
-            Text("Recharge Pro")
+            Text("Recharge+")
         } footer: {
             Text("Body signals fold your sleep, resting heart rate, and HRV into the estimate, within a bounded range. One reading never swings the countdown on its own.")
         }

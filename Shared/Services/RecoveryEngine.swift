@@ -46,6 +46,19 @@ public final class RecoveryEngine: ObservableObject {
     /// not a pitch, it is a mock-up.
     @Published public private(set) var personalAnalysis = PersonalRecoveryModel.Analysis.neutral
 
+    /// The standard window beside the personalized one, for the most recent
+    /// session that produced a countdown.
+    ///
+    /// Always populated, and always *computed* rather than derived. Multiplying
+    /// the standard hours by `personalAnalysis.factor` was the cheap version and
+    /// it understated the difference badly: the personalized window is scored
+    /// against the person's own 42-day baseline instead of the population
+    /// reference, which moves the relative load, which moves the curve. When the
+    /// thirty-day multiplier happened to land near 1 the derived version showed
+    /// the same number twice and the conversion card vanished, on exactly the
+    /// screens whose whole argument is that the number changes.
+    @Published public private(set) var personalizedPreview = PersonalizedPreview.reference(factor: 1)
+
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
     private init() {}
@@ -273,6 +286,7 @@ public final class RecoveryEngine: ObservableObject {
             personalAnalysis = PersonalRecoveryModel.analyse(
                 profile: settings.athleteProfile, sessions: [], days: [], now: now
             )
+            personalizedPreview = .reference(factor: personalAnalysis.factor)
             return
         }
 
@@ -320,44 +334,50 @@ public final class RecoveryEngine: ObservableObject {
             now: now
         )
         personalAnalysis = analysis
-        let personalization: RecoveryPersonalization = isPro
-            ? .personalized(factor: analysis.factor)
-            : .standard
 
         var history: [(profile: WorkoutProfile, load: Double, date: Date)] = []
         var results: [RecoveryEstimate] = []
+        var preview: PersonalizedPreview?
 
         // Pass two: the estimate the user actually gets. On the free tier that is
         // the standard one already computed — no personal baseline, no overnight
         // context, no calibration, the same table for everyone.
         for (index, workout) in workouts.enumerated() {
             let session = inputs[index]
-            let estimate: RecoveryEstimate
-            if isPro {
-                let baseline = RecoveryBaseline.build(
+            // Scored the personalized way regardless of tier. A paying user gets
+            // it as their estimate; a free user gets it as the only honest way to
+            // show what the upgrade would actually do to *their* numbers.
+            let personalized = RecoveryCalculator.estimate(
+                for: session,
+                baseline: RecoveryBaseline.build(
                     from: history,
                     for: session.profile,
                     now: workout.endDate
-                )
-                let recoveryContext = settings.useContextSignals
+                ),
+                context: settings.useContextSignals
                     ? contextFor(
                         workout: workout,
                         contextByKey: contextByKey,
                         restingBaseline: restingBaseline,
                         hrvBaseline: hrvBaseline
                     )
-                    : .empty
-                estimate = RecoveryCalculator.estimate(
-                    for: session,
-                    baseline: baseline,
-                    context: recoveryContext,
-                    calibration: settings.calibrationFactor,
-                    personalization: personalization,
+                    : .empty,
+                calibration: settings.calibrationFactor,
+                personalization: .personalized(factor: analysis.factor),
+                standardHours: standardEstimates[index].hours,
+                now: now
+            )
+            let estimate = isPro ? personalized : standardEstimates[index]
+
+            // Overwrites as the loop walks forward, so the survivor is the most
+            // recent session that produced a countdown either way.
+            if standardEstimates[index].producesCountdown || personalized.producesCountdown {
+                preview = PersonalizedPreview(
+                    label: "Your last \(session.activityLabel)",
                     standardHours: standardEstimates[index].hours,
-                    now: now
+                    personalizedHours: personalized.hours,
+                    isExample: false
                 )
-            } else {
-                estimate = standardEstimates[index]
             }
 
             // Cache the load back onto the workout so the baseline for the next
@@ -403,6 +423,17 @@ public final class RecoveryEngine: ObservableObject {
             context.delete(state)
         }
         try? context.save()
+
+        // No qualifying session yet is not a reason to show nothing, and neither
+        // is a session where the two happen to land on the same rounded hour:
+        // fall back to the canonical hard session, which is a real point on the
+        // real curve and where the multiplier has room to show.
+        if let preview, preview.isVisiblyDifferent {
+            personalizedPreview = preview
+        } else {
+            let reference = PersonalizedPreview.reference(factor: analysis.factor)
+            personalizedPreview = reference.isVisiblyDifferent ? reference : (preview ?? reference)
+        }
 
         estimates = results.sorted { $0.sessionEnd > $1.sessionEnd }
         current = RecoveryResolver.current(in: results)
@@ -681,6 +712,7 @@ public final class RecoveryEngine: ObservableObject {
     private func loadScreenshotFixtures() {
         estimates = ScreenshotFixtures.history()
         personalAnalysis = ScreenshotFixtures.personalAnalysis()
+        personalizedPreview = ScreenshotFixtures.personalizedPreview()
         current = RecoveryResolver.current(in: estimates)
         awaitingFeedback = nil
         awaitingEffort = nil
