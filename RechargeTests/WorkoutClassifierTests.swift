@@ -96,4 +96,71 @@ final class WorkoutClassifierTests: XCTestCase {
         XCTAssertFalse(WorkoutProfile.endurance.wantsEffortInput)
         XCTAssertFalse(WorkoutProfile.easy.wantsEffortInput)
     }
+
+    /// The whole raw-value table, pinned against HealthKit's own numbering.
+    ///
+    /// This exists because the original table omitted `australianFootball` (3)
+    /// and shifted everything from `badminton` (4) through `crossTraining` (11)
+    /// up by one slot. Boxing arrived as an unmapped code and was scored as
+    /// endurance; a climb was read as boxing; basketball was read as the name
+    /// below it and fell through to the default branch. Nothing in the suite
+    /// could see it, because every test asked the classifier about a code it had
+    /// looked up in the same wrong table.
+    ///
+    /// Verified against `HKWorkout.h` in the iOS 26.5 SDK. Note that 81 is a
+    /// genuine gap in Apple's enum: `swimBikeRun` carries an explicit `= 82`.
+    func testTheRawValuesMatchHealthKit() {
+        let healthKit: [UInt: WorkoutClassifier.ActivityCode] = [
+            1: .americanFootball, 2: .archery, 3: .australianFootball, 4: .badminton,
+            5: .baseball, 6: .basketball, 7: .bowling, 8: .boxing, 9: .climbing,
+            10: .cricket, 11: .crossTraining, 12: .curling, 13: .cycling, 14: .dance,
+            15: .danceInspiredTraining, 16: .elliptical, 17: .equestrianSports,
+            18: .fencing, 19: .fishing, 20: .functionalStrengthTraining, 21: .golf,
+            22: .gymnastics, 23: .handball, 24: .hiking, 25: .hockey, 26: .hunting,
+            27: .lacrosse, 28: .martialArts, 29: .mindAndBody,
+            30: .mixedMetabolicCardioTraining, 31: .paddleSports, 32: .play,
+            33: .preparationAndRecovery, 34: .racquetball, 35: .rowing, 36: .rugby,
+            37: .running, 38: .sailing, 39: .skatingSports, 40: .snowSports,
+            41: .soccer, 42: .softball, 43: .squash, 44: .stairClimbing,
+            45: .surfingSports, 46: .swimming, 47: .tableTennis, 48: .tennis,
+            49: .trackAndField, 50: .traditionalStrengthTraining, 51: .volleyball,
+            52: .walking, 53: .waterFitness, 54: .waterPolo, 55: .waterSports,
+            56: .wrestling, 57: .yoga, 58: .barre, 59: .coreTraining,
+            60: .crossCountrySkiing, 61: .downhillSkiing, 62: .flexibility,
+            63: .highIntensityIntervalTraining, 64: .jumpRope, 65: .kickboxing,
+            66: .pilates, 67: .snowboarding, 68: .stairs, 69: .stepTraining,
+            70: .wheelchairWalkPace, 71: .wheelchairRunPace, 72: .taiChi,
+            73: .mixedCardio, 74: .handCycling, 75: .discSports, 76: .fitnessGaming,
+            77: .cardioDance, 78: .socialDance, 79: .pickleball, 80: .cooldown,
+            82: .swimBikeRun, 83: .transition, 84: .underwaterDiving, 3000: .other
+        ]
+        for (raw, expected) in healthKit {
+            XCTAssertEqual(
+                WorkoutClassifier.ActivityCode(rawValue: raw), expected,
+                "raw value \(raw) does not name \(expected)"
+            )
+        }
+        XCTAssertNil(WorkoutClassifier.ActivityCode(rawValue: 81), "81 is a gap in HealthKit's enum")
+    }
+
+    /// The four activities the shift actually broke, named so a regression is
+    /// legible rather than a number moving.
+    func testTheActivitiesTheOffByOneBrokeAreClassifiedAgain() {
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 8), .mixed, "boxing")
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 6), .mixed, "basketball")
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 9), .strength, "climbing")
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 11), .mixed, "cross-training")
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 4), .mixed, "badminton")
+        XCTAssertEqual(WorkoutClassifier.profile(activityCode: 7), .easy, "bowling")
+    }
+
+    /// No real HealthKit code may fall through to the unknown-code fallback.
+    func testEveryHealthKitCodeHasAHome() {
+        for raw in (UInt(1)...UInt(84)) where raw != 81 {
+            XCTAssertNotNil(
+                WorkoutClassifier.ActivityCode(rawValue: raw),
+                "raw value \(raw) is not pinned, so it falls back to endurance"
+            )
+        }
+    }
 }

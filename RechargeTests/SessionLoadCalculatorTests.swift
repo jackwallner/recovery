@@ -164,4 +164,62 @@ final class SessionLoadCalculatorTests: XCTestCase {
         XCTAssertTrue(load.value.isFinite)
         XCTAssertEqual(load.value, 0, accuracy: 0.0001)
     }
+
+    /// The bug this whole family of tests was missing: for a lifting session the
+    /// answer depended on which sensor happened to work, not on the session.
+    ///
+    /// The same 60-minute lift scored 5.3 hours with a clean heart-rate trace,
+    /// 7.2 hours from energy alone, and 24 hours once the effort prompt was
+    /// answered. More information made the number smaller, and answering the
+    /// question the app itself asked was punished with a shorter window.
+    func testAStrengthSessionScoresTheSameWhicheverSensorWorked() {
+        func lift(hr: Bool, energy: Bool) -> Double {
+            SessionLoadCalculator.profiledLoad(for: RecoveryFixtures.session(
+                id: "lift", profile: .strength, minutes: 60,
+                averageHR: hr ? 118 : nil,
+                coverage: hr ? 0.9 : 0.1,
+                energy: energy ? 255 : nil
+            )).value
+        }
+        let everything = lift(hr: true, energy: true)
+        for (name, value) in [
+            ("optical signal lost", lift(hr: false, energy: true)),
+            ("no energy recorded", lift(hr: true, energy: false)),
+            ("nothing but a duration", lift(hr: false, energy: false))
+        ] {
+            XCTAssertEqual(
+                value, everything, accuracy: everything * 0.15,
+                "a lift scored differently when \(name)"
+            )
+        }
+    }
+
+    /// Answering the effort prompt must only ever be able to raise the estimate.
+    /// It is the one signal the user supplies by hand, and a shorter window in
+    /// return for saying "that was hard" teaches them not to answer.
+    func testAnsweringTheEffortPromptNeverShortensAStrengthSession() {
+        for rpe in stride(from: 1.0, through: 10.0, by: 1.0) {
+            let silent = SessionLoadCalculator.profiledLoad(for: RecoveryFixtures.session(
+                id: "l", profile: .strength, minutes: 60, averageHR: 118, coverage: 0.9, energy: 255
+            )).value
+            let answered = SessionLoadCalculator.profiledLoad(for: RecoveryFixtures.session(
+                id: "l", profile: .strength, minutes: 60, averageHR: 118, coverage: 0.9,
+                energy: 255, effort: rpe
+            )).value
+            XCTAssertGreaterThanOrEqual(answered, silent, "RPE \(rpe) shortened the window")
+        }
+    }
+
+    /// Court and combat sports hold the optical signal, so heart rate is a real
+    /// measurement there rather than the systematic under-read it is at a
+    /// barbell. Letting the coarse energy inference outbid it turned a
+    /// 90-minute social tennis match into a 36-hour window.
+    func testEnergyDoesNotOutbidHeartRateOnAMixedSession() {
+        let tennis = RecoveryFixtures.session(
+            id: "tennis", profile: .mixed, minutes: 90, averageHR: 133,
+            coverage: 0.88, energy: 612
+        )
+        let load = SessionLoadCalculator.profiledLoad(for: tennis)
+        XCTAssertEqual(load.source, .heartRate)
+    }
 }

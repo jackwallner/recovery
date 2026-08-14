@@ -180,7 +180,13 @@ private struct HistoryRow: View {
                     Text(estimate.activityLabel.capitalized)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("\(estimate.category.shortLabel) · \(timeLabel)")
+                    // An easy session's category is measured against the easy
+                    // population reference, which makes a three-hour round of
+                    // golf read "Very hard" on the row that also says its
+                    // countdown is "None". The category answers a question
+                    // nobody asked of an active-recovery session; say what the
+                    // row actually means instead.
+                    Text("\(estimate.profile == .easy ? "Active recovery" : estimate.category.shortLabel) · \(timeLabel)")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                 }
