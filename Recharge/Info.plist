@@ -37,6 +37,15 @@
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, and sleep from Apple Health to estimate how long your next hard session is likely to be worth waiting for. It also reads your date of birth and sex, which set the heart-rate range your sessions are measured against. Recharge never writes Health data.</string>
+	<!-- Recharge never writes to Health: `requestAuthorization` passes
+	     `toShare: []`. The string stays anyway because App Store Connect
+	     rejects the upload without it (error 90683): its static analysis sees
+	     `HKHealthStore.requestAuthorization(toShare:read:)` referenced in the
+	     binary and requires a purpose string for the write half whether or not
+	     the app ever passes anything to it. Removing it archives cleanly and
+	     then fails at upload, which is a slow way to find out. -->
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Recharge does not write any data to Apple Health.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
