@@ -1,0 +1,64 @@
+Skończ ciężki trening, a Recharge uruchomi odliczanie. Gdy dobiegnie końca, dostajesz wyraźne Gotowy.
+
+To cała aplikacja. To odpowiedź, jaką po aktywności daje Ci Garmin, zbudowana na Apple Watcha, którego już masz. Bez pierścienia, bez paska, bez drugiego ekosystemu sprzętu w abonamencie.
+
+CO WIDZISZ
+
+• Odliczanie w godzinach po każdym liczącym się treningu
+• Wyraźne Gotowy, gdy szacunek wygasa
+• Powód: który trening ustawił okno i jak pewny jest wynik
+• Komplikacje w czterech rodzinach: okrągła, prostokątna, liniowa i narożna
+
+ZBUDOWANE POD TRENING HYBRYDOWY
+
+Recharge stosuje osobną krzywą dla każdego rodzaju sesji: godzina pod sztangą i godzina na rowerze nie kosztują tego samego.
+
+• Wytrzymałość: bieg, rower, wiosłowanie, pływanie. Obciążenie z rezerwy tętna.
+• Siła: podnoszenie ciężarów. Tętno na nadgarstku jest tu niewiarygodne, więc Recharge zadaje Ci pytanie zamiast zgadywać.
+• Mieszane: HYROX, CrossFit, obwody. Oba systemy obciążone, więc najdłuższe okno.
+• Lekkie: spacery, joga, mobilność. Liczone jako regeneracja aktywna i nigdy nie uruchamiają ani nie wydłużają odliczania.
+
+Recharge pokazuje ograniczone okno zamiast liczby o fałszywej precyzji, razem z sygnałem, który je wyznaczył.
+
+STANDARD, ZA DARMO
+
+Szacunek standardowy to ta sama tabela dla wszystkich: rodzaj sesji, długość i intensywność, mierzone względem zakresu tętna dla Twojego wieku.
+
+• Import treningów z Apple Zdrowie
+• Odliczanie i stan Gotowy
+• Aplikacja na Apple Watch
+• Wszystkie cztery rodziny komplikacji
+• Wyjaśnienie ostatniego szacunku na iPhonie
+
+RECHARGE+
+
+Recharge+ zastępuje tę tabelę Tobą: każda sesja jest mierzona względem Twojej własnej 42-dniowej linii bazowej, a ostatnie 30 dni ustala tempo Twoich odliczań.
+
+• Czas z Twojej własnej historii, a nie ze średniej populacji
+• Sen, tętno spoczynkowe i HRV wliczone w każdy szacunek
+• Kalibracja na podstawie tego, jak naprawdę się czułeś na końcu
+• Obciążenie tygodniowe wobec Twojej średniej z czterech tygodni
+• Rodzaj treningu do zmiany sesja po sesji
+• Opcjonalne powiadomienie w chwili, gdy jesteś Gotowy
+
+Recharge+ jest dostępny jako subskrypcja miesięczna lub roczna albo jako jednorazowy zakup dożywotni.
+
+• Subskrypcje miesięczna i roczna zawierają 7 dni bezpłatnego okresu próbnego dla nowych uprawnionych subskrybentów
+• Wersja dożywotnia to zakup jednorazowy, bez subskrypcji i bez odnowień
+
+Ceny są pokazywane w aplikacji przed zakupem i różnią się w zależności od regionu. Płatność jest pobierana z Twojego konta Apple przy potwierdzeniu zakupu. Subskrypcje odnawiają się automatycznie: konto jest obciążane w ciągu 24 godzin przed końcem okresu, chyba że automatyczne odnawianie zostanie wyłączone co najmniej 24 godziny wcześniej. Zarządzaj lub anuluj w Ustawienia › Konto Apple › Subskrypcje. Niewykorzystana część okresu próbnego przepada przy zakupie.
+
+Polityka prywatności: https://jackwallner.github.io/recovery/privacy-policy.html
+Warunki korzystania (standardowa EULA Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRYWATNOŚĆ
+
+Recharge czyta z Apple Zdrowie i nic tam nie zapisuje. Twoje dane zostają na Twoich urządzeniach. Bez konta, bez logowania, bez serwera.
+
+WAŻNE
+
+Recharge podaje szacunek treningu sercowo-naczyniowego na podstawie Twojego niedawnego obciążenia. To nie jest porada medyczna i nie powie Ci, czy jesteś w stanie trenować. Obciążenie sercowo-naczyniowe, zakwasy, choroba i zmęczenie psychiczne to nie to samo. Porozmawiaj o swoim zdrowiu z wykwalifikowanym specjalistą.
+
+Recharge nie jest powiązany z Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ani Apple, nie jest przez nie wspierany ani sponsorowany. Nazwy produktów są znakami towarowymi ich właścicieli.
+
+Wymaga iOS 17 lub nowszego. Zdecydowanie zalecany jest Apple Watch rejestrujący Twoje treningi.

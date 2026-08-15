@@ -1,0 +1,64 @@
+Päätä kova treeni, ja Recharge käynnistää laskurin. Kun se päättyy, saat selkeän Valmis.
+
+Siinä on koko sovellus. Se on vastaus, jonka Garmin antaa sinulle suorituksen jälkeen, rakennettuna Apple Watchiin, joka sinulla jo on. Ei sormusta, ei pantaa, ei toista laitteistoekosysteemiä tilattavaksi.
+
+MITÄ NÄET
+
+• Laskuri tunteina jokaisen laskettavan treenin jälkeen
+• Selkeä Valmis, kun arvio päättyy
+• Syy sen takana: mikä treeni asetti ikkunan ja kuinka varma sovellus on
+• Komplikaatiot neljässä perheessä: pyöreä, suorakulmainen, inline ja kulma
+
+TEHTY HYBRIDIHARJOITTELUUN
+
+Recharge käyttää omaa käyrää treenityypille: tunti tangon alla ja tunti pyörällä eivät maksa samaa.
+
+• Kestävyys: juoksu, pyöräily, soutu, uinti. Kuormitus sykereservistä.
+• Voima: nostot. Ranteen syke ei ole täällä luotettava, joten Recharge kysyy sinulta yhden kysymyksen sen sijaan että arvaisi.
+• Sekatreeni: HYROX, CrossFit, kiertoharjoittelu. Molemmat järjestelmät kuormittuvat, joten pisin ikkuna.
+• Kevyt: kävelyt, jooga, liikkuvuus. Lasketaan aktiiviseksi palautumiseksi eikä koskaan aloita tai pidennä laskuria.
+
+Recharge näyttää rajatun ikkunan eikä väärän tarkan luvun, ja kertoo signaalin, joka sen tuotti.
+
+VAKIO, ILMAINEN
+
+Vakioarvio on sama taulukko kaikille: treenin tyyppi, kesto ja kovuus, mitattuna ikääsi vastaavalla sykealueella.
+
+• Treenien tuonti Apple Terveydestä
+• Laskuri ja Valmis-tila
+• Apple Watch -sovellus
+• Kaikki neljä komplikaatioperhettä
+• Selitys iPhonessa viimeisimmästä arviosta
+
+RECHARGE+
+
+Recharge+ korvaa taulukon sinulla: jokainen treeni mitataan omaa 42 päivän perustasoasi vasten, ja viimeiset 30 päivää määrittävät, kuinka nopeasti laskurisi kulkevat.
+
+• Aika omasta historiastasi, ei väestön keskiarvosta
+• Uni, leposyke ja HRV mukana jokaisessa arviossa
+• Kalibrointi sen mukaan, miltä sinusta oikeasti tuntui lopussa
+• Viikkokuormitus omaa neljän viikon keskiarvoasi vasten
+• Treenityypin voi ohittaa treeni kerrallaan
+• Valinnainen ilmoitus juuri silloin kun olet Valmis
+
+Recharge+ on saatavilla kuukausi- tai vuositilauksena tai kertaostoksena ikuisesti.
+
+• Kuukausi- ja vuositilaus sisältävät 7 päivän ilmaisen kokeilun uusille tilaajille, jotka ovat siihen oikeutettuja
+• Ikuinen on kertaostos ilman tilausta ja ilman uusiutumista
+
+Hinnat näkyvät sovelluksessa ennen ostoa ja vaihtelevat alueittain. Maksu veloitetaan Apple-tililtäsi oston vahvistuksen yhteydessä. Tilaukset uusiutuvat automaattisesti: tiliä veloitetaan 24 tunnin sisällä ennen jakson päättymistä, ellei automaattista uusiutumista poisteta käytöstä vähintään 24 tuntia aiemmin. Hallinnoi tai peruuta kohdassa Asetukset › Apple-tili › Tilaukset. Kokeilun käyttämätön osa menetetään ostettaessa.
+
+Tietosuojakäytäntö: https://jackwallner.github.io/recovery/privacy-policy.html
+Käyttöehdot (Applen vakio-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+TIETOSUOJA
+
+Recharge lukee Apple Terveydestä eikä kirjoita sinne mitään. Tietosi pysyvät laitteillasi. Ei tiliä, ei kirjautumista, ei palvelinta.
+
+TÄRKEÄÄ
+
+Recharge antaa kardiovaskulaarisen harjoitusarvion viimeaikaisen kuormituksesi perusteella. Se ei ole lääketieteellistä neuvontaa eikä voi kertoa, oletko kunnossa harjoittelemaan. Kardiovaskulaarinen kuormitus, lihasarkuus, sairaus ja henkinen väsymys eivät ole sama asia. Keskustele terveydestäsi pätevän ammattilaisen kanssa.
+
+Recharge ei ole sidoksissa Garminiin, WHOOPiin, Ouraan, Polariin, Corosiin, HYROXiin, CrossFitiin tai Appleen, eivätkä ne tue tai sponsoroi sitä. Tuotenimet ovat omistajiensa tavaramerkkejä.
+
+Vaatii iOS 17:n tai uudemman. Apple Watch, joka tallentaa treenisi, on erittäin suositeltava.

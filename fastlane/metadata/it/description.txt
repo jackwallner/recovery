@@ -1,0 +1,64 @@
+Finisci una sessione dura e Recharge avvia un conto alla rovescia. Quando arriva a zero, hai un Pronto chiaro.
+
+Questa è tutta l'app. È la risposta che un Garmin ti dà dopo un'attività, pensata per l'Apple Watch che hai già. Nessun anello, nessuna fascia, nessun secondo ecosistema hardware da pagare.
+
+COSA VEDI
+
+• Un conto alla rovescia in ore dopo ogni allenamento valido
+• Un Pronto netto quando la stima scade
+• Il motivo dietro: quale sessione ha fissato la finestra e quanta fiducia c'è
+• Complicazioni in quattro famiglie: circolare, rettangolare, in linea e angolo
+
+PENSATA PER L'ALLENAMENTO IBRIDO
+
+Recharge usa una curva diversa per tipo di sessione: un'ora sotto il bilanciere e un'ora in bici non costano la stessa cosa.
+
+• Resistenza: corsa, bici, vogatore, nuoto. Carico dalla riserva cardiaca.
+• Forza: sollevamento. La frequenza cardiaca al polso qui non è affidabile, quindi Recharge ti fa una domanda invece di indovinare.
+• Misto: HYROX, CrossFit, circuiti. Entrambi i sistemi sollecitati, quindi la finestra più lunga.
+• Leggero: camminate, yoga, mobilità. Contano come recupero attivo e non avviano né allungano mai un conto alla rovescia.
+
+Recharge mostra una finestra delimitata invece di un numero di falsa precisione, insieme al segnale che l'ha prodotta.
+
+STANDARD, GRATIS
+
+La stima standard è la stessa tabella per tutti: tipo di sessione, durata e durezza, misurati sull'intervallo cardiaco corrispondente alla tua età.
+
+• Importazione degli allenamenti da Salute di Apple
+• Il conto alla rovescia e lo stato Pronto
+• App per Apple Watch
+• Tutte e quattro le famiglie di complicazioni
+• Spiegazione su iPhone della tua ultima stima
+
+RECHARGE+
+
+Recharge+ sostituisce quella tabella con te: ogni sessione è misurata sul tuo riferimento personale di 42 giorni, e gli ultimi 30 giorni regolano la velocità dei tuoi conti alla rovescia.
+
+• Un tempo che nasce dal tuo storico, non da una media di popolazione
+• Sonno, frequenza cardiaca a riposo e HRV in ogni stima
+• Calibrazione da come ti sei sentito davvero alla fine
+• Carico settimanale rispetto alla tua media di quattro settimane
+• Tipo di allenamento modificabile sessione per sessione
+• Notifica facoltativa nel momento in cui sei Pronto
+
+Recharge+ è disponibile come abbonamento mensile o annuale, o come acquisto singolo a vita.
+
+• Gli abbonamenti mensile e annuale includono 7 giorni di prova gratuita per i nuovi abbonati idonei
+• L'opzione a vita è un acquisto singolo, senza abbonamento né rinnovo
+
+I prezzi sono mostrati nell'app prima dell'acquisto e variano in base alla regione. Il pagamento viene addebitato sul tuo ID Apple alla conferma dell'acquisto. Gli abbonamenti si rinnovano automaticamente: l'addebito avviene nelle 24 ore prima della fine del periodo, salvo disattivazione del rinnovo almeno 24 ore prima. Gestisci o annulla in Impostazioni › ID Apple › Abbonamenti. La parte non usata di una prova gratuita si perde con l'acquisto.
+
+Informativa sulla privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Condizioni d'uso (EULA standard Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRIVACY
+
+Recharge legge da Salute di Apple e non scrive nulla. I tuoi dati restano sui tuoi dispositivi. Nessun account, nessun accesso, nessun server.
+
+IMPORTANTE
+
+Recharge fornisce una stima di allenamento cardiovascolare basata sul tuo carico recente. Non è un consiglio medico e non può dirti se sei nelle condizioni di allenarti. Carico cardiovascolare, indolenzimento, malattia e stanchezza mentale non sono la stessa cosa. Parla della tua salute con un professionista qualificato.
+
+Recharge non è affiliata, approvata né sponsorizzata da Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit o Apple. I nomi dei prodotti sono marchi dei rispettivi titolari.
+
+Richiede iOS 17 o successivo. Si consiglia un Apple Watch che registri i tuoi allenamenti.

@@ -1,0 +1,7 @@
+Första versionen.
+
+• Nedräkning efter varje pass som räknas, med ett tydligt Redo-läge
+• Apple Watch-app och fyra komplikationsfamiljer: cirkulär, rektangulär, inline och hörn
+• Egna kurvor för uthållighet, styrka, blandat (HYROX / CrossFit) och lugna pass
+• Ansträngning med ett tryck på handleden när pulsen inte är tillförlitlig
+• Full förklaring av varje uppskattning: vilket pass som satte den, hur hårt det var för dig och hur säker appen är

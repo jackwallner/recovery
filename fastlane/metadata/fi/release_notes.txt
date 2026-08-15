@@ -1,0 +1,7 @@
+Ensimmäinen versio.
+
+• Laskuri jokaisen laskettavan treenin jälkeen, ja selkeä Valmis-tila
+• Apple Watch -sovellus ja neljä komplikaatioperhettä: pyöreä, suorakulmainen, inline ja kulma
+• Omat käyrät kestävyydelle, voimalle, sekatreenille (HYROX / CrossFit) ja kevyille treeneille
+• Rasituksen arviointi yhdellä napautuksella ranteessa, kun syke ei ole luotettava
+• Täysi selitys jokaiselle arviolle: mikä treeni sen asetti, kuinka kova se oli sinulle ja kuinka varma sovellus on

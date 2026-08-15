@@ -1,0 +1,7 @@
+Első verzió.
+
+• Visszaszámlálás minden beszámított edzés után, világos Kész állapottal
+• Apple Watch app és négy komplikációcsalád: kör, téglalap, soros és sarok
+• Külön görbék állóképességhez, erőhöz, vegyes edzéshez (HYROX / CrossFit) és könnyű mozgáshoz
+• Erőfeszítés értékelése egy koppintással a csuklón, ha a pulzus nem megbízható
+• Minden becslés teljes magyarázata: melyik edzés állította be, mennyire volt kemény neked, és mennyire biztos

@@ -1,0 +1,7 @@
+Eerste versie.
+
+• Aftelling na elke meetellende workout, met een duidelijke Klaar-status
+• Apple Watch-app en vier complicatiefamilies: rond, rechthoekig, inline en hoek
+• Aparte curves voor duur, kracht, gemengd (HYROX / CrossFit) en lichte sessies
+• Inspanning met één tik op de pols beoordelen als de hartslag onbetrouwbaar is
+• Volledige uitleg bij elke schatting: welke sessie hem zette, hoe zwaar die voor jou was en hoe zeker de app is

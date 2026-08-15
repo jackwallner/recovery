@@ -1,0 +1,64 @@
+Dokončite tvrdý tréning a Recharge spustí odpočítavanie. Keď dobehne, dostanete jasné Pripravený.
+
+To je celá aplikácia. Je to odpoveď, ktorú vám po aktivite dá Garmin, postavená pre Apple Watch, ktoré už máte. Žiadny prsteň, žiadny pás, žiadny druhý hardvérový ekosystém na predplatenie.
+
+ČO UVIDÍTE
+
+• Odpočítavanie v hodinách po každom započítanom tréningu
+• Jasné Pripravený, keď odhad vyprší
+• Dôvod za tým: ktorý tréning nastavil okno a aký istý je výsledok
+• Komplikácie v štyroch rodinách: kruhová, obdĺžniková, riadková a rohová
+
+POSTAVENÉ PRE HYBRIDNÝ TRÉNING
+
+Recharge používa vlastnú krivku pre každý typ lekcie: hodina pod činkou a hodina na bicykli nestoja to isté.
+
+• Vytrvalosť: beh, bicykel, veslovanie, plávanie. Záťaž z tepovej rezervy.
+• Sila: dvíhanie. Tep na zápästí je tu nespoľahlivý, takže sa vás Recharge opýta namiesto hádania.
+• Zmiešané: HYROX, CrossFit, kruhový tréning. Zaťažené oba systémy, teda najdlhšie okno.
+• Ľahké: prechádzky, joga, mobilita. Počíta sa ako aktívna regenerácia a nikdy nespustí ani nepredĺži odpočítavanie.
+
+Recharge ukazuje ohraničené okno namiesto čísla s falošnou presnosťou, spolu so signálom, ktorý ho vytvoril.
+
+ŠTANDARD, ZADARMO
+
+Štandardný odhad je rovnaká tabuľka pre všetkých: typ lekcie, dĺžka a tvrdosť, merané voči tepovému rozsahu pre váš vek.
+
+• Import tréningov z Apple Zdravie
+• Odpočítavanie a stav Pripravený
+• Aplikácia pre Apple Watch
+• Všetky štyri rodiny komplikácií
+• Vysvetlenie posledného odhadu na iPhone
+
+RECHARGE+
+
+Recharge+ nahradí túto tabuľku vami: každá lekcia sa meria voči vašej vlastnej 42-dňovej základnej línii a posledných 30 dní určuje, ako rýchlo vaše odpočty bežia.
+
+• Čas z vašej vlastnej histórie, nie z populačného priemeru
+• Spánok, pokojový tep a HRV v každom odhade
+• Kalibrácia podľa toho, ako ste sa na konci naozaj cítili
+• Týždenná záťaž proti vášmu vlastnému štvortýždňovému priemeru
+• Typ tréningu sa dá prepísať lekciu po lekcii
+• Voliteľné upozornenie vo chvíli, keď ste Pripravený
+
+Recharge+ je k dispozícii ako mesačné alebo ročné predplatné, prípadne ako jednorazový nákup navždy.
+
+• Mesačné aj ročné predplatné obsahuje 7 dní skúšobnej verzie zadarmo pre nových oprávnených predplatiteľov
+• Verzia navždy je jednorazový nákup, bez predplatného a bez obnovenia
+
+Ceny sa zobrazujú v aplikácii pred nákupom a líšia sa podľa regiónu. Platba sa strhne z vášho účtu Apple pri potvrdení nákupu. Predplatné sa obnovuje automaticky: účet je zaťažený do 24 hodín pred koncom obdobia, ak automatické obnovenie nevypnete najmenej 24 hodín vopred. Spravujte alebo zrušte v Nastavenia › Účet Apple › Predplatné. Nevyužitá časť skúšobnej verzie pri nákupe prepadá.
+
+Zásady ochrany súkromia: https://jackwallner.github.io/recovery/privacy-policy.html
+Podmienky používania (štandardná EULA Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+SÚKROMIE
+
+Recharge číta z Apple Zdravie a nič tam nezapisuje. Vaše údaje zostávajú vo vašich zariadeniach. Žiadny účet, žiadne prihlasovanie, žiadny server.
+
+DÔLEŽITÉ
+
+Recharge poskytuje odhad kardiovaskulárneho tréningu podľa vašej nedávnej záťaže. Nie je to lekárska rada a nemôže vám povedať, či ste v stave trénovať. Kardiovaskulárna záťaž, bolesť svalov, choroba a psychická únava nie sú to isté. O svojom zdraví sa poraďte s kvalifikovaným odborníkom.
+
+Recharge nie je spojený so značkami Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ani Apple a nie je nimi podporovaný ani sponzorovaný. Názvy produktov sú ochranné známky príslušných vlastníkov.
+
+Vyžaduje iOS 17 alebo novší. Dôrazne odporúčame Apple Watch, ktoré zaznamenávajú vaše tréningy.

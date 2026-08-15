@@ -1,0 +1,7 @@
+Primera versión.
+
+• Cuenta atrás tras cada entrenamiento que cuenta, con un estado Listo claro
+• App para Apple Watch y cuatro familias de complicaciones: circular, rectangular, en línea y esquina
+• Curvas propias para resistencia, fuerza, mixto (HYROX / CrossFit) y sesiones suaves
+• Valoración del esfuerzo con un toque en la muñeca cuando la frecuencia cardíaca no es fiable
+• Explicación completa de cada estimación: qué sesión la fijó, cuánto te costó y con qué confianza

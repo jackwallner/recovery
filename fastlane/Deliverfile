@@ -1,8 +1,59 @@
-# Only en-US is populated in fastlane/metadata/ so far. `deliver` creates a
-# localization for every language listed here, so listing the full 50 would push
-# empty listings into ASC. Add locales here as their metadata lands.
+# Every locale with a folder in fastlane/metadata/. `deliver` creates a
+# localization for each one listed here, so this list and the folders on disk
+# have to stay in step: a name here with no folder pushes an empty listing.
+# Source of truth for the copy is scripts/native_locale_content/, applied with
+# scripts/apply-native-locales.py.
 languages([
-  "en-US"
+  "ar-SA",
+  "bn-BD",
+  "ca",
+  "cs",
+  "da",
+  "de-DE",
+  "el",
+  "en-AU",
+  "en-CA",
+  "en-GB",
+  "en-US",
+  "es-ES",
+  "es-MX",
+  "fi",
+  "fr-CA",
+  "fr-FR",
+  "gu-IN",
+  "he",
+  "hi",
+  "hr",
+  "hu",
+  "id",
+  "it",
+  "ja",
+  "kn-IN",
+  "ko",
+  "ml-IN",
+  "mr-IN",
+  "ms",
+  "nl-NL",
+  "no",
+  "or-IN",
+  "pa-IN",
+  "pl",
+  "pt-BR",
+  "pt-PT",
+  "ro",
+  "ru",
+  "sk",
+  "sl-SI",
+  "sv",
+  "ta-IN",
+  "te-IN",
+  "th",
+  "tr",
+  "uk",
+  "ur-PK",
+  "vi",
+  "zh-Hans",
+  "zh-Hant"
 ])
 
 # Draft version is set via Fastfile from ASC_APP_VERSION (see asc-ensure-draft-version).

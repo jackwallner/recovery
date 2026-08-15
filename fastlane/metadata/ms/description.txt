@@ -1,0 +1,64 @@
+Tamatkan sesi berat dan Recharge memulakan kiraan detik. Apabila ia tamat, anda mendapat status Sedia yang jelas.
+
+Itulah keseluruhan aplikasi ini. Ia jawapan yang diberikan Garmin selepas sesuatu aktiviti, dibina untuk Apple Watch yang anda sedia ada. Tiada cincin, tiada tali dada, tiada ekosistem perkakasan kedua untuk dilanggan.
+
+APA YANG ANDA LIHAT
+
+• Kiraan detik dalam jam selepas setiap latihan yang dikira
+• Status Sedia yang jelas apabila anggaran tamat
+• Sebab di sebaliknya: sesi mana yang menetapkan tempohnya dan sejauh mana yakin
+• Komplikasi dalam empat keluarga: bulat, segi empat tepat, sebaris dan sudut
+
+DIBINA UNTUK LATIHAN HIBRID
+
+Recharge menggunakan lengkung berasingan bagi setiap jenis sesi: sejam di bawah bar dan sejam atas basikal tidak sama kosnya.
+
+• Daya tahan: lari, basikal, mendayung, renang. Beban daripada rizab degupan jantung.
+• Kekuatan: angkat berat. Degupan jantung di pergelangan tidak boleh dipercayai di sini, jadi Recharge bertanya kepada anda dan tidak meneka.
+• Campuran: HYROX, CrossFit, litar. Kedua-dua sistem dibebankan, jadi tempoh paling panjang.
+• Ringan: berjalan, yoga, mobiliti. Dikira sebagai pemulihan aktif dan tidak pernah memulakan atau memanjangkan kiraan.
+
+Recharge memaparkan tempoh yang bersempadan, bukan nombor berketepatan palsu, berserta isyarat yang menghasilkannya.
+
+STANDARD, PERCUMA
+
+Anggaran standard ialah jadual yang sama untuk semua orang: jenis sesi, tempoh dan keberatannya, diukur terhadap julat degupan jantung mengikut umur anda.
+
+• Import latihan daripada Apple Kesihatan
+• Kiraan detik dan status Sedia
+• Aplikasi Apple Watch
+• Kesemua empat keluarga komplikasi
+• Penjelasan pada iPhone bagi anggaran terakhir anda
+
+RECHARGE+
+
+Recharge+ menggantikan jadual itu dengan anda: setiap sesi diukur terhadap garis asas 42 hari anda sendiri, dan 30 hari terakhir menentukan sepantas mana kiraan anda berjalan.
+
+• Masa daripada sejarah anda sendiri, bukan purata populasi
+• Tidur, degupan jantung rehat dan HRV masuk ke dalam setiap anggaran
+• Penentukuran daripada perasaan sebenar anda apabila tempoh tamat
+• Beban mingguan berbanding purata empat minggu anda sendiri
+• Jenis latihan boleh ditukar bagi setiap sesi
+• Pemberitahuan pilihan pada saat anda Sedia
+
+Recharge+ ditawarkan sebagai langganan bulanan atau tahunan, atau sebagai pembelian sekali seumur hidup.
+
+• Langganan bulanan dan tahunan termasuk percubaan percuma 7 hari untuk pelanggan baharu yang layak
+• Versi seumur hidup ialah pembelian sekali, tanpa langganan dan tanpa pembaharuan
+
+Harga dipaparkan dalam aplikasi sebelum anda membeli dan berbeza mengikut wilayah. Bayaran dikenakan pada akaun Apple anda apabila pembelian disahkan. Langganan diperbaharui secara automatik: caj dikenakan dalam tempoh 24 jam sebelum tempoh semasa berakhir, melainkan pembaharuan automatik dimatikan sekurang-kurangnya 24 jam lebih awal. Urus atau batalkan di Tetapan › Akaun Apple › Langganan. Bahagian percubaan percuma yang tidak digunakan akan hilang apabila membeli.
+
+Dasar Privasi: https://jackwallner.github.io/recovery/privacy-policy.html
+Syarat Penggunaan (EULA standard Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRIVASI
+
+Recharge membaca daripada Apple Kesihatan dan tidak menulis apa-apa kembali. Data anda kekal pada peranti anda. Tiada akaun, tiada log masuk, tiada pelayan.
+
+PENTING
+
+Recharge memberikan anggaran latihan kardiovaskular berdasarkan beban terkini anda. Ia bukan nasihat perubatan dan tidak boleh memberitahu anda sama ada anda layak berlatih. Beban kardiovaskular, lenguh otot, penyakit dan keletihan mental bukan perkara yang sama. Bincangkan kesihatan anda dengan profesional yang berkelayakan.
+
+Recharge tidak bergabung dengan, tidak disokong dan tidak ditaja oleh Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit atau Apple. Nama produk ialah tanda dagangan pemilik masing-masing.
+
+Memerlukan iOS 17 atau lebih baharu. Apple Watch yang merakam latihan anda amat disyorkan.
