@@ -1,0 +1,7 @@
+Prva različica.
+
+• Odštevanje po vsakem upoštevanem treningu, z jasnim stanjem Pripravljen
+• Aplikacija za Apple Watch in štiri družine zapletov: krožna, pravokotna, v vrstici in kotna
+• Ločene krivulje za vzdržljivost, moč, mešani trening (HYROX / CrossFit) in lahke vadbe
+• Ocena napora z enim dotikom na zapestju, ko srčni utrip ni zanesljiv
+• Popolna razlaga vsake ocene: kateri trening jo je določil, kako težak je bil zate in kako zanesljiva je

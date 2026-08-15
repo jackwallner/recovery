@@ -1,0 +1,7 @@
+Prvá verzia.
+
+• Odpočítavanie po každom započítanom tréningu, s jasným stavom Pripravený
+• Aplikácia pre Apple Watch a štyri rodiny komplikácií: kruhová, obdĺžniková, riadková a rohová
+• Vlastné krivky pre vytrvalosť, silu, zmiešaný tréning (HYROX / CrossFit) a ľahké lekcie
+• Hodnotenie námahy jedným ťuknutím na zápästí, keď tep nie je spoľahlivý
+• Úplné vysvetlenie každého odhadu: ktorý tréning ho nastavil, aký ťažký pre vás bol a aký istý je výsledok

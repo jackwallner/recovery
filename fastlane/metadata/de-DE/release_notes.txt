@@ -1,0 +1,7 @@
+Erste Version.
+
+• Countdown nach jedem zählenden Workout, mit klarem Bereit-Zustand
+• Apple Watch App und vier Komplikationsfamilien: rund, rechteckig, inline und Ecke
+• Eigene Kurven für Ausdauer, Kraft, gemischt (HYROX / CrossFit) und leichte Einheiten
+• Anstrengung mit einem Tipp am Handgelenk bewerten, wenn die Herzfrequenz unzuverlässig ist
+• Vollständige Erklärung jeder Schätzung: welche Einheit sie gesetzt hat, wie hart sie für dich war und wie sicher sie ist

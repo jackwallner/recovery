@@ -1,0 +1,7 @@
+Prva verzija.
+
+• Odbrojavanje nakon svakog treninga koji se broji, s jasnim stanjem Spreman
+• Aplikacija za Apple Watch i četiri obitelji komplikacija: kružna, pravokutna, u liniji i kutna
+• Zasebne krivulje za izdržljivost, snagu, mješoviti trening (HYROX / CrossFit) i lagane sesije
+• Ocjena napora jednim dodirom na zapešću kada puls nije pouzdan
+• Potpuno objašnjenje svake procjene: koji ju je trening postavio, koliko ti je bio težak i koliko je pouzdana

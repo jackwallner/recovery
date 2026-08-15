@@ -1,0 +1,64 @@
+Afslut en hård træning, og Recharge starter en nedtælling. Når den løber ud, får du et tydeligt Klar.
+
+Det er hele appen. Det er svaret, et Garmin giver dig efter en aktivitet, bygget til det Apple Watch, du allerede har. Ingen ring, ingen rem, intet andet hardwareøkosystem at abonnere på.
+
+DET DU SER
+
+• En nedtælling i timer efter hver træning, der tæller
+• Et tydeligt Klar, når estimatet udløber
+• Grunden bag: hvilken træning der satte vinduet, og hvor sikker appen er
+• Komplikationer i fire familier: cirkulær, rektangulær, inline og hjørne
+
+BYGGET TIL HYBRIDTRÆNING
+
+Recharge bruger en egen kurve pr. træningstype: en time under stangen og en time på cyklen koster ikke det samme.
+
+• Udholdenhed: løb, cykel, roning, svømning. Belastning ud fra din pulsreserve.
+• Styrke: løft. Pulsen ved håndleddet er upålidelig her, så Recharge stiller dig ét spørgsmål i stedet for at gætte.
+• Blandet: HYROX, CrossFit, cirkler. Begge systemer belastet, altså det længste vindue.
+• Let: gåture, yoga, mobilitet. Tæller som aktiv restitution og starter eller forlænger aldrig en nedtælling.
+
+Recharge viser et afgrænset vindue frem for et tal med falsk præcision, sammen med signalet, der gav det.
+
+STANDARD, GRATIS
+
+Standardestimatet er den samme tabel for alle: type træning, længde og hårdhed, målt mod pulsintervallet for din alder.
+
+• Import af træninger fra Apple Sundhed
+• Nedtællingen og Klar-tilstanden
+• Apple Watch-app
+• Alle fire komplikationsfamilier
+• Forklaring på iPhone af dit seneste estimat
+
+RECHARGE+
+
+Recharge+ erstatter tabellen med dig: hver træning måles mod din egen 42-dages baseline, og de seneste 30 dage afgør, hvor hurtigt dine nedtællinger går.
+
+• En tid fra din egen historik, ikke fra et befolkningsgennemsnit
+• Søvn, hvilepuls og HRV indgår i hvert estimat
+• Kalibrering ud fra, hvordan du faktisk havde det, da tiden løb ud
+• Ugebelastning mod dit eget gennemsnit over fire uger
+• Træningstype kan ændres træning for træning
+• Valgfri besked i samme øjeblik du er Klar
+
+Recharge+ fås som måneds- eller årsabonnement eller som et engangskøb på livstid.
+
+• Måneds- og årsabonnement indeholder 7 dages gratis prøveperiode for nye berettigede abonnenter
+• Livstid er et engangskøb uden abonnement og uden fornyelse
+
+Priserne vises i appen, før du køber, og varierer efter region. Betalingen trækkes fra din Apple-konto ved bekræftelse af købet. Abonnementer fornyes automatisk: kontoen trækkes inden for 24 timer før periodens udløb, medmindre automatisk fornyelse slås fra mindst 24 timer før. Administrer eller opsig i Indstillinger › Apple-konto › Abonnementer. Ubrugt del af en prøveperiode mistes ved køb.
+
+Privatlivspolitik: https://jackwallner.github.io/recovery/privacy-policy.html
+Brugsvilkår (Apples standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRIVATLIV
+
+Recharge læser fra Apple Sundhed og skriver intet tilbage. Dine data bliver på dine enheder. Ingen konto, intet login, ingen server.
+
+VIGTIGT
+
+Recharge giver et kardiovaskulært træningsestimat ud fra din seneste belastning. Det er ikke lægelig rådgivning og kan ikke fortælle dig, om du er i stand til at træne. Kardiovaskulær belastning, ømhed, sygdom og mental træthed er ikke det samme. Tal med en kvalificeret fagperson om dit helbred.
+
+Recharge er ikke tilknyttet, godkendt eller sponsoreret af Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit eller Apple. Produktnavne er varemærker tilhørende deres respektive ejere.
+
+Kræver iOS 17 eller nyere. Et Apple Watch, der optager dine træninger, anbefales kraftigt.

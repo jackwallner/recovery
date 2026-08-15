@@ -1,0 +1,7 @@
+Première version.
+
+• Décompte après chaque entraînement admissible, avec un état Prêt clair
+• App Apple Watch et quatre familles de complications : circulaire, rectangulaire, en ligne et coin
+• Courbes distinctes pour l'endurance, la force, le mixte (HYROX / CrossFit) et les séances légères
+• Note d'effort en un geste au poignet quand la fréquence cardiaque n'est pas fiable
+• Explication complète de chaque estimation : la séance qui l'a fixée, sa dureté pour vous et le niveau de confiance

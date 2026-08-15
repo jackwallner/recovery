@@ -1,0 +1,64 @@
+Završi težak trening i Recharge pokreće odbrojavanje. Kad istekne, dobiješ jasno Spreman.
+
+To je cijela aplikacija. To je odgovor koji ti Garmin daje nakon aktivnosti, napravljen za Apple Watch koji već imaš. Bez prstena, bez remena, bez drugog hardverskog ekosustava na pretplatu.
+
+ŠTO VIDIŠ
+
+• Odbrojavanje u satima nakon svakog treninga koji se broji
+• Jasno Spreman kad procjena istekne
+• Razlog iza toga: koji je trening postavio prozor i koliko je pouzdan
+• Komplikacije u četiri obitelji: kružna, pravokutna, u liniji i kutna
+
+NAPRAVLJENO ZA HIBRIDNI TRENING
+
+Recharge koristi zasebnu krivulju za svaku vrstu sesije: sat pod šipkom i sat na biciklu ne koštaju isto.
+
+• Izdržljivost: trčanje, bicikl, veslanje, plivanje. Opterećenje iz pulsne rezerve.
+• Snaga: dizanje. Puls na zapešću ovdje nije pouzdan, pa ti Recharge postavi pitanje umjesto da nagađa.
+• Mješovito: HYROX, CrossFit, kružni trening. Oba sustava opterećena, dakle najdulji prozor.
+• Lagano: šetnje, joga, mobilnost. Broji se kao aktivni oporavak i nikad ne pokreće niti produljuje odbrojavanje.
+
+Recharge prikazuje omeđen prozor umjesto broja lažne preciznosti, zajedno sa signalom koji ga je proizveo.
+
+STANDARD, BESPLATNO
+
+Standardna procjena je ista tablica za sve: vrsta sesije, trajanje i težina, mjereni prema pulsnom rasponu za tvoju dob.
+
+• Uvoz treninga iz Apple Zdravlja
+• Odbrojavanje i stanje Spreman
+• Aplikacija za Apple Watch
+• Sve četiri obitelji komplikacija
+• Objašnjenje posljednje procjene na iPhoneu
+
+RECHARGE+
+
+Recharge+ zamjenjuje tu tablicu tobom: svaka se sesija mjeri prema tvojoj vlastitoj 42-dnevnoj osnovici, a zadnjih 30 dana određuje koliko brzo teku tvoja odbrojavanja.
+
+• Vrijeme iz tvoje vlastite povijesti, a ne iz populacijskog prosjeka
+• San, puls u mirovanju i HRV u svakoj procjeni
+• Kalibracija prema tome kako si se stvarno osjećao na kraju
+• Tjedno opterećenje prema tvom vlastitom četverotjednom prosjeku
+• Vrsta treninga se može promijeniti sesiju po sesiju
+• Neobavezna obavijest u trenutku kad si Spreman
+
+Recharge+ dostupan je kao mjesečna ili godišnja pretplata ili kao jednokratna doživotna kupnja.
+
+• Mjesečna i godišnja pretplata uključuju 7 dana besplatnog probnog razdoblja za nove pretplatnike koji ispunjavaju uvjete
+• Doživotna verzija je jednokratna kupnja, bez pretplate i bez obnove
+
+Cijene se prikazuju u aplikaciji prije kupnje i razlikuju se ovisno o regiji. Plaćanje se naplaćuje s tvog Apple računa pri potvrdi kupnje. Pretplate se obnavljaju automatski: račun se tereti unutar 24 sata prije kraja razdoblja, osim ako se automatska obnova isključi najmanje 24 sata ranije. Upravljaj ili otkaži u Postavke › Apple račun › Pretplate. Neiskorišteni dio probnog razdoblja gubi se kupnjom.
+
+Pravila privatnosti: https://jackwallner.github.io/recovery/privacy-policy.html
+Uvjeti korištenja (Appleov standardni EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRIVATNOST
+
+Recharge čita iz Apple Zdravlja i ništa ne zapisuje natrag. Tvoji podaci ostaju na tvojim uređajima. Bez računa, bez prijave, bez poslužitelja.
+
+VAŽNO
+
+Recharge daje procjenu kardiovaskularnog treninga na temelju tvog nedavnog opterećenja. To nije medicinski savjet i ne može ti reći jesi li sposoban trenirati. Kardiovaskularno opterećenje, upala mišića, bolest i mentalni umor nisu isto. O svom zdravlju razgovaraj s kvalificiranim stručnjakom.
+
+Recharge nije povezan s tvrtkama Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ni Apple niti ga one podupiru ili sponzoriraju. Nazivi proizvoda zaštitni su znakovi njihovih vlasnika.
+
+Zahtijeva iOS 17 ili noviji. Toplo se preporučuje Apple Watch koji bilježi tvoje treninge.

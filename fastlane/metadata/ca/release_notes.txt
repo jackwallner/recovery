@@ -1,0 +1,7 @@
+Primera versió.
+
+• Compte enrere després de cada entrenament que compta, amb un estat Llest clar
+• App per a l'Apple Watch i quatre famílies de complicacions: circular, rectangular, en línia i cantonada
+• Corbes pròpies per a resistència, força, mixt (HYROX / CrossFit) i sessions suaus
+• Valoració de l'esforç amb un toc al canell quan la freqüència cardíaca no és fiable
+• Explicació completa de cada estimació: quina sessió la va fixar, què et va costar i amb quina confiança

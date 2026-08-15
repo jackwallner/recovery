@@ -1,0 +1,7 @@
+Primeira versão.
+
+• Contagem decrescente após cada treino elegível, com um estado Pronto claro
+• App para Apple Watch e quatro famílias de complicações: circular, retangular, em linha e canto
+• Curvas próprias para resistência, força, misto (HYROX / CrossFit) e sessões leves
+• Avaliação do esforço com um toque no pulso quando a frequência cardíaca não é fiável
+• Explicação completa de cada estimativa: que sessão a definiu, quanto lhe custou e com que confiança

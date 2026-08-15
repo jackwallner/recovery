@@ -1,0 +1,1 @@
+garmin,whoop,oura,athlytic,hyrox,ট্রায়াথলন,ম্যারাথন,দৌড়,ফিটনেস,জিম,হৃদস্পন্দন,ঘুম,training,hrv

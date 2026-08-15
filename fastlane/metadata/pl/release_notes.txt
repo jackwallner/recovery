@@ -1,0 +1,7 @@
+Pierwsza wersja.
+
+• Odliczanie po każdym liczącym się treningu, z wyraźnym stanem Gotowy
+• Aplikacja na Apple Watch i cztery rodziny komplikacji: okrągła, prostokątna, liniowa i narożna
+• Osobne krzywe dla wytrzymałości, siły, treningu mieszanego (HYROX / CrossFit) i lekkich sesji
+• Ocena wysiłku jednym dotknięciem na nadgarstku, gdy tętno nie jest wiarygodne
+• Pełne wyjaśnienie każdego szacunku: który trening go ustawił, jak ciężki był dla Ciebie i jak pewny jest wynik

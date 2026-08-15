@@ -1,0 +1,7 @@
+Versi pertama.
+
+• Hitung mundur setelah setiap latihan yang dihitung, dengan status Siap yang jelas
+• Aplikasi Apple Watch dan empat keluarga komplikasi: bundar, persegi panjang, sebaris, dan sudut
+• Kurva terpisah untuk daya tahan, kekuatan, campuran (HYROX / CrossFit), dan sesi ringan
+• Penilaian usaha dengan satu ketukan di pergelangan saat detak jantung tidak andal
+• Penjelasan lengkap untuk setiap perkiraan: sesi mana yang menetapkannya, seberat apa untukmu, dan seberapa yakin

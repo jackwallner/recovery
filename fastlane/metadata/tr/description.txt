@@ -1,0 +1,64 @@
+Zorlu bir seansı bitir, Recharge geri sayımı başlatsın. Süre dolduğunda net bir Hazır görürsün.
+
+Uygulamanın tamamı bu. Bir Garmin'in aktiviteden sonra verdiği cevabın, zaten sahip olduğun Apple Watch için yapılmış hali. Yüzük yok, kayış yok, abone olunacak ikinci bir donanım ekosistemi yok.
+
+NE GÖRÜRSÜN
+
+• Sayılan her antrenmandan sonra saat cinsinden bir geri sayım
+• Tahmin sona erdiğinde net bir Hazır
+• Arkasındaki neden: pencereyi hangi seans belirledi ve ne kadar kesin
+• Dört ailede komplikasyonlar: dairesel, dikdörtgen, satır içi ve köşe
+
+HİBRİT ANTRENMAN İÇİN YAPILDI
+
+Recharge her seans türü için ayrı bir eğri kullanır: bar altında bir saat ile bisiklette bir saat aynı maliyette değildir.
+
+• Dayanıklılık: koşu, bisiklet, kürek, yüzme. Yük, nabız rezervinden.
+• Kuvvet: ağırlık kaldırma. Bilekten nabız burada güvenilir değil, bu yüzden Recharge tahmin etmek yerine sana bir soru sorar.
+• Karma: HYROX, CrossFit, istasyon. İki sistem de zorlanır, yani en uzun pencere.
+• Hafif: yürüyüş, yoga, mobilite. Aktif toparlanma sayılır, asla bir geri sayım başlatmaz veya uzatmaz.
+
+Recharge, yanlış kesinlikte bir sayı yerine sınırlı bir pencere gösterir ve onu üreten sinyali de belirtir.
+
+STANDART, ÜCRETSİZ
+
+Standart tahmin herkes için aynı tablodur: seansın türü, süresi ve zorluğu, yaşına karşılık gelen nabız aralığına göre ölçülür.
+
+• Apple Sağlık'tan antrenman aktarımı
+• Geri sayım ve Hazır durumu
+• Apple Watch uygulaması
+• Dört komplikasyon ailesinin tamamı
+• Son tahmininin iPhone'da açıklaması
+
+RECHARGE+
+
+Recharge+ bu tabloyu seninle değiştirir: her seans kendi 42 günlük referansına göre ölçülür ve son 30 gün geri sayımlarının ne kadar hızlı işleyeceğini belirler.
+
+• Nüfus ortalamasından değil, kendi geçmişinden çıkan bir süre
+• Her tahmine katılan uyku, istirahat nabzı ve HRV
+• Süre dolduğunda gerçekte nasıl hissettiğine göre kalibrasyon
+• Haftalık yük, kendi dört haftalık ortalamana karşı
+• Antrenman türü seans bazında değiştirilebilir
+• Hazır olduğun anda isteğe bağlı bildirim
+
+Recharge+ aylık veya yıllık abonelik olarak ya da tek seferlik ömür boyu satın alma olarak sunulur.
+
+• Aylık ve yıllık abonelikler, uygun yeni aboneler için 7 günlük ücretsiz deneme içerir
+• Ömür boyu seçenek tek seferlik bir satın almadır, abonelik ve yenileme yoktur
+
+Fiyatlar satın almadan önce uygulamada gösterilir ve bölgeye göre değişir. Ödeme, satın alma onaylandığında Apple hesabından tahsil edilir. Abonelikler otomatik yenilenir: dönem bitmeden önceki 24 saat içinde tahsilat yapılır, otomatik yenileme en az 24 saat önce kapatılmadıysa. Ayarlar › Apple hesabı › Abonelikler bölümünden yönet veya iptal et. Ücretsiz denemenin kullanılmayan kısmı satın alma ile kaybolur.
+
+Gizlilik Politikası: https://jackwallner.github.io/recovery/privacy-policy.html
+Kullanım Koşulları (Apple standart EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+GİZLİLİK
+
+Recharge Apple Sağlık'tan okur ve oraya hiçbir şey yazmaz. Verilerin cihazlarında kalır. Hesap yok, oturum açma yok, sunucu yok.
+
+ÖNEMLİ
+
+Recharge, son yüküne dayalı bir kardiyovasküler antrenman tahmini verir. Tıbbi tavsiye değildir ve antrenmana uygun olup olmadığını söyleyemez. Kardiyovasküler yük, kas ağrısı, hastalık ve zihinsel yorgunluk aynı şey değildir. Sağlığın hakkında nitelikli bir uzmanla konuş.
+
+Recharge; Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit veya Apple ile bağlantılı değildir, onlar tarafından onaylanmaz ve desteklenmez. Ürün adları ilgili sahiplerinin ticari markalarıdır.
+
+iOS 17 veya üzeri gerekir. Antrenmanlarını kaydeden bir Apple Watch şiddetle önerilir.

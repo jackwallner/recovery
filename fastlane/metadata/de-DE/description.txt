@@ -1,0 +1,64 @@
+Beende eine harte Einheit und Recharge startet einen Countdown. Läuft er ab, bekommst du ein klares Bereit.
+
+Das ist die ganze App. Es ist die Antwort, die dir eine Garmin nach einer Aktivität gibt, gebaut für die Apple Watch, die du schon besitzt. Kein Ring, kein Gurt, kein zweites Hardware-Ökosystem mit Abo.
+
+WAS DU SIEHST
+
+• Ein Countdown in Stunden nach jedem zählenden Workout
+• Ein klares Bereit, wenn die Schätzung abläuft
+• Der Grund dahinter: welche Einheit das Fenster gesetzt hat und wie sicher Recharge ist
+• Komplikationen in vier Familien: rund, rechteckig, inline und Ecke
+
+FÜR HYBRIDES TRAINING GEBAUT
+
+Recharge rechnet für jede Art von Einheit eine eigene Kurve, denn eine Stunde unter der Hantel und eine Stunde auf dem Rad kosten nicht dasselbe:
+
+• Ausdauer: Laufen, Radfahren, Rudern, Schwimmen. Belastung aus der Herzfrequenzreserve deines Workouts.
+• Kraft: Heben. Die Herzfrequenz am Handgelenk ist hier unzuverlässig, also fragt Recharge dich, statt zu raten.
+• Gemischt: HYROX, CrossFit, Zirkel. Beide Systeme belastet, also das längste Fenster.
+• Leicht: Spaziergänge, Yoga, Mobility. Zählt als aktive Erholung und startet oder verlängert nie einen Countdown.
+
+Recharge zeigt ein begrenztes Fenster statt einer Zahl mit falscher Präzision, dazu das Signal dahinter und wie sicher es ist.
+
+STANDARD, KOSTENLOS
+
+Die Standardschätzung ist dieselbe Tabelle für alle: Art der Einheit, Dauer und Härte, gemessen am Herzfrequenzbereich für dein Alter.
+
+• Import von Workouts aus Apple Health
+• Der Countdown und der Bereit-Zustand
+• Apple Watch App
+• Alle vier Komplikationsfamilien
+• Erklärung deiner letzten Schätzung auf dem iPhone
+
+RECHARGE+
+
+Recharge+ ersetzt diese Tabelle durch dich: jede Einheit wird an deiner eigenen 42-Tage-Basislinie gemessen, und die letzten 30 Tage bestimmen, wie schnell deine Countdowns laufen.
+
+• Eine Zeit aus deiner Historie statt aus einem Durchschnitt
+• Schlaf, Ruheherzfrequenz und HRV fließen in jede Schätzung ein
+• Kalibrierung daraus, wie du dich beim Ablauf wirklich gefühlt hast
+• Wochenbelastung gegen deinen eigenen Vier-Wochen-Schnitt
+• Überschreibung des Workout-Typs pro Einheit
+• Optionale Mitteilung in dem Moment, in dem du bereit bist
+
+Recharge+ gibt es als Monats- oder Jahresabo oder als einmaligen Lifetime-Kauf.
+
+• Monats- und Jahresabo enthalten eine 7-tägige Gratisphase für berechtigte neue Abonnenten
+• Lifetime ist ein einmaliger Kauf ohne Abo und ohne Verlängerung
+
+Die Preise werden in der App vor dem Kauf angezeigt und sind je nach Region unterschiedlich. Die Zahlung wird bei Kaufbestätigung über deine Apple-ID abgebucht. Abos verlängern sich automatisch; dein Konto wird innerhalb von 24 Stunden vor Ende der Periode belastet, sofern die automatische Verlängerung nicht mindestens 24 Stunden vorher deaktiviert wird. Verwalten oder kündigen unter Einstellungen › Apple-ID › Abonnements. Ein nicht genutzter Teil einer Gratisphase verfällt beim Kauf.
+
+Datenschutzrichtlinie: https://jackwallner.github.io/recovery/privacy-policy.html
+Nutzungsbedingungen (Apple Standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+DATENSCHUTZ
+
+Recharge liest aus Apple Health und schreibt nichts zurück. Deine Daten bleiben auf deinen Geräten. Kein Konto, keine Anmeldung, kein Server.
+
+WICHTIG
+
+Recharge liefert eine kardiovaskuläre Trainingsschätzung auf Basis deiner jüngsten Belastung. Sie ist keine medizinische Beratung und kann dir nicht sagen, ob du fit zum Trainieren bist. Kardiovaskuläre Belastung, Muskelkater, Krankheit und mentale Müdigkeit sind nicht dasselbe. Sprich mit einer qualifizierten Fachperson über deine Gesundheit.
+
+Recharge ist nicht mit Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit oder Apple verbunden und wird von ihnen weder unterstützt noch gesponsert. Produktnamen sind Marken ihrer jeweiligen Inhaber.
+
+Erfordert iOS 17 oder neuer. Eine Apple Watch, die deine Workouts aufzeichnet, wird dringend empfohlen.

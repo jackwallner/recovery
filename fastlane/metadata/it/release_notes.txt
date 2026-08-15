@@ -1,0 +1,7 @@
+Prima versione.
+
+• Conto alla rovescia dopo ogni allenamento valido, con uno stato Pronto chiaro
+• App per Apple Watch e quattro famiglie di complicazioni: circolare, rettangolare, in linea e angolo
+• Curve distinte per resistenza, forza, misto (HYROX / CrossFit) e sessioni leggere
+• Valutazione dello sforzo con un tocco al polso quando la frequenza cardiaca non è affidabile
+• Spiegazione completa di ogni stima: quale sessione l'ha fissata, quanto è stata dura per te e con quanta fiducia

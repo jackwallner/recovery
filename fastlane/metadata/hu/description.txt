@@ -1,0 +1,64 @@
+Fejezz be egy kemény edzést, és a Recharge elindít egy visszaszámlálást. Amikor lejár, világos Kész jelzést kapsz.
+
+Ez az egész app. Ez az a válasz, amit egy Garmin ad egy tevékenység után, az Apple Watchra építve, ami már megvan. Nincs gyűrű, nincs öv, nincs második hardveres ökoszisztéma előfizetéssel.
+
+AMIT LÁTSZ
+
+• Órákban megadott visszaszámlálás minden beszámított edzés után
+• Tiszta Kész, amikor a becslés lejár
+• Az ok mögötte: melyik edzés állította be az ablakot, és mennyire biztos
+• Komplikációk négy családban: kör, téglalap, soros és sarok
+
+HIBRID EDZÉSRE KÉSZÜLT
+
+A Recharge minden edzéstípusra saját görbét használ: egy óra a rúd alatt és egy óra a kerékpáron nem ugyanannyiba kerül.
+
+• Állóképesség: futás, kerékpár, evezés, úszás. Terhelés a pulzustartalékból.
+• Erő: emelés. A csuklón mért pulzus itt megbízhatatlan, ezért a Recharge inkább kérdez, mint találgat.
+• Vegyes: HYROX, CrossFit, köredzés. Mindkét rendszer terhelve, tehát a leghosszabb ablak.
+• Könnyű: séta, jóga, mobilitás. Aktív regenerációnak számít, és soha nem indít vagy hosszabbít visszaszámlálást.
+
+A Recharge behatárolt ablakot mutat egy hamis pontosságú szám helyett, azzal a jellel együtt, amiből származik.
+
+ALAP, INGYENES
+
+Az alapbecslés mindenkinek ugyanaz a táblázat: az edzés típusa, hossza és keménysége, a korodhoz tartozó pulzustartományhoz mérve.
+
+• Edzések importja az Apple Egészségből
+• A visszaszámlálás és a Kész állapot
+• Apple Watch app
+• Mind a négy komplikációcsalád
+• Magyarázat iPhone-on a legutóbbi becslésedről
+
+RECHARGE+
+
+A Recharge+ téged tesz a táblázat helyébe: minden edzés a saját 42 napos alapvonaladhoz mérve, és az utolsó 30 nap szabja meg, milyen gyorsan futnak a visszaszámlálásaid.
+
+• Idő a saját előzményeidből, nem népességátlagból
+• Alvás, nyugalmi pulzus és HRV minden becslésben
+• Kalibrálás abból, hogyan érezted magad valójában a végén
+• Heti terhelés a saját négyhetes átlagodhoz mérve
+• Edzéstípus edzésenként felülírható
+• Opcionális értesítés abban a pillanatban, amikor Kész vagy
+
+A Recharge+ havi vagy éves előfizetésként, illetve egyszeri örökös vásárlásként érhető el.
+
+• A havi és az éves előfizetés 7 napos ingyenes próbaidőt tartalmaz az arra jogosult új előfizetőknek
+• Az örökös változat egyszeri vásárlás, előfizetés és megújítás nélkül
+
+Az árak vásárlás előtt megjelennek az appban, és régiónként eltérnek. A fizetés a vásárlás megerősítésekor terheli az Apple-fiókodat. Az előfizetések automatikusan megújulnak: a terhelés az időszak vége előtti 24 órában történik, hacsak az automatikus megújítást legalább 24 órával korábban ki nem kapcsolod. Kezelés vagy lemondás: Beállítások › Apple-fiók › Előfizetések. Az ingyenes próbaidő fel nem használt része a vásárláskor elvész.
+
+Adatvédelmi irányelvek: https://jackwallner.github.io/recovery/privacy-policy.html
+Felhasználási feltételek (Apple szabványos EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+ADATVÉDELEM
+
+A Recharge olvas az Apple Egészségből, és semmit nem ír vissza. Az adataid a saját eszközeiden maradnak. Nincs fiók, nincs bejelentkezés, nincs szerver.
+
+FONTOS
+
+A Recharge kardiovaszkuláris edzésbecslést ad a közelmúltbeli terhelésed alapján. Ez nem orvosi tanács, és nem tudja megmondani, alkalmas vagy-e az edzésre. A kardiovaszkuláris terhelés, az izomláz, a betegség és a mentális fáradtság nem ugyanaz. Az egészségedről beszélj képzett szakemberrel.
+
+A Recharge nem áll kapcsolatban a Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit vagy Apple vállalattal, és azok nem támogatják vagy szponzorálják. A terméknevek a megfelelő tulajdonosaik védjegyei.
+
+iOS 17 vagy újabb szükséges. Erősen ajánlott egy Apple Watch, amely rögzíti az edzéseidet.

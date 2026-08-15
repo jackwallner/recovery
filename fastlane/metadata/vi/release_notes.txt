@@ -1,0 +1,7 @@
+Phiên bản đầu tiên.
+
+• Đếm ngược sau mỗi buổi tập được tính, kèm trạng thái Sẵn sàng rõ ràng
+• Ứng dụng Apple Watch và bốn họ tiện ích: tròn, chữ nhật, nội tuyến và góc
+• Đường cong riêng cho sức bền, sức mạnh, hỗn hợp (HYROX / CrossFit) và buổi nhẹ
+• Chấm mức gắng sức bằng một chạm trên cổ tay khi nhịp tim không đáng tin
+• Giải thích đầy đủ cho mỗi ước tính: buổi nào đặt ra nó, nặng đến đâu với bạn và mức tin cậy

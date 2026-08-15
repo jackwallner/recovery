@@ -1,0 +1,1 @@
+garmin,whoop,oura,coros,polar,athlytic,hyrox,triatlo,resistencia,maratona,corrida,ginasio,hrv,wod

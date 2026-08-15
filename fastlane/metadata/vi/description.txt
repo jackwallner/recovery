@@ -1,0 +1,64 @@
+Kết thúc một buổi tập nặng và Recharge bắt đầu đếm ngược. Khi hết giờ, bạn nhận được trạng thái Sẵn sàng rõ ràng.
+
+Đó là toàn bộ ứng dụng. Đó là câu trả lời một chiếc Garmin đưa cho bạn sau mỗi hoạt động, được làm cho chiếc Apple Watch bạn đã có. Không nhẫn, không dây đeo ngực, không hệ sinh thái phần cứng thứ hai phải đăng ký.
+
+BẠN THẤY GÌ
+
+• Đếm ngược theo giờ sau mỗi buổi tập được tính
+• Trạng thái Sẵn sàng rõ ràng khi ước tính hết hạn
+• Lý do phía sau: buổi nào đặt ra khoảng thời gian và mức tin cậy ra sao
+• Tiện ích trong bốn họ: tròn, chữ nhật, nội tuyến và góc
+
+LÀM CHO TẬP LUYỆN HỖN HỢP
+
+Recharge dùng một đường cong riêng cho từng loại buổi tập: một giờ dưới thanh tạ và một giờ trên xe đạp không tốn như nhau.
+
+• Sức bền: chạy, đạp xe, chèo thuyền, bơi. Tải tính từ dự trữ nhịp tim.
+• Sức mạnh: nâng tạ. Nhịp tim ở cổ tay không đáng tin ở đây, nên Recharge hỏi bạn một câu thay vì đoán.
+• Hỗn hợp: HYROX, CrossFit, vòng tròn. Cả hai hệ đều bị tải, nên khoảng thời gian dài nhất.
+• Nhẹ: đi bộ, yoga, vận động linh hoạt. Được tính là hồi phục chủ động và không bao giờ bắt đầu hay kéo dài một lượt đếm ngược.
+
+Recharge hiển thị một khoảng có giới hạn thay vì một con số chính xác giả tạo, kèm tín hiệu đã tạo ra nó.
+
+TIÊU CHUẨN, MIỄN PHÍ
+
+Ước tính tiêu chuẩn là cùng một bảng cho mọi người: loại buổi tập, độ dài và độ nặng, đo theo dải nhịp tim tương ứng với tuổi bạn.
+
+• Nhập buổi tập từ Apple Sức khỏe
+• Đếm ngược và trạng thái Sẵn sàng
+• Ứng dụng Apple Watch
+• Cả bốn họ tiện ích
+• Giải thích trên iPhone về ước tính gần nhất
+
+RECHARGE+
+
+Recharge+ thay bảng đó bằng chính bạn: mỗi buổi tập được đo theo đường cơ sở 42 ngày của riêng bạn, và 30 ngày gần nhất quyết định các lượt đếm ngược chạy nhanh đến đâu.
+
+• Thời gian rút ra từ lịch sử của bạn, không phải trung bình dân số
+• Giấc ngủ, nhịp tim nghỉ và HRV được đưa vào mỗi ước tính
+• Hiệu chỉnh theo cảm nhận thật của bạn khi hết giờ
+• Tải hàng tuần so với trung bình bốn tuần của chính bạn
+• Loại buổi tập có thể đổi theo từng buổi
+• Thông báo tùy chọn ngay khi bạn Sẵn sàng
+
+Recharge+ có dưới dạng đăng ký hàng tháng hoặc hàng năm, hoặc mua một lần trọn đời.
+
+• Đăng ký hàng tháng và hàng năm bao gồm 7 ngày dùng thử miễn phí cho người đăng ký mới đủ điều kiện
+• Bản trọn đời là mua một lần, không đăng ký và không gia hạn
+
+Giá được hiển thị trong ứng dụng trước khi mua và khác nhau theo khu vực. Khoản thanh toán được tính vào tài khoản Apple của bạn khi xác nhận mua. Đăng ký tự động gia hạn: tài khoản bị tính phí trong vòng 24 giờ trước khi kỳ hiện tại kết thúc, trừ khi tắt tự động gia hạn ít nhất 24 giờ trước đó. Quản lý hoặc hủy trong Cài đặt › Tài khoản Apple › Đăng ký. Phần chưa dùng của bản dùng thử sẽ mất khi mua.
+
+Chính sách quyền riêng tư: https://jackwallner.github.io/recovery/privacy-policy.html
+Điều khoản sử dụng (EULA chuẩn của Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+QUYỀN RIÊNG TƯ
+
+Recharge đọc từ Apple Sức khỏe và không ghi gì trở lại. Dữ liệu của bạn ở lại trên thiết bị của bạn. Không tài khoản, không đăng nhập, không máy chủ.
+
+QUAN TRỌNG
+
+Recharge đưa ra ước tính tập luyện tim mạch dựa trên tải gần đây của bạn. Đây không phải lời khuyên y tế và không thể cho bạn biết bạn có đủ sức để tập hay không. Tải tim mạch, đau cơ, bệnh tật và mệt mỏi tinh thần không phải là một. Hãy trao đổi về sức khỏe của bạn với chuyên gia có chuyên môn.
+
+Recharge không liên kết, không được chứng thực hay tài trợ bởi Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit hay Apple. Tên sản phẩm là thương hiệu của chủ sở hữu tương ứng.
+
+Yêu cầu iOS 17 trở lên. Rất khuyến khích dùng Apple Watch có ghi lại các buổi tập của bạn.

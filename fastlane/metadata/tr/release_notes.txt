@@ -1,0 +1,7 @@
+İlk sürüm.
+
+• Sayılan her antrenmanın ardından geri sayım ve net bir Hazır durumu
+• Apple Watch uygulaması ve dört komplikasyon ailesi: dairesel, dikdörtgen, satır içi ve köşe
+• Dayanıklılık, kuvvet, karma (HYROX / CrossFit) ve hafif seanslar için ayrı eğriler
+• Nabız güvenilir olmadığında bilekten tek dokunuşla efor puanlaması
+• Her tahminin tam açıklaması: hangi seans belirledi, senin için ne kadar zordu ve ne kadar kesin

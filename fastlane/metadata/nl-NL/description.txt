@@ -1,0 +1,64 @@
+Rond een zware sessie af en Recharge start een aftelling. Loopt die af, dan krijg je een duidelijke Klaar.
+
+Dat is de hele app. Het is het antwoord dat een Garmin je na een activiteit geeft, gebouwd voor de Apple Watch die je al hebt. Geen ring, geen band, geen tweede hardware-ecosysteem om op te abonneren.
+
+WAT JE ZIET
+
+• Een aftelling in uren na elke meetellende workout
+• Een heldere Klaar als de schatting afloopt
+• De reden erachter: welke sessie het venster zette en hoe zeker de app is
+• Complicaties in vier families: rond, rechthoekig, inline en hoek
+
+GEBOUWD VOOR HYBRIDE TRAINEN
+
+Recharge gebruikt een aparte curve per soort sessie: een uur onder de stang en een uur op de fiets kosten niet hetzelfde.
+
+• Duur: hardlopen, fietsen, roeien, zwemmen. Belasting uit je hartslagreserve.
+• Kracht: tillen. De hartslag aan de pols is hier onbetrouwbaar, dus stelt Recharge je één vraag in plaats van te gokken.
+• Gemengd: HYROX, CrossFit, circuits. Beide systemen belast, dus het langste venster.
+• Licht: wandelen, yoga, mobiliteit. Telt als actief herstel en start of verlengt nooit een aftelling.
+
+Recharge toont een begrensd venster in plaats van een getal met valse precisie, samen met het signaal dat het opleverde.
+
+STANDAARD, GRATIS
+
+De standaardschatting is dezelfde tabel voor iedereen: soort sessie, duur en zwaarte, gemeten tegen het hartslagbereik dat bij je leeftijd hoort.
+
+• Workouts importeren uit Apple Gezondheid
+• De aftelling en de Klaar-status
+• Apple Watch-app
+• Alle vier de complicatiefamilies
+• Uitleg op de iPhone bij je laatste schatting
+
+RECHARGE+
+
+Recharge+ vervangt die tabel door jou: elke sessie wordt gemeten tegen je eigen basislijn van 42 dagen, en de laatste 30 dagen bepalen hoe snel je aftellingen lopen.
+
+• Een tijd uit je eigen historie, niet uit een gemiddelde
+• Slaap, rusthartslag en HRV in elke schatting verwerkt
+• Kalibratie op hoe je je echt voelde toen een aftelling afliep
+• Weekbelasting tegen je eigen gemiddelde over vier weken
+• Type workout per sessie aan te passen
+• Optionele melding op het moment dat je Klaar bent
+
+Recharge+ is er als maand- of jaarabonnement, of als eenmalige levenslange aankoop.
+
+• Maand- en jaarabonnement bevatten 7 dagen gratis proefperiode voor nieuwe abonnees die daarvoor in aanmerking komen
+• Levenslang is een eenmalige aankoop, zonder abonnement en zonder verlenging
+
+Prijzen worden in de app getoond voordat je koopt en verschillen per regio. De betaling wordt bij bevestiging van de aankoop van je Apple ID afgeschreven. Abonnementen verlengen automatisch: er wordt afgeschreven binnen 24 uur voor het einde van de periode, tenzij automatische verlenging minstens 24 uur van tevoren is uitgezet. Beheer of zeg op via Instellingen › Apple ID › Abonnementen. Een niet gebruikt deel van een proefperiode vervalt bij aankoop.
+
+Privacybeleid: https://jackwallner.github.io/recovery/privacy-policy.html
+Gebruiksvoorwaarden (Apple standaard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
+PRIVACY
+
+Recharge leest uit Apple Gezondheid en schrijft er niets naartoe. Je gegevens blijven op je eigen apparaten. Geen account, geen inloggen, geen server.
+
+BELANGRIJK
+
+Recharge geeft een cardiovasculaire trainingsschatting op basis van je recente belasting. Het is geen medisch advies en kan je niet vertellen of je fit genoeg bent om te trainen. Cardiovasculaire belasting, spierpijn, ziekte en mentale vermoeidheid zijn niet hetzelfde. Bespreek je gezondheid met een gekwalificeerde professional.
+
+Recharge is niet verbonden aan, goedgekeurd door of gesponsord door Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit of Apple. Productnamen zijn handelsmerken van hun respectieve eigenaren.
+
+Vereist iOS 17 of nieuwer. Een Apple Watch die je workouts opneemt wordt sterk aanbevolen.

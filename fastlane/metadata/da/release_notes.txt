@@ -1,0 +1,7 @@
+Første version.
+
+• Nedtælling efter hver træning, der tæller, med en tydelig Klar-tilstand
+• Apple Watch-app og fire komplikationsfamilier: cirkulær, rektangulær, inline og hjørne
+• Egne kurver til udholdenhed, styrke, blandet (HYROX / CrossFit) og lette træninger
+• Anstrengelse med ét tryk på håndleddet, når pulsen ikke er pålidelig
+• Fuld forklaring på hvert estimat: hvilken træning der satte det, hvor hårdt det var for dig, og hvor sikker appen er

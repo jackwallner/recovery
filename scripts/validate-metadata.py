@@ -34,6 +34,17 @@ EXPECTED_CATEGORIES = {
     "primary_category": "HEALTH_AND_FITNESS",
     "secondary_category": "SPORTS",
 }
+# 24 Latin characters and 24 CJK characters are not the same amount of text.
+# A 24-character Chinese or Japanese app name is roughly a full sentence and
+# reads as keyword stuffing, which is why every other app in the fleet ships
+# CJK names at 12-17 characters. The floor exists to stop a field going to
+# waste, so it drops for the scripts where 30 characters is already generous.
+CJK_LOCALES = frozenset({"ja", "ko", "zh-Hans", "zh-Hant"})
+EN_DISCLOSURE = "Prices are shown in the app before you buy and vary by region"
+DISCLOSURES = {}
+for _path in sorted((Path(__file__).parent / "native_locale_content").glob("*.json")):
+    for _locale, _fields in json.loads(_path.read_text(encoding="utf-8")).items():
+        DISCLOSURES[_locale] = _fields["price_disclosure"]
 
 
 def read(locale: str, field: str) -> str:
@@ -83,10 +94,12 @@ def main() -> None:
         notes = read(locale, "release_notes")
 
         # The 23-character carve-out for "Recharge: Recovery Time" is gone with
-        # that name. Every field now clears the normal 24-character floor.
+        # that name. Every Latin-script locale clears the 24-character floor;
+        # CJK gets the lower one for the reason given at CJK_LOCALES.
+        floor = 12 if locale in CJK_LOCALES else 24
         for field, value, minimum, maximum in (
-            ("name", name, 24, 30),
-            ("subtitle", subtitle, 24, 30),
+            ("name", name, floor, 30),
+            ("subtitle", subtitle, floor, 30),
             ("keywords", keywords, 94, 100),
         ):
             if not minimum <= len(value) <= maximum:
@@ -117,7 +130,11 @@ def main() -> None:
             errors.append(f"{locale}: missing privacy URL")
         if re.search(r"[$£€]\s?\d|\d+[.,]\d{2}\s*(?:per|/)", description):
             errors.append(f"{locale}: description must not hardcode regional prices")
-        if "Prices are shown in the app before you buy and vary by region" not in description:
+        # Every locale has to carry the disclosure, but in its own language. The
+        # sentence lives beside the rest of that locale's copy in
+        # scripts/native_locale_content/, so this check reads it from there
+        # rather than demanding the English string in 49 translated listings.
+        if DISCLOSURES.get(locale, EN_DISCLOSURE) not in description:
             errors.append(f"{locale}: missing regional-price disclosure")
         if locale == "en-US" and "7-day" not in description:
             errors.append(f"{locale}: missing 7-day trial disclosure")

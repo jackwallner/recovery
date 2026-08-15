@@ -1,0 +1,110 @@
+{
+  "ja": {
+    "name": "Recharge ワークアウト回復時間",
+    "subtitle": "Apple Watchのカウントダウン",
+    "keywords": "garmin,ガーミン,whoop,coros,polar,athlytic,hyrox,トライアスロン,マラソン,ランニング,筋トレ,疲労,心拍,睡眠,トレーニング,回復,アップルウォッチ",
+    "promotional_text": "Garminのような回復時間を、すでに持っているApple Watchで。ハードなセッションのたびにカウントダウンが始まり、終われば明確な「準備完了」。",
+    "release_notes": "最初のバージョンです。\n\n• 対象となるワークアウトごとにカウントダウン、そして明確な「準備完了」\n• Apple Watchアプリと4種類のコンプリケーション（円形・長方形・インライン・コーナー）\n• 持久系・筋力系・混合（HYROX / CrossFit）・軽い運動でそれぞれ別のカーブ\n• 心拍が当てにならないときは手首でワンタップの主観的強度入力\n• すべての推定に完全な説明：どのセッションが決めたか、どれだけきつかったか、どれだけ確かか",
+    "price_disclosure": "価格は購入前にアプリ内に表示され、地域によって異なります",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ 月額",
+      "monthly_desc": "身体データ、負荷の傾向、準備完了の通知。",
+      "yearly_name": "Recharge+ 年額",
+      "yearly_desc": "1年分の身体データ、負荷の傾向、通知。",
+      "lifetime_name": "Recharge+ 買い切り",
+      "lifetime_desc": "Recharge+ を永久に。1回の支払い、更新なし。"
+    },
+    "description": "ハードなセッションを終えると、Recharge がカウントダウンを始めます。ゼロになれば、はっきりとした「準備完了」。\n\nアプリはそれだけです。アクティビティのあとに Garmin が返してくれる答えを、すでに持っている Apple Watch のために作りました。リングも、ストラップも、二つ目のハードウェア環境の定額契約も必要ありません。\n\n表示されるもの\n\n• 対象となるワークアウトごとに、時間単位のカウントダウン\n• 推定が切れたときの明確な「準備完了」\n• その理由：どのセッションがこの時間を決めたのか、どれだけ確かなのか\n• 4種類のコンプリケーション：円形、長方形、インライン、コーナー\n\nハイブリッドなトレーニングのために\n\nRecharge はセッションの種類ごとに別のカーブを使います。バーベルの下の1時間とバイクの1時間は、同じコストではないからです。\n\n• 持久系：ラン、バイク、ローイング、スイム。心拍予備能から負荷を算出。\n• 筋力系：ウエイト。手首の心拍はここでは当てにならないので、Recharge は推測せずに質問します。\n• 混合：HYROX、CrossFit、サーキット。両方の系に負荷がかかるため、最も長い時間。\n• 軽い運動：ウォーキング、ヨガ、モビリティ。アクティブリカバリーとして扱い、カウントダウンを始めることも延ばすこともありません。\n\nRecharge は見せかけの精度の数字ではなく、幅のある時間と、それを出した信号を示します。\n\n標準、無料\n\n標準の推定は全員に同じ表です。セッションの種類、長さ、きつさを、あなたの年齢に対応する心拍レンジで測ります。\n\n• Apple ヘルスケアからのワークアウト取り込み\n• カウントダウンと「準備完了」\n• Apple Watch アプリ\n• 4種類すべてのコンプリケーション\n• iPhone での直近の推定の説明\n\nRECHARGE+\n\nRecharge+ はその表をあなた自身に置き換えます。すべてのセッションをあなた自身の42日間の基準と比べ、直近30日があなたのカウントダウンの速さを決めます。\n\n• 集団平均ではなく、あなた自身の履歴から出た時間\n• 睡眠、安静時心拍、心拍変動をすべての推定に反映\n• カウントダウンが終わったときの実際の感覚によるキャリブレーション\n• 週の負荷を、あなた自身の4週間平均と比較\n• セッションごとにワークアウト種別を上書き\n• 準備が整った瞬間の通知（任意）\n\nRecharge+ は月額または年額のサブスクリプション、あるいは一度きりの買い切りでご利用いただけます。\n\n• 月額と年額には、対象となる新規登録者向けに7日間の無料トライアルが含まれます\n• 買い切りは一度きりの購入で、サブスクリプションも更新もありません\n\n{price_disclosure}。購入確定時に Apple アカウントへ課金されます。サブスクリプションは自動更新され、期間終了の24時間前までに自動更新をオフにしない限り、終了前24時間以内に課金されます。管理と解約は「設定 › Apple アカウント › サブスクリプション」から。無料トライアルの未使用分は購入時に失効します。\n\nプライバシーポリシー: https://jackwallner.github.io/recovery/privacy-policy.html\n利用規約（Apple標準EULA）: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\nプライバシー\n\nRecharge は Apple ヘルスケアから読み取るだけで、書き戻しません。データはあなたのデバイスに留まります。アカウントもログインもサーバーもありません。\n\n重要\n\nRecharge は直近の運動負荷にもとづく心血管系トレーニングの推定を示します。医学的な助言ではなく、あなたがトレーニングできる状態かどうかを判断するものではありません。心血管系の負荷、筋肉痛、病気、精神的な疲れは同じものではありません。健康については有資格の専門家にご相談ください。\n\nRecharge は Garmin、WHOOP、Oura、Polar、Coros、HYROX、CrossFit、Apple と提携しておらず、これらによる承認も後援も受けていません。製品名は各所有者の商標です。\n\niOS 17 以降が必要です。ワークアウトを記録する Apple Watch を強く推奨します。"
+  },
+  "ko": {
+    "name": "Recharge 운동 회복 시간",
+    "subtitle": "Apple Watch 회복 카운트다운",
+    "keywords": "garmin,가민,whoop,coros,athlytic,hyrox,철인3종,마라톤,러닝,헬스,심박,수면,트레이닝,근력,체력,지구력,사이클,크로스핏,컨디션,회복시간,운동부하",
+    "promotional_text": "이미 가지고 있는 Apple Watch에서 만나는 Garmin 스타일 회복 시간. 힘든 운동 뒤마다 카운트다운, 끝나면 분명한 준비 완료.",
+    "release_notes": "첫 번째 버전입니다.\n\n• 집계되는 운동마다 카운트다운, 그리고 분명한 준비 완료 상태\n• Apple Watch 앱과 네 가지 컴플리케이션 계열: 원형, 직사각형, 인라인, 모서리\n• 지구력, 근력, 혼합(HYROX / CrossFit), 가벼운 운동에 각각 다른 곡선\n• 심박이 신뢰하기 어려울 때 손목에서 한 번 탭으로 강도 입력\n• 모든 추정에 대한 완전한 설명: 어떤 운동이 정했는지, 얼마나 힘들었는지, 얼마나 확실한지",
+    "price_disclosure": "가격은 구매 전 앱에 표시되며 지역에 따라 다릅니다",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ 월간",
+      "monthly_desc": "신체 신호, 부하 추세, 준비 완료 알림.",
+      "yearly_name": "Recharge+ 연간",
+      "yearly_desc": "1년간의 신체 신호, 부하 추세, 알림.",
+      "lifetime_name": "Recharge+ 평생",
+      "lifetime_desc": "Recharge+ 평생. 한 번 결제, 갱신 없음."
+    },
+    "description": "힘든 운동을 마치면 Recharge가 카운트다운을 시작합니다. 시간이 다 되면 분명한 준비 완료가 표시됩니다.\n\n앱은 이게 전부입니다. 활동 후 Garmin이 알려주던 답을, 이미 가지고 있는 Apple Watch를 위해 만들었습니다. 반지도, 스트랩도, 구독해야 할 두 번째 하드웨어 생태계도 없습니다.\n\n무엇이 보이나\n\n• 집계되는 운동마다 시간 단위 카운트다운\n• 추정이 끝나면 선명한 준비 완료\n• 그 이유: 어떤 운동이 이 구간을 정했고, 얼마나 확실한지\n• 네 가지 계열의 컴플리케이션: 원형, 직사각형, 인라인, 모서리\n\n하이브리드 훈련을 위해 만들었습니다\n\nRecharge는 운동 종류마다 다른 곡선을 씁니다. 바벨 아래의 한 시간과 자전거 위의 한 시간은 같은 값이 아니니까요.\n\n• 지구력: 달리기, 사이클, 로잉, 수영. 심박 예비량에서 부하를 계산합니다.\n• 근력: 웨이트. 손목 심박은 여기서 믿기 어렵기 때문에, Recharge는 추측 대신 질문을 합니다.\n• 혼합: HYROX, CrossFit, 서킷. 두 계통 모두 부하를 받으므로 가장 긴 구간.\n• 가벼움: 걷기, 요가, 모빌리티. 능동 회복으로 계산되며 카운트다운을 시작하거나 늘리지 않습니다.\n\nRecharge는 거짓 정밀도의 숫자 대신 범위가 있는 구간을 보여주고, 그 값을 만든 신호도 함께 알려줍니다.\n\n기본, 무료\n\n기본 추정은 모두에게 같은 표입니다. 운동의 종류, 길이, 강도를 나이에 맞는 심박 범위에 대고 측정합니다.\n\n• Apple 건강에서 운동 가져오기\n• 카운트다운과 준비 완료 상태\n• Apple Watch 앱\n• 네 가지 컴플리케이션 계열 전부\n• iPhone에서 최근 추정에 대한 설명\n\nRECHARGE+\n\nRecharge+는 그 표를 당신으로 바꿉니다. 모든 운동을 당신 자신의 42일 기준선에 대고 측정하고, 최근 30일이 카운트다운이 흐르는 속도를 정합니다.\n\n• 인구 평균이 아니라 당신의 기록에서 나온 시간\n• 수면, 안정 시 심박, 심박 변이도를 모든 추정에 반영\n• 카운트다운이 끝났을 때 실제로 어땠는지에 따른 보정\n• 주간 부하를 당신 자신의 4주 평균과 비교\n• 운동 종류를 세션별로 변경\n• 준비가 된 순간의 선택형 알림\n\nRecharge+는 월간 또는 연간 구독으로, 혹은 한 번만 결제하는 평생 이용권으로 제공됩니다.\n\n• 월간과 연간 구독에는 자격이 되는 신규 구독자를 위한 7일 무료 체험이 포함됩니다\n• 평생 이용권은 한 번만 결제하며 구독도 갱신도 없습니다\n\n{price_disclosure}. 구매를 확인하면 Apple 계정으로 결제됩니다. 구독은 자동 갱신되며, 기간이 끝나기 최소 24시간 전에 자동 갱신을 끄지 않으면 종료 전 24시간 이내에 청구됩니다. 관리와 해지는 설정 › Apple 계정 › 구독에서 할 수 있습니다. 무료 체험의 남은 기간은 구매 시 소멸됩니다.\n\n개인정보 처리방침: https://jackwallner.github.io/recovery/privacy-policy.html\n이용 약관(Apple 표준 EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\n개인정보\n\nRecharge는 Apple 건강에서 읽기만 하고 아무것도 쓰지 않습니다. 데이터는 당신의 기기에 남습니다. 계정도, 로그인도, 서버도 없습니다.\n\n중요\n\nRecharge는 최근 운동 부하를 바탕으로 심혈관 훈련 추정치를 제공합니다. 의학적 조언이 아니며, 당신이 훈련에 적합한 상태인지 알려줄 수 없습니다. 심혈관 부하, 근육통, 질병, 정신적 피로는 서로 다른 것입니다. 건강에 대해서는 자격을 갖춘 전문가와 상의하세요.\n\nRecharge는 Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit 또는 Apple과 제휴, 보증, 후원 관계가 없습니다. 제품명은 각 소유자의 상표입니다.\n\niOS 17 이상이 필요합니다. 운동을 기록하는 Apple Watch를 강력히 권장합니다."
+  },
+  "zh-Hans": {
+    "name": "Recharge 运动恢复时间",
+    "subtitle": "Apple Watch 恢复倒计时",
+    "keywords": "garmin,佳明,whoop,coros,polar,athlytic,hyrox,铁人三项,马拉松,跑步,力量训练,心率,睡眠,训练负荷,疲劳,骑行,游泳,健身,运动手表,恢复时间,越野跑",
+    "promotional_text": "在你已有的 Apple Watch 上，获得佳明式的恢复时间。每次大强度训练后开始倒计时，结束时给出明确的「已就绪」。",
+    "release_notes": "首个版本。\n\n• 每次计入的训练后开始倒计时，并给出明确的「已就绪」\n• Apple Watch App 与四类复杂功能：圆形、矩形、内联和边角\n• 耐力、力量、混合（HYROX / CrossFit）和轻度训练各用一条曲线\n• 心率不可靠时，在手腕上一次点按即可给出主观强度\n• 每个估算都有完整解释：由哪次训练决定、对你有多难、把握有多大",
+    "price_disclosure": "价格会在购买前显示在 App 内，并因地区而异",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ 月度",
+      "monthly_desc": "身体信号、负荷趋势与就绪提醒。",
+      "yearly_name": "Recharge+ 年度",
+      "yearly_desc": "一年的身体信号、负荷趋势与提醒。",
+      "lifetime_name": "Recharge+ 永久",
+      "lifetime_desc": "永久使用 Recharge+。一次付费，无需续订。"
+    },
+    "description": "结束一次大强度训练，Recharge 就开始倒计时。倒计时归零，你会看到明确的「已就绪」。\n\n整个 App 就是这件事。它是佳明手表在一次活动之后给你的那个答案，为你已经拥有的 Apple Watch 而造。不需要戒指，不需要心率带，也不需要第二套要订阅的硬件生态。\n\n你会看到\n\n• 每次计入的训练之后，以小时为单位的倒计时\n• 估算到期时清晰的「已就绪」\n• 背后的原因：哪一次训练决定了这段时间，把握有多大\n• 四类复杂功能：圆形、矩形、内联和边角\n\n为混合训练而做\n\nRecharge 为每一种训练类型使用单独的曲线：杠铃下的一小时和骑行的一小时，代价并不相同。\n\n• 耐力：跑步、骑行、划船、游泳。负荷来自心率储备。\n• 力量：举重。手腕心率在这里并不可靠，所以 Recharge 会问你一个问题，而不是猜。\n• 混合：HYROX、CrossFit、循环训练。两个系统同时受压，因此时间最长。\n• 轻度：散步、瑜伽、灵活性训练。计为主动恢复，永远不会开启或延长倒计时。\n\nRecharge 给出的是一个有边界的区间，而不是一个假装精确的数字，并告诉你这个数字来自哪个信号。\n\n标准版，免费\n\n标准估算对所有人都是同一张表：训练的类型、时长和强度，按你年龄对应的心率区间来衡量。\n\n• 从 Apple 健康导入训练\n• 倒计时与「已就绪」状态\n• Apple Watch App\n• 全部四类复杂功能\n• 在 iPhone 上查看最近一次估算的说明\n\nRECHARGE+\n\nRecharge+ 用你自己替换那张表：每次训练都与你自己 42 天的基线比较，最近 30 天决定你的倒计时走得多快。\n\n• 时间来自你自己的历史，而不是人群平均值\n• 睡眠、静息心率和心率变异性都纳入每一次估算\n• 依据倒计时结束时你真实的感受进行校准\n• 周负荷与你自己的四周平均值比较\n• 可逐次覆盖训练类型\n• 就绪那一刻的可选通知\n\nRecharge+ 提供按月或按年订阅，也可以一次性买断永久使用。\n\n• 月度和年度订阅为符合条件的新订阅者提供 7 天免费试用\n• 永久版为一次性购买，没有订阅，也不会续订\n\n{price_disclosure}。确认购买时将从你的 Apple 账户扣款。订阅会自动续订：除非在当前周期结束前至少 24 小时关闭自动续订，否则会在结束前 24 小时内扣款。可在「设置 › Apple 账户 › 订阅」中管理或取消。免费试用中未使用的部分在购买时失效。\n\n隐私政策：https://jackwallner.github.io/recovery/privacy-policy.html\n使用条款（Apple 标准 EULA）：https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\n隐私\n\nRecharge 只从 Apple 健康读取，不写回任何数据。你的数据留在你的设备上。没有账户，没有登录，没有服务器。\n\n重要提示\n\nRecharge 基于你最近的训练负荷给出心血管训练估算。它不是医疗建议，也无法告诉你身体是否适合训练。心血管负荷、肌肉酸痛、疾病和精神疲劳并不是一回事。请就你的健康问题咨询有资质的专业人士。\n\nRecharge 与 Garmin、WHOOP、Oura、Polar、Coros、HYROX、CrossFit 或 Apple 无关联，也未获得它们的认可或赞助。产品名称为其各自所有者的商标。\n\n需要 iOS 17 或更高版本。强烈建议使用能记录训练的 Apple Watch。"
+  },
+  "zh-Hant": {
+    "name": "Recharge 運動恢復時間",
+    "subtitle": "Apple Watch 恢復倒數計時",
+    "keywords": "garmin,whoop,coros,polar,athlytic,hyrox,鐵人三項,馬拉松,跑步,重訓,心率,睡眠,訓練負荷,疲勞,健身,騎車,游泳,恢復時間,越野,心率變異,運動手錶",
+    "promotional_text": "在你已經擁有的 Apple Watch 上，取得 Garmin 式的恢復時間。每次高強度訓練後開始倒數，結束時給你明確的「已就緒」。",
+    "release_notes": "第一個版本。\n\n• 每次計入的訓練後開始倒數，並給出明確的「已就緒」\n• Apple Watch App 與四種複雜功能：圓形、矩形、行內與角落\n• 耐力、肌力、混合（HYROX / CrossFit）與輕度訓練各有一條曲線\n• 心率不可靠時，在手腕上輕點一次即可回報主觀強度\n• 每個估算都有完整說明：由哪次訓練決定、對你有多辛苦、把握有多大",
+    "price_disclosure": "價格會在購買前顯示於 App 內，並依地區而異",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ 月訂閱",
+      "monthly_desc": "身體訊號、負荷趨勢與就緒通知。",
+      "yearly_name": "Recharge+ 年訂閱",
+      "yearly_desc": "一年的身體訊號、負荷趨勢與通知。",
+      "lifetime_name": "Recharge+ 永久版",
+      "lifetime_desc": "永久使用 Recharge+。一次付款，不會續訂。"
+    },
+    "description": "結束一次高強度訓練，Recharge 就開始倒數。倒數歸零時，你會看到明確的「已就緒」。\n\n整個 App 就是這件事。它是 Garmin 手錶在一次活動之後給你的那個答案，為你已經擁有的 Apple Watch 而做。不需要戒指，不需要心跳帶，也不需要第二套要訂閱的硬體生態。\n\n你會看到\n\n• 每次計入的訓練之後，以小時為單位的倒數\n• 估算到期時清楚的「已就緒」\n• 背後的原因：哪一次訓練決定了這段時間，把握有多大\n• 四種複雜功能：圓形、矩形、行內與角落\n\n為混合訓練而做\n\nRecharge 為每一種訓練類型使用不同的曲線：槓鈴下的一小時和騎車的一小時，代價並不相同。\n\n• 耐力：跑步、騎車、划船、游泳。負荷取自心率儲備。\n• 肌力：舉重。手腕心率在這裡並不可靠，所以 Recharge 會問你一個問題，而不是用猜的。\n• 混合：HYROX、CrossFit、循環訓練。兩個系統同時承壓，因此時間最長。\n• 輕度：散步、瑜伽、活動度訓練。算作主動恢復，永遠不會啟動或延長倒數。\n\nRecharge 給的是一段有邊界的區間，而不是假裝精確的數字，並告訴你這個數字來自哪個訊號。\n\n標準版，免費\n\n標準估算對所有人都是同一張表：訓練的類型、長度與強度，依你年齡對應的心率區間來衡量。\n\n• 從 Apple 健康匯入訓練\n• 倒數與「已就緒」狀態\n• Apple Watch App\n• 全部四種複雜功能\n• 在 iPhone 上查看最近一次估算的說明\n\nRECHARGE+\n\nRecharge+ 用你自己取代那張表：每次訓練都與你自己 42 天的基準線比較，最近 30 天決定你的倒數走得多快。\n\n• 時間來自你自己的紀錄，而不是族群平均值\n• 睡眠、靜息心率與心率變異度都納入每一次估算\n• 依據倒數結束時你真實的感受進行校準\n• 週負荷與你自己的四週平均值比較\n• 可逐次覆寫訓練類型\n• 就緒那一刻的選擇性通知\n\nRecharge+ 提供按月或按年訂閱，也可以一次買斷永久使用。\n\n• 月訂閱與年訂閱為符合資格的新訂閱者提供 7 天免費試用\n• 永久版為一次性購買，沒有訂閱，也不會續訂\n\n{price_disclosure}。確認購買時會從你的 Apple 帳號扣款。訂閱會自動續訂：除非在目前週期結束前至少 24 小時關閉自動續訂，否則會在結束前 24 小時內扣款。可在「設定 › Apple 帳號 › 訂閱項目」中管理或取消。免費試用中未使用的部分會在購買時失效。\n\n隱私權政策：https://jackwallner.github.io/recovery/privacy-policy.html\n使用條款（Apple 標準 EULA）：https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\n隱私\n\nRecharge 只從 Apple 健康讀取，不會寫回任何資料。你的資料留在你的裝置上。沒有帳號，沒有登入，沒有伺服器。\n\n重要提醒\n\nRecharge 依你最近的訓練負荷給出心血管訓練估算。它不是醫療建議，也無法告訴你身體是否適合訓練。心血管負荷、肌肉痠痛、疾病與精神疲勞並不是同一件事。請就你的健康問題諮詢合格的專業人員。\n\nRecharge 與 Garmin、WHOOP、Oura、Polar、Coros、HYROX、CrossFit 或 Apple 沒有關聯，也未獲得其背書或贊助。產品名稱為各自所有者的商標。\n\n需要 iOS 17 或更新版本。強烈建議使用會記錄訓練的 Apple Watch。"
+  },
+  "id": {
+    "name": "Recharge: Waktu pemulihan",
+    "subtitle": "Hitung mundur Apple Watch",
+    "keywords": "garmin,whoop,coros,polar,athlytic,hyrox,triatlon,maraton,lari,gym,kebugaran,detak,jantung,hrv,tidur",
+    "promotional_text": "Waktu pemulihan ala Garmin di Apple Watch yang sudah kamu punya. Hitung mundur setelah setiap sesi berat, dan status Siap yang jelas saat habis.",
+    "release_notes": "Versi pertama.\n\n• Hitung mundur setelah setiap latihan yang dihitung, dengan status Siap yang jelas\n• Aplikasi Apple Watch dan empat keluarga komplikasi: bundar, persegi panjang, sebaris, dan sudut\n• Kurva terpisah untuk daya tahan, kekuatan, campuran (HYROX / CrossFit), dan sesi ringan\n• Penilaian usaha dengan satu ketukan di pergelangan saat detak jantung tidak andal\n• Penjelasan lengkap untuk setiap perkiraan: sesi mana yang menetapkannya, seberat apa untukmu, dan seberapa yakin",
+    "price_disclosure": "Harga ditampilkan di aplikasi sebelum kamu membeli dan berbeda tiap wilayah",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ Bulanan",
+      "monthly_desc": "Sinyal tubuh, tren beban, dan notifikasi Siap.",
+      "yearly_name": "Recharge+ Tahunan",
+      "yearly_desc": "Setahun sinyal tubuh, tren beban, notifikasi.",
+      "lifetime_name": "Recharge+ Seumur hidup",
+      "lifetime_desc": "Recharge+ selamanya. Sekali bayar, tanpa perpanjangan."
+    },
+    "description": "Selesaikan sesi berat dan Recharge memulai hitung mundur. Saat habis, kamu mendapat status Siap yang jelas.\n\nItu seluruh aplikasinya. Ini jawaban yang diberikan Garmin setelah sebuah aktivitas, dibuat untuk Apple Watch yang sudah kamu punya. Tanpa cincin, tanpa sabuk dada, tanpa ekosistem perangkat kedua yang harus dilanggan.\n\nAPA YANG KAMU LIHAT\n\n• Hitung mundur dalam jam setelah setiap latihan yang dihitung\n• Status Siap yang tegas saat perkiraan berakhir\n• Alasan di baliknya: sesi mana yang menetapkan rentangnya dan seberapa yakin\n• Komplikasi dalam empat keluarga: bundar, persegi panjang, sebaris, dan sudut\n\nDIBUAT UNTUK LATIHAN HIBRIDA\n\nRecharge memakai kurva terpisah per jenis sesi: satu jam di bawah barbel dan satu jam di sepeda tidak sama harganya.\n\n• Daya tahan: lari, sepeda, dayung, renang. Beban dari cadangan detak jantung.\n• Kekuatan: angkat beban. Detak jantung di pergelangan tidak andal di sini, jadi Recharge bertanya alih-alih menebak.\n• Campuran: HYROX, CrossFit, sirkuit. Kedua sistem terbebani, jadi rentang terpanjang.\n• Ringan: jalan kaki, yoga, mobilitas. Dihitung sebagai pemulihan aktif dan tidak pernah memulai atau memperpanjang hitung mundur.\n\nRecharge menampilkan rentang yang berbatas, bukan angka berpresisi palsu, lengkap dengan sinyal yang menghasilkannya.\n\nSTANDAR, GRATIS\n\nPerkiraan standar adalah tabel yang sama untuk semua orang: jenis sesi, durasi, dan beratnya, diukur terhadap rentang detak jantung sesuai usiamu.\n\n• Impor latihan dari Apple Kesehatan\n• Hitung mundur dan status Siap\n• Aplikasi Apple Watch\n• Keempat keluarga komplikasi\n• Penjelasan di iPhone untuk perkiraan terakhirmu\n\nRECHARGE+\n\nRecharge+ mengganti tabel itu denganmu: setiap sesi diukur terhadap garis dasar 42 harimu sendiri, dan 30 hari terakhir menentukan seberapa cepat hitung mundurmu berjalan.\n\n• Waktu dari riwayatmu sendiri, bukan dari rata-rata populasi\n• Tidur, detak jantung istirahat, dan HRV masuk ke setiap perkiraan\n• Kalibrasi dari bagaimana rasanya bagimu saat waktunya habis\n• Beban mingguan dibandingkan rata-rata empat mingguanmu sendiri\n• Jenis latihan bisa diubah per sesi\n• Notifikasi opsional tepat saat kamu Siap\n\nRecharge+ tersedia sebagai langganan bulanan atau tahunan, atau sebagai pembelian sekali untuk seumur hidup.\n\n• Langganan bulanan dan tahunan mencakup uji coba gratis 7 hari untuk pelanggan baru yang memenuhi syarat\n• Versi seumur hidup adalah pembelian sekali, tanpa langganan dan tanpa perpanjangan\n\n{price_disclosure}. Pembayaran dibebankan ke akun Apple-mu saat pembelian dikonfirmasi. Langganan diperpanjang otomatis: penagihan terjadi dalam 24 jam sebelum periode berakhir, kecuali perpanjangan otomatis dimatikan setidaknya 24 jam sebelumnya. Kelola atau batalkan di Pengaturan › Akun Apple › Langganan. Bagian uji coba gratis yang belum terpakai hangus saat pembelian.\n\nKebijakan Privasi: https://jackwallner.github.io/recovery/privacy-policy.html\nKetentuan Penggunaan (EULA standar Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\nPRIVASI\n\nRecharge membaca dari Apple Kesehatan dan tidak menulis apa pun kembali. Datamu tetap di perangkatmu. Tanpa akun, tanpa login, tanpa server.\n\nPENTING\n\nRecharge memberi perkiraan latihan kardiovaskular berdasarkan bebanmu belakangan ini. Ini bukan nasihat medis dan tidak bisa memberitahumu apakah kamu layak berlatih. Beban kardiovaskular, nyeri otot, sakit, dan lelah mental bukan hal yang sama. Bicarakan kesehatanmu dengan tenaga profesional yang berkualifikasi.\n\nRecharge tidak berafiliasi dengan, tidak didukung, dan tidak disponsori oleh Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit, atau Apple. Nama produk adalah merek dagang pemiliknya masing-masing.\n\nMembutuhkan iOS 17 atau lebih baru. Apple Watch yang merekam latihanmu sangat disarankan."
+  },
+  "ms": {
+    "name": "Recharge: Masa pemulihan",
+    "subtitle": "Kira detik pada Apple Watch",
+    "keywords": "garmin,whoop,coros,polar,athlytic,hyrox,triatlon,maraton,lari,gim,kecergasan,degupan,jantung,hrv",
+    "promotional_text": "Masa pemulihan gaya Garmin pada Apple Watch yang anda sedia ada. Kiraan detik selepas setiap sesi berat, dan status Sedia yang jelas apabila tamat.",
+    "release_notes": "Versi pertama.\n\n• Kiraan detik selepas setiap latihan yang dikira, dengan status Sedia yang jelas\n• Aplikasi Apple Watch dan empat keluarga komplikasi: bulat, segi empat tepat, sebaris dan sudut\n• Lengkung berasingan untuk daya tahan, kekuatan, campuran (HYROX / CrossFit) dan sesi ringan\n• Penilaian usaha dengan satu ketikan pada pergelangan apabila degupan jantung tidak boleh dipercayai\n• Penjelasan penuh bagi setiap anggaran: sesi mana yang menetapkannya, betapa beratnya untuk anda, dan sejauh mana yakin",
+    "price_disclosure": "Harga dipaparkan dalam aplikasi sebelum anda membeli dan berbeza mengikut wilayah",
+    "products": {
+      "group": "Recharge+",
+      "monthly_name": "Recharge+ Bulanan",
+      "monthly_desc": "Isyarat badan, trend beban dan makluman Sedia.",
+      "yearly_name": "Recharge+ Tahunan",
+      "yearly_desc": "Setahun isyarat badan, trend beban, makluman.",
+      "lifetime_name": "Recharge+ Seumur hidup",
+      "lifetime_desc": "Recharge+ selamanya. Sekali bayar, tanpa pembaharuan."
+    },
+    "description": "Tamatkan sesi berat dan Recharge memulakan kiraan detik. Apabila ia tamat, anda mendapat status Sedia yang jelas.\n\nItulah keseluruhan aplikasi ini. Ia jawapan yang diberikan Garmin selepas sesuatu aktiviti, dibina untuk Apple Watch yang anda sedia ada. Tiada cincin, tiada tali dada, tiada ekosistem perkakasan kedua untuk dilanggan.\n\nAPA YANG ANDA LIHAT\n\n• Kiraan detik dalam jam selepas setiap latihan yang dikira\n• Status Sedia yang jelas apabila anggaran tamat\n• Sebab di sebaliknya: sesi mana yang menetapkan tempohnya dan sejauh mana yakin\n• Komplikasi dalam empat keluarga: bulat, segi empat tepat, sebaris dan sudut\n\nDIBINA UNTUK LATIHAN HIBRID\n\nRecharge menggunakan lengkung berasingan bagi setiap jenis sesi: sejam di bawah bar dan sejam atas basikal tidak sama kosnya.\n\n• Daya tahan: lari, basikal, mendayung, renang. Beban daripada rizab degupan jantung.\n• Kekuatan: angkat berat. Degupan jantung di pergelangan tidak boleh dipercayai di sini, jadi Recharge bertanya kepada anda dan tidak meneka.\n• Campuran: HYROX, CrossFit, litar. Kedua-dua sistem dibebankan, jadi tempoh paling panjang.\n• Ringan: berjalan, yoga, mobiliti. Dikira sebagai pemulihan aktif dan tidak pernah memulakan atau memanjangkan kiraan.\n\nRecharge memaparkan tempoh yang bersempadan, bukan nombor berketepatan palsu, berserta isyarat yang menghasilkannya.\n\nSTANDARD, PERCUMA\n\nAnggaran standard ialah jadual yang sama untuk semua orang: jenis sesi, tempoh dan keberatannya, diukur terhadap julat degupan jantung mengikut umur anda.\n\n• Import latihan daripada Apple Kesihatan\n• Kiraan detik dan status Sedia\n• Aplikasi Apple Watch\n• Kesemua empat keluarga komplikasi\n• Penjelasan pada iPhone bagi anggaran terakhir anda\n\nRECHARGE+\n\nRecharge+ menggantikan jadual itu dengan anda: setiap sesi diukur terhadap garis asas 42 hari anda sendiri, dan 30 hari terakhir menentukan sepantas mana kiraan anda berjalan.\n\n• Masa daripada sejarah anda sendiri, bukan purata populasi\n• Tidur, degupan jantung rehat dan HRV masuk ke dalam setiap anggaran\n• Penentukuran daripada perasaan sebenar anda apabila tempoh tamat\n• Beban mingguan berbanding purata empat minggu anda sendiri\n• Jenis latihan boleh ditukar bagi setiap sesi\n• Pemberitahuan pilihan pada saat anda Sedia\n\nRecharge+ ditawarkan sebagai langganan bulanan atau tahunan, atau sebagai pembelian sekali seumur hidup.\n\n• Langganan bulanan dan tahunan termasuk percubaan percuma 7 hari untuk pelanggan baharu yang layak\n• Versi seumur hidup ialah pembelian sekali, tanpa langganan dan tanpa pembaharuan\n\n{price_disclosure}. Bayaran dikenakan pada akaun Apple anda apabila pembelian disahkan. Langganan diperbaharui secara automatik: caj dikenakan dalam tempoh 24 jam sebelum tempoh semasa berakhir, melainkan pembaharuan automatik dimatikan sekurang-kurangnya 24 jam lebih awal. Urus atau batalkan di Tetapan › Akaun Apple › Langganan. Bahagian percubaan percuma yang tidak digunakan akan hilang apabila membeli.\n\nDasar Privasi: https://jackwallner.github.io/recovery/privacy-policy.html\nSyarat Penggunaan (EULA standard Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\n\nPRIVASI\n\nRecharge membaca daripada Apple Kesihatan dan tidak menulis apa-apa kembali. Data anda kekal pada peranti anda. Tiada akaun, tiada log masuk, tiada pelayan.\n\nPENTING\n\nRecharge memberikan anggaran latihan kardiovaskular berdasarkan beban terkini anda. Ia bukan nasihat perubatan dan tidak boleh memberitahu anda sama ada anda layak berlatih. Beban kardiovaskular, lenguh otot, penyakit dan keletihan mental bukan perkara yang sama. Bincangkan kesihatan anda dengan profesional yang berkelayakan.\n\nRecharge tidak bergabung dengan, tidak disokong dan tidak ditaja oleh Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit atau Apple. Nama produk ialah tanda dagangan pemilik masing-masing.\n\nMemerlukan iOS 17 atau lebih baharu. Apple Watch yang merakam latihan anda amat disyorkan."
+  }
+}
