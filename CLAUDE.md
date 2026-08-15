@@ -367,7 +367,7 @@ StoreKit product identifiers are bundle-prefixed
   configure it on simulator.
 - **App Store ID is `6797089337`** (`com.jackwallner.recovery`). `fastlane/metadata/`
   is canonical and is uploaded, not aspirational: as of 2026-08-14 the ASC record
-  is named "Recharge: Recovery Time" and version 1.0.0 carries the current
+  is named "Recharge Workout Recovery Time" and version 1.0.0 carries the
   subtitle, keywords and description with build 14 attached, in
   PREPARE_FOR_SUBMISSION. Push edits with `scripts/upload-appstore-metadata.sh`
   and confirm with `scripts/asc-readiness.py`, which diffs ASC against the files

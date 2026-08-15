@@ -82,10 +82,10 @@ def main() -> None:
         promo = read(locale, "promotional_text")
         notes = read(locale, "release_notes")
 
-        # The locked product name is 23 characters. Keep the normal 24-character
-        # floor for subtitles while allowing this exact canonical name.
+        # The 23-character carve-out for "Recharge: Recovery Time" is gone with
+        # that name. Every field now clears the normal 24-character floor.
         for field, value, minimum, maximum in (
-            ("name", name, 23 if name == "Recharge: Recovery Time" else 24, 30),
+            ("name", name, 24, 30),
             ("subtitle", subtitle, 24, 30),
             ("keywords", keywords, 94, 100),
         ):
