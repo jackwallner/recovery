@@ -32,9 +32,9 @@ The standard estimate is the same table for everyone: what kind of session it wa
 • All four complication families
 • iPhone explanation of your latest estimate
 
-RECHARGE PRO
+RECHARGE+
 
-Pro replaces that table with you: every session is scored against your own 42-day baseline, and the last 30 days set how fast your countdowns run.
+Recharge+ replaces that table with you: every session is scored against your own 42-day baseline, and the last 30 days set how fast your countdowns run.
 
 • A recovery time built from your own history, not a population average
 • Sleep, resting heart rate, and HRV folded into each estimate

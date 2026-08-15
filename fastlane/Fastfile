@@ -5,18 +5,40 @@ default_platform(:ios)
 REVIEW_NOTES = <<~NOTES
   Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
 
-  No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, Active Energy, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity. If the review device has no recorded workout, the app shows an explicit empty state rather than a number.
+  No account or login is required. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, Active Energy, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity.
 
-  Core flow:
-  1. Launch app and grant Apple Health read access
-  2. Today shows the current countdown, or Ready, with the reasoning behind the estimate
-  3. History lists every scored session and the load and heart-rate coverage behind each one
-  4. Settings exposes the Watch complication style and the disclaimer
-  The Apple Watch app and its complications mirror the same countdown.
+  IMPORTANT FOR REVIEW: every number here comes from workouts already in Apple Health. On a device with no workout history the app correctly shows an empty state ("No workout yet") rather than a countdown. Step 2 creates a workout in about a minute so the full experience can be reviewed without training.
 
-  Recharge presents a cardiovascular training estimate only. It makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
+  1. GRANT HEALTH ACCESS
+  Launch Recharge. Step through onboarding and tap Connect Apple Health. On the Health permission sheet tap "Turn On All", then Allow. Onboarding then asks two or three short profile questions and ends on a Recharge+ offer; tap "Get Started" to continue on the free tier.
 
-  Recharge Pro (IAP via RevenueCat) offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime purchase. Price, billing period, renewal behavior, Restore, Terms, and Privacy all appear at the purchase point. The app does not use non-exempt encryption.
+  2. CREATE A QUALIFYING WORKOUT (no exercise needed)
+  Open Apple's built-in Health app > Browse > Activity > Workouts > Add Data (top right).
+  Set Activity Type: Traditional Strength Training
+  Set Kilocalories: 500
+  Set the start time to earlier today and the end time 60 minutes later.
+  Tap Add.
+
+  3. SEE THE COUNTDOWN
+  Return to Recharge and open the Today tab. Pull down to refresh. A countdown in hours appears within a few seconds, with the phase headline, the session that set it, and a confidence rating.
+
+  4. SEE WHY
+  Today shows the explanation inline below the countdown: which session set the window, its load, which signal produced that load (heart rate, reported effort, active energy, or duration), and heart-rate coverage. The History tab lists every scored session with the same detail.
+
+  5. STRENGTH EFFORT PROMPT
+  The workout added in step 2 is a strength session with no heart-rate samples, so wrist heart rate cannot score it. Today therefore shows a card reading "How hard was that session?". Tap it and pick a rating from 1 to 10; the countdown recalculates immediately from the answer. The same one-tap prompt appears on the Apple Watch app when a phone-scored session is waiting for an answer, and the answer is sent from the Watch back to the phone.
+
+  6. APPLE WATCH AND COMPLICATIONS
+  Open Recharge on the paired Watch: it renders the same countdown from a snapshot the phone writes to the shared App Group (the Watch never queries Health itself). Complications come in four families (circular, rectangular, inline, corner). Pick the style in the iPhone Settings tab under Watch complication, then add Recharge to a watch face.
+
+  7. EMPTY AND FAILURE STATES
+  Deleting the workout added in step 2 from the Health app and refreshing returns Today to the "No workout yet" empty state. If Health returns nothing because access was denied, the Today footer and the Settings > Health status row say so explicitly rather than showing a stale number; iOS never reports read authorization to apps, so that row reports what Health returned, not which categories were granted.
+
+  DISCLAIMER AND CLAIMS
+  Recharge presents a cardiovascular training estimate only. It makes no diagnostic, treatment, or injury-prevention claim. A disclaimer saying so, and advising the user to talk with a qualified health professional before making medical decisions, is shown on the Today screen, in Settings, in onboarding, and on the paywall.
+
+  IN-APP PURCHASES
+  Recharge+ (via RevenueCat) offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime purchase. Reach the paywall from the Recharge+ row on Today or from Settings. Price, billing period, renewal behavior, Restore, Terms (Apple Standard EULA), and Privacy all appear at the purchase point. The app does not use non-exempt encryption.
 NOTES
 
 platform :ios do
@@ -108,7 +130,10 @@ platform :ios do
       skip_screenshots: true,
       force: true,
       submit_for_review: true,
-      automatic_release: true,
+      # The ASC version is set to MANUAL release. Asking deliver for automatic
+      # release here would flip that behind our back and ship 1.0.0 the moment
+      # review passes, with no chance to check the live listing first.
+      automatic_release: false,
       run_precheck_before_submit: false,
       submission_information: {
         add_id_info_uses_idfa: false,

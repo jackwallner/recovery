@@ -543,7 +543,7 @@ struct SettingsView: View {
             // "Your data stays on your devices" full stop read as "nothing ever
             // leaves", which the privacy policy already qualifies. Say the same
             // thing here rather than making the careful reader go and find it.
-            Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition. Your Health data stays on your devices; only purchase information is handled by Apple and RevenueCat.")
+            Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition. Talk with a qualified health professional before making medical decisions. Your Health data stays on your devices; only purchase information is handled by Apple and RevenueCat.")
         }
     }
 

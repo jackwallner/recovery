@@ -329,7 +329,7 @@ struct PaywallView: View {
             .font(.system(.footnote, design: .rounded))
             .foregroundStyle(Theme.textSecondary)
 
-            Text("Recharge gives a cardiovascular training estimate. It is not medical advice.")
+            Text("Recharge gives a cardiovascular training estimate. It is not medical advice. Talk with a qualified health professional before making medical decisions.")
                 .font(.system(size: 10, design: .rounded))
                 .foregroundStyle(Theme.textTertiary)
                 .multilineTextAlignment(.center)

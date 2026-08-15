@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -12,19 +13,27 @@ import asc_lib
 BUNDLE = "com.jackwallner.recovery"
 PRODUCT_ID = "com.jackwallner.recovery.lifetime"
 # App Store Connect's internal reference name is immutable after creation.
-# The localized customer-facing name is Recharge Pro Lifetime.
+# The localized customer-facing name is Recharge+ Lifetime.
 PRODUCT_REFERENCE_NAME = "Recharge Pro Lifetime"
-PRODUCT_DESCRIPTION = "Unlock Recharge Pro forever. One payment."
+PRODUCT_DESCRIPTION = "Recharge+ forever. One payment, no renewal."
 PRICE = "59.99"
 
-# Kept in step with the REVIEW_NOTES heredoc in fastlane/Fastfile.
-REVIEW_NOTES = """Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
 
-No account or login is required. On first launch, connect Apple Health. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Sleep, Active Energy, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity. If the review device has no recorded workout, the app shows an explicit empty state rather than a number. Recharge presents a cardiovascular training estimate only; it makes no diagnostic, treatment, or injury-prevention claim, and a disclaimer to that effect is shown on the main screen.
+def review_notes() -> str:
+    """The single copy of the review notes lives in the Fastfile heredoc.
 
-Today shows the current countdown with the reasoning behind the estimate, History lists every scored session with the load and heart-rate coverage behind it, and Settings exposes the Watch complication style. The Apple Watch app and its complications mirror the same countdown.
-
-Recharge Pro offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime non-consumable. Price, billing period, renewal behavior, restore, terms, and privacy all appear at the purchase point. The app does not use non-exempt encryption."""
+    It used to be duplicated here, and the two drifted: the Fastfile grew a
+    step-by-step reviewer walkthrough while this file still carried the old
+    four-paragraph summary, so whichever script ran last decided what App
+    Review actually read.
+    """
+    text = (asc_lib.ROOT / "fastlane" / "Fastfile").read_text()
+    match = re.search(r"REVIEW_NOTES = <<~NOTES\n(.*?)\nNOTES\n", text, re.S)
+    if not match:
+        raise SystemExit("error: could not read REVIEW_NOTES from fastlane/Fastfile")
+    return "\n".join(
+        line[2:] if line.startswith("  ") else line for line in match.group(1).split("\n")
+    )
 
 
 def main() -> None:
@@ -110,7 +119,7 @@ def main() -> None:
                         "name": PRODUCT_REFERENCE_NAME,
                         "productId": PRODUCT_ID,
                         "inAppPurchaseType": "NON_CONSUMABLE",
-                        "reviewNote": "One-time purchase that unlocks Recharge Pro forever.",
+                        "reviewNote": "One-time purchase that unlocks Recharge+ forever.",
                     },
                     "relationships": {"app": {"data": {"type": "apps", "id": app_id}}},
                 }
@@ -242,7 +251,7 @@ def main() -> None:
         "contactPhone": "+1 425 753 3411",
         "contactEmail": "jackwallner@gmail.com",
         "demoAccountRequired": False,
-        "notes": REVIEW_NOTES,
+        "notes": review_notes(),
     }
     if detail:
         client.patch(

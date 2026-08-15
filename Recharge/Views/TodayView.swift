@@ -454,7 +454,7 @@ struct TodayView: View {
     // MARK: - Disclaimer
 
     private var disclaimer: some View {
-        Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition.")
+        Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition. Talk with a qualified health professional before making medical decisions.")
             .font(.system(.caption2, design: .rounded))
             .foregroundStyle(Theme.textTertiary)
             .multilineTextAlignment(.center)
