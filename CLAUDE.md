@@ -365,9 +365,18 @@ StoreKit product identifiers are bundle-prefixed
   substitutes `RC_PUBLIC_KEY` from `~/.recovery_credentials` for the archive and
   restores the placeholder on exit, so the key never lands in a commit. Never
   configure it on simulator.
-- **App Store ID is `6797089337`** (`com.jackwallner.recovery`). The ASC record
-  is still named "Recovery App Placeholder"; the real name, subtitle, and
-  keywords are in `fastlane/metadata/en-US/` and have not been uploaded yet.
+- **App Store ID is `6797089337`** (`com.jackwallner.recovery`). `fastlane/metadata/`
+  is canonical and is uploaded, not aspirational: as of 2026-08-14 the ASC record
+  is named "Recharge: Recovery Time" and version 1.0.0 carries the current
+  subtitle, keywords and description with build 14 attached, in
+  PREPARE_FOR_SUBMISSION. Push edits with `scripts/upload-appstore-metadata.sh`
+  and confirm with `scripts/asc-readiness.py`, which diffs ASC against the files
+  and exits non-zero on any drift. `scripts/validate-metadata.py` runs first and
+  enforces the field lengths (name 24-30 with the 23-char product name
+  whitelisted, subtitle 24-30, **keywords 94-100**) plus no duplicate keyword
+  token and no keyword that repeats a word already in the name or subtitle.
+  ASO reasoning and the measured popularity/difficulty tables live in
+  `docs/positioning.md`; the numbers come from the Astro tracker, app id `123`.
 
 ## Open tuning questions
 1. Relative load is measured against the **median** of the person's sessions,
