@@ -152,7 +152,82 @@ the launch-stack tables above within ±3.
 |---|---|---|
 | Title | `Recharge: Recovery Time` | 23/30 |
 | Subtitle | `Countdown for Apple Watch` | 25/30 |
-| Keywords | `garmin,whoop,oura,coros,polar,hyrox,endurance,athlete,race,day,triathlon,crossfit,hrv,wod,tsb` | 93/100 |
+| Keywords | `garmin,connect,whoop,oura,coros,polar,athlytic,hyrox,endurance,triathlon,athlete,race,day,tsb,taper` | 99/100 |
+
+### The allocation rule
+
+Expected traffic is popularity times the chance of actually ranking at zero
+ratings. That second factor is close to 1 on a brand SERP (proven above, and
+re-proven on `hyrox` below) and close to 0 on any generic term above difficulty
+50. So a character is only worth spending on a brand SERP or on a generic under
+difficulty 40, and popularity alone is a trap.
+
+Every term in the field clears that bar:
+
+| Term | Pop | Diff | Why it is winnable |
+|---|---:|---:|---|
+| garmin | 65 | 59 | brand SERP |
+| whoop | 64 | 69 | brand SERP |
+| oura | 63 | 42 | brand SERP |
+| garmin connect (via `connect`) | 59 | 60 | brand SERP |
+| coros | 53 | 43 | brand SERP |
+| polar | 51 | 42 | brand SERP |
+| athlytic | 47 | 50 | brand SERP, in the launch stack above |
+| hyrox | 41 | 17 | best generic in the category |
+| endurance | 24 | 15 | |
+| triathlon | 19 | 17 | |
+| tsb | 17 | 39 | |
+| race day (via `race,day`) | 16 | 9 | |
+| athlete | 15 | 23 | |
+| taper | 5 | 9 | floor popularity, but 6 characters of genuine relevance |
+
+Three terms from the first pass were cut for failing it: `crossfit` (47/52),
+`wod` (30/52) and `hrv` (27/60). All three have real popularity and all three are
+unreachable until the app has ratings, so they were 20 characters of nothing.
+Revisit them in the phase-two stack.
+
+`bevel` (57/49) qualifies on the data and is deliberately left out. It is a
+direct competitor *app* rather than a hardware brand the product positions
+against, which is closer to 2.3.7's own example, and unlike `athlytic` it was
+never in the launch stack. It is the first thing to add if the field
+underperforms and the risk appetite holds.
+
+### The title and subtitle cannot be optimised for traffic
+
+Measured 2026-08-14, and this is the finding, not a shrug. Every word that could
+plausibly sit in a title or subtitle for this app is either at the popularity
+floor or far past the difficulty ceiling:
+
+| Candidate | Pop | Diff | |
+|---|---:|---:|---|
+| apple watch | 73 | 63 | unreachable |
+| countdown | 72 | 74 | unreachable, and the traffic is event countdowns |
+| coach | 64 | 77 | unreachable |
+| timer | 63 | 70 | unreachable |
+| score | 58 | 78 | unreachable |
+| tracker | 52 | 81 | unreachable |
+| log | 39 | 37 | reachable, but means food and mood logs |
+| recovery | 8 | 60 | floor and unreachable |
+| recovery time | 5 | 23 | floor |
+| post workout | 5 | 45 | floor |
+| hybrid training | 5 | 13 | floor |
+| strength | 7 | 59 | floor |
+| healthkit | 19 | 52 | modest, unreachable |
+
+So the subtitle is a **conversion** asset here, not a ranking one, and it should
+be judged that way. "Countdown for Apple Watch" states the behaviour and the
+platform, which is what a browsing user needs, and gives up nothing measurable
+because neither word was ever going to rank.
+
+Moving `hyrox` into the subtitle was considered and rejected. Visible HYROX use
+clearly passes review (the live SERP has `HYROX Academy`, `TrainRox - Hyrox
+Workout`, `Hyrox Timer`, `RoxHype`, `HyRhythm - HYROX Tracker`), and title and
+subtitle placement outranks the keyword field. But it would narrow a general
+recovery app to one race format on the surface most users read first, and the
+conversion cost outweighs a difficulty-17 term the keyword field already reaches.
+
+`hyrox` softness re-checked live 2026-08-14: apps with 2, 3 and 17 ratings all
+sit in the top 10.
 
 **The subtitle no longer repeats the title.** "Recovery Time for Apple Watch" spent
 13 of 29 characters restating words the title already indexes. "Countdown" is worth
@@ -163,7 +238,8 @@ second most searched term in the whole set, and it is the honest platform claim.
 **Five popularity-5 terms were removed from the keyword field**: `rest day` (5/70),
 `training load` (5/11), `readiness` (5/7), `overtraining` (5/7), `strain` (5/41).
 They were shipped in the first draft despite `scoping-2026-08-04.md` already
-recording them at the floor.
+recording them at the floor. Anything measuring 5 is the floor, not a small
+number, so it is not a cheap term, it is a dead one.
 
 **No spaces, no phrases.** Apple tokenises the field on commas *and* spaces and
 combines terms itself, so `race day` is written `race,day` and the phrase still
