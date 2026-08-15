@@ -76,6 +76,28 @@ def optional_data(client: asc_lib.ASCClient, path: str) -> dict | None:
         return None
 
 
+def product_copy(locale: str) -> dict:
+    return json.loads((ROOT / "fastlane" / "metadata" / locale / "products.json").read_text(encoding="utf-8"))
+
+
+def check_product_copy(localizations: list[dict], name_key: str, desc_key: str, label: str, failures: list[str]) -> None:
+    """Diff live product copy against products.json.
+
+    The en-US yearly description read "Save 37%" against $5.99 monthly and
+    $29.99 yearly, which is a 58% saving. Nothing checked it, so it survived
+    every readiness run until a human read the words.
+    """
+    drifted = []
+    for item in localizations:
+        locale = item["attributes"]["locale"]
+        expected = product_copy(locale)
+        if item["attributes"].get("name") != expected[name_key]:
+            drifted.append(f"{locale} name")
+        if desc_key and item["attributes"].get("description") != expected[desc_key]:
+            drifted.append(f"{locale} description")
+    check(not drifted, f"{label} copy matches products.json" + (f" (drift: {', '.join(drifted[:4])})" if drifted else ""), failures)
+
+
 def main() -> None:
     failures: list[str] = []
     client = asc_lib.ASCClient(asc_lib.bearer_token(*asc_lib.load_credentials()))
@@ -240,6 +262,7 @@ def main() -> None:
     for group in asc_lib.list_all(client, f"/apps/{app_id}/subscriptionGroups"):
         group_locs = asc_lib.list_all(client, f"/subscriptionGroups/{group['id']}/subscriptionGroupLocalizations")
         check({item["attributes"]["locale"] for item in group_locs} == PRODUCT_LOCALES, "subscription group localized in all locales", failures)
+        check_product_copy(group_locs, "group", "", "subscription group", failures)
         for subscription in asc_lib.list_all(client, f"/subscriptionGroups/{group['id']}/subscriptions"):
             product_id = subscription["attributes"]["productId"]
             all_products.add(product_id)
@@ -249,6 +272,8 @@ def main() -> None:
             check(bool(subscription["attributes"].get("reviewNote")), f"{product_id} review note present", failures)
             locs = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/subscriptionLocalizations")
             check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
+            prefix = "monthly" if product_id.endswith(".monthly") else "yearly"
+            check_product_copy(locs, f"{prefix}_name", f"{prefix}_desc", product_id, failures)
             prices = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/prices?limit=200")
             offers = asc_lib.list_all(client, f"/subscriptions/{subscription['id']}/introductoryOffers?limit=200")
             check(bool(prices), f"{product_id} pricing set ({len(prices)} scheduled prices)", failures)
@@ -296,6 +321,7 @@ def main() -> None:
         finally:
             asc_lib.API = old_api
         check({item["attributes"]["locale"] for item in locs} == PRODUCT_LOCALES, f"{product_id} localized in all locales", failures)
+        check_product_copy(locs, "lifetime_name", "lifetime_desc", product_id, failures)
         review_screenshot = iap_screenshot(client, iap["id"])
         check(bool(review_screenshot), f"{product_id} review screenshot set", failures)
         if review_screenshot:
