@@ -42,10 +42,19 @@ def load_credentials() -> tuple[str, str, str]:
         if creds_path.exists():
             for line in creds_path.read_text().splitlines():
                 line = line.strip()
+                # The file is meant to be `source`d, so every line is `export K=V`.
+                # Reading it without stripping that prefix produced a key named
+                # "export ASC_ISSUER_ID" and a script that claimed the credentials
+                # were unset.
+                if line.startswith("export "):
+                    line = line[len("export "):].strip()
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+                v = v.strip().strip('"').strip("'")
+                # The values are written for the shell, so $HOME and ~ appear
+                # unexpanded when the file is read rather than sourced.
+                os.environ.setdefault(k.strip(), os.path.expanduser(os.path.expandvars(v)))
         key_id = os.environ.get("ASC_API_KEY_ID")
         issuer_id = os.environ.get("ASC_ISSUER_ID")
         key_path = os.environ.get("ASC_KEY_PATH")

@@ -215,7 +215,7 @@ struct OnboardingView: View {
             symbol: "info.circle.fill",
             tint: Theme.idle,
             title: "What the number\nactually means",
-            message: "Recharge estimates when another hard session is likely to be reasonable, based on your recent workout load. It is a cardiovascular training estimate — not a measure of muscle repair, illness, or injury risk, and not medical advice.",
+            message: "Recharge estimates when another hard session is likely to be reasonable, based on your recent workout load. It is a cardiovascular training estimate, not a measure of muscle repair, illness, or injury risk, and not medical advice. Talk with a qualified health professional before making medical decisions.",
             primaryTitle: "I understand",
             primaryAction: advance
         )

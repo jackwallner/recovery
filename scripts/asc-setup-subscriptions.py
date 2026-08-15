@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create Recharge Pro subscriptions, trials, localizations, and Vitals PPP prices."""
+"""Create Recharge+ subscriptions, trials, localizations, and Vitals PPP prices."""
 from __future__ import annotations
 
 import json
@@ -14,8 +14,8 @@ BUNDLE = "com.jackwallner.recovery"
 # User-facing group and product names come from localized products.json files.
 GROUP_REFERENCE_NAME = "Recharge Pro"
 SUBS = [
-    ("com.jackwallner.recovery.monthly", "Recharge Pro Monthly", "ONE_MONTH", "1.99", "Monthly access to Recharge Pro."),
-    ("com.jackwallner.recovery.yearly", "Recharge Pro Yearly", "ONE_YEAR", "14.99", "Yearly access to Recharge Pro."),
+    ("com.jackwallner.recovery.monthly", "Recharge+ Monthly", "ONE_MONTH", "5.99", "Body signals, load trends, overrides, and Ready alerts."),
+    ("com.jackwallner.recovery.yearly", "Recharge+ Yearly", "ONE_YEAR", "29.99", "A year of body signals, load trends, and Ready alerts."),
 ]
 TIERS = {
     "IND": ("4.99", "0.69"), "PAK": ("4.99", "0.69"), "BGD": ("4.99", "0.69"), "IDN": ("4.99", "0.69"),
@@ -81,7 +81,7 @@ def main() -> None:
     for index, (pid, name, period, price, description) in enumerate(SUBS):
         sub = existing.get(pid)
         if not sub:
-            sub = c.post("/subscriptions", {"data": {"type": "subscriptions", "attributes": {"name": name, "productId": pid, "subscriptionPeriod": period, "familySharable": False, "groupLevel": 1, "reviewNote": "Unlocks Recharge Pro features."}, "relationships": {"group": {"data": {"type": "subscriptionGroups", "id": group_id}}}}})["data"]
+            sub = c.post("/subscriptions", {"data": {"type": "subscriptions", "attributes": {"name": name, "productId": pid, "subscriptionPeriod": period, "familySharable": False, "groupLevel": 1, "reviewNote": "Unlocks Recharge+ features."}, "relationships": {"group": {"data": {"type": "subscriptionGroups", "id": group_id}}}}})["data"]
         sid = sub["id"]
         locs = {x["attributes"]["locale"]: x for x in asc_lib.list_all(c, f"/subscriptions/{sid}/subscriptionLocalizations")}
         product_prefix = "monthly" if period == "ONE_MONTH" else "yearly"

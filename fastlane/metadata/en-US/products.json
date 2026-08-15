@@ -1,9 +1,9 @@
 {
-  "group": "Recharge Pro",
-  "monthly_name": "Recharge Pro Monthly",
+  "group": "Recharge+",
+  "monthly_name": "Recharge+ Monthly",
   "monthly_desc": "Body signals, load trends, overrides, and Ready alerts.",
-  "yearly_name": "Recharge Pro Yearly",
-  "yearly_desc": "A year of Recharge Pro. Save 37%.",
-  "lifetime_name": "Recharge Pro Lifetime",
-  "lifetime_desc": "Recharge Pro forever. One payment."
+  "yearly_name": "Recharge+ Yearly",
+  "yearly_desc": "A year of body signals, load trends, and Ready alerts.",
+  "lifetime_name": "Recharge+ Lifetime",
+  "lifetime_desc": "Recharge+ forever. One payment, no renewal."
 }
