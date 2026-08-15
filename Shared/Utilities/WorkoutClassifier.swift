@@ -19,7 +19,11 @@ public enum WorkoutClassifier {
     /// boxing. `WorkoutClassifierTests.testTheRawValuesMatchHealthKit` pins the
     /// whole table against the SDK's own numbering so a future edit cannot
     /// reintroduce a shift.
-    public enum ActivityCode: UInt, Sendable {
+    /// `CaseIterable` so an audit can sweep the whole table rather than the
+    /// handful of codes someone thought to list. `RecoveryMatrixTests` scores
+    /// every case against every persona, which is the only way a mapping bug in
+    /// a sport nobody on the team plays gets caught.
+    public enum ActivityCode: UInt, Sendable, CaseIterable {
         case americanFootball = 1
         case archery = 2
         case australianFootball = 3

@@ -306,6 +306,15 @@ final class RecoveryCalculatorTests: XCTestCase {
         XCTAssertEqual(estimate.confidence, .buildingBaseline)
     }
 
+    /// A lift where the optical signal dropped and the user has not answered the
+    /// effort question is scored by its own duration floor, and says so.
+    ///
+    /// It used to report `.energy` at exactly the same number, because
+    /// `energyLoad` floored its inferred effort at the profile's assumed one —
+    /// so the calorie figure was the duration floor wearing a different label.
+    /// The floor now lives in one place, `strengthLoad`'s maximum against
+    /// `durationLoad`, and the source names what actually produced the load.
+    /// Either way the confidence is low, which is the part the user sees.
     func testStrengthWithoutHeartRateOrEffortIsLowConfidence() {
         let estimate = RecoveryCalculator.estimate(
             for: RecoveryFixtures.strengthNoHeartRate,
@@ -313,8 +322,16 @@ final class RecoveryCalculatorTests: XCTestCase {
             context: RecoveryFixtures.goodContext,
             now: now
         )
-        XCTAssertEqual(estimate.load.source, .energy)
+        XCTAssertEqual(estimate.load.source, .duration)
         XCTAssertEqual(estimate.confidence, .low)
+        XCTAssertEqual(
+            estimate.load.value,
+            RecoveryFixtures.strengthNoHeartRate.durationMinutes
+                * WorkoutProfile.strength.assumedEffort
+                * SessionLoadCalculator.effortToTrimpScale,
+            accuracy: 0.001,
+            "the lifting floor moved"
+        )
     }
 
     func testEffortInputRaisesConfidenceOnTheSameStrengthSession() {

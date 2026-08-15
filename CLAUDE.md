@@ -38,12 +38,12 @@ mirror the schema.
 
 ### The model (`Shared/Utilities/`)
 Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
-110-test suite in `RechargeTests` possible without a Health store.
+196-test suite in `RechargeTests` possible without a Health store.
 
 | File | Stage |
 |---|---|
 | `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. Also `intensityFraction`, the HR-reserve quality proxy. |
-| `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. `.standard(for:)` is the no-samples population reference the free tier uses. |
+| `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. Below `minimumSamples` the median is shrunk toward the population reference (see below). `.standard(for:)` is the no-samples reference the free tier uses. |
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
 | `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
 | `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
@@ -110,8 +110,9 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **3**
-(the load ladder and the six-hour floor). `RecoveryEstimate` has a hand-written
+window disagrees with what the same session would produce today. Currently **4**
+(the energy path moved onto the TRIMP curve and the mixed blind guess came down
+from RPE 7 to 6). `RecoveryEstimate` has a hand-written
 `init(from:)` so version-1 records decode as the unmultiplied standard windows
 they actually were.
 
@@ -136,9 +137,90 @@ than a systematic under-read, and letting the coarse energy inference outbid it
 turned a 90-minute social tennis match into a 36-hour window.
 `testEnergyDoesNotOutbidHeartRateOnAMixedSession` pins that.
 
-Measured across a 36-session x 5-persona matrix, the window a user gets now
-varies by a mean of 1.23x across sensor-availability scenarios, against 4.7x
-before. Strength is exactly 1.00x.
+### Every source estimates the same quantity, and now on the same curve
+The three load sources answer one question — what fraction of heart-rate reserve
+did this session sustain — and `SessionLoadCalculator.trimpPerMinute` is the
+single definition of what a minute at that fraction costs. Heart rate measures
+the fraction; energy infers it from the burn rate through
+`referenceEnergyAtFullReserve` (15.6 kcal/min, from %HRR ≈ %VO2R for a 75 kg
+adult at 45 ml/kg/min); duration falls back to the type's `assumedEffort`.
+
+The energy path used to map kilocalories onto a perceived effort on a straight
+line while the heart-rate path used Banister's exponential. Two different
+shapes: they agreed for a hard session and the inference roughly **doubled** the
+measurement for an easy one. A 60-minute easy run therefore scored *no countdown
+at all* from a clean heart-rate trace and an eighteen-hour countdown from the
+phone's calorie estimate alone — the same session, logged on two devices,
+disagreeing about whether it had happened.
+
+`WorkoutProfile.mixed.assumedEffort` came down from 7 to 6 for the reason
+strength's came down from 6 to 5: at 7 the blind guess outscored every informed
+source for a typical session, so a manually entered game beat a recorded one and
+the longest window in the app belonged to the session it knew least about.
+
+**The residual is body mass, not intensity.** HealthKit's active energy already
+accounts for weight, so a heavier or fitter person burns more at the same reserve
+fraction and the inference over-reads them. Reading body mass would fix it and
+costs a new row in the Health permission sheet; it has not been done. An
+energy-derived load never rates better than low confidence on a session that can
+set a long window, which is the honest thing available today.
+
+### The audit is in the repo, and it is what found the last two bugs
+`RechargeTests/AthleteMatrix.swift` is the population: every activity type
+HealthKit defines (plus one it does not), at three durations and three
+intensities, for seven personas — a 24-year-old newcomer, a masters endurance
+athlete whose predicted ceiling is well under the 185 default, a lifter, a hybrid
+athlete, a 66-year-old returner, the modal recreational user, and someone who
+answered nothing at all — under seven combinations of working sensors. Around
+thirty thousand scored sessions per tier, none of them chosen because the model
+looked good on it.
+
+`RecoveryMatrixTests` asserts **properties**, not values, so a tuning change may
+move every number in the table but may not: invert monotonicity in duration or
+intensity, let an honest hard effort answer shorten a window, let a personal
+detail reach a standard estimate, make a bigger training history lengthen a
+window, produce a non-finite or unbounded countdown, or make a medical claim.
+
+Sensor-availability spread, model version 4, measured by
+`testSensorAvailabilityDoesNotMoveTheWindowMuch` (which prints the table):
+
+| profile | mean | p95 | worst |
+|---|---|---|---|
+| endurance | 1.63x | 2.84x | 2.97x |
+| strength | 1.36x | 2.29x | 2.33x |
+| mixed | 1.87x | 3.42x | 3.53x |
+
+Read those with the guarantee beside them, because the guarantee is the stronger
+statement: for **strength**, more information may only ever *lengthen* the
+window, since the rule takes a maximum across all four sources and a maximum over
+a superset cannot be smaller
+(`testForAStrengthSessionMoreInformationNeverShortensTheWindow`). The spread that
+remains is almost entirely the blind fallback — a session with no heart rate, no
+energy, and no effort answer is scored at what its type usually costs, and no
+such guess can know that this particular hour was an easy one.
+
+An earlier version of this file claimed a mean of 1.23x from a 36-session x
+5-persona matrix that was never committed. The numbers above replace it because
+they can be reproduced from the repository.
+
+### A thin baseline is shrunk, because everything is divided by it
+`RecoveryBaseline.typicalLoad` is the denominator of every relative load, so on a
+three-session history the whole model is dividing by a description of three
+sessions. The matrix found what that does: a 24-year-old three days into using
+the app got **57 hours** for an ordinary 60-minute lift, and a 66-year-old got
+the full 72-hour cap, purely because a moderate session is a large multiple of a
+small number.
+
+Below `minimumSamples` (8) the personal median is now blended geometrically with
+the profile's `standardTypicalLoad` on a weight that grows with the sample count;
+at 8 and above it returns the median exactly, as before. The two figures above
+became 27 and 34 hours. It is the same shrinkage shape `PersonalRecoveryModel`
+uses to fold evidence into the questionnaire prior, and it says the same thing:
+personalisation earns its way in.
+
+`quietThreshold` already had this property — it stays at the absolute floor until
+the sample is big enough — so the two halves of the baseline now agree about when
+the person's own history starts counting.
 
 ### The six-hour floor is Garmin's, and it is sourced
 `RecoveryCalculator.minimumCountdownHours` is 6, because Garmin documents its
@@ -295,6 +377,20 @@ StoreKit product identifiers are bundle-prefixed
 2. The absolute countdown floor (`RecoveryCalculator.absoluteCountdownFloor`,
    18 load units, ~a 20-minute walk) and the 25th-percentile quiet threshold are
    both first-pass values.
+3. **The reported-effort path still has the shape mismatch the energy path just
+   lost.** `effortToTrimpScale` is a straight line calibrated at the hard end: 60
+   minutes at RPE 8 scores 144 against a heart-rate reading of 143, which is why
+   it was chosen, but 60 minutes at RPE 4 scores 72 against a reading of 41. The
+   fix is the same one energy got — map the RPE to a reserve-equivalent (RPE/10
+   is close to the ACSM correspondence) and run it through `trimpPerMinute` —
+   and it lands almost exactly on the current value at RPE 8, so the anchor
+   survives. It was **not** done before 1.0 because it moves every blind
+   `assumedEffort` fallback onto the new curve as well, which cuts a no-data
+   60-minute lift from ~14h to ~7h and would undo the "sixty minutes of
+   resistance work costs what it costs" floor without re-deriving all four
+   constants first. It is the largest remaining source of sensor spread and the
+   thing to do first when the model is next opened. `RecoveryMatrixTests` will
+   show the improvement directly.
 
 ---
 Shared iOS conventions (build, simulator, release/TestFlight, ASC key, signing,

@@ -151,6 +151,60 @@ final class SessionLoadCalculatorTests: XCTestCase {
         )
     }
 
+    /// The same easy hour, once from a clean heart-rate trace and once from the
+    /// calorie figure alone, has to produce the same load.
+    ///
+    /// It did not. The old inference mapped kilocalories per minute onto a
+    /// perceived effort on a straight line, while the heart-rate path costs a
+    /// minute on Banister's exponential, so the two agreed for a hard session
+    /// and the inference roughly doubled the measurement for an easy one. In the
+    /// app that read as a 60-minute easy run scoring no countdown at all on the
+    /// Watch and an eighteen-hour countdown from the phone — the same session,
+    /// logged on two devices, disagreeing about whether it had happened.
+    ///
+    /// 7 kcal/min at 45% of heart-rate reserve is the reference relation
+    /// (%HRR ≈ %VO2R for a 75 kg adult at 45 ml/kg/min), which is the same
+    /// place `referenceEnergyAtFullReserve` comes from.
+    func testTheEnergyInferenceLandsOnTheHeartRateScaleAtEveryIntensity() {
+        // resting 52, max 188: 45%, 62%, and 80% of a 136 bpm reserve.
+        for (heartRate, kilocaloriesPerMinute) in [(113.0, 7.0), (136.0, 9.7), (161.0, 12.5)] {
+            let measured = SessionLoadCalculator.load(for: RecoveryFixtures.session(
+                id: "hr", profile: .endurance, minutes: 60, averageHR: heartRate, coverage: 0.95
+            ))
+            let inferred = SessionLoadCalculator.load(for: RecoveryFixtures.session(
+                id: "kcal", profile: .endurance, minutes: 60, coverage: 0,
+                energy: kilocaloriesPerMinute * 60
+            ))
+            XCTAssertEqual(measured.source, .heartRate)
+            XCTAssertEqual(inferred.source, .energy)
+            XCTAssertEqual(
+                inferred.value / measured.value, 1, accuracy: 0.10,
+                "energy and heart rate disagree at \(Int(heartRate)) bpm"
+            )
+        }
+    }
+
+    /// Losing the heart-rate trace must not turn a session that did not qualify
+    /// into one that sets a long countdown.
+    func testAnEasyHourDoesNotBecomeAHardOneWhenTheHeartRateIsMissing() {
+        let withHeartRate = RecoveryFixtures.session(
+            id: "hr", profile: .endurance, minutes: 60, averageHR: 113,
+            coverage: 0.95, energy: 420
+        )
+        let withoutHeartRate = RecoveryFixtures.session(
+            id: "no-hr", profile: .endurance, minutes: 60, coverage: 0, energy: 420
+        )
+        let baseline = RecoveryFixtures.settledEnduranceBaseline()
+        let measured = RecoveryCalculator.estimate(
+            for: withHeartRate, baseline: baseline, now: RecoveryFixtures.now
+        )
+        let inferred = RecoveryCalculator.estimate(
+            for: withoutHeartRate, baseline: baseline, now: RecoveryFixtures.now
+        )
+        XCTAssertEqual(measured.producesCountdown, inferred.producesCountdown)
+        XCTAssertEqual(measured.hours, inferred.hours, accuracy: max(measured.hours * 0.1, 0.5))
+    }
+
     func testZeroDurationProducesZeroLoadRatherThanNaN() {
         let session = SessionInput(
             id: "s",
