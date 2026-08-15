@@ -39,7 +39,20 @@ def request(method: str, path: str, body: dict | None = None) -> dict:
 
 def main() -> None:
     projects = request("GET", "/projects")["items"]
-    project = next(project for project in projects if project["name"].lower() in {"recharge", "recharge: recovery time"})
+    # V2 secret keys are project-scoped: every key on this machine returns
+    # exactly its own project and 404s on anything else. So a single project in
+    # the list *is* the answer, and matching on the name is worse than useless
+    # here. This lookup used to require the name to be "Recharge", but the RC
+    # project is still called "Recovery" (it predates the rename), so it raised
+    # StopIteration and the script had never once run to completion.
+    if len(projects) == 1:
+        project = projects[0]
+    else:
+        project = next(
+            project
+            for project in projects
+            if project["name"].lower() in {"recharge", "recovery", "recharge: recovery time"}
+        )
     project_id = project["id"]
     apps = request("GET", f"/projects/{project_id}/apps")["items"]
     app = next(
@@ -76,12 +89,19 @@ def main() -> None:
             print(f"product exists: {identifier}")
         configured_products[identifier] = product
 
+    # The entitlement that actually exists in the project is `Recovery+`, and
+    # the three Test Store products are already attached to it. The old list
+    # here ("pro", "V02 Max Pro", "Recharge Pro") matched none of them, so the
+    # fallback would have created a *second* entitlement and attached the App
+    # Store products to that one instead. Recharge unlocks on any active
+    # entitlement (`hasRechargeProEntitlement`), so it would still have worked,
+    # which is exactly what would have made it hard to find later.
     entitlements = request("GET", f"/projects/{project_id}/entitlements")["items"]
     entitlement = next(
         (
             entitlement
             for entitlement in entitlements
-            if entitlement["lookup_key"] in {"pro", "V02 Max Pro", "Recharge Pro", "Recharge Pro"}
+            if entitlement["lookup_key"] in {"Recovery+", "Recharge+", "pro"}
         ),
         None,
     )
@@ -89,9 +109,9 @@ def main() -> None:
         entitlement = request(
             "POST",
             f"/projects/{project_id}/entitlements",
-            {"lookup_key": "pro", "display_name": "Recharge Pro"},
+            {"lookup_key": "Recovery+", "display_name": "Recharge+"},
         )
-        print("created entitlement: pro")
+        print("created entitlement: Recovery+")
 
     attached = request(
         "GET",
