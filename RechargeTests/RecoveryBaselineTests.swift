@@ -12,9 +12,34 @@ final class RecoveryBaselineTests: XCTestCase {
         }
     }
 
-    func testMedianIsTheTypicalLoad() {
-        let baseline = RecoveryBaseline(loads: [10, 20, 30, 40, 50], profile: .endurance)
-        XCTAssertEqual(baseline.typicalLoad, 30, accuracy: 0.0001)
+    func testMedianIsTheTypicalLoadOnceTheSampleIsBigEnough() {
+        let baseline = RecoveryBaseline(
+            loads: [10, 20, 30, 40, 50, 60, 70, 80, 90], profile: .endurance
+        )
+        XCTAssertTrue(baseline.hasEnoughSamples)
+        XCTAssertEqual(baseline.typicalLoad, 50, accuracy: 0.0001)
+    }
+
+    /// A thin history is shrunk toward the population reference rather than
+    /// taken at face value. Three sessions is a description of three sessions,
+    /// and dividing every future session by their median is how a 60-minute
+    /// lift became a 72-hour countdown for someone three days into the app.
+    func testAThinHistoryIsPulledTowardTheStandardReference() {
+        let thin = RecoveryBaseline(loads: [30, 44, 52], profile: .strength)
+        let median = thin.percentile(0.5)
+        XCTAssertGreaterThan(thin.typicalLoad, median)
+        XCTAssertLessThan(thin.typicalLoad, WorkoutProfile.strength.standardTypicalLoad)
+
+        // More evidence moves it toward the person, monotonically.
+        var previous = RecoveryBaseline(loads: [44], profile: .strength).typicalLoad
+        for count in 2...RecoveryBaseline.minimumSamples {
+            let baseline = RecoveryBaseline(
+                loads: Array(repeating: 44.0, count: count), profile: .strength
+            )
+            XCTAssertLessThanOrEqual(baseline.typicalLoad, previous)
+            previous = baseline.typicalLoad
+        }
+        XCTAssertEqual(previous, 44, accuracy: 0.0001, "eight sessions must be fully personal")
     }
 
     func testPercentileInterpolatesRatherThanSnapping() {
@@ -24,8 +49,10 @@ final class RecoveryBaselineTests: XCTestCase {
     }
 
     func testUnsortedInputIsHandled() {
-        let baseline = RecoveryBaseline(loads: [50, 10, 40, 20, 30], profile: .endurance)
-        XCTAssertEqual(baseline.typicalLoad, 30, accuracy: 0.0001)
+        let baseline = RecoveryBaseline(
+            loads: [50, 10, 90, 40, 20, 80, 30, 70, 60], profile: .endurance
+        )
+        XCTAssertEqual(baseline.typicalLoad, 50, accuracy: 0.0001)
     }
 
     func testNonPositiveLoadsAreDiscarded() {

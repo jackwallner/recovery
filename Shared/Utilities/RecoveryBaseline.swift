@@ -27,11 +27,30 @@ public struct RecoveryBaseline: Sendable, Equatable {
 
     public var hasEnoughSamples: Bool { sampleCount >= Self.minimumSamples }
 
-    /// Median session load, or the profile's standard population reference when
-    /// the user has no usable history yet.
+    /// What a typical session costs this person: their own median, shrunk
+    /// toward the profile's population reference while the sample is still thin.
+    ///
+    /// The median alone was the whole story, and on a full history it still is —
+    /// at `minimumSamples` and above this returns exactly `percentile(0.5)`.
+    /// Below it, a median of three sessions is not a description of the person,
+    /// it is a description of the three sessions the app happened to see, and
+    /// every relative load is divided by it. `RecoveryMatrixTests` found what
+    /// that does: a 24-year-old three sessions into using the app got 57 hours
+    /// for an ordinary 60-minute lift, and a 66-year-old got the full 72-hour
+    /// cap, because a moderate session is a large multiple of a small number.
+    ///
+    /// So personalisation earns its way in. The weight grows linearly with the
+    /// sample count and the blend is geometric, which is the same shape
+    /// `PersonalRecoveryModel` uses to fold evidence into the questionnaire
+    /// prior: on day three the estimate is mostly the standard table, and by
+    /// eight sessions it is entirely the person's own.
     public var typicalLoad: Double {
         guard !loads.isEmpty else { return profile.standardTypicalLoad }
-        return percentile(0.5)
+        let personal = percentile(0.5)
+        guard personal > 0 else { return profile.standardTypicalLoad }
+        let weight = min(Double(sampleCount) / Double(Self.minimumSamples), 1)
+        guard weight < 1 else { return personal }
+        return exp(weight * log(personal) + (1 - weight) * log(profile.standardTypicalLoad))
     }
 
     /// The 25th percentile. Sessions below this (and below the absolute floor)
