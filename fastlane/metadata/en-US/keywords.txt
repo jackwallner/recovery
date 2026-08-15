@@ -1,1 +1,1 @@
-garmin,whoop,oura,coros,rest day,training load,readiness,overtraining,strain,endurance,race day
+garmin,whoop,oura,coros,polar,hyrox,endurance,athlete,race,day,triathlon,crossfit,hrv,wod,tsb

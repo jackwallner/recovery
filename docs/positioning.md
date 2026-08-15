@@ -133,7 +133,7 @@ word means sobriety tracking and deleted-file rescue.
 ## Naming
 
 The name must not lean on "recovery" for discovery, must leave Garmin/WHOOP out of
-the title, and should ideally carry one winnable term. Candidates, undecided:
+the title, and should ideally carry one winnable term. Candidates considered:
 
 | Name | Subtitle | Notes |
 |---|---|---|
@@ -141,6 +141,60 @@ the title, and should ideally carry one winnable term. Candidates, undecided:
 | Rebound | Training Recovery & Ready Time | Slightly more athletic |
 | Ready | Recovery Time for Athletes | Carries `athlete` (15/23); "Ready" alone is generic |
 | Endur | Recovery Time & Training Load | Carries `endurance` (24/15); collides with ENDUR × HYROX |
+
+## Launch metadata, settled 2026-08-14
+
+`Recharge` wins the name. The subtitle changed, and the keyword field was rebuilt.
+All popularity/difficulty figures below were re-pulled on 2026-08-14 and reproduce
+the launch-stack tables above within ±3.
+
+| Field | Value | Count |
+|---|---|---|
+| Title | `Recharge: Recovery Time` | 23/30 |
+| Subtitle | `Countdown for Apple Watch` | 25/30 |
+| Keywords | `garmin,whoop,oura,coros,polar,hyrox,endurance,athlete,race,day,triathlon,crossfit,hrv,wod,tsb` | 93/100 |
+
+**The subtitle no longer repeats the title.** "Recovery Time for Apple Watch" spent
+13 of 29 characters restating words the title already indexes. "Countdown" is worth
+little on its own (`recovery countdown` is 5/39) but it is the product's actual
+behaviour and it costs nothing to say. "Apple Watch" stays: at 73/63 it is the
+second most searched term in the whole set, and it is the honest platform claim.
+
+**Five popularity-5 terms were removed from the keyword field**: `rest day` (5/70),
+`training load` (5/11), `readiness` (5/7), `overtraining` (5/7), `strain` (5/41).
+They were shipped in the first draft despite `scoping-2026-08-04.md` already
+recording them at the floor.
+
+**No spaces, no phrases.** Apple tokenises the field on commas *and* spaces and
+combines terms itself, so `race day` is written `race,day` and the phrase still
+matches. Nothing in the field duplicates a word in the title or subtitle, and
+nothing duplicates another keyword.
+
+**The brand block stays**, per the reasoning above. Re-checked live on 2026-08-14:
+`StayGreen: Run Coach for WHOOP` ranks #9 for "whoop" with 2 ratings and the mark
+visibly in its name, and `Klyft` ranks #8 with 1 rating. Brand SERPs are still soft
+and removing the block would give up 245 popularity points (`garmin` 65, `whoop` 64,
+`oura` 63, `coros` 53) for nothing that replaces it. The generic vocabulary is still
+empty: every "recovery" and "readiness" phrase measures 5.
+
+The standing risk is unchanged and is the reason to revisit this: Garmin and WHOOP
+both ship competing App Store apps, so unlike the GLP-1 precedent they have an
+incentive to file a 5.2.1 complaint, and one complaint removes the whole block at
+once. Mitigation is the non-affiliation line in `description.txt`, which now names
+HYROX and CrossFit as well.
+
+**`hyrox` (41/17) went in.** It is the best generic term in the category by a wide
+margin, high popularity at a difficulty a zero-authority app can clear, and the app
+genuinely scores HYROX sessions, so it is describing a feature rather than packing
+metadata. `triathlon` (19/17) went in on the same reasoning. `crossfit` (47/52) and
+`wod` (30/52) are at the difficulty-50 ceiling and are expected to do nothing until
+the app has ratings; they are there because there was room.
+
+If the keyword field underperforms after launch, the no-brands fallback is:
+
+```
+hyrox,endurance,athlete,triathlon,crossfit,wod,hrv,race,day,taper,tsb,marathon,gym,log,deload,zone
+```
 
 ## Product scope
 
