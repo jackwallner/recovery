@@ -82,7 +82,9 @@ def main() -> None:
     app = asc_lib.find_app(client, BUNDLE)
     app_id = app["id"]
     attrs = app["attributes"]
-    check(attrs.get("name") == "Recharge: Recovery Time", "ASC app record name is current", failures)
+    # Read the expected name off disk rather than hardcoding it, so renaming the
+    # app is a one-file change and this check cannot silently go stale.
+    check(attrs.get("name") == asc_lib.read_meta("en-US", "name"), "ASC app record name is current", failures)
     check(attrs.get("contentRightsDeclaration") == "DOES_NOT_USE_THIRD_PARTY_CONTENT", "content rights declared", failures)
 
     version = asc_lib.find_version_by_string(client, app_id, VERSION)

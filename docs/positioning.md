@@ -144,15 +144,52 @@ the title, and should ideally carry one winnable term. Candidates considered:
 
 ## Launch metadata, settled 2026-08-14
 
-`Recharge` wins the name. The subtitle changed, and the keyword field was rebuilt.
-All popularity/difficulty figures below were re-pulled on 2026-08-14 and reproduce
-the launch-stack tables above within ±3.
+`Recharge` wins the name. The subtitle changed, the title gained "Workout", and
+the keyword field was rebuilt. All popularity/difficulty figures below were
+re-pulled on 2026-08-14 and reproduce the launch-stack tables above within ±3.
 
 | Field | Value | Count |
 |---|---|---|
-| Title | `Recharge: Recovery Time` | 23/30 |
+| Title | `Recharge Workout Recovery Time` | 30/30 |
 | Subtitle | `Countdown for Apple Watch` | 25/30 |
 | Keywords | `garmin,connect,whoop,oura,coros,polar,athlytic,hyrox,endurance,triathlon,athlete,race,day,tsb,taper` | 99/100 |
+
+### "Recovery Time" alone was ambiguous, and the SERP proves it
+
+The note further up ("on the App Store the word means sobriety tracking and
+deleted-file rescue") was written from intuition. It is now measured. The live
+top 12 for `recovery`, 2026-08-14:
+
+| # | App | What it is |
+|---:|---|---|
+| 1 | I Am Sober | sobriety tracker |
+| 2 | Photo Recovery: Pic Restore | deleted files |
+| 3 | File Recovery - Photo Recovery | deleted files |
+| 4 | Photo Recovery : Deleted Photo | deleted files |
+| 5 | Photo Recovery: Deleted Files | deleted files |
+| 6 | NewForm: Recovery & Wellbeing | addiction |
+| 7 | SMART Recovery | addiction |
+| 8 | Recovery Path for Addiction | addiction |
+| 9 | Sober Me: Tools for Recovery | addiction |
+| 10 | RR: Eating Disorder Management | eating disorder |
+| 11 | Photo Recovery - Restore Files | deleted files |
+| 12 | Nomo - Sobriety Clocks | sobriety |
+
+Not one fitness app. So `Recharge: Recovery Time` was a title that, to a browsing
+user, read as a sobriety clock. This is a utility app and the name has to say what
+it does, so the title gained the disambiguating word: **`Recharge Workout Recovery
+Time`**, 30/30.
+
+The colon went because the four words are exactly 30 characters with a space and
+31 with a colon. `workout` (66/82) beat `training` (42/71) for the slot: neither
+will rank at zero ratings, so the choice is about which word the modal user says,
+and if the app ever earns authority `workout` is the larger prize.
+
+This changes no traffic and is not meant to. Every descriptive phrase in this
+category measures at the popularity floor of 5 (`workout recovery` 5/44,
+`training recovery` 5/11, `muscle recovery` 5/21, `gym recovery` 5/9,
+`recovery time` 5/23). The title is a **comprehension** asset, exactly as the
+build plan already says of the `Recharge` suffix.
 
 ### The allocation rule
 

@@ -8,7 +8,7 @@ what order. Nothing here reopens positioning.
 
 | Thing | Value |
 |---|---|
-| App name | **Recharge: Recovery Time** |
+| App name | **Recharge Workout Recovery Time** (renamed 2026-08-14) |
 | Subtitle | **Countdown for Apple Watch** (settled 2026-08-14, see `positioning.md`) |
 | Repo dir | `~/recovery` (unchanged; dir name != app name is normal in this fleet, cf. `~/health` = VO2 Max, `~/vitals` = Total Calories) |
 | Xcode project / scheme | `Recharge` |
