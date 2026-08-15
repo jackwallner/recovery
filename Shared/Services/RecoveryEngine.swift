@@ -436,15 +436,20 @@ public final class RecoveryEngine: ObservableObject {
         }
 
         estimates = results.sorted { $0.sessionEnd > $1.sessionEnd }
-        current = RecoveryResolver.current(in: results)
+        // Every "is this still running / recent enough to ask about" decision
+        // below reads the same `now` the estimates were calculated against.
+        // Reaching for `Date.now` here instead made a rescore at an injected
+        // instant resolve its current estimate and its effort prompt against the
+        // wall clock, so the two halves of one pass could disagree.
+        current = RecoveryResolver.current(in: results, now: now)
         awaitingFeedback = RecoveryResolver.awaitingFeedback(
-            in: results, answered: settings.answeredFeedbackSessions
+            in: results, answered: settings.answeredFeedbackSessions, now: now
         )
         let declined = settings.declinedEffortSessions
         awaitingEffort = workouts
             .filter {
                 $0.wantsEffortInput
-                    && Date.now.timeIntervalSince($0.endDate) < 2 * 86_400
+                    && now.timeIntervalSince($0.endDate) < 2 * 86_400
                     && !declined.contains($0.healthKitUUID)
             }
             .max { $0.endDate < $1.endDate }

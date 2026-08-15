@@ -24,14 +24,14 @@
     <false/>
     <!-- The Watch app never calls HealthKit: the phone owns the model and the
          wrist only reads the snapshot it sends. The entitlement and the
-         self-care background mode are gone for that reason. These two strings
-         stay because `HealthKitService` is compiled into every target out of
+         self-care background mode are gone for that reason. The share string
+         stays because `HealthKitService` is compiled into every target out of
          `Shared`, so the binary still references the framework and App Store
-         validation wants a purpose string for anything it can see. -->
+         validation wants a purpose string for anything it can see. There is no
+         update string: `requestAuthorization` passes `toShare: []`, so a write
+         purpose string describes a permission the app can never ask for. -->
     <key>NSHealthShareUsageDescription</key>
     <string>Recharge reads your workouts and heart data from Apple Health to show how long your recovery estimate has left. Recharge never writes Health data.</string>
-    <key>NSHealthUpdateUsageDescription</key>
-    <string>Recharge does not write any data to Apple Health.</string>
     <key>WKApplication</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>

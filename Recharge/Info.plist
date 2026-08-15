@@ -37,8 +37,6 @@
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, and sleep from Apple Health to estimate how long your next hard session is likely to be worth waiting for. It also reads your date of birth and sex, which set the heart-rate range your sessions are measured against. Recharge never writes Health data.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>Recharge does not write any data to Apple Health.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
