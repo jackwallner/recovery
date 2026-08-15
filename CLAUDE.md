@@ -366,17 +366,36 @@ StoreKit product identifiers are bundle-prefixed
   restores the placeholder on exit, so the key never lands in a commit. Never
   configure it on simulator.
 - **App Store ID is `6797089337`** (`com.jackwallner.recovery`). `fastlane/metadata/`
-  is canonical and is uploaded, not aspirational: as of 2026-08-14 the ASC record
-  is named "Recharge Workout Recovery Time" and version 1.0.0 carries the
-  subtitle, keywords and description with build 14 attached, in
-  PREPARE_FOR_SUBMISSION. Push edits with `scripts/upload-appstore-metadata.sh`
-  and confirm with `scripts/asc-readiness.py`, which diffs ASC against the files
-  and exits non-zero on any drift. `scripts/validate-metadata.py` runs first and
-  enforces the field lengths (name 24-30 with the 23-char product name
-  whitelisted, subtitle 24-30, **keywords 94-100**) plus no duplicate keyword
-  token and no keyword that repeats a word already in the name or subtitle.
+  is canonical and is uploaded, not aspirational: as of 2026-08-15 the ASC record
+  is named "Recharge Workout Recovery Time", version 1.0.0 is in
+  PREPARE_FOR_SUBMISSION with build 14 attached, and **all 50 locales** carry a
+  name, subtitle, keywords, description, promotional text and release notes.
+  Push edits with `scripts/upload-appstore-metadata.sh` and confirm with
+  `scripts/asc-readiness.py`, which diffs ASC against the files and exits
+  non-zero on any drift (464 checks, 400 of them the locale diff).
+  `scripts/validate-metadata.py` runs first and enforces the field lengths
+  (name 24-30, subtitle 24-30, **keywords 94-100**) plus no duplicate keyword
+  token and no keyword that repeats a word already in the name or subtitle. The
+  24-character floor drops to 12 for `ja`, `ko`, `zh-Hans` and `zh-Hant`,
+  because 24 CJK characters is a sentence, not a name.
+- **The 49 non-English locales are generated, not hand-edited.**
+  `scripts/native_locale_content/*.json` is the source; `apply-native-locales.py`
+  writes the folders and `check-native-locales.py` runs the same limits against
+  the source so a bad length is caught before 50 folders exist. Editing
+  `fastlane/metadata/<locale>/` directly is fine for a one-off but the next apply
+  overwrites it. en-US is the exception and is hand-maintained.
+- **`products.json` is the customer-facing IAP copy for all 50 locales**, and
+  `scripts/asc-sync-product-localizations.py` is what pushes it (the setup
+  scripts also write prices, availability and intro offers, which is not what you
+  want for a copy change). Premium branding is **Recharge+** everywhere a
+  customer can see it; the ASC *reference* names still say "Recharge Pro"
+  because Apple makes those immutable and nobody sees them.
+  **Products attached to a review submission are locked** — a copy PATCH returns
+  409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE`, and a never-submitted
+  submission cannot be cancelled, so deleting its items is the only way through.
   ASO reasoning and the measured popularity/difficulty tables live in
-  `docs/positioning.md`; the numbers come from the Astro tracker, app id `123`.
+  `docs/positioning.md` (en-US) and `docs/localization-aso.md` (per store); the
+  numbers come from the Astro tracker, app id `123`.
 
 ## Open tuning questions
 1. Relative load is measured against the **median** of the person's sessions,
