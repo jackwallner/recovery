@@ -18,7 +18,7 @@ import Foundation
 /// six hours, the minimum Garmin documents for the same feature. Windows for
 /// strength sessions roughly doubled; endurance is unchanged except below the
 /// floor.
-public let recoveryModelVersion = 3
+public let recoveryModelVersion = 4
 
 // MARK: - Tier
 
@@ -110,7 +110,13 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
         // sources say for a typical session of the type, or having no data pays
         // better than having some.
         case .strength: 5
-        case .mixed: 7
+        // Was 7, for the same reason strength's was 6: it put the blind guess
+        // above every informed source for a typical session of the type. A
+        // 60-minute mixed session reads 78 from a good heart-rate trace and 108
+        // from an RPE of 6, and the type-typical fallback was scoring it 126 —
+        // so a manually entered game outscored a recorded one, and the longest
+        // window in the app belonged to the session it knew least about.
+        case .mixed: 6
         case .easy: 2
         }
     }

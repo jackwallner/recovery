@@ -28,6 +28,19 @@ public enum SessionLoadCalculator {
     /// 60-minute threshold run.
     static let effortToTrimpScale = 0.30
 
+    /// Active kilocalories per minute a reference adult burns at full
+    /// heart-rate reserve, which is what converts a burn rate into the same
+    /// reserve fraction the heart-rate path measures.
+    ///
+    /// From %HRR ≈ %VO2R: a 75 kg adult at a VO2 max of 45 ml/kg/min has
+    /// (3.375 − 0.263) L/min of oxygen uptake available above rest, and at
+    /// roughly 5 kcal per litre that is about 15.6 kcal/min of *active* energy
+    /// at full reserve. It is a reference, not a measurement: someone heavier
+    /// or fitter burns more at the same reserve fraction and this over-reads
+    /// them, which is why an energy-derived load never rates better than low
+    /// confidence on a session that can set a long window.
+    public static let referenceEnergyAtFullReserve: Double = 15.6
+
     /// Fallback max heart rate when the user has not set one and Health has no
     /// estimate. Age-predicted values need an age we may not have, so this is a
     /// deliberately blunt default and the confidence rating reflects it.
@@ -136,6 +149,15 @@ public enum SessionLoadCalculator {
         return min(Swift.max((average - resting) / (max - resting), 0), 1)
     }
 
+    /// Banister's exponential weighting of one minute at a given fraction of
+    /// heart-rate reserve. The single definition of what a minute of work
+    /// costs: both the measured path and the inferred one go through it, so
+    /// they cannot drift into different shapes.
+    static func trimpPerMinute(atReserve reserve: Double) -> Double {
+        let r = min(max(reserve, 0), 1)
+        return r * trimpWeightConstant * exp(trimpExponent * r)
+    }
+
     /// Heart-rate-reserve TRIMP. Needs an average heart rate, a resting figure,
     /// a max, and enough sample coverage to believe the average.
     static func heartRateLoad(for session: SessionInput) -> SessionLoad? {
@@ -143,9 +165,8 @@ public enum SessionLoadCalculator {
               let reserve = intensityFraction(for: session)
         else { return nil }
 
-        let weighted = reserve * trimpWeightConstant * exp(trimpExponent * reserve)
         return SessionLoad(
-            value: session.durationMinutes * weighted,
+            value: session.durationMinutes * trimpPerMinute(atReserve: reserve),
             source: .heartRate,
             heartRateCoverage: session.heartRateCoverage
         )
@@ -160,9 +181,26 @@ public enum SessionLoadCalculator {
         )
     }
 
-    /// Infers an effort from the burn rate. Deliberately conservative for
-    /// strength work, where kcal/min under-reads what the session actually
-    /// cost — which is the whole reason the RPE prompt exists.
+    /// Infers the fraction of aerobic reserve the session sustained from its
+    /// burn rate, then costs it on the same curve the measured path uses.
+    ///
+    /// The previous version mapped kilocalories per minute onto a perceived
+    /// effort and then onto the effort scale, and the two curves had different
+    /// shapes: it agreed with the heart-rate reading for a hard session and
+    /// roughly doubled it for an easy one. That is how a 60-minute easy run
+    /// scored *no countdown at all* with a good heart-rate trace and eighteen
+    /// hours from the phone's calorie estimate alone — the same session, logged
+    /// on two devices, disagreeing about whether it even happened.
+    /// `RecoveryMatrixTests` found it by sweeping the sensor scenarios rather
+    /// than reasoning about them.
+    ///
+    /// Estimating the same quantity the heart-rate path measures makes the two
+    /// agree by construction for the reference adult, and leaves a residual
+    /// that scales with body mass and fitness rather than with intensity.
+    ///
+    /// There is no longer a strength-specific floor here. It was redundant:
+    /// `strengthLoad` already takes the maximum against `durationLoad`, which
+    /// is the same floor expressed once, in the place that documents why.
     static func energyLoad(for session: SessionInput) -> SessionLoad? {
         guard let energy = session.activeEnergyKilocalories,
               energy > 0,
@@ -170,17 +208,9 @@ public enum SessionLoadCalculator {
         else { return nil }
 
         let perMinute = energy / session.durationMinutes
-        var inferredEffort = min(max(2 + (perMinute - 3) * 0.6, 1), 10)
-        // The burn rate of resistance work is low for reasons that have nothing
-        // to do with how hard it was, so for the profiles that raise the effort
-        // prompt the inference is floored at what the session type usually
-        // costs. Without this a 60-minute lift infers an effort of 2.8 out of
-        // 10, which is not conservative, it is wrong.
-        if session.profile == .strength {
-            inferredEffort = max(inferredEffort, session.profile.assumedEffort)
-        }
+        let reserve = min(max(perMinute / referenceEnergyAtFullReserve, 0), 1)
         return SessionLoad(
-            value: session.durationMinutes * inferredEffort * effortToTrimpScale,
+            value: session.durationMinutes * trimpPerMinute(atReserve: reserve),
             source: .energy,
             heartRateCoverage: session.heartRateCoverage
         )
