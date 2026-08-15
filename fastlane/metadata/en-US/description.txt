@@ -61,6 +61,6 @@ IMPORTANT
 
 Recharge gives a cardiovascular training estimate based on your recent workout load. It is not medical advice and does not diagnose, treat, cure, or prevent any condition, and it cannot tell you whether you are physically fit to train. Cardiovascular load, muscle soreness, connective tissue, illness, and mental fatigue are not the same thing. Always use your own judgement, and speak to a qualified professional about your health.
 
-Recharge is not affiliated with, endorsed by, or sponsored by Garmin, WHOOP, Oura, Polar, Coros, or Apple. Product names are trademarks of their respective owners.
+Recharge is not affiliated with, endorsed by, or sponsored by Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit, or Apple. Product names are trademarks of their respective owners.
 
 Requires iOS 17 or later. An Apple Watch that records your workouts is strongly recommended.
