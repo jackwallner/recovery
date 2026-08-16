@@ -366,10 +366,12 @@ StoreKit product identifiers are bundle-prefixed
   restores the placeholder on exit, so the key never lands in a commit. Never
   configure it on simulator.
 - **App Store ID is `6797089337`** (`com.jackwallner.recovery`). `fastlane/metadata/`
-  is canonical and is uploaded, not aspirational: as of 2026-08-15 the ASC record
+  is canonical and is uploaded, not aspirational: as of 2026-08-16 the ASC record
   is named "Recharge Workout Recovery Time", version 1.0.0 is in
-  PREPARE_FOR_SUBMISSION with build 14 attached, and **all 50 locales** carry a
+  READY_FOR_REVIEW with build 15 attached, and **all 50 locales** carry a
   name, subtitle, keywords, description, promotional text and release notes.
+  Build 15 is the first one carrying the Recharge+ rename and the reworded
+  disclaimers, so 14 must not be what ships.
   Push edits with `scripts/upload-appstore-metadata.sh` and confirm with
   `scripts/asc-readiness.py`, which diffs ASC against the files and exits
   non-zero on any drift (464 checks, 400 of them the locale diff).
@@ -393,6 +395,15 @@ StoreKit product identifiers are bundle-prefixed
   **Products attached to a review submission are locked** — a copy PATCH returns
   409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE`, and a never-submitted
   submission cannot be cancelled, so deleting its items is the only way through.
+  That teardown is not free: the four product items can only be put back in the
+  ASC web UI (Add for Review on the subscription group page, on each subscription
+  page, and on `/distribution/iaps/<id>`), because the first subscription and
+  first non-consumable an app ships cannot be attached over the public API.
+  `asc-submit-for-review.py --prepare-only` does the half that is scriptable, and
+  the plain run now refuses to submit with fewer than 5 items rather than burning
+  a review cycle on a 2.1(b) rejection. Adding the version item flips the version
+  from PREPARE_FOR_SUBMISSION to READY_FOR_REVIEW, which is why both states are
+  accepted.
   ASO reasoning and the measured popularity/difficulty tables live in
   `docs/positioning.md` (en-US) and `docs/localization-aso.md` (per store); the
   numbers come from the Astro tracker, app id `123`.
