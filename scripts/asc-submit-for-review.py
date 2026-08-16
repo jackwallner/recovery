@@ -16,7 +16,7 @@ field. So the three products go in by hand, once, in the ASC web UI, and
 `--prepare-only` exists to set the submission up and stop before submitting so
 that can happen.
 
-Usage: asc-submit-for-review.py [--version 1.0.0] [--dry-run] [--prepare-only]
+Usage: asc-submit-for-review.py [--version 1.0.0] [--dry-run] [--prepare-only] [--force]
 """
 from __future__ import annotations
 
@@ -31,6 +31,14 @@ import asc_lib  # noqa: E402
 BUNDLE = "com.jackwallner.recovery"
 PLATFORM = "IOS"
 
+# Adding the version as a submission item flips it out of PREPARE_FOR_SUBMISSION
+# and into READY_FOR_REVIEW, so the second half of the --prepare-only workflow
+# has to accept the state the first half leaves behind.
+SUBMITTABLE_STATES = frozenset({"PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW"})
+
+# The version, the subscription group, both subscriptions, and the lifetime IAP.
+EXPECTED_ITEMS = 5
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -40,6 +48,11 @@ def main() -> None:
         "--prepare-only",
         action="store_true",
         help="create the submission and add the version, then stop so the IAPs can be added in the UI",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="submit even if the four product items are missing",
     )
     args = parser.parse_args()
 
@@ -53,8 +66,8 @@ def main() -> None:
     version_id = version["id"]
     state = version["attributes"].get("appStoreState")
     print(f"version {args.version} state={state} id={version_id}")
-    if state != "PREPARE_FOR_SUBMISSION":
-        raise SystemExit(f"error: version is {state}, expected PREPARE_FOR_SUBMISSION")
+    if state not in SUBMITTABLE_STATES:
+        raise SystemExit(f"error: version is {state}, expected one of {sorted(SUBMITTABLE_STATES)}")
 
     build = client.get(f"/appStoreVersions/{version_id}/build").get("data")
     if not build:
@@ -122,7 +135,19 @@ def main() -> None:
         print("Then re-run without --prepare-only. Expect 5 items on the submission.")
         return
 
-    # 3) Submit.
+    # 3) Count the items before submitting. Guideline 2.1(b) rejects a paywall
+    # whose products were not submitted with the binary, and the four product
+    # items only exist if someone did the UI half, so submitting without them is
+    # a wasted review cycle rather than a partial success.
+    items = asc_lib.list_all(client, f"/reviewSubmissions/{submission_id}/items?limit=50")
+    print(f"{len(items)} item(s) on the submission")
+    if len(items) < EXPECTED_ITEMS and not args.force:
+        raise SystemExit(
+            f"error: expected {EXPECTED_ITEMS} items (version, subscription group, 2 subscriptions,"
+            f" lifetime), found {len(items)}. Do the ASC UI steps above, or pass --force."
+        )
+
+    # 4) Submit.
     client.patch(
         f"/reviewSubmissions/{submission_id}",
         {"data": {"type": "reviewSubmissions", "id": submission_id, "attributes": {"submitted": True}}},
