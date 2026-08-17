@@ -15,35 +15,54 @@ final class ComplicationCopyTests: XCTestCase {
         style: ComplicationStyle,
         remaining: TimeInterval,
         readyAt: Date?,
-        activityLabel: String = "run"
+        activityLabel: String = "run",
+        dataState: ComplicationCopy.DataState = .synced
     ) -> [String] {
         [
-            ComplicationCopy.primary(phase: phase, style: style, remaining: remaining, readyAt: readyAt),
+            ComplicationCopy.primary(
+                phase: phase, style: style, remaining: remaining, readyAt: readyAt,
+                dataState: dataState
+            ),
             ComplicationCopy.secondary(
                 phase: phase, style: style, remaining: remaining, readyAt: readyAt,
-                activityLabel: activityLabel
+                activityLabel: activityLabel, dataState: dataState
             ),
-            ComplicationCopy.inline(phase: phase, style: style, remaining: remaining, readyAt: readyAt),
-            ComplicationCopy.rectangularTitle(phase: phase, style: style, remaining: remaining, readyAt: readyAt)
+            ComplicationCopy.inline(
+                phase: phase, style: style, remaining: remaining, readyAt: readyAt,
+                dataState: dataState
+            ),
+            ComplicationCopy.rectangularTitle(
+                phase: phase, style: style, remaining: remaining, readyAt: readyAt,
+                dataState: dataState
+            )
         ]
     }
 
-    /// The whole matrix: four phases, three styles, both activity-label states.
+    /// The whole matrix: four phases, three styles, both activity-label states,
+    /// both data states.
+    ///
+    /// `dataState` is in here rather than tested on its own because every
+    /// property the other tests assert — no medical claim, never empty, fits the
+    /// slot — has to hold for the never-synced strings too, and a state that only
+    /// its own test can see is a state the compliance checks do not cover.
     private func everyString() -> [String] {
         var strings: [String] = []
         for phase in phases {
             for style in ComplicationStyle.allCases {
                 for label in ["run", ""] {
-                    let remaining: TimeInterval = phase == .readySoon ? 4_500 : 18 * 3600
-                    strings += allCopy(
-                        phase: phase,
-                        style: style,
-                        remaining: phase == .ready || phase == .noRecentWorkout ? 0 : remaining,
-                        readyAt: phase == .ready || phase == .noRecentWorkout
-                            ? nil
-                            : now.addingTimeInterval(remaining),
-                        activityLabel: label
-                    )
+                    for dataState in ComplicationCopy.DataState.allCases {
+                        let remaining: TimeInterval = phase == .readySoon ? 4_500 : 18 * 3600
+                        strings += allCopy(
+                            phase: phase,
+                            style: style,
+                            remaining: phase == .ready || phase == .noRecentWorkout ? 0 : remaining,
+                            readyAt: phase == .ready || phase == .noRecentWorkout
+                                ? nil
+                                : now.addingTimeInterval(remaining),
+                            activityLabel: label,
+                            dataState: dataState
+                        )
+                    }
                 }
             }
         }
@@ -85,16 +104,29 @@ final class ComplicationCopyTests: XCTestCase {
 
     /// Circular and corner slots are a handful of characters wide. This is the
     /// guard against a style quietly growing a string those families cannot fit.
+    /// Widened from a single sample to the whole range, because the sample was
+    /// the reason the previous width claim held: `compactRemaining` was checked
+    /// at 22h45m, which is below the 24-hour boundary where the string used to
+    /// collapse to `"2d"` and now reads `"2d 23h"`.
     func testPrimaryStaysShortEnoughForACircularSlot() {
         for phase in phases {
             for style in ComplicationStyle.allCases {
-                let primary = ComplicationCopy.primary(
-                    phase: phase,
-                    style: style,
-                    remaining: 22 * 3600 + 45 * 60,
-                    readyAt: now.addingTimeInterval(22 * 3600 + 45 * 60)
-                )
-                XCTAssertLessThanOrEqual(primary.count, 8, "\(phase)/\(style) primary was \"\(primary)\"")
+                for dataState in ComplicationCopy.DataState.allCases {
+                    for minutes in stride(from: 1, through: 72 * 60, by: 7) {
+                        let remaining = TimeInterval(minutes * 60)
+                        let primary = ComplicationCopy.primary(
+                            phase: phase,
+                            style: style,
+                            remaining: remaining,
+                            readyAt: now.addingTimeInterval(remaining),
+                            dataState: dataState
+                        )
+                        XCTAssertLessThanOrEqual(
+                            primary.count, 8,
+                            "\(phase)/\(style)/\(dataState) primary was \"\(primary)\" at \(minutes)m left"
+                        )
+                    }
+                }
             }
         }
     }
@@ -102,14 +134,74 @@ final class ComplicationCopyTests: XCTestCase {
     func testInlineStaysWithinAOneLineSlot() {
         for phase in phases {
             for style in ComplicationStyle.allCases {
-                let inline = ComplicationCopy.inline(
-                    phase: phase,
-                    style: style,
-                    remaining: 18 * 3600,
-                    readyAt: now.addingTimeInterval(18 * 3600)
-                )
-                XCTAssertLessThanOrEqual(inline.count, 20, "\(phase)/\(style) inline was \"\(inline)\"")
+                for dataState in ComplicationCopy.DataState.allCases {
+                    for minutes in stride(from: 1, through: 72 * 60, by: 7) {
+                        let remaining = TimeInterval(minutes * 60)
+                        let inline = ComplicationCopy.inline(
+                            phase: phase,
+                            style: style,
+                            remaining: remaining,
+                            readyAt: now.addingTimeInterval(remaining),
+                            dataState: dataState
+                        )
+                        XCTAssertLessThanOrEqual(
+                            inline.count, 20,
+                            "\(phase)/\(style)/\(dataState) inline was \"\(inline)\" at \(minutes)m left"
+                        )
+                    }
+                }
             }
+        }
+    }
+
+    // MARK: - The state that looked like a broken complication
+
+    /// A complication that has never been handed a snapshot must say so, not
+    /// render a dash.
+    ///
+    /// The Watch has its own App Group container and only the Watch *app* writes
+    /// into it, so between installing Recharge and opening it on the wrist the
+    /// extension has genuinely never been told anything. That went through the
+    /// `noRecentWorkout` branch, whose primary string is `"--"`, and a face
+    /// showing `--` with no explanation is indistinguishable from a complication
+    /// that does not work.
+    func testAComplicationThatHasNeverSyncedSaysSoRatherThanShowingADash() {
+        for style in ComplicationStyle.allCases {
+            let strings = allCopy(
+                phase: .noRecentWorkout,
+                style: style,
+                remaining: 0,
+                readyAt: nil,
+                activityLabel: "",
+                dataState: .neverSynced
+            )
+            for text in strings {
+                XCTAssertFalse(
+                    text.trimmingCharacters(in: CharacterSet(charactersIn: "- ")).isEmpty,
+                    "\(style) rendered \"\(text)\", which reads as a broken complication"
+                )
+            }
+            XCTAssertTrue(
+                strings.contains { $0.lowercased().contains("open") },
+                "\(style) never tells the user what to do about it: \(strings)"
+            )
+        }
+    }
+
+    /// And the two states have to be distinguishable, or the fix is cosmetic:
+    /// "you have not set this up" and "you have not trained in four days" are
+    /// different problems with different answers.
+    func testNeverSyncedAndNoRecentWorkoutDoNotReadTheSame() {
+        for style in ComplicationStyle.allCases {
+            let synced = allCopy(
+                phase: .noRecentWorkout, style: style, remaining: 0, readyAt: nil,
+                activityLabel: "", dataState: .synced
+            )
+            let never = allCopy(
+                phase: .noRecentWorkout, style: style, remaining: 0, readyAt: nil,
+                activityLabel: "", dataState: .neverSynced
+            )
+            XCTAssertNotEqual(synced, never, "\(style) says the same thing in both states")
         }
     }
 

@@ -98,28 +98,41 @@ func loadComplicationStyle() -> ComplicationStyle {
 /// The strings themselves live in `Shared/Utilities/ComplicationCopy.swift`, so
 /// the test target can compile them. These are the entry-shaped call sites.
 extension RecoveryEntry {
+    /// "No snapshot has ever arrived" is a different state from "no workout in
+    /// four days", and on the wrist it is by far the more likely one: the Watch
+    /// has its own App Group container, only the Watch *app* can write into it,
+    /// and a widget extension cannot hold a `WCSession`. Someone who installs
+    /// Recharge and adds the complication before opening the Watch app is in
+    /// this state, and used to be shown a bare `--`.
+    var dataState: ComplicationCopy.DataState {
+        snapshot.hasSession ? .synced : .neverSynced
+    }
+
     var primaryText: String {
         ComplicationCopy.primary(
-            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
+            dataState: dataState
         )
     }
 
     var secondaryText: String {
         ComplicationCopy.secondary(
             phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
-            activityLabel: snapshot.activityLabel
+            activityLabel: snapshot.activityLabel, dataState: dataState
         )
     }
 
     var inlineText: String {
         ComplicationCopy.inline(
-            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
+            dataState: dataState
         )
     }
 
     var rectangularTitleText: String {
         ComplicationCopy.rectangularTitle(
-            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt
+            phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
+            dataState: dataState
         )
     }
 }
