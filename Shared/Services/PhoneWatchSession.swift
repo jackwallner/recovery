@@ -206,6 +206,28 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         connectivityLogger.info("Flushed \(queue.count, privacy: .public) queued effort answers")
     }
 
+    /// Waits until WatchConnectivity has finished handing over whatever it woke
+    /// us for.
+    ///
+    /// `WKWatchConnectivityRefreshBackgroundTask` is the system saying "data is
+    /// arriving, stay alive". Completing that task before `hasContentPending`
+    /// clears tells the system the app is done and lets the payload be dropped —
+    /// which is the difference between a complication that updates itself after
+    /// a workout and one the user has to open the Watch app to refresh.
+    ///
+    /// Polled rather than awaited on a callback because WatchConnectivity offers
+    /// no completion for "the queue is now empty"; `hasContentPending` is the
+    /// documented way to ask.
+    public func waitForPendingContent(timeout: TimeInterval) async {
+        let deadline = Date.now.addingTimeInterval(timeout)
+        while WCSession.default.hasContentPending, Date.now < deadline {
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        if WCSession.default.hasContentPending {
+            connectivityLogger.error("Connectivity wake timed out with content still pending")
+        }
+    }
+
     /// Pulls a fresh snapshot when the phone is right there. The application
     /// context alone would eventually arrive, but "eventually" is not good
     /// enough for a user who just raised their wrist.
