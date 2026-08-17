@@ -94,7 +94,11 @@ struct TrialOfferPage: View {
                 .padding(.bottom, 18)
 
             if showsPersonalization {
-                personalizedComparison(engine.personalizedPreview)
+                // The same table Today shows, with the same blur over the same
+                // real numbers. What the user is sold here is literally what
+                // they get, which is the only reason it is allowed to be the
+                // pitch.
+                RestPatternCard(rows: engine.restPattern, isPro: false, isCompact: true)
                     .padding(.bottom, 18)
             }
 
@@ -236,68 +240,6 @@ struct TrialOfferPage: View {
         showsPersonalization
             ? [.personalizedTime, .bodySignals, .weeklyLoad]
             : [.bodySignals, .weeklyLoad, .sessionOverrides]
-    }
-
-    // MARK: - The comparison
-
-    /// Standard hours against personalized hours, on a session the user actually
-    /// did wherever possible.
-    ///
-    /// Always shown. `RecoveryEngine.personalizedPreview` scores the session both
-    /// ways for real — the personal baseline as well as the thirty-day
-    /// multiplier — and falls back to the canonical hard session when there is no
-    /// qualifying one yet, so there is always a difference to show and it is
-    /// always arithmetic rather than a mock-up.
-    private func personalizedComparison(_ preview: PersonalizedPreview) -> some View {
-        VStack(spacing: 10) {
-            Text(preview.label + (preview.isExample ? ", for example" : ""))
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(Theme.textSecondary)
-
-            HStack(spacing: 0) {
-                comparisonColumn(
-                    title: "Standard",
-                    value: CountdownFormat.hours(preview.standardHours),
-                    tint: Theme.textSecondary
-                )
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Theme.textTertiary)
-                    .padding(.horizontal, 4)
-                comparisonColumn(
-                    title: "Yours",
-                    value: CountdownFormat.hours(preview.personalizedHours),
-                    tint: Theme.pro
-                )
-            }
-
-            ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).prefix(2), id: \.self) { line in
-                Text(line)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity)
-        .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .accessibilityElement(children: .combine)
-    }
-
-    private func comparisonColumn(title: String, value: String, tint: Color) -> some View {
-        VStack(spacing: 2) {
-            Text(title)
-                .font(.system(.caption2, design: .rounded, weight: .semibold))
-                .foregroundStyle(Theme.textTertiary)
-                .textCase(.uppercase)
-            Text(value)
-                .font(.system(.title2, design: .rounded, weight: .bold))
-                .foregroundStyle(tint)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private func purchase() async {

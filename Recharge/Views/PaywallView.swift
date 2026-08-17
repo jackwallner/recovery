@@ -264,6 +264,12 @@ struct PaywallView: View {
             .buttonStyle(.plain)
             .disabled(selected == nil || store.purchaseInFlight)
             .opacity(selected == nil ? 0.5 : 1)
+            // "Continue with Recharge+" is also the label on the locked-card
+            // capsule in Today (`RechargeConversionCopy.shortCTALabel`), so a
+            // test matching on the label alone can pick the one *behind* this
+            // sheet and then correctly report that it is not hittable. The
+            // identifier is what makes the layout assertion about this button.
+            .accessibilityIdentifier("paywall-cta")
 
             if let disclosure {
                 Text(disclosure)

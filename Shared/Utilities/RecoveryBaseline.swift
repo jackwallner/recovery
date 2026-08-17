@@ -9,6 +9,28 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// Prior session loads for the profile being scored, most recent first is
     /// not required — the statistics are order-independent.
     public let loads: [Double]
+
+    /// The same history totalled **by day**.
+    ///
+    /// This is what `typicalLoad` is built from, and separating the two is the
+    /// fix for the worst inversion the model has had. Relative load asks "how
+    /// big was this session against what this person is adapted to", and
+    /// adaptation is a property of how much they train, not of how they slice
+    /// it up. Somebody who rides three times a day was being described by the
+    /// *median of one of those rides*, so their normal Tuesday read as five
+    /// times normal and pinned the 72-hour ceiling — and every extra session
+    /// they did made it worse, because it pulled the median further down.
+    ///
+    /// Totalled per day, three twenty-minute rides are one day of training,
+    /// which is what they are. Frequency now raises the denominator instead of
+    /// lowering it, so training more shortens the window, which is the direction
+    /// the app claims everywhere else.
+    ///
+    /// `quietThreshold` deliberately stays on the per-session figures below:
+    /// "was this session substantial enough to start a countdown" is a question
+    /// about the session, not about the day it landed in.
+    public let dailyLoads: [Double]
+
     public let profile: WorkoutProfile
 
     /// Below this many samples the percentile statistics are noise and the
@@ -18,12 +40,22 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// Window of history the baseline is built from.
     public static let historyDays = 42
 
-    public init(loads: [Double], profile: WorkoutProfile) {
-        self.loads = loads.filter { $0 > 0 }.sorted()
+    /// - Parameter dailyLoads: the same history totalled by day. Defaults to the
+    ///   session loads themselves, which is the right reading for a caller that
+    ///   has no dates: one session per day is the assumption that changes
+    ///   nothing.
+    public init(loads: [Double], profile: WorkoutProfile, dailyLoads: [Double]? = nil) {
+        let sessions = loads.filter { $0 > 0 }.sorted()
+        self.loads = sessions
+        self.dailyLoads = (dailyLoads ?? loads).filter { $0 > 0 }.sorted()
         self.profile = profile
     }
 
     public var sampleCount: Int { loads.count }
+
+    /// Training days in the window. What `typicalLoad` is actually averaging
+    /// over, and the honest sample size for it.
+    public var dayCount: Int { dailyLoads.count }
 
     public var hasEnoughSamples: Bool { sampleCount >= Self.minimumSamples }
 
@@ -45,30 +77,42 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// prior: on day three the estimate is mostly the standard table, and by
     /// eight sessions it is entirely the person's own.
     public var typicalLoad: Double {
-        guard !loads.isEmpty else { return profile.standardTypicalLoad }
-        let personal = percentile(0.5)
+        guard !dailyLoads.isEmpty else { return profile.standardTypicalLoad }
+        let personal = Self.percentile(0.5, in: dailyLoads)
         guard personal > 0 else { return profile.standardTypicalLoad }
-        let weight = min(Double(sampleCount) / Double(Self.minimumSamples), 1)
+        let weight = min(Double(dayCount) / Double(Self.minimumSamples), 1)
         guard weight < 1 else { return personal }
         return exp(weight * log(personal) + (1 - weight) * log(profile.standardTypicalLoad))
     }
 
-    /// The 25th percentile. Sessions below this (and below the absolute floor)
-    /// do not start a countdown at all.
+    /// The 25th percentile of individual **sessions**. Sessions below this (and
+    /// below the absolute floor) do not start a countdown at all.
+    ///
+    /// Per-session on purpose, unlike `typicalLoad`. Whether a workout was
+    /// substantial enough to be worth a countdown is a question about that
+    /// workout; how big it was relative to what the person is used to is a
+    /// question about their training. Running both off the daily totals would
+    /// mean somebody who trains three times a day needs a single session as big
+    /// as an average person's whole day before the app acknowledges it.
     public var quietThreshold: Double {
         guard hasEnoughSamples else { return RecoveryCalculator.absoluteCountdownFloor }
         return max(percentile(0.25), RecoveryCalculator.absoluteCountdownFloor)
     }
 
-    /// Linear-interpolated percentile over the sorted sample.
+    /// Linear-interpolated percentile over the sorted per-session sample.
     public func percentile(_ fraction: Double) -> Double {
-        guard !loads.isEmpty else { return 0 }
-        guard loads.count > 1 else { return loads[0] }
-        let position = min(max(fraction, 0), 1) * Double(loads.count - 1)
+        Self.percentile(fraction, in: loads)
+    }
+
+    /// Linear-interpolated percentile over any sorted sample.
+    static func percentile(_ fraction: Double, in sorted: [Double]) -> Double {
+        guard !sorted.isEmpty else { return 0 }
+        guard sorted.count > 1 else { return sorted[0] }
+        let position = min(max(fraction, 0), 1) * Double(sorted.count - 1)
         let lower = Int(position.rounded(.down))
-        let upper = min(lower + 1, loads.count - 1)
+        let upper = min(lower + 1, sorted.count - 1)
         let weight = position - Double(lower)
-        return loads[lower] + (loads[upper] - loads[lower]) * weight
+        return sorted[lower] + (sorted[upper] - sorted[lower]) * weight
     }
 
     /// The population reference the free tier scores against: no samples, so
@@ -95,19 +139,35 @@ public struct RecoveryBaseline: Sendable, Equatable {
         let cutoff = now.addingTimeInterval(-Double(historyDays) * 86_400)
         let recent = history.filter { $0.date >= cutoff && $0.profile != .easy }
 
-        let inProfile = recent.filter { $0.profile == profile }.map(\.load)
+        let inProfile = recent.filter { $0.profile == profile }
         if inProfile.count >= minimumSamples {
-            return RecoveryBaseline(loads: inProfile, profile: profile)
+            return baseline(from: inProfile, for: profile)
         }
 
         // Not enough same-profile history. Pooling across profiles is a worse
         // comparison but a much better one than the standard reference, so use
         // it whenever it clears the threshold.
-        let pooled = recent.map(\.load)
-        if pooled.count >= minimumSamples {
-            return RecoveryBaseline(loads: pooled, profile: profile)
+        if recent.count >= minimumSamples {
+            return baseline(from: recent, for: profile)
         }
 
-        return RecoveryBaseline(loads: inProfile.isEmpty ? pooled : inProfile, profile: profile)
+        return baseline(from: inProfile.isEmpty ? recent : inProfile, for: profile)
+    }
+
+    /// Sessions and their per-day totals, which are the two different questions
+    /// `quietThreshold` and `typicalLoad` ask.
+    private static func baseline(
+        from entries: [(profile: WorkoutProfile, load: Double, date: Date)],
+        for profile: WorkoutProfile
+    ) -> RecoveryBaseline {
+        var byDay: [String: Double] = [:]
+        for entry in entries {
+            byDay[DateHelpers.dayKey(for: entry.date), default: 0] += entry.load
+        }
+        return RecoveryBaseline(
+            loads: entries.map(\.load),
+            profile: profile,
+            dailyLoads: Array(byDay.values)
+        )
     }
 }

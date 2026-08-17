@@ -430,8 +430,16 @@ public final class RecoveryEngine: ObservableObject {
                 // Build 10 records are missing their tier fields. Keep an
                 // expired one frozen until RevenueCat answers, then rescore it
                 // once under the customer's actual tier.
+                // A record scored by an older model is not a record of what the
+                // app would say today, and leaving it frozen means a user who
+                // opens the app after an update sees their whole history in the
+                // old numbers with no way to get the new ones. A version bump is
+                // exactly the case where reaching back is right: the app was
+                // wrong about those sessions, and it now knows it.
+                let isStaleVersion = record.modelVersion != recoveryModelVersion
                 let isFrozen = record.readyAt <= now
                     && !unfreezeAll
+                    && !isStaleVersion
                     && workout.healthKitUUID != unfrozenSessionID
                     && (
                         record.hasCompleteTierMetadata

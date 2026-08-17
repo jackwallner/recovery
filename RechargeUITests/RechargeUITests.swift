@@ -73,7 +73,11 @@ final class RechargeUITests: XCTestCase {
         // to be pressable on the first frame, with no scrolling: this assertion
         // is the regression guard for a purchase surface that showed prices but
         // hid its action.
-        let cta = app.buttons["Continue with Recharge+"].firstMatch
+        // By identifier, not by label: "Continue with Recharge+" is also the
+        // locked-card capsule on Today, which sits behind this sheet, and
+        // `firstMatch` on the label can pick that one and then truthfully report
+        // that it is not hittable.
+        let cta = app.buttons["paywall-cta"].firstMatch
         XCTAssertTrue(cta.exists, "the paywall CTA is missing")
         XCTAssertTrue(cta.isHittable, "the paywall CTA is not reachable without scrolling")
 
@@ -324,7 +328,10 @@ final class RechargeUITests: XCTestCase {
         XCTAssertTrue(getStarted.isHittable, "the free path cannot be reached")
         getStarted.tap()
         XCTAssertTrue(
-            app.tabBars.buttons["Today"].waitForExistence(timeout: 15),
+            // Not `app.tabBars`: the bar is a floating translucent capsule of
+            // plain buttons over the content, not a system `TabView`, so the
+            // system bar element does not exist to query.
+            app.buttons["Today"].firstMatch.waitForExistence(timeout: 15),
             "the free path did not finish setup"
         )
     }
