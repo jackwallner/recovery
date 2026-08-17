@@ -194,12 +194,17 @@ final class RechargeUITests: XCTestCase {
         "Continue", "Connect Apple Health", "Skip this one", "I understand"
     ]
 
+    /// The offer page's own primary. Named separately because it is the one the
+    /// walk stops at, and because it is the button the frame check exists for:
+    /// it is the only CTA in the flow with legal text anywhere near it.
+    private static let offerPrimary = "Continue with Recharge+"
+
     @discardableResult
     private func advanceToTheOffer(_ app: XCUIApplication) -> [CGRect] {
         var primaryFrames: [CGRect] = []
 
         for _ in 0..<12 {
-            if app.buttons["Continue with Recharge+"].firstMatch.exists { break }
+            if app.buttons[Self.offerPrimary].firstMatch.exists { break }
             guard let next = Self.onboardingPrimaries
                 .map({ app.buttons[$0].firstMatch })
                 .first(where: { $0.exists })
@@ -220,27 +225,77 @@ final class RechargeUITests: XCTestCase {
             // twice.
             Thread.sleep(forTimeInterval: 0.6)
         }
+
+        // The offer page's CTA, measured like every other one.
+        //
+        // The previous version of this helper broke out of the loop the moment
+        // that button appeared and returned without its frame, so the check
+        // below covered the four Continue buttons and stopped one page short of
+        // the only page in the flow with anything underneath its CTA. The bug it
+        // was written to catch had moved onto the page it could not see.
+        let offer = app.buttons[Self.offerPrimary].firstMatch
+        if offer.waitForExistence(timeout: 10) {
+            wait(
+                for: [expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: offer)],
+                timeout: 10
+            )
+            primaryFrames.append(offer.frame)
+        }
         return primaryFrames
     }
 
     /// The regression guard for the reported bug: the primary button moved
-    /// between onboarding pages, because only the Health page carried a
-    /// secondary action and its height was not reserved anywhere else.
+    /// between onboarding pages.
     ///
-    /// Frames, not screenshots: this is a geometry claim, and a screenshot
-    /// cannot fail on a four-point shift.
+    /// It has moved for two different reasons now. First because only the Health
+    /// page carried a secondary action and its height was not reserved anywhere
+    /// else. Then because the trial page appended a subscription disclosure and a
+    /// Restore/Terms/Privacy row *below* its CTA, lifting it clear of the four
+    /// Continue buttons that had just trained the thumb — on the one screen in
+    /// the flow that takes money. Nothing that varies between pages may sit below
+    /// the primary button; see `OnboardingActions`.
+    ///
+    /// Frames, not screenshots: this is a geometry claim, and a screenshot cannot
+    /// fail on a four-point shift.
     func testTheOnboardingButtonStaysInOnePlace() {
         let app = launch(scene: "onboarding")
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
 
         let frames = advanceToTheOffer(app)
-        XCTAssertGreaterThanOrEqual(frames.count, 3, "onboarding ended before it could be measured")
+        XCTAssertGreaterThanOrEqual(frames.count, 4, "onboarding ended before it could be measured")
 
         guard let first = frames.first else { return XCTFail("no primary button was found") }
-        for frame in frames.dropFirst() {
-            XCTAssertEqual(frame.minY, first.minY, accuracy: 1, "the primary button moved between pages")
-            XCTAssertEqual(frame.height, first.height, accuracy: 1, "the primary button changed height")
+        for (index, frame) in frames.enumerated().dropFirst() {
+            XCTAssertEqual(
+                frame.minY, first.minY, accuracy: 1,
+                "the primary button moved between pages (page \(index + 1) of \(frames.count))"
+            )
+            XCTAssertEqual(
+                frame.height, first.height, accuracy: 1,
+                "the primary button changed height (page \(index + 1) of \(frames.count))"
+            )
         }
+    }
+
+    /// The same claim, stated where it actually broke: the last frame in the walk
+    /// is the purchase CTA, and it has to sit exactly where the Continue button
+    /// on the page before it sat.
+    ///
+    /// Separate from the loop above so a failure names the real defect rather
+    /// than "page 5 of 5 moved".
+    func testThePurchaseCTALandsWhereTheContinueButtonWas() {
+        let app = launch(scene: "onboarding")
+        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
+
+        let frames = advanceToTheOffer(app)
+        guard frames.count >= 2, let offer = frames.last, let previous = frames.dropLast().last else {
+            return XCTFail("the walk never reached the offer page")
+        }
+        XCTAssertEqual(
+            offer.minY, previous.minY, accuracy: 1,
+            "the purchase CTA sits \(offer.minY - previous.minY)pt from where the thumb was just trained to reach"
+        )
+        attach(app, named: "onboarding-cta-alignment")
     }
 
     /// The last onboarding decision is choosing a tier, not postponing one, so
@@ -297,6 +352,46 @@ final class RechargeUITests: XCTestCase {
         ).firstMatch
         XCTAssertTrue(price.exists, "the billed amount is missing")
         attach(app, named: "trial-offer-accessibility-xxxl-cta")
+    }
+
+    // MARK: - The comparison card
+
+    /// A countdown on its own is unreadable: "18h" gives no way to tell whether
+    /// that is a lot, a little, or what you were going to do anyway. The three
+    /// columns are the frame, so they have to be on Today, above the explanation.
+    func testTodayShowsTheRestPatternComparison() {
+        let app = launch(scene: "recovering")
+        XCTAssertTrue(
+            app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15),
+            "the comparison that makes the countdown mean something is missing"
+        )
+        for band in ["Moderate", "Hard", "Very hard"] {
+            XCTAssertTrue(app.staticTexts[band].firstMatch.exists, "the \(band) band is missing")
+        }
+        attach(app, named: "today-rest-pattern")
+    }
+
+    /// The third column is the pitch, and on the free tier it has to be locked —
+    /// with the real number under the blur, not a mock-up, because
+    /// `RecoveryEngine` computes it on both tiers precisely so this can be honest.
+    func testTheRestPatternLocksThePersonalizedColumnOnTheFreeTier() {
+        let app = launch(scene: "recovering")
+        XCTAssertTrue(app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15))
+        XCTAssertTrue(
+            app.buttons["See your own numbers"].firstMatch.exists,
+            "the free tier is not offered the personalized column"
+        )
+    }
+
+    /// And a subscriber must not be sold what they already have.
+    func testTheRestPatternIsUnlockedForASubscriber() {
+        let app = launch(scene: "premiumActive")
+        XCTAssertTrue(app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15))
+        XCTAssertFalse(
+            app.buttons["See your own numbers"].firstMatch.exists,
+            "a subscriber is still being pitched the column they are paying for"
+        )
+        attach(app, named: "today-rest-pattern-pro")
     }
 
     /// App Review 1.4.1: the non-diagnostic disclaimer has to be present and

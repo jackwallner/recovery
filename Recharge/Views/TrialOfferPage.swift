@@ -26,31 +26,61 @@ struct TrialOfferPage: View {
 
     private var package: Package? { store.yearlyPackage }
 
-    /// The whole page is one scroll view pinned to at least the height of its
-    /// container, so at normal sizes the `Spacer()`s still distribute exactly as
-    /// they did and nothing scrolls. Without it, an accessibility content size
-    /// overflows the fixed stack and SwiftUI resolves that by *truncating*: the
-    /// headline, the price, the trial length, and the purchase button itself all
-    /// rendered ellipsized, which is an informed-consent failure and not just a
-    /// layout defect.
+    /// Pitch on top, one decision pinned to the thumb zone underneath — the same
+    /// shape as every other onboarding page, and for the same two reasons.
+    ///
+    /// **The pitch scrolls.** At an accessibility content size the old fixed
+    /// `VStack` overflowed the screen and SwiftUI resolved that by *truncating*:
+    /// the headline, the price, the trial length, and the purchase button itself
+    /// all rendered ellipsized. A user cannot consent to a subscription they
+    /// cannot read.
+    ///
+    /// **The decision does not scroll, and neither does it move.** Everything
+    /// variable — the trial callout, the billed amount, the free exit, the
+    /// disclosure, an error — is handed to `OnboardingActions` as content
+    /// *above* the button. The only thing below the button is the legal slot
+    /// that every other page also reserves, so this CTA lands in the identical
+    /// frame the four Continue buttons before it occupied.
     var body: some View {
-        GeometryReader { proxy in
+        VStack(spacing: 0) {
             ScrollView {
-                content
-                    .frame(minHeight: proxy.size.height)
+                pitch
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
             }
             .scrollBounceBehavior(.basedOnSize)
+
+            OnboardingActions(
+                primaryTitle: store.onboardingTrialCTALabel,
+                primaryAction: { Task { await purchase() } },
+                tint: Theme.pro,
+                primaryDisabled: package == nil || store.purchaseInFlight,
+                isBusy: store.purchaseInFlight,
+                secondaryTitle: declineTitle,
+                secondaryAction: onDecline,
+                above: AnyView(purchaseTerms),
+                showsLegalLinks: true,
+                isRestoring: isRestoring,
+                onRestore: { Task { await restore() } }
+            )
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, 16)
+        .task {
+            store.trackPaywallImpression(id: "onboarding_trial")
+            if store.products.isEmpty { await store.fetchProducts() }
         }
     }
 
-    private var content: some View {
+    private var pitch: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 12)
+            Spacer(minLength: 0)
 
             Image(systemName: "bolt.badge.clock.fill")
                 .font(.system(size: 56))
                 .foregroundStyle(Theme.pro)
                 .padding(.bottom, 20)
+                .accessibilityHidden(true)
 
             Text(headline)
                 .font(.system(.title, design: .rounded, weight: .bold))
@@ -84,59 +114,31 @@ struct TrialOfferPage: View {
             }
             .padding(.horizontal, 12)
 
-            Spacer()
+            Spacer(minLength: 0)
+        }
+    }
 
+    /// Everything the purchase decision needs stated beside it, and nothing that
+    /// is allowed to sit below the button. Rendered on every state of the page,
+    /// so it can grow and shrink freely without touching the CTA's frame.
+    private var purchaseTerms: some View {
+        VStack(spacing: 12) {
             trialCallout
-
             price
-                .padding(.bottom, 12)
-
-            softExit
-                .padding(.bottom, 4)
-
-            Button {
-                Task { await purchase() }
-            } label: {
-                Group {
-                    if store.purchaseInFlight {
-                        ProgressView().tint(.white)
-                    } else {
-                        Text(store.onboardingTrialCTALabel)
-                            .font(.system(.headline, design: .rounded))
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Theme.pro, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
-            .disabled(package == nil || store.purchaseInFlight)
-            .opacity(package == nil ? 0.5 : 1)
-
-            if let disclosure = store.yearlySheetDisclosureText {
-                Text(disclosure)
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 8)
-            }
 
             if let errorMessage {
                 Text(errorMessage)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.red)
-                    .padding(.top, 6)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if let disclosure = store.yearlySheetDisclosureText {
+                Text(disclosure)
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            purchaseFooter
-                .padding(.top, 10)
-        }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 16)
-        .task {
-            store.trackPaywallImpression(id: "onboarding_trial")
-            if store.products.isEmpty { await store.fetchProducts() }
         }
     }
 
@@ -165,37 +167,9 @@ struct TrialOfferPage: View {
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
             }
-            .padding(.bottom, 12)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .accessibilityElement(children: .combine)
         }
-    }
-
-    /// The free path, above the CTA and de-emphasized.
-    ///
-    /// Below it, under the legal footer, it read as the last resort of someone
-    /// who had already failed to buy. Above it, it is the same secondary slot
-    /// every other onboarding page reserves, and the primary button lands where
-    /// the thumb has been going for the whole flow. Same shape as Vitals and
-    /// VO2 Max.
-    private var softExit: some View {
-        Button(declineTitle, action: onDecline)
-            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-            .foregroundStyle(Theme.textSecondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-    }
-
-    private var purchaseFooter: some View {
-        HStack(spacing: 16) {
-            Button("Restore") {
-                Task { await restore() }
-            }
-            .disabled(isRestoring)
-            Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-            Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
-        }
-        .font(.system(.caption, design: .rounded))
-        .foregroundStyle(Theme.textSecondary)
     }
 
     /// Largest pricing element on the page, per Apple 3.1.2(c). When the
@@ -208,13 +182,23 @@ struct TrialOfferPage: View {
                 Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(RechargeConversionCopy.billedNote(
                     trialLabel: store.eligibleIntroLabel(for: package),
                     eligibleForTrial: store.isEligibleForIntroOffer(package)
                 ))
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             }
+            // Capped at the same ceiling as the CTA label above it, so the
+            // billed amount stays the larger of the two at every content size.
+            // Apple 3.1.2(c) weighs pricing elements against each other, and an
+            // uncapped `.title3` beside a capped headline inverts that at the
+            // top accessibility sizes.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         } else if store.isLoadingProducts {
             VStack(spacing: 8) {
                 ProgressView()

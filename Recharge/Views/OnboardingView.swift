@@ -7,10 +7,16 @@ import SwiftUI
 /// Two structural rules hold across all of them, and both were bugs before they
 /// were rules:
 ///
-/// - **The buttons never move.** Every page ends in the same `OnboardingActions`
-///   block, and that block reserves the secondary row whether or not the page
-///   has one. A "Not now" that appears on page two used to shove the primary
-///   button up by its own height, so the thumb landed on nothing.
+/// - **The buttons never move.** Every page — the trial offer included — ends in
+///   the same `OnboardingActions` block, and that block reserves *both* variable
+///   rows: the secondary action whether or not the page has one, and the
+///   Restore/Terms/Privacy slot whether or not the page is a purchase point.
+///   Nothing that varies between pages is allowed below the primary button, so
+///   its distance from the bottom of the screen is a constant. Both halves were
+///   bugs first: a "Not now" that appears on page two used to shove the primary
+///   up by its own height, and the trial page's subscription disclosure used to
+///   shove it up again by two lines of eleven-point legal text — on the one
+///   screen in the flow that takes money.
 /// - **The step list is frozen once, not derived continuously.** The questions
 ///   depend on what Health supplied, and answering one removes it from
 ///   `AthleteProfile.gaps`. Recomputing the array from the profile would delete
@@ -246,65 +252,6 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - The action block every page ends in
-
-/// Primary button, then a secondary row that is laid out whether or not the page
-/// uses it.
-///
-/// The reservation is the point. Without it the primary button sits at a
-/// different height on every page, and the one on the Health page — the only one
-/// with a secondary action — jumps up by exactly the height of a subheadline the
-/// moment you reach it.
-private struct OnboardingActions: View {
-    let primaryTitle: String
-    let primaryAction: () -> Void
-    var tint: Color = Theme.recovering
-    var primaryDisabled = false
-    var isBusy = false
-    var secondaryTitle: String?
-    var secondaryAction: (() -> Void)?
-
-    var body: some View {
-        VStack(spacing: 12) {
-            // Always present, sometimes invisible, and always *above* the
-            // primary. The placeholder text is a real string rather than a space
-            // so it reserves the same height at every Dynamic Type size, and
-            // sitting above means the primary button is the lowest thing on
-            // every page — including the offer, where the way out is "Get
-            // Started" and the CTA underneath it has to land in the same slot
-            // the thumb has been using all flow.
-            Button(secondaryTitle ?? "Not now") { secondaryAction?() }
-                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .opacity(secondaryTitle == nil ? 0 : 1)
-                .disabled(secondaryTitle == nil || secondaryAction == nil)
-                .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
-                .accessibilityHidden(secondaryTitle == nil)
-
-            Button(action: primaryAction) {
-                HStack(spacing: 8) {
-                    if isBusy {
-                        ProgressView().tint(.white)
-                    }
-                    Text(primaryTitle)
-                        .font(.system(.headline, design: .rounded))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    tint.opacity(primaryDisabled ? 0.6 : 1),
-                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                )
-                .foregroundStyle(.white)
-            }
-            .buttonStyle(.plain)
-            .disabled(primaryDisabled)
-        }
-    }
-}
-
 // MARK: - Reusable explanatory page
 
 /// Explanation on top, one decision pinned to the thumb zone underneath.
@@ -367,24 +314,26 @@ private struct OnboardingPage: View {
                         .foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.horizontal, 8)
+
+                    // Inside the scroll view, not between it and the buttons.
+                    // This was the last thing in the flow that could still move
+                    // the CTA: three lines of explanation about a denied Health
+                    // permission used to shove the button up by about fifty
+                    // points at the exact moment the user was reaching for it.
+                    if let footnote {
+                        Text(footnote)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 16)
+                    }
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, minHeight: 0)
                 .padding(.vertical, 12)
             }
             .scrollBounceBehavior(.basedOnSize)
-
-            // The one thing that can still move the buttons, and only in a state
-            // the user just caused by being denied Health access. Showing the
-            // reason beats holding the layout still.
-            if let footnote {
-                Text(footnote)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 10)
-            }
 
             OnboardingActions(
                 primaryTitle: primaryTitle,
