@@ -307,15 +307,30 @@ Two things went wrong on the wrist and both looked like a broken complication:
   `testTheCompactCountdownChangesAtLeastOnceAnHourAcrossTheWholeRange`, asserted
   over every minute of the range rather than at sample points — the old tests all
   passed because none of them asked whether two entries an hour apart *differ*.
-- **A fresh install rendered `--`.** The Watch has its **own App Group
-  container**; the only thing that ever writes a snapshot into it is
-  `PhoneWatchSession` running inside the Watch *app*, and a widget extension
-  cannot hold a `WCSession`. So between installing and opening the app on the
-  wrist, the extension reads `RecoverySnapshot.empty`, which took the
-  `noRecentWorkout` branch, whose primary string is `"--"`. That state is now
-  `ComplicationCopy.DataState.neverSynced` and says "Open Recharge to set up".
-  It is copy, not a fix: nothing can populate that container except the Watch app
-  running once, so the honest thing is to say so.
+- **A fresh install rendered `--`, and stayed that way.** Two devices, two App
+  Group containers, so a snapshot has to cross WatchConnectivity and be written
+  to the Watch's own disk. The extension cannot take that delivery itself — a
+  widget extension is not a running process that can be sent anything, it is
+  spun up to answer "give me a timeline" and torn down, so whatever it needs must
+  already be on disk. **The user should never have to open the Watch app for
+  that to happen**, and `WatchAppDelegate` is the whole reason they do not: the
+  system wakes it in the background to take delivery, and it writes the App
+  Group and reloads the timelines.
+
+  `handle(_ backgroundTasks:)` broke that chain in three ways and between them
+  made "open the Watch app first" the normal case. It completed every task
+  immediately, including `WKWatchConnectivityRefreshBackgroundTask` — which is
+  the system saying "stay alive, data is arriving", and completing it before
+  `hasContentPending` clears lets the payload be dropped. It never scheduled the
+  next `WKApplicationRefreshBackgroundTask`, and watchOS background refresh is a
+  chain, so the app went quiet after the first wake. And it handed every task
+  type the same completion call, which is wrong for a snapshot task. Fixed, with
+  `PhoneWatchSession.waitForPendingContent` holding the connectivity task open.
+
+  `ComplicationCopy.DataState.neverSynced` covers the window before the first
+  delivery lands and says "Open Recharge to set up". That window should be brief,
+  and if a user reports it persisting, the background-wake path is what to look
+  at, not the copy.
 
 ### Onboarding reads Health before it asks anything
 The flow is welcome → Health → what Health found → the gap questions → what the

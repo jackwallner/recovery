@@ -19,18 +19,25 @@ public enum ComplicationCopy {
     ///
     /// This is not the same question as "is there a recent workout", and
     /// collapsing the two is what made a freshly added complication look broken.
-    /// The Watch's App Group is a *separate container* from the phone's: the only
-    /// thing that ever writes a snapshot into it is `PhoneWatchSession` running
-    /// inside the Watch **app**, and a widget extension cannot hold a
-    /// `WCSession` of its own. So between installing the app and opening it on
-    /// the wrist for the first time, the extension reads `RecoverySnapshot.empty`
-    /// and has genuinely never been told anything.
     ///
-    /// That state used to render as the `noRecentWorkout` phase, whose primary
-    /// string is `"--"`. Someone who adds the complication before opening the
-    /// Watch app sees a dash on their face and no way to find out why — it reads
-    /// as null, because it is. It gets its own copy now, and the copy is an
-    /// instruction.
+    /// The two devices have separate App Group containers, so a snapshot has to
+    /// cross the WatchConnectivity boundary and be written to the Watch's own
+    /// disk before the extension can see it. The extension cannot take that
+    /// delivery itself: a widget extension is not a running process that can be
+    /// sent anything, it is spun up to answer "give me a timeline" and torn down
+    /// again, so whatever it needs must already be on disk when it is asked. The
+    /// Watch app takes delivery in the background (see `WatchAppDelegate`) and
+    /// writes it, and the user should never have to open anything for that to
+    /// happen.
+    ///
+    /// This state is the window before the first delivery lands — a fresh
+    /// install, or a Watch that has been out of contact since it was set up. It
+    /// should be brief. It used to render as the `noRecentWorkout` phase, whose
+    /// primary string is `"--"`, so a face showing a bare dash was the app's
+    /// answer both to "you have not trained in four days" and to "I have never
+    /// been told anything", and neither was distinguishable from a complication
+    /// that simply does not work. It gets its own copy now, and the copy is an
+    /// instruction rather than a shrug.
     public enum DataState: Sendable, CaseIterable {
         /// A snapshot has arrived from the phone at some point.
         case synced
