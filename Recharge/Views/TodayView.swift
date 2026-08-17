@@ -49,6 +49,16 @@ struct TodayView: View {
                     if settings.hasDeferredHealthAccess {
                         healthAccessCard
                     }
+                    // Above the Why card on purpose. "Why 18h" is only worth
+                    // reading once you know whether 18h is a lot; the comparison
+                    // is the frame and the explanation is the detail.
+                    if !engine.restPattern.isEmpty {
+                        RestPatternCard(
+                            rows: engine.restPattern,
+                            isPro: store.isPro,
+                            onUpgrade: { showPaywall = true }
+                        )
+                    }
                     if let explained {
                         whyCard(explained)
                     }
