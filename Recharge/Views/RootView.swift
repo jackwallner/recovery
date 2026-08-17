@@ -33,20 +33,51 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.25), value: settings.hasCompletedSetup)
     }
 
+    /// A floating translucent bar over the content rather than a system
+    /// `TabView`, the same shape Protein and Vitals use.
+    ///
+    /// The system bar draws an opaque slab across the bottom of a screen whose
+    /// whole point is a tinted full-bleed background, and on iOS 26 it renders
+    /// as a solid pill that cuts the page in half. This sits on top of the
+    /// content in `ultraThinMaterial`, so the countdown and the history list run
+    /// under it and the app reads as one surface.
+    ///
+    /// Screens keep their own bottom padding to clear it (`TodayView` and
+    /// `HistoryView` both pad 72), because the content scrolls behind rather
+    /// than stopping above.
     private var main: some View {
-        TabView(selection: $selectedTab) {
-            TodayView(isPresentingSheet: $todayIsPresentingSheet)
-                .tabItem { Label("Today", systemImage: "hourglass") }
-                .tag(Tab.today)
+        ZStack(alignment: .bottom) {
+            tabContent(.today) { TodayView(isPresentingSheet: $todayIsPresentingSheet) }
+            tabContent(.history) { HistoryView() }
+            tabContent(.settings) { SettingsView() }
 
-            HistoryView()
-                .tabItem { Label("History", systemImage: "list.bullet.rectangle") }
-                .tag(Tab.history)
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
-                .tag(Tab.settings)
+            HStack(spacing: 0) {
+                TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
+                    selectedTab = .today
+                }
+                TabButton(
+                    icon: "list.bullet.rectangle",
+                    label: "History",
+                    isSelected: selectedTab == .history
+                ) { selectedTab = .history }
+                TabButton(icon: "gearshape", label: "Settings", isSelected: selectedTab == .settings) {
+                    selectedTab = .settings
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
+            .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
+            .padding(.bottom, 12)
         }
+        // Deliberately *not* `.ignoresSafeArea(edges: .bottom)`, which is what
+        // Protein does. Applied here it leaks into every sheet this view
+        // presents: the paywall pins its CTA to the bottom of the sheet, and
+        // with the bottom inset zeroed that button sat under the home indicator
+        // and stopped being hittable. `testPaywallRendersRealProductsUnderStoreKitTesting`
+        // caught it. The bar sits inside the safe area instead, which costs a few
+        // points and no correctness.
+        .tint(Theme.recovering)
         .task { await evaluateLaunchSurfaces() }
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
             Task { await evaluateReadyMomentSurfaces() }
@@ -162,6 +193,20 @@ struct RootView: View {
         showWhatsNew || showReviewPrompt || showTrialOffer || todayIsPresentingSheet
     }
 
+    /// Every tab stays alive and keeps its scroll position and navigation stack,
+    /// which is what a system `TabView` does and what a plain `if` would throw
+    /// away on every switch.
+    @ViewBuilder
+    private func tabContent<Content: View>(
+        _ tab: Tab,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .opacity(selectedTab == tab ? 1 : 0)
+            .allowsHitTesting(selectedTab == tab)
+            .accessibilityHidden(selectedTab != tab)
+    }
+
     private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {
         pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
     }
@@ -170,5 +215,38 @@ struct RootView: View {
         guard pendingNativeReviewAfterDismiss else { return }
         pendingNativeReviewAfterDismiss = false
         requestReview()
+    }
+}
+
+/// One tab. Ported from Protein, which is where this bar's shape comes from.
+private struct TabButton: View {
+    let icon: String
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                Text(label)
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(isSelected ? Theme.recovering : Color(.tertiaryLabel))
+            .frame(width: 78, height: 44)
+            .background(
+                isSelected ? Theme.recovering.opacity(0.14) : .clear,
+                in: Capsule()
+            )
+            // Without a content shape the tap area shrinks to the icon and
+            // label, which reports a target well under 44pt.
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        // Without this VoiceOver reads all three tabs identically and never says
+        // which one you are on.
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }

@@ -18,7 +18,13 @@ import SwiftUI
 struct RestPatternCard: View {
     let rows: [RestPattern.Row]
     let isPro: Bool
-    let onUpgrade: () -> Void
+    var onUpgrade: (() -> Void)?
+
+    /// The onboarding pitch shows the same table with none of the furniture: no
+    /// upgrade button (the page has one), no explanatory footnote (the page is
+    /// the explanation). Same numbers, same blur, so what the user is shown
+    /// before paying is exactly what they get after.
+    var isCompact = false
 
     /// The band the sentence talks about: the hardest one with a real measured
     /// gap, because that is where the difference between habit and estimate is
@@ -38,8 +44,10 @@ struct RestPatternCard: View {
                         .foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if !isPro { upgradeButton }
-                footnote
+                if !isCompact {
+                    if !isPro, let onUpgrade { upgradeButton(onUpgrade) }
+                    footnote
+                }
             }
         }
     }
@@ -56,7 +64,7 @@ struct RestPatternCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
-            if !isPro { ProBadge() }
+            if !isPro, !isCompact { ProBadge() }
         }
     }
 
@@ -154,8 +162,8 @@ struct RestPatternCard: View {
         }
     }
 
-    private var upgradeButton: some View {
-        Button(action: onUpgrade) {
+    private func upgradeButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             Text("See your own numbers")
                 .font(.system(.footnote, design: .rounded, weight: .semibold))
                 .frame(maxWidth: .infinity)

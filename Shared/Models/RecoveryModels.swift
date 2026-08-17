@@ -18,7 +18,19 @@ import Foundation
 /// six hours, the minimum Garmin documents for the same feature. Windows for
 /// strength sessions roughly doubled; endurance is unchanged except below the
 /// floor.
-public let recoveryModelVersion = 4
+///
+/// 5: what "typical" means, on both sides of the comparison. The personal
+/// baseline is totalled **per day** rather than per session, because a user who
+/// trains three times a day was being described by the median of one of those
+/// sessions — so their ordinary Tuesday read as five times normal, pinned the
+/// 72-hour ceiling, and every extra session they did made it worse. And the
+/// population reference came down to a lightly active adult's training day
+/// (85/105/115 to 52/64/70, ratios unchanged), because it is the answer given to
+/// someone with no history and that person is not a trained athlete. Together
+/// they put the two tiers the right way round: training more now shortens the
+/// window instead of lengthening it. Free-tier windows get longer; windows for
+/// anyone training more than a couple of times a week get shorter.
+public let recoveryModelVersion = 5
 
 // MARK: - Tier
 
@@ -125,29 +137,40 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
     /// personal history to use: the whole of the standard tier, and the
     /// bootstrap for a Recharge+ user in their first few weeks.
     ///
-    /// Each is one moderately trained adult's typical session, put through
-    /// `SessionLoadCalculator` rather than picked:
+    /// The population reference a session is measured against when there is no
+    /// personal history to use.
     ///
-    /// | Profile | Reference session | Load |
+    /// **This describes a lightly active adult's typical training day, not a
+    /// trained one's.** It is the denominator behind every number the free tier
+    /// shows, so it is the answer the app gives someone who has just installed
+    /// it and has no history at all — and that person is far more likely to be
+    /// two easy sessions a week than five hard ones. Anchoring it to a
+    /// moderately trained adult made the standard window read short for exactly
+    /// the population it exists to describe, and it made the free tier the
+    /// *flattering* number, which is backwards: personalisation should be able
+    /// to bring a fit user's window **down** from the standard, and it cannot do
+    /// that if the standard already assumes they are fit.
+    ///
+    /// | Profile | Reference training day | Load |
     /// |---|---|---|
-    /// | endurance | 50 min at 70% heart-rate reserve | ~86 |
-    /// | strength | 55 min at RPE 6.5 | ~107 |
-    /// | mixed | 50 min at RPE 7.5 | ~113 |
+    /// | endurance | ~35 min at 65% heart-rate reserve | 52 |
+    /// | strength | ~40 min at RPE 5.5 | 64 |
+    /// | mixed | ~35 min at RPE 6.5 | 70 |
     ///
-    /// These were 70 / 80 / 95, which were only ever meant to keep a first-ever
-    /// workout from dividing by zero. Load-bearing for every free user, they put
-    /// a routine 45-minute run at 0.79 of "typical" and both a 60-minute
-    /// threshold run and a 90-minute steady run at 2.25 — far enough up the
-    /// curve that two quite different sessions clipped to the same 42-hour
-    /// window. Raising the reference to a real typical session is what puts the
-    /// interesting range back in the middle of the curve, where it can separate
-    /// them.
+    /// The ratios between the three are unchanged from the 85 / 105 / 115 that
+    /// preceded these; only the level moved, so nothing about the relative cost
+    /// of a lift against a ride has been retuned here.
+    ///
+    /// Compare `RecoveryBaseline.typicalLoad`, which is the same quantity
+    /// measured from the person's own history and totalled per day. The two have
+    /// to describe the same kind of thing or the comparison the app is built on
+    /// is a change of units.
     public var standardTypicalLoad: Double {
         switch self {
-        case .endurance: 85
-        case .strength: 105
-        case .mixed: 115
-        case .easy: 20
+        case .endurance: 52
+        case .strength: 64
+        case .mixed: 70
+        case .easy: 12
         }
     }
 

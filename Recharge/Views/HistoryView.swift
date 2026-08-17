@@ -12,14 +12,52 @@ struct HistoryView: View {
     @State private var showPaywall = false
     @State private var selected: RecoveryEstimate?
 
-    private var grouped: [(key: String, estimates: [RecoveryEstimate])] {
+    /// Whether the sessions that produced no countdown are expanded.
+    ///
+    /// Collapsed by default, and that is the whole point. Somebody who walks
+    /// three times a day and rides easy in between had a History tab that was
+    /// twenty identical rows of "Walk · Active recovery · None" with the two
+    /// estimates that actually matter buried somewhere inside it. The list is
+    /// supposed to be the evidence that the app is paying attention; a wall of
+    /// "None" is the opposite.
+    @State private var showsQuietSessions = false
+
+    private struct DayGroup: Identifiable {
+        let key: String
+        let date: Date
+        /// Sessions that started a countdown. These are the list.
+        let scored: [RecoveryEstimate]
+        /// Everything else — walks, easy spins, anything under the threshold.
+        let quiet: [RecoveryEstimate]
+
+        var id: String { key }
+        var isEmpty: Bool { scored.isEmpty && quiet.isEmpty }
+    }
+
+    private var grouped: [DayGroup] {
         let calendar = Calendar.current
         let groups = Dictionary(grouping: engine.estimates) { estimate in
             DateHelpers.dayKey(for: estimate.sessionEnd, calendar: calendar)
         }
         return groups
-            .map { (key: $0.key, estimates: $0.value.sorted { $0.sessionEnd > $1.sessionEnd }) }
+            .map { key, estimates in
+                let sorted = estimates.sorted { $0.sessionEnd > $1.sessionEnd }
+                return DayGroup(
+                    key: key,
+                    date: sorted.first?.sessionEnd ?? .now,
+                    scored: sorted.filter(\.producesCountdown),
+                    quiet: sorted.filter { !$0.producesCountdown }
+                )
+            }
+            // A day with nothing but walks still gets a header and a one-line
+            // summary, because "you walked four times and none of it counted" is
+            // information. A day with nothing at all does not exist.
+            .filter { !$0.isEmpty }
             .sorted { $0.key > $1.key }
+    }
+
+    private var quietSessionCount: Int {
+        engine.estimates.count { !$0.producesCountdown }
     }
 
     var body: some View {
@@ -98,17 +136,29 @@ struct HistoryView: View {
         ScrollView {
             LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
                 if !store.isPro { weeklyLoadTeaser }
-                ForEach(grouped, id: \.key) { group in
+                ForEach(grouped) { group in
                     Section {
-                        ForEach(group.estimates, id: \.sessionID) { estimate in
+                        ForEach(group.scored, id: \.sessionID) { estimate in
                             Button { selected = estimate } label: {
                                 HistoryRow(estimate: estimate)
                             }
                             .buttonStyle(.plain)
                         }
+                        if !group.quiet.isEmpty {
+                            if showsQuietSessions {
+                                ForEach(group.quiet, id: \.sessionID) { estimate in
+                                    Button { selected = estimate } label: {
+                                        HistoryRow(estimate: estimate)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            } else {
+                                quietSummary(group)
+                            }
+                        }
                     } header: {
                         HStack {
-                            Text(dayHeading(group.estimates.first?.sessionEnd ?? .now))
+                            Text(dayHeading(group.date))
                                 .font(.system(.caption, design: .rounded, weight: .semibold))
                                 .foregroundStyle(Theme.textSecondary)
                             Spacer()
@@ -118,10 +168,54 @@ struct HistoryView: View {
                         .background(Theme.background)
                     }
                 }
+                if quietSessionCount > 0 { quietToggle }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 72)
+            .padding(.bottom, 96)
         }
+    }
+
+    /// One line in place of a day's worth of walks.
+    private func quietSummary(_ group: DayGroup) -> some View {
+        Button { showsQuietSessions = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "figure.walk")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.textTertiary)
+                Text(quietSummaryText(group))
+                    .font(.system(.footnote, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func quietSummaryText(_ group: DayGroup) -> String {
+        let count = group.quiet.count
+        let noun = count == 1 ? "session" : "sessions"
+        return group.scored.isEmpty
+            ? "\(count) light \(noun), no countdown"
+            : "and \(count) light \(noun)"
+    }
+
+    private var quietToggle: some View {
+        Button { showsQuietSessions.toggle() } label: {
+            Text(showsQuietSessions
+                 ? "Hide light sessions"
+                 : "Show \(quietSessionCount) light \(quietSessionCount == 1 ? "session" : "sessions")")
+                .font(.system(.footnote, design: .rounded, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 4)
     }
 
     @ViewBuilder

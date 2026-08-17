@@ -204,6 +204,51 @@ An earlier version of this file claimed a mean of 1.23x from a 36-session x
 5-persona matrix that was never committed. The numbers above replace it because
 they can be reproduced from the repository.
 
+### "Typical" is a training day, not a session, and the standard is a couch
+The worst inversion the model has had, reported from a real Health store: a user
+who trains several times a day was told his ordinary hard ride was a **72-hour**
+window against a **20-hour** standard. Training more bought a longer window, and
+every extra session made it worse.
+
+`RecoveryBaseline.typicalLoad` was the median of his own *sessions*, and when
+most sessions are twenty-minute spins the median **is** a twenty-minute spin, so
+a real ride read as 5.2x normal and pinned the ceiling. `typicalLoad` is now
+built from `dailyLoads` — the same history totalled per day — because relative
+load asks what the person is adapted to, and adaptation is a property of how much
+they train rather than how they slice it up. Frequency now raises the denominator
+instead of lowering it.
+
+`quietThreshold` deliberately stays per-session. Whether a workout was
+substantial enough to earn a countdown is a question about that workout;
+running it off daily totals would mean somebody training three times a day needs
+a single session as big as an average person's whole day before the app notices.
+
+`WorkoutProfile.standardTypicalLoad` came down from 85/105/115 to **52/64/70**
+(ratios unchanged, so nothing about a lift versus a ride was retuned). It is the
+denominator behind every free-tier number, which is the answer given to somebody
+who just installed the app and has no history — and that person is far more
+likely to be two easy sessions a week than five hard ones. Anchoring it to a
+*moderately trained adult* made the free tier the flattering number, which is
+backwards: personalisation has to be able to bring a fit user's window **down**
+from the standard, and it cannot if the standard already assumes they are fit.
+
+`HighVolumeAthleteTests` pins all of it, including
+`testAddingTrainingVolumeOnlyEverShortensTheWindow`, which failed before the fix.
+The same case now reads:
+
+| | before | after |
+|---|---|---|
+| typical load (own) | 22.0 | 57.5 |
+| standard reference | 85.0 | 52.0 |
+| relative load, personal | 5.22 | 2.00 |
+| standard window | 20.4h | 41.0h |
+| personal window | **72.0h** | **35.9h** |
+
+A model-version bump also **thaws frozen records** in `RecoveryEngine.rescore`:
+an estimate scored by an older model is not what the app would say today, and
+leaving it frozen means a user who updates sees their whole history in the old
+numbers with no way to get the new ones.
+
 ### A thin baseline is shrunk, because everything is divided by it
 `RecoveryBaseline.typicalLoad` is the denominator of every relative load, so on a
 three-session history the whole model is dividing by a description of three

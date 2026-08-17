@@ -16,7 +16,24 @@ struct TodayView: View {
     @State private var now = Date.now
     @State private var showPaywall = false
     @State private var showEffortSheet = false
-    @State private var showFeedbackSheet = false
+
+    /// The estimate the readiness question is about, **captured** rather than
+    /// read live from the engine.
+    ///
+    /// It used to be `.sheet(isPresented:)` with the body reading
+    /// `engine.awaitingFeedback` inside. Answering calls
+    /// `engine.recordFeedback`, which sets `awaitingFeedback` to nil, which
+    /// re-evaluated the sheet's body to an empty `if let` *before* the dismiss
+    /// landed — so tapping any of the three answers left a blank sheet sitting
+    /// there. That is the "blocked off and doesn't do anything" report: the
+    /// answer was recorded every time, and then the UI ate it.
+    @State private var feedbackTarget: RecoveryEstimate?
+
+    /// Set once Today has been on screen long enough for the onboarding
+    /// transition to finish. `RootView` cross-fades onboarding out over a
+    /// quarter of a second, and a sheet raised inside that window fights the
+    /// transition and lands half-drawn, which is the glitch on first launch.
+    @State private var isSettled = false
 
     /// The ring is a fixed 236pt frame with the largest text in the app inside
     /// it. At an accessibility content size that text no longer fits, so the
@@ -85,12 +102,16 @@ struct TodayView: View {
             }
             .onAppear { now = .now }
             .task {
-                if engine.awaitingFeedback != nil { showFeedbackSheet = true }
+                // Let the onboarding cross-fade finish before anything is
+                // presented over it.
+                try? await Task.sleep(for: .milliseconds(400))
+                isSettled = true
+                presentFeedbackIfNeeded()
             }
             // A countdown usually expires while the app is open on the minute
             // tick, so `.task` alone would miss the moment it actually matters.
-            .onChange(of: engine.awaitingFeedback?.sessionID) { _, sessionID in
-                if sessionID != nil { showFeedbackSheet = true }
+            .onChange(of: engine.awaitingFeedback?.sessionID) { _, _ in
+                presentFeedbackIfNeeded()
             }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "today")
@@ -110,25 +131,35 @@ struct TodayView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showFeedbackSheet) {
-                if let pending = engine.awaitingFeedback {
-                    ReadinessFeedbackSheet(estimate: pending) { feedback in
-                        if let feedback {
-                            engine.recordFeedback(feedback, forSessionID: pending.sessionID)
-                        } else {
-                            engine.dismissFeedback(forSessionID: pending.sessionID)
-                        }
+            // `item:` rather than `isPresented:`, so the sheet renders the
+            // estimate it was opened with instead of whatever the engine is
+            // currently holding. Answering clears `engine.awaitingFeedback`, and
+            // under the old wiring that emptied the sheet's body mid-tap.
+            .sheet(item: $feedbackTarget) { pending in
+                ReadinessFeedbackSheet(estimate: pending) { feedback in
+                    if let feedback {
+                        engine.recordFeedback(feedback, forSessionID: pending.sessionID)
+                    } else {
+                        engine.dismissFeedback(forSessionID: pending.sessionID)
                     }
+                    feedbackTarget = nil
                 }
             }
             .onChange(of: showPaywall) { _, _ in publishSheetState() }
             .onChange(of: showEffortSheet) { _, _ in publishSheetState() }
-            .onChange(of: showFeedbackSheet) { _, _ in publishSheetState() }
+            .onChange(of: feedbackTarget?.sessionID) { _, _ in publishSheetState() }
         }
     }
 
+    /// Raises the readiness question, once the screen has settled and only for
+    /// something the engine is actually waiting on.
+    private func presentFeedbackIfNeeded() {
+        guard isSettled, feedbackTarget == nil, let pending = engine.awaitingFeedback else { return }
+        feedbackTarget = pending
+    }
+
     private func publishSheetState() {
-        isPresentingSheet = showPaywall || showEffortSheet || showFeedbackSheet
+        isPresentingSheet = showPaywall || showEffortSheet || feedbackTarget != nil
     }
 
     // MARK: - Hero

@@ -100,8 +100,17 @@ struct ReadinessFeedbackSheet: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    /// No `NavigationStack`, and no fixed detent.
+    ///
+    /// The three answers are the entire point of this sheet, and at a `.medium`
+    /// detent the content ran past the bottom of it: on a smaller phone, or at a
+    /// larger text size, the last answer sat below the fold with nothing to
+    /// scroll and a navigation bar eating the top. That is the "blocked off"
+    /// half of the report. It scrolls now, sized to its own content, with
+    /// `.large` underneath for accessibility text sizes and the escape as a
+    /// plain button in the flow rather than a toolbar item.
     var body: some View {
-        NavigationStack {
+        ScrollView {
             VStack(spacing: 20) {
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
@@ -110,12 +119,14 @@ struct ReadinessFeedbackSheet: View {
                     Text("How did that feel?")
                         .font(.system(.title2, design: .rounded, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.center)
                     Text("Your estimate after that \(estimate.activityLabel) ran out. Telling Recharge how it went tunes your own bands.")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.top, 24)
+                .padding(.top, 28)
 
                 VStack(spacing: 10) {
                     ForEach(ReadinessFeedback.allCases, id: \.self) { feedback in
@@ -125,6 +136,8 @@ struct ReadinessFeedbackSheet: View {
                         } label: {
                             Text(feedback.label)
                                 .font(.system(.headline, design: .rounded))
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 15)
                                 .background(
@@ -137,23 +150,29 @@ struct ReadinessFeedbackSheet: View {
                     }
                 }
 
+                Button("Not now") {
+                    onAnswer(nil)
+                    dismiss()
+                }
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.vertical, 4)
+
                 Text("Stored on this device only.")
                     .font(.system(.caption2, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
-
-                Spacer()
             }
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
-            .background(Theme.background)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Not now") {
-                        onAnswer(nil)
-                        dismiss()
-                    }
-                }
-            }
+            .padding(.bottom, 28)
         }
-        .presentationDetents([.medium])
+        .scrollBounceBehavior(.basedOnSize)
+        .background(Theme.background)
+        .presentationDetents([.height(Self.preferredHeight), .large])
+        .presentationDragIndicator(.visible)
     }
+
+    /// Tall enough for the icon, the explanation, all three answers and the way
+    /// out, with `.large` available underneath for accessibility text sizes.
+    private static let preferredHeight: CGFloat = 470
 }
