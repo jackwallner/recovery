@@ -59,6 +59,19 @@ public final class RecoveryEngine: ObservableObject {
     /// screens whose whole argument is that the number changes.
     @Published public private(set) var personalizedPreview = PersonalizedPreview.reference(factor: 1)
 
+    /// One row per intensity band: the gap the person actually leaves, what the
+    /// standard table gives someone with their answers, and what Recharge+ makes
+    /// of it.
+    ///
+    /// Computed on both tiers for the same reason `personalAnalysis` is. It is
+    /// also the only place in the app where "training more means shorter windows"
+    /// is visible: both personal paths already work that way — a bigger median
+    /// session makes the same workout a smaller multiple of it, and
+    /// `PersonalRecoveryModel.densityFactor` shrinks the multiplier as chronic
+    /// load rises — but a lone countdown has nothing to be shorter *than*, so
+    /// nobody could see it.
+    @Published public private(set) var restPattern: [RestPattern.Row] = []
+
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
     private init() {}
@@ -287,6 +300,12 @@ public final class RecoveryEngine: ObservableObject {
                 profile: settings.athleteProfile, sessions: [], days: [], now: now
             )
             personalizedPreview = .reference(factor: personalAnalysis.factor)
+            // Every row falls back to the canonical mid-band session, so the
+            // comparison is on screen from the first launch rather than after
+            // the first workout.
+            restPattern = RestPattern.rows(
+                sessions: [], profile: settings.athleteProfile, now: now
+            )
             return
         }
 
@@ -338,6 +357,7 @@ public final class RecoveryEngine: ObservableObject {
         var history: [(profile: WorkoutProfile, load: Double, date: Date)] = []
         var results: [RecoveryEstimate] = []
         var preview: PersonalizedPreview?
+        var patternSessions: [RestPattern.Session] = []
 
         // Pass two: the estimate the user actually gets. On the free tier that is
         // the standard one already computed — no personal baseline, no overnight
@@ -377,6 +397,23 @@ public final class RecoveryEngine: ObservableObject {
                     standardHours: standardEstimates[index].hours,
                     personalizedHours: personalized.hours,
                     isExample: false
+                )
+            }
+
+            // Banded by the *standard* category so a session does not jump rows
+            // the moment the user subscribes, and carrying both windows because
+            // deriving one from the other is exactly the shortcut that made
+            // `personalizedPreview` understate the difference.
+            if standardEstimates[index].producesCountdown {
+                patternSessions.append(
+                    RestPattern.Session(
+                        id: session.id,
+                        endDate: session.endDate,
+                        profile: session.profile,
+                        band: standardEstimates[index].category,
+                        standardHours: standardEstimates[index].hours,
+                        personalizedHours: personalized.hours
+                    )
                 )
             }
 
@@ -434,6 +471,12 @@ public final class RecoveryEngine: ObservableObject {
             let reference = PersonalizedPreview.reference(factor: analysis.factor)
             personalizedPreview = reference.isVisiblyDifferent ? reference : (preview ?? reference)
         }
+
+        restPattern = RestPattern.rows(
+            sessions: patternSessions,
+            profile: settings.athleteProfile,
+            now: now
+        )
 
         estimates = results.sorted { $0.sessionEnd > $1.sessionEnd }
         // Every "is this still running / recent enough to ask about" decision
@@ -718,6 +761,7 @@ public final class RecoveryEngine: ObservableObject {
         estimates = ScreenshotFixtures.history()
         personalAnalysis = ScreenshotFixtures.personalAnalysis()
         personalizedPreview = ScreenshotFixtures.personalizedPreview()
+        restPattern = ScreenshotFixtures.restPattern()
         current = RecoveryResolver.current(in: estimates)
         awaitingFeedback = nil
         awaitingEffort = nil

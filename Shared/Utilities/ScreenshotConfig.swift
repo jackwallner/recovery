@@ -117,6 +117,28 @@ public enum ScreenshotFixtures {
         )
     }
 
+    /// The rest-pattern card, derived from the same history the rest of the
+    /// capture is built from rather than hand-written, so the three columns on
+    /// the screenshot are the arithmetic the app would actually produce.
+    public static func restPattern(now: Date = .now) -> [RestPattern.Row] {
+        RestPattern.rows(
+            sessions: history(now: now)
+                .filter { $0.producesCountdown }
+                .map {
+                    RestPattern.Session(
+                        id: $0.sessionID,
+                        endDate: $0.sessionEnd,
+                        profile: $0.profile,
+                        band: $0.category,
+                        standardHours: $0.standardHours,
+                        personalizedHours: $0.hours
+                    )
+                },
+            profile: athleteProfile(),
+            now: now
+        )
+    }
+
     /// What Health would have supplied for the screenshot user. Experience and
     /// bounce-back are deliberately left out: they are the two questions Health
     /// can never answer, so leaving them open is what makes the onboarding
@@ -139,17 +161,25 @@ public enum ScreenshotFixtures {
     /// Two weeks of finished estimates for the history screen. The leading
     /// session's age flips with the scene, so `ready` shows an expired countdown
     /// and `recovering` shows a live one from the same fixture set.
+    ///
+    /// `standard` is the same session on the standard table and is **not** the
+    /// same figure as `hours`. It used to be left off, which defaulted it to
+    /// `hours` — so every surface that compares the two tiers rendered the same
+    /// number twice, and the rest-pattern card's whole third column had nothing
+    /// to show. The spread here is what the fixture user's own analysis implies:
+    /// a 0.86 multiplier *and* a personal baseline above the population
+    /// reference, which is the compounding the model actually does.
     public static func history(now: Date = .now) -> [RecoveryEstimate] {
         let leadHoursAgo: Double = ScreenshotConfig.wantsReady ? 26 : 3
-        let pattern: [(hoursAgo: Double, hours: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
-            (leadHoursAgo, 21.7, .endurance, "run", .hard),
-            (27, 9.4, .endurance, "ride", .typical),
-            (52, 0, .easy, "walk", .easy),
-            (74, 31.2, .mixed, "functional session", .unusuallyHard),
-            (98, 14.8, .strength, "lifting session", .typical),
-            (122, 18.1, .endurance, "run", .hard),
-            (170, 7.6, .endurance, "run", .typical),
-            (196, 26.4, .mixed, "functional session", .hard)
+        let pattern: [(hoursAgo: Double, hours: Double, standard: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
+            (leadHoursAgo, 21.7, 28.0, .endurance, "run", .hard),
+            (27, 9.4, 13.0, .endurance, "ride", .typical),
+            (52, 0, 0, .easy, "walk", .easy),
+            (74, 31.2, 39.0, .mixed, "functional session", .unusuallyHard),
+            (98, 14.8, 19.0, .strength, "lifting session", .typical),
+            (122, 18.1, 24.0, .endurance, "run", .hard),
+            (170, 7.6, 11.0, .endurance, "run", .typical),
+            (196, 26.4, 34.0, .mixed, "functional session", .hard)
         ]
         return pattern.enumerated().map { index, item in
             let end = now.addingTimeInterval(-item.hoursAgo * 3600)
@@ -175,7 +205,8 @@ public enum ScreenshotFixtures {
                 relativeLoad: 0.5 + Double(index) * 0.22,
                 category: item.category,
                 confidence: index % 3 == 0 ? .high : .medium,
-                reasons: reasons
+                reasons: reasons,
+                standardHours: item.standard
             )
         }
     }

@@ -50,6 +50,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
 | `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. All 84 raw values are pinned and tested against the SDK's own numbering; the table was silently off by one from `badminton` (4) through `crossTraining` (11) for the app's whole life, because it omitted `australianFootball` (3). |
 | `CountdownTimeline` | the entry schedule a decaying countdown needs. |
+| `RestPattern` | the comparison: per intensity band, the gap the person actually leaves, what the standard table gives someone with their answers, and what Recharge+ makes of it. |
 
 ### The two tiers
 `RecoveryTier` is stored on every estimate, because the two answer different
@@ -255,6 +256,36 @@ reference. Say so rather than implying otherwise.
   any UI existed. Run it any time:
   `xcodebuild test -project Recharge.xcodeproj -scheme Recharge -destination "id=$UDID" -only-testing:RechargeTests/FixtureTableTests/testPrintFixtureTable`
 
+### Training more means shorter windows, and `RestPattern` is where you can see it
+Both personal paths already worked that way and neither was legible. Relative
+load is divided by `RecoveryBaseline.typicalLoad`, the person's own median, so a
+bigger median makes the same workout a smaller multiple of it; and
+`PersonalRecoveryModel.densityFactor` shrinks the multiplier as chronic weekly
+load rises. But a lone "18h" has nothing to be shorter *than*, so the app was
+answering a question nobody had asked.
+
+`RestPattern.rows` returns one row per band (`typical`, `hard`, `unusuallyHard`
+— never `easy`, which starts no countdown) with three figures:
+
+- **You** — median hours between a session in that band and the next qualifying
+  one. A *measurement*, over `windowDays` (90, deliberately longer than the 42
+  the baseline uses and the 30 the analysis uses: those track who the person is
+  now, this needs enough intervals in the rare bands to have a median). Needs
+  `minimumGapSamples` (2) — one interval is not "you usually". Gaps over
+  `maximumGapHours` (14 days) are a layoff, not rest, and are dropped.
+- **Similar** — the median standard window for that band times
+  `AthleteProfile.prior`, so it moves with age, experience, weekly volume and
+  bounce-back. Shown on both tiers; it is not an estimate the app acts on.
+- **Yours** — the personalized window, **computed**, never
+  `standardHours * factor`. Same mistake `personalizedPreview` was fixed for.
+  Blurred on the free tier with the real number underneath, because a mocked-up
+  figure on a paywall is one someone will hold the app to.
+
+Bands come from the *standard* scoring so a session does not jump rows the
+moment the user subscribes. Every band falls back to the canonical mid-band
+session on the real curve when there is no history in it, so the card is
+populated on first launch and reports `isExample`.
+
 ### The countdown timeline
 The one piece with no precedent in the fleet. Every other complication here
 renders a cumulative daily number that only grows, and one entry with an hourly
@@ -264,14 +295,48 @@ through the final two hours, an entry exactly at `readyAt`, and one after it so
 the face flips to Ready even if the system never refreshes. **Views must render
 from `entry.date`, never from `Date.now`.**
 
+Two things went wrong on the wrist and both looked like a broken complication:
+
+- **The value did not tick.** `CountdownFormat.compactRemaining` returned a bare
+  `"\(days)d"` above 24 hours, which is where most of the app's range lives: a
+  72-hour window read `3d` for a full day, then `2d` for a full day, then `1d`
+  for a full day, while the timeline dutifully carried seventy hourly entries
+  that all rendered the same three characters. It steps down through `2d 23h`,
+  `23h`, `1h 20m`, `18m` now, capped at six characters so a circular or corner
+  slot still fits it. The guarantee is
+  `testTheCompactCountdownChangesAtLeastOnceAnHourAcrossTheWholeRange`, asserted
+  over every minute of the range rather than at sample points — the old tests all
+  passed because none of them asked whether two entries an hour apart *differ*.
+- **A fresh install rendered `--`.** The Watch has its **own App Group
+  container**; the only thing that ever writes a snapshot into it is
+  `PhoneWatchSession` running inside the Watch *app*, and a widget extension
+  cannot hold a `WCSession`. So between installing and opening the app on the
+  wrist, the extension reads `RecoverySnapshot.empty`, which took the
+  `noRecentWorkout` branch, whose primary string is `"--"`. That state is now
+  `ComplicationCopy.DataState.neverSynced` and says "Open Recharge to set up".
+  It is copy, not a fix: nothing can populate that container except the Watch app
+  running once, so the honest thing is to say so.
+
 ### Onboarding reads Health before it asks anything
 The flow is welcome → Health → what Health found → the gap questions → what the
 number means → the tier decision. Two structural rules, both of which were bugs
 first:
 
-- **The buttons never move.** Every page ends in the same `OnboardingActions`
-  block, which reserves the secondary row whether or not the page uses one.
-  `testTheOnboardingButtonStaysInOnePlace` asserts the frames, not a screenshot.
+- **The buttons never move**, the trial offer included. Every page ends in the
+  same `OnboardingActions` block, which reserves *both* variable rows: the
+  secondary action whether or not the page uses one, and the
+  Restore/Terms/Privacy slot whether or not the page is a purchase point.
+  Nothing that varies between pages may sit below the primary button, so its
+  distance from the bottom of the screen is a constant and everything a page
+  wants to say goes above it. The trial page's subscription disclosure and legal
+  row used to sit *under* its CTA, lifting the one button in the flow that takes
+  money about forty points clear of the four Continue buttons that had just
+  trained the thumb. `testTheOnboardingButtonStaysInOnePlace` asserts the frames,
+  not a screenshot — but it broke out of its walk the moment the offer page
+  appeared and never measured it, so the bug lived on the one page the guard
+  could not see. It measures the offer CTA now, and
+  `testThePurchaseCTALandsWhereTheContinueButtonWas` states the same claim where
+  it actually broke.
 - **The step list is frozen once**, when the user leaves the Health page.
   Answering a question removes it from `AthleteProfile.gaps`, so a continuously
   derived array would delete the page the user is standing on. The progress bar
@@ -358,6 +423,16 @@ StoreKit product identifiers are bundle-prefixed
   asserts all three cards and attaches the render. That covers **layout**;
   localized/PPP price formatting is still only observable on device. Never sign
   off on paywall spacing from a `simctl` screenshot.
+- **A fixture that agrees with itself proves nothing.**
+  `ScreenshotFixtures.history` never passed `standardHours`, so it defaulted to
+  `hours` and every two-tier comparison in the app rendered the same number
+  twice on every capture. The rest-pattern card's whole third column — the one
+  the upgrade sells — read identically to the free column in `premiumActive`.
+  The fixture now carries both figures explicitly, spread the way the fixture
+  user's own analysis implies (0.86 multiplier *and* a personal baseline above
+  the population reference). If you add a field that a conversion surface
+  compares, put a real difference in the fixture or the capture will show the
+  app doing nothing.
 - **Screenshot mode:** `RECHARGE_SCREENSHOT_MODE=1` +
   `RECHARGE_SCREENSHOT_SCENE=<recovering|ready|history|settings|paywall|premiumActive|onboarding|watchRecovering|watchReady>`.
   Bypasses HealthKit entirely and seeds `ScreenshotFixtures`.
