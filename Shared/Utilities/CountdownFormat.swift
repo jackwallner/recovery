@@ -25,8 +25,24 @@ public enum CountdownFormat {
         return "\(minutes)m"
     }
 
-    /// Complication-width countdown: `2d`, `18h`, `1h 20m`, `18m`.
-    /// Whole hours drop the minutes so a circular slot never truncates.
+    /// Complication-width countdown: `2d 23h`, `18h`, `1h 20m`, `18m`.
+    ///
+    /// The unit steps down as the window runs out — days and hours, then hours,
+    /// then hours and minutes, then minutes — and the rule that decides where to
+    /// stop is **the string has to change at least once an hour, everywhere**. A
+    /// complication whose value has not moved since yesterday morning is
+    /// indistinguishable from one that is broken.
+    ///
+    /// The previous version returned a bare `"\(days)d"` above 24 hours, which is
+    /// where the app's own maximum window lives: a 72-hour countdown read `3d`
+    /// for a full day, then `2d` for a full day, then `1d` for a full day.
+    /// Two-thirds of the longest estimate Recharge can produce rendered as a
+    /// figure that never ticked, on the one surface whose whole job is to tick,
+    /// while the timeline dutifully built seventy hourly entries that all carried
+    /// the same three characters.
+    ///
+    /// Never longer than six characters, so a circular or corner slot does not
+    /// truncate. `2d 23h` is the widest it gets, and only above 48 hours.
     public static func compactRemaining(_ seconds: TimeInterval) -> String {
         guard seconds > 0 else { return "Ready" }
         let totalMinutes = Int((seconds / 60).rounded(.up))
@@ -34,7 +50,7 @@ public enum CountdownFormat {
         let hours = (totalMinutes % 1440) / 60
         let minutes = totalMinutes % 60
 
-        if days > 0 { return "\(days)d" }
+        if days > 0 { return hours > 0 ? "\(days)d \(hours)h" : "\(days)d" }
         if hours >= 2 { return "\(hours)h" }
         if hours > 0 { return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h" }
         return "\(minutes)m"
