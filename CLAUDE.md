@@ -332,6 +332,24 @@ Two things went wrong on the wrist and both looked like a broken complication:
   and if a user reports it persisting, the background-wake path is what to look
   at, not the copy.
 
+**Recharge's Watch app is the only one in the fleet that cannot read Health.**
+`VitalsWatch` and `VO2MaxWatch` both carry `com.apple.developer.healthkit` and
+compute their own numbers on the wrist, so their complications work with no
+phone involvement at all and never depend on a background wake landing. That is
+why they "just work" and this one is fussier, and it is a deliberate choice
+here, not an oversight: the phone owns the model, and a watch recomputing it
+could disagree with the phone about the same session.
+
+The escape hatch is cheaper than it looks if it is ever needed. `Shared` is
+compiled into `RechargeWatch` in full, so `RecoveryEngine`, `HealthKitService`
+and `DataService` are already on the wrist, and `RechargeWatch/Info.plist`
+already carries both Health usage strings. The missing pieces are the
+entitlement and — the part that is actually the work — syncing
+`effectiveMaxHeartRate`, `calibrationFactor`, `athleteProfile`, `ambiguousProfile`
+and the tier, without which the watch would score against defaults and visibly
+disagree with the phone. Do not take this path to fix a delivery bug; take it
+only if mirroring is decided against on purpose.
+
 ### Onboarding reads Health before it asks anything
 The flow is welcome → Health → what Health found → the gap questions → what the
 number means → the tier decision. Two structural rules, both of which were bugs
