@@ -59,30 +59,70 @@ public struct RecoveryBaseline: Sendable, Equatable {
 
     public var hasEnoughSamples: Bool { sampleCount >= Self.minimumSamples }
 
-    /// What a typical session costs this person: their own median, shrunk
-    /// toward the profile's population reference while the sample is still thin.
+    /// What a typical training day costs this person: the **geometric mean** of
+    /// their own daily loads, shrunk toward the profile's population reference
+    /// while the sample is still thin.
     ///
-    /// The median alone was the whole story, and on a full history it still is —
-    /// at `minimumSamples` and above this returns exactly `percentile(0.5)`.
-    /// Below it, a median of three sessions is not a description of the person,
-    /// it is a description of the three sessions the app happened to see, and
-    /// every relative load is divided by it. `RecoveryMatrixTests` found what
-    /// that does: a 24-year-old three sessions into using the app got 57 hours
-    /// for an ordinary 60-minute lift, and a 66-year-old got the full 72-hour
-    /// cap, because a moderate session is a large multiple of a small number.
+    /// ### Why a geometric mean and not the median
+    ///
+    /// It was the median, and the median has a second version of the bug
+    /// `dailyLoads` was introduced to fix. Totalling per day stopped a *frequent*
+    /// trainer from being described by one of their short sessions. It does
+    /// nothing for a *polarised* one, whose week is a lot of small days and two
+    /// big ones: the middle day is small, so the median is small, and their real
+    /// session still reads as a large multiple of "normal".
+    ///
+    /// The reported case is exactly this shape. Three short spins on most days
+    /// and two hard rides a week is 647 load units a week against a population
+    /// reference of 210 — genuinely high volume — but the median *day* is 57.5,
+    /// which is **below** the reference day of 70. So the model called his
+    /// ordinary hard ride twice his normal and gave him a longer window than the
+    /// free tier would have. Training more still bought a longer window; the
+    /// daily-total fix had only moved where it happened.
+    ///
+    /// A geometric mean is the honest central tendency for a quantity this
+    /// skewed. Training loads are roughly log-normal, and for a log-normal
+    /// sample the geometric mean *is* the median, so on an evenly distributed
+    /// history this changes nothing measurable (a light user's 44.0 became
+    /// 43.8). The two separate exactly when the distribution is skewed, which is
+    /// the case we need noticed. And unlike an arithmetic mean it cannot be
+    /// dragged around by one outlier: the log compresses a single three-hour
+    /// ultra instead of letting it redefine what a normal day costs. The
+    /// polarised rider's figure moves 57.5 to 75.2, and his hard ride from 35.9h
+    /// to 24.6h, now below the 27.3h standard where it belongs.
+    ///
+    /// It is also the operation this file already performs one line further
+    /// down, so both halves of the baseline now combine evidence the same way.
+    ///
+    /// ### Why it is shrunk
+    ///
+    /// This is the denominator of every relative load, so on a three-session
+    /// history the whole model is dividing by a description of three sessions.
+    /// `RecoveryMatrixTests` found what that does: a 24-year-old three days into
+    /// using the app got 57 hours for an ordinary 60-minute lift, and a
+    /// 66-year-old got the full 72-hour cap, because a moderate session is a
+    /// large multiple of a small number.
     ///
     /// So personalisation earns its way in. The weight grows linearly with the
-    /// sample count and the blend is geometric, which is the same shape
+    /// day count and the blend is geometric, which is the same shape
     /// `PersonalRecoveryModel` uses to fold evidence into the questionnaire
     /// prior: on day three the estimate is mostly the standard table, and by
-    /// eight sessions it is entirely the person's own.
+    /// eight training days it is entirely the person's own.
     public var typicalLoad: Double {
         guard !dailyLoads.isEmpty else { return profile.standardTypicalLoad }
-        let personal = Self.percentile(0.5, in: dailyLoads)
+        let personal = Self.geometricMean(of: dailyLoads)
         guard personal > 0 else { return profile.standardTypicalLoad }
         let weight = min(Double(dayCount) / Double(Self.minimumSamples), 1)
         guard weight < 1 else { return personal }
         return exp(weight * log(personal) + (1 - weight) * log(profile.standardTypicalLoad))
+    }
+
+    /// Geometric mean of a positive sample. Empty or non-positive input returns
+    /// zero, which callers read as "no usable history".
+    static func geometricMean(of sample: [Double]) -> Double {
+        let positive = sample.filter { $0 > 0 }
+        guard !positive.isEmpty else { return 0 }
+        return exp(positive.reduce(0) { $0 + log($1) } / Double(positive.count))
     }
 
     /// The 25th percentile of individual **sessions**. Sessions below this (and

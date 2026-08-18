@@ -30,7 +30,7 @@ import Foundation
 /// they put the two tiers the right way round: training more now shortens the
 /// window instead of lengthening it. Free-tier windows get longer; windows for
 /// anyone training more than a couple of times a week get shorter.
-public let recoveryModelVersion = 5
+public let recoveryModelVersion = 6
 
 // MARK: - Tier
 
@@ -137,29 +137,40 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
     /// personal history to use: the whole of the standard tier, and the
     /// bootstrap for a Recharge+ user in their first few weeks.
     ///
-    /// The population reference a session is measured against when there is no
-    /// personal history to use.
-    ///
-    /// **This describes a lightly active adult's typical training day, not a
-    /// trained one's.** It is the denominator behind every number the free tier
-    /// shows, so it is the answer the app gives someone who has just installed
-    /// it and has no history at all — and that person is far more likely to be
-    /// two easy sessions a week than five hard ones. Anchoring it to a
-    /// moderately trained adult made the standard window read short for exactly
-    /// the population it exists to describe, and it made the free tier the
-    /// *flattering* number, which is backwards: personalisation should be able
-    /// to bring a fit user's window **down** from the standard, and it cannot do
-    /// that if the standard already assumes they are fit.
+    /// **The anchor is Firstbeat's activity class 3 to 5, "already engaged in
+    /// training" — not a sedentary adult and not a trained one.** That is where
+    /// Garmin's own default sits, and Recharge's standard tier is trying to be
+    /// the same thing: the estimate you get before anything has been measured
+    /// about you. Firstbeat's scale runs 0 to 2 for beginners, 3 to 5 for people
+    /// already training, 6 to 7 for the highly fit, and 7.5 to 10 for athletes,
+    /// and Training Effect (which recovery time is derived from) is EPOC scaled
+    /// by that class. Picking the bottom of the scale is not a neutral default,
+    /// it is a different claim about the user.
     ///
     /// | Profile | Reference training day | Load |
     /// |---|---|---|
-    /// | endurance | ~35 min at 65% heart-rate reserve | 52 |
-    /// | strength | ~40 min at RPE 5.5 | 64 |
-    /// | mixed | ~35 min at RPE 6.5 | 70 |
+    /// | endurance | ~45 min at 65% heart-rate reserve | 70 |
+    /// | strength | ~50 min at RPE 5.5 | 86 |
+    /// | mixed | ~45 min at RPE 6.5 | 94 |
     ///
-    /// The ratios between the three are unchanged from the 85 / 105 / 115 that
-    /// preceded these; only the level moved, so nothing about the relative cost
-    /// of a lift against a ride has been retuned here.
+    /// The endurance figure is **fitted**, not chosen: `GarminAnchorTests` scores
+    /// thirteen canonical sessions against the recovery-time bands Garmin is
+    /// observed to produce (easy 0-12h, moderate 12-24h, hard 24-48h, very hard
+    /// 48-72h) and 70 is the value that lands all thirteen inside their band. The
+    /// two previous values both miss, in opposite directions: 85 ran short from a
+    /// steady 45 minutes upward, and 52 ran long enough that an ordinary tempo
+    /// hour returned 50 hours and a hard interval session pinned the 72-hour
+    /// ceiling. 52 came from wanting personalisation to be able to shorten a fit
+    /// user's window, which was the right goal aimed at the wrong constant: the
+    /// personal denominator is *measured* from their own history and is free to
+    /// be two or three times this, so lowering the population reference never
+    /// created that headroom. It only made the free tier longer for everybody,
+    /// including the beginner it was lowered for.
+    ///
+    /// The ratios between the three profiles are unchanged across all three
+    /// revisions (85/105/115, then 52/64/70, now 70/86/94), so nothing about the
+    /// relative cost of a lift against a ride has ever been retuned here. Only
+    /// the level has moved.
     ///
     /// Compare `RecoveryBaseline.typicalLoad`, which is the same quantity
     /// measured from the person's own history and totalled per day. The two have
@@ -167,10 +178,10 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
     /// is a change of units.
     public var standardTypicalLoad: Double {
         switch self {
-        case .endurance: 52
-        case .strength: 64
-        case .mixed: 70
-        case .easy: 12
+        case .endurance: 70
+        case .strength: 86
+        case .mixed: 94
+        case .easy: 16
         }
     }
 
