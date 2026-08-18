@@ -171,15 +171,21 @@ public enum ScreenshotFixtures {
     /// reference, which is the compounding the model actually does.
     public static func history(now: Date = .now) -> [RecoveryEstimate] {
         let leadHoursAgo: Double = ScreenshotConfig.wantsReady ? 26 : 3
-        let pattern: [(hoursAgo: Double, hours: Double, standard: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
-            (leadHoursAgo, 21.7, 28.0, .endurance, "run", .hard),
-            (27, 9.4, 13.0, .endurance, "ride", .typical),
-            (52, 0, 0, .easy, "walk", .easy),
-            (74, 31.2, 39.0, .mixed, "functional session", .unusuallyHard),
-            (98, 14.8, 19.0, .strength, "lifting session", .typical),
-            (122, 18.1, 24.0, .endurance, "run", .hard),
-            (170, 7.6, 11.0, .endurance, "run", .typical),
-            (196, 26.4, 34.0, .mixed, "functional session", .hard)
+        // `carried` is the recovery still outstanding when the session landed,
+        // and one row has a real one: the lifting session at 98h went on top of
+        // the run at 122h, whose 18.1-hour window still had 5.9 hours to go.
+        // Recovery time is cumulative, so a capture where nothing ever stacks
+        // would show a model quietly simpler than the one that ships — the same
+        // trap `standardHours` fell into when it defaulted to `hours`.
+        let pattern: [(hoursAgo: Double, hours: Double, standard: Double, carried: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
+            (leadHoursAgo, 21.7, 28.0, 0, .endurance, "run", .hard),
+            (27, 9.4, 13.0, 0, .endurance, "ride", .typical),
+            (52, 0, 0, 0, .easy, "walk", .easy),
+            (74, 31.2, 39.0, 0, .mixed, "functional session", .unusuallyHard),
+            (98, 14.8, 19.0, 5.9, .strength, "lifting session", .typical),
+            (122, 18.1, 24.0, 0, .endurance, "run", .hard),
+            (170, 7.6, 11.0, 0, .endurance, "run", .typical),
+            (196, 26.4, 34.0, 0, .mixed, "functional session", .hard)
         ]
         return pattern.enumerated().map { index, item in
             let end = now.addingTimeInterval(-item.hoursAgo * 3600)
@@ -191,22 +197,26 @@ public enum ScreenshotFixtures {
                     "Extended slightly: short sleep (5.4h) and HRV below your usual range."
                 ]
             }
+            // The countdown this session actually set, which is what `readyAt`
+            // and the displayed range have to agree with.
+            let total = item.hours > 0 ? item.hours + item.carried : 0
             return RecoveryEstimate(
                 sessionID: "screenshot-\(index)",
                 profile: item.profile,
                 activityLabel: item.label,
                 calculatedAt: end,
                 sessionEnd: end,
-                readyAt: end.addingTimeInterval(item.hours * 3600),
+                readyAt: end.addingTimeInterval(total * 3600),
                 hours: item.hours,
-                windowLowHours: item.hours * 0.85,
-                windowHighHours: item.hours * 1.15,
+                windowLowHours: total * 0.85,
+                windowHighHours: total * 1.15,
                 load: SessionLoad(value: 40 + Double(index) * 12, source: .heartRate, heartRateCoverage: 0.95),
                 relativeLoad: 0.5 + Double(index) * 0.22,
                 category: item.category,
                 confidence: index % 3 == 0 ? .high : .medium,
                 reasons: reasons,
-                standardHours: item.standard
+                standardHours: item.standard,
+                carriedHours: item.carried
             )
         }
     }

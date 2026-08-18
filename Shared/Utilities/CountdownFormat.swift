@@ -62,6 +62,19 @@ public enum CountdownFormat {
         return "\(Int(hours.rounded()))h"
     }
 
+    /// Why a stacked countdown is longer than the session on screen.
+    ///
+    /// Recovery time is cumulative, so a session done inside a running
+    /// countdown produces a number the session alone does not explain. Saying
+    /// the two parts out loud is the difference between a model the user can
+    /// follow and one that looks broken.
+    ///
+    /// Deliberately arithmetic and deliberately not a claim about the body: it
+    /// names two figures the app has already shown and adds them.
+    public static func stackedNote(sessionHours: Double, carriedHours: Double) -> String {
+        "\(hours(sessionHours)) for this session, on top of \(hours(carriedHours)) still to go"
+    }
+
     /// The bounded window, e.g. `18 to 28h`. Collapses to a single figure when
     /// rounding makes the two ends equal.
     public static func window(low: Double, high: Double) -> String {

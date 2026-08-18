@@ -22,7 +22,7 @@ Recharge viser et avgrenset vindu i stedet for et tall med falsk presisjon, samm
 
 STANDARD, GRATIS
 
-Standardestimatet er den samme tabellen for alle: type økt, lengde og hardhet, målt mot pulsområdet for alderen din.
+Standardestimatet er én felles tabell, stilt inn etter treningsnivået du oppgir, eller som Recharge ser: type økt, lengde og hardhet, målt mot pulsområdet for alderen din.
 
 • Import av økter fra Apple Helse
 • Nedtellingen og Klar-tilstanden
@@ -53,7 +53,7 @@ Bruksvilkår (Apples standard-EULA): https://www.apple.com/legal/internet-servic
 
 PERSONVERN
 
-Recharge leser fra Apple Helse og skriver ingenting tilbake. Dataene dine blir på enhetene dine. Ingen konto, ingen innlogging, ingen server.
+Recharge leser fra Apple Helse og skriver ingenting tilbake. Dataene dine blir på enhetene dine. Ingen konto og ingen innlogging. Kjøp og abonnementsstatus håndteres av Apple og RevenueCat.
 
 VIKTIG
 

@@ -22,7 +22,7 @@ Recharge mostra una finestra acotada en lloc d'un número de falsa precisió, am
 
 ESTÀNDARD, GRATIS
 
-L'estimació estàndard és la mateixa taula per a tothom: tipus de sessió, durada i duresa, mesurats sobre el rang cardíac que correspon a la teva edat.
+L'estimació estàndard és una taula comuna, ajustada al nivell d'entrenament que indiques o que observa Recharge: tipus de sessió, durada i duresa, mesurats sobre el rang cardíac que correspon a la teva edat.
 
 • Importació d'entrenaments des de Salut d'Apple
 • El compte enrere i l'estat Llest
@@ -53,7 +53,7 @@ Condicions d'ús (EULA estàndard d'Apple): https://www.apple.com/legal/internet
 
 PRIVACITAT
 
-Recharge llegeix de Salut d'Apple i no hi escriu res. Les teves dades es queden als teus dispositius. Sense compte, sense inici de sessió, sense servidor.
+Recharge llegeix de Salut d'Apple i no hi escriu res. Les teves dades es queden als teus dispositius. Sense compte i sense inici de sessió. Les compres i l'estat de la subscripció els gestionen Apple i RevenueCat.
 
 IMPORTANT
 

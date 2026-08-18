@@ -22,7 +22,7 @@ Recharge muestra una ventana acotada en vez de un número de falsa precisión, j
 
 ESTÁNDAR, GRATIS
 
-La estimación estándar es la misma tabla para todos: tipo de sesión, duración y dureza, medidos sobre el rango cardíaco que corresponde a tu edad.
+La estimación estándar es una tabla común, ajustada al nivel de entrenamiento que indicas o que observa Recharge: tipo de sesión, duración y dureza, medidos sobre el rango cardíaco que corresponde a tu edad.
 
 • Importación de entrenamientos desde Salud de Apple
 • La cuenta regresiva y el estado Listo
@@ -53,7 +53,7 @@ Condiciones de uso (EULA estándar de Apple): https://www.apple.com/legal/intern
 
 PRIVACIDAD
 
-Recharge lee de Salud de Apple y no escribe nada. Tus datos se quedan en tus dispositivos. Sin cuenta, sin inicio de sesión, sin servidor.
+Recharge lee de Salud de Apple y no escribe nada. Tus datos se quedan en tus dispositivos. Sin cuenta y sin inicio de sesión. Las compras y el estado de la suscripción los gestionan Apple y RevenueCat.
 
 IMPORTANTE
 

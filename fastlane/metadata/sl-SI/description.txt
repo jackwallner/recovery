@@ -22,7 +22,7 @@ Recharge pokaže omejeno okno namesto številke z lažno natančnostjo, skupaj s
 
 STANDARD, BREZPLAČNO
 
-Standardna ocena je enaka tabela za vse: vrsta vadbe, trajanje in zahtevnost, merjeni glede na razpon srčnega utripa za tvojo starost.
+Standardna ocena je ena skupna tabela, prilagojena ravni treniranosti, ki jo navedeš ali ki jo opazi Recharge: vrsta vadbe, trajanje in zahtevnost, merjeni glede na razpon srčnega utripa za tvojo starost.
 
 • Uvoz treningov iz Apple Zdravja
 • Odštevanje in stanje Pripravljen
@@ -53,7 +53,7 @@ Pogoji uporabe (Applov standardni EULA): https://www.apple.com/legal/internet-se
 
 ZASEBNOST
 
-Recharge bere iz Apple Zdravja in vanj nič ne zapisuje. Tvoji podatki ostanejo na tvojih napravah. Brez računa, brez prijave, brez strežnika.
+Recharge bere iz Apple Zdravja in vanj nič ne zapisuje. Tvoji podatki ostanejo na tvojih napravah. Brez računa in brez prijave. Nakupe in stanje naročnine urejata Apple in RevenueCat.
 
 POMEMBNO
 

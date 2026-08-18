@@ -39,6 +39,7 @@ struct SettingsView: View {
             // Inline, as on Today, History, and the rest of the fleet: a large
             // title draws its own bar over the page the moment the form scrolls.
             .navigationBarTitleDisplayMode(.inline)
+            .tabBarClearance()
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "settings")
                     .environmentObject(store)

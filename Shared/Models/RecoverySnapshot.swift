@@ -67,7 +67,11 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         self.init(
             readyAt: estimate.producesCountdown ? estimate.readyAt : nil,
             sessionEnd: estimate.sessionEnd,
-            hours: estimate.hours,
+            // The stacked total, not the session's own cost: everything reading
+            // a snapshot is drawing a countdown, and the countdown runs for the
+            // total. `windowLowHours`/`windowHighHours` already spread around
+            // it.
+            hours: estimate.totalHours,
             windowLowHours: estimate.windowLowHours,
             windowHighHours: estimate.windowHighHours,
             profile: estimate.profile,
@@ -117,10 +121,31 @@ public enum RecoverySnapshotStore {
     static let key = "recoverySnapshot"
 
     public static func load(defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)) -> RecoverySnapshot {
-        guard let data = (defaults ?? .standard).data(forKey: key),
-              let snapshot = try? JSONDecoder().decode(RecoverySnapshot.self, from: data)
-        else { return .empty }
-        return snapshot
+        loadIfPresent(defaults: defaults) ?? .empty
+    }
+
+    /// nil when nothing has ever been written here, which on the Watch is a
+    /// genuinely different state from a snapshot that happens to be empty.
+    ///
+    /// `load` collapses the two, and every reader used to go through it, so a
+    /// user who had synced perfectly well but simply had no qualifying workout
+    /// got the same `RecoverySnapshot.empty` as a Watch that had never heard
+    /// from the phone, and the complication told them to open Recharge to set
+    /// it up, forever, with nothing to set up. Presence of the key is the only
+    /// thing that can tell them apart, because an empty snapshot and a default
+    /// one are equal by construction.
+    public static func loadIfPresent(
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) -> RecoverySnapshot? {
+        guard let data = (defaults ?? .standard).data(forKey: key) else { return nil }
+        return try? JSONDecoder().decode(RecoverySnapshot.self, from: data)
+    }
+
+    /// Whether the phone has ever published into this container.
+    public static func hasEverSynced(
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) -> Bool {
+        (defaults ?? .standard).data(forKey: key) != nil
     }
 
     public static func save(

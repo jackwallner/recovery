@@ -77,7 +77,26 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// over, and the honest sample size for it.
     public var dayCount: Int { dailyLoads.count }
 
+    /// Enough individual **sessions** to read a per-session percentile off them.
+    /// `quietThreshold` is the only thing this gates, and per-session is what
+    /// that statistic is, so it counts sessions.
     public var hasEnoughSamples: Bool { sampleCount >= Self.minimumSamples }
+
+    /// Whether `typicalLoad` is actually the person's own number yet.
+    ///
+    /// Counted in **training days**, because that is what the shrinkage in
+    /// `typicalLoad` weights by, and confidence is a claim about the
+    /// denominator, so it has to be counted the same way the denominator is.
+    ///
+    /// It used to count sessions, which let the two disagree, and they
+    /// disagreed hardest for exactly the user `dailyLoads` was introduced for:
+    /// somebody training three times a day clears eight *sessions* on day
+    /// three, so the estimate stopped saying `buildingBaseline` while the
+    /// denominator underneath it was still five-eighths population reference.
+    /// The app announced it had measured them while it was still mostly
+    /// guessing, and it did so soonest for the heaviest trainers, who are the
+    /// ones most likely to check.
+    public var hasEstablishedBaseline: Bool { dayCount >= Self.minimumSamples }
 
     /// What a typical training day costs this person: the **geometric mean** of
     /// their own daily loads, shrunk toward the profile's population reference

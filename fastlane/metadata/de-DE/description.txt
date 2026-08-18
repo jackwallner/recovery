@@ -22,7 +22,7 @@ Recharge zeigt ein begrenztes Fenster statt einer Zahl mit falscher Präzision, 
 
 STANDARD, KOSTENLOS
 
-Die Standardschätzung ist dieselbe Tabelle für alle: Art der Einheit, Dauer und Härte, gemessen am Herzfrequenzbereich für dein Alter.
+Die Standardschätzung ist eine gemeinsame Tabelle auf deinem Trainingsniveau: Art der Einheit, Dauer und Härte, am Herzfrequenzbereich für dein Alter.
 
 • Import von Workouts aus Apple Health
 • Der Countdown und der Bereit-Zustand
@@ -53,7 +53,7 @@ Nutzungsbedingungen (Apple Standard-EULA): https://www.apple.com/legal/internet-
 
 DATENSCHUTZ
 
-Recharge liest aus Apple Health und schreibt nichts zurück. Deine Daten bleiben auf deinen Geräten. Kein Konto, keine Anmeldung, kein Server.
+Recharge liest aus Apple Health und schreibt nichts zurück. Deine Daten bleiben auf deinen Geräten. Kein Konto und keine Anmeldung. Käufe laufen über Apple und RevenueCat.
 
 WICHTIG
 

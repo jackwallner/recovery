@@ -22,7 +22,7 @@ Recharge prikazuje omeđen prozor umjesto broja lažne preciznosti, zajedno sa s
 
 STANDARD, BESPLATNO
 
-Standardna procjena je ista tablica za sve: vrsta sesije, trajanje i težina, mjereni prema pulsnom rasponu za tvoju dob.
+Standardna procjena je jedna zajednička tablica, prilagođena razini treniranosti koju navedeš ili koju Recharge primijeti: vrsta sesije, trajanje i težina, mjereni prema pulsnom rasponu za tvoju dob.
 
 • Uvoz treninga iz Apple Zdravlja
 • Odbrojavanje i stanje Spreman
@@ -53,7 +53,7 @@ Uvjeti korištenja (Appleov standardni EULA): https://www.apple.com/legal/intern
 
 PRIVATNOST
 
-Recharge čita iz Apple Zdravlja i ništa ne zapisuje natrag. Tvoji podaci ostaju na tvojim uređajima. Bez računa, bez prijave, bez poslužitelja.
+Recharge čita iz Apple Zdravlja i ništa ne zapisuje natrag. Tvoji podaci ostaju na tvojim uređajima. Bez računa i bez prijave. Kupnje i status pretplate obrađuju Apple i RevenueCat.
 
 VAŽNO
 

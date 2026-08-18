@@ -22,7 +22,7 @@ A Recharge behatárolt ablakot mutat egy hamis pontosságú szám helyett, azzal
 
 ALAP, INGYENES
 
-Az alapbecslés mindenkinek ugyanaz a táblázat: az edzés típusa, hossza és keménysége, a korodhoz tartozó pulzustartományhoz mérve.
+Az alapbecslés egyetlen közös táblázat, a megadott vagy a Recharge által megfigyelt edzettségi szintedhez igazítva: az edzés típusa, hossza és keménysége, a korodhoz tartozó pulzustartományhoz mérve.
 
 • Edzések importja az Apple Egészségből
 • A visszaszámlálás és a Kész állapot
@@ -53,7 +53,7 @@ Felhasználási feltételek (Apple szabványos EULA): https://www.apple.com/lega
 
 ADATVÉDELEM
 
-A Recharge olvas az Apple Egészségből, és semmit nem ír vissza. Az adataid a saját eszközeiden maradnak. Nincs fiók, nincs bejelentkezés, nincs szerver.
+A Recharge olvas az Apple Egészségből, és semmit nem ír vissza. Az adataid a saját eszközeiden maradnak. Nincs fiók és nincs bejelentkezés. A vásárlásokat és az előfizetés állapotát az Apple és a RevenueCat kezeli.
 
 FONTOS
 

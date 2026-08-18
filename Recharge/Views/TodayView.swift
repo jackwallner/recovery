@@ -88,10 +88,8 @@ struct TodayView: View {
                     disclaimer
                 }
                 .padding(.horizontal, 16)
-                // Clears the floating tab bar; without it the disclaimer, which
-                // has to stay legible for App Review 1.4.1, sits under the blur.
-                .padding(.bottom, 72)
             }
+            .tabBarClearance()
             .background(Theme.background)
             .navigationTitle("Recharge")
             .navigationBarTitleDisplayMode(.inline)
@@ -212,12 +210,26 @@ struct TodayView: View {
 
                 if let explained, explained.producesCountdown {
                     // Past tense once it has expired: "Window 18 to 25h" beside a
-                    // green Ready ring reads as a live figure it no longer is.
+                    // green Ring reads as a live figure it no longer is.
                     Text(phase == .ready
                          ? "Estimate was \(CountdownFormat.window(low: explained.windowLowHours, high: explained.windowHighHours))"
                          : "Window \(CountdownFormat.window(low: explained.windowLowHours, high: explained.windowHighHours))")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textTertiary)
+
+                    // A stacked countdown is longer than the session on screen
+                    // appears to justify, and without saying why that reads as
+                    // the app having got it wrong.
+                    if explained.isStacked {
+                        Text(CountdownFormat.stackedNote(
+                            sessionHours: explained.hours,
+                            carriedHours: explained.carriedHours
+                        ))
+                            .font(.system(.footnote, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 if let explained {
@@ -234,7 +246,7 @@ struct TodayView: View {
         // A stale estimate is not explained, so it must not paint a full ring
         // beside the "no workout yet" hero either.
         guard let explained, explained.producesCountdown else { return phase == .noRecentWorkout ? 0 : 1 }
-        let total = explained.hours * 3600
+        let total = explained.totalHours * 3600
         guard total > 0 else { return 1 }
         return min(max(1 - explained.remainingSeconds(at: now) / total, 0), 1)
     }
@@ -333,7 +345,15 @@ struct TodayView: View {
                         Text("How hard was that session?")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
-                        Text("Heart rate was unreliable, so your rating decides the estimate.")
+                        // Not "your rating decides the estimate", which is what
+                        // this said and is not what the model does: strength and
+                        // mixed sessions take the *highest* of heart rate,
+                        // effort, energy and the type-typical guess, so an
+                        // honest low rating can lose to a signal that read
+                        // harder. Promising the answer is decisive and then
+                        // moving the number by nothing is a worse outcome than
+                        // never asking.
+                        Text("Heart rate was patchy here. Your rating counts whenever it reads harder than the sensors did.")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.leading)

@@ -37,7 +37,7 @@ enum ProFeature: CaseIterable {
     var detail: String {
         switch self {
         case .personalizedTime:
-            "The free estimate is the standard model at the training level you told us about. Recharge+ scores every session against your own \(RecoveryBaseline.historyDays)-day baseline instead, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
+            "The free estimate is the standard model at the training level you told us about. Recharge+ scores every session against your own \(RecoveryBaseline.historyDays)-day baseline instead, then reads the last \(PersonalRecoveryModel.windowDays) days (how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window) to set how fast your countdowns run."
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
         case .weeklyLoad:

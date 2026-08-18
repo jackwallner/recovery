@@ -22,10 +22,24 @@ struct RestPatternCard: View {
     var onUpgrade: (() -> Void)?
 
     /// The onboarding pitch shows the same table with none of the furniture: no
-    /// upgrade button (the page has one), no explanatory footnote (the page is
-    /// the explanation). Same numbers, same blur, so what the user is shown
+    /// upgrade button (the page has one) and no explanatory footnote (the page
+    /// is the explanation). Same numbers, same blur, so what the user is shown
     /// before paying is exactly what they get after.
+    ///
+    /// The one thing compact may **not** drop is that a figure is an example.
+    /// This card is on the trial-offer page, where the person most likely to be
+    /// looking at it is the person who has recorded nothing yet, so every row
+    /// is the canonical fallback session and the furniture that said so was
+    /// the furniture being stripped. Blurring a number does not communicate
+    /// that it is illustrative; it communicates that it is real and withheld.
     var isCompact = false
+
+    /// True when nothing in the table has been measured yet and every figure is
+    /// the canonical mid-band session. The state a brand-new user is in, and
+    /// the one the pitch is read in.
+    private var isEntirelyExample: Bool { !rows.isEmpty && rows.allSatisfy(\.isExample) }
+
+    private var hasAnyExample: Bool { rows.contains(where: \.isExample) }
 
     /// The band the sentence talks about: the hardest one with a real measured
     /// gap, because that is where the difference between habit and estimate is
@@ -48,6 +62,14 @@ struct RestPatternCard: View {
                 if !isCompact {
                     if !isPro, let onUpgrade { upgradeButton(onUpgrade) }
                     footnote
+                } else if hasAnyExample {
+                    // The compact variant drops the furniture, not the caveat.
+                    Text(isEntirelyExample
+                         ? "Example figures. Yours are measured from your own sessions once you have recorded some."
+                         : "Some bands have no sessions yet, so those rows are examples from the standard curve.")
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -56,7 +78,11 @@ struct RestPatternCard: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("Your rest pattern")
+                // "Your rest pattern" over a table containing none of the
+                // user's own sessions is a claim the app cannot support, and it
+                // is made loudest on the trial page, where somebody is deciding
+                // whether to pay for exactly the thing being illustrated.
+                Text(isEntirelyExample ? "Rest pattern, for example" : "Your rest pattern")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Text("Hours between sessions, by how hard the last one was.")
@@ -179,7 +205,7 @@ struct RestPatternCard: View {
     /// three columns look alike and only one of them is something that happened.
     private var footnote: some View {
         Text(
-            rows.contains(where: \.isExample)
+            hasAnyExample
                 ? "Measured from your own sessions where there are enough of them, and from the standard curve where there are not. Estimates, not targets."
                 : "Measured from your own sessions. The last two columns are estimates, not targets."
         )
@@ -201,6 +227,12 @@ struct RestPatternCard: View {
                 ? "Yours, \(CountdownFormat.hours(row.personalizedHours))."
                 : "Your own estimate is a Recharge+ feature."
         )
+        // Sighted users get the caveat from the footnote under the table.
+        // VoiceOver reads a row at a time and never reaches it, so the row has
+        // to carry it.
+        if row.isExample {
+            parts.append("Example figures for this band. No sessions recorded in it yet.")
+        }
         return parts.joined(separator: " ")
     }
 }

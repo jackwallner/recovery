@@ -36,7 +36,10 @@ struct EffortPromptSheet: View {
                     Text("How hard was it?")
                         .font(.system(.title2, design: .rounded, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("Your \(Int(durationMinutes.rounded()))-minute \(activityLabel) didn't have usable heart-rate data, so your rating sets the estimate.")
+                    // Same correction as the card that opens this sheet: the
+                    // rating joins the other signals and the highest one wins,
+                    // so it can only ever lengthen the window, never shorten it.
+                    Text("Your \(Int(durationMinutes.rounded()))-minute \(activityLabel) didn't have usable heart-rate data. Your rating counts whenever it reads harder than the other signals.")
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)

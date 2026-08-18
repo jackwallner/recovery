@@ -22,7 +22,7 @@ Recharge mostra una finestra delimitata invece di un numero di falsa precisione,
 
 STANDARD, GRATIS
 
-La stima standard è la stessa tabella per tutti: tipo di sessione, durata e durezza, misurati sull'intervallo cardiaco corrispondente alla tua età.
+La stima standard è un'unica tabella tarata sul tuo livello di allenamento: tipo, durata e intensità, sull'intervallo cardiaco della tua età.
 
 • Importazione degli allenamenti da Salute di Apple
 • Il conto alla rovescia e lo stato Pronto
@@ -53,7 +53,7 @@ Condizioni d'uso (EULA standard Apple): https://www.apple.com/legal/internet-ser
 
 PRIVACY
 
-Recharge legge da Salute di Apple e non scrive nulla. I tuoi dati restano sui tuoi dispositivi. Nessun account, nessun accesso, nessun server.
+Recharge legge da Salute di Apple e non scrive nulla. I tuoi dati restano sui tuoi dispositivi. Nessun account né accesso. Gli acquisti passano da Apple e RevenueCat.
 
 IMPORTANTE
 
