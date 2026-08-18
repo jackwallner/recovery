@@ -325,7 +325,10 @@ public final class RecoveryEngine: ObservableObject {
         let standardEstimates = inputs.map { session in
             RecoveryCalculator.estimate(
                 for: session,
-                baseline: .standard(for: session.profile),
+                baseline: .standard(
+                    for: session.profile,
+                    fitnessScale: settings.athleteProfile.fitnessScale
+                ),
                 now: now
             )
         }
@@ -361,7 +364,8 @@ public final class RecoveryEngine: ObservableObject {
 
         // Pass two: the estimate the user actually gets. On the free tier that is
         // the standard one already computed — no personal baseline, no overnight
-        // context, no calibration, the same table for everyone.
+        // context, no calibration, no history — the standard model at the
+        // training level they stated.
         for (index, workout) in workouts.enumerated() {
             let session = inputs[index]
             // Scored the personalized way regardless of tier. A paying user gets
@@ -372,7 +376,8 @@ public final class RecoveryEngine: ObservableObject {
                 baseline: RecoveryBaseline.build(
                     from: history,
                     for: session.profile,
-                    now: workout.endDate
+                    now: workout.endDate,
+                    fitnessScale: settings.athleteProfile.fitnessScale
                 ),
                 context: settings.useContextSignals
                     ? contextFor(

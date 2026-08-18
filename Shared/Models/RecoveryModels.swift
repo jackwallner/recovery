@@ -30,7 +30,7 @@ import Foundation
 /// they put the two tiers the right way round: training more now shortens the
 /// window instead of lengthening it. Free-tier windows get longer; windows for
 /// anyone training more than a couple of times a week get shorter.
-public let recoveryModelVersion = 6
+public let recoveryModelVersion = 7
 
 // MARK: - Tier
 
@@ -39,8 +39,11 @@ public let recoveryModelVersion = 6
 /// Stored on every estimate, because the two answer subtly different questions
 /// and a history list that mixes them without saying so is lying by omission.
 public enum RecoveryTier: String, Codable, Sendable {
-    /// The same table for everyone: session type, duration, and intensity in,
-    /// hours out. No personal history, no overnight context, no calibration.
+    /// The standard model at the training level the person stated: session
+    /// type, duration, and intensity in, hours out, against a population
+    /// reference scaled by `AthleteProfile.fitnessScale`. No personal history,
+    /// no overnight context, no calibration, no thirty-day analysis. The line
+    /// between the tiers is *measurement*, not personalisation.
     case standard
     /// The person's own baseline, their thirty-day recovery analysis, overnight
     /// context, and their calibration feedback.

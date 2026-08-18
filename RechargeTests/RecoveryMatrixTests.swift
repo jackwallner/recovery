@@ -107,7 +107,7 @@ final class RecoveryMatrixTests: XCTestCase {
                             let session = AthleteMatrix.session(
                                 code: code, shape: shape, persona: persona, sensors: sensors
                             )
-                            let standard = AthleteMatrix.standard(session).hours
+                            let standard = AthleteMatrix.standard(session, persona: persona).hours
                             let personalized = AthleteMatrix.personalized(session, persona: persona).hours
                             XCTAssertGreaterThanOrEqual(
                                 standard, previous,
@@ -148,7 +148,7 @@ final class RecoveryMatrixTests: XCTestCase {
                             let session = AthleteMatrix.session(
                                 code: code, shape: shape, persona: persona, sensors: sensors
                             )
-                            let standard = AthleteMatrix.standard(session).hours
+                            let standard = AthleteMatrix.standard(session, persona: persona).hours
                             let personalized = AthleteMatrix.personalized(session, persona: persona).hours
                             XCTAssertGreaterThanOrEqual(
                                 standard, previous,
@@ -199,8 +199,8 @@ final class RecoveryMatrixTests: XCTestCase {
                             code: code, shape: shape, persona: persona, sensors: silent
                         )
                         XCTAssertGreaterThanOrEqual(
-                            AthleteMatrix.standard(answered).hours,
-                            AthleteMatrix.standard(unanswered).hours,
+                            AthleteMatrix.standard(answered, persona: persona).hours,
+                            AthleteMatrix.standard(unanswered, persona: persona).hours,
                             "answering the effort question shortened the standard window: \(answered.id)"
                         )
                         XCTAssertGreaterThanOrEqual(
@@ -434,7 +434,14 @@ final class RecoveryMatrixTests: XCTestCase {
                 cell.shape.name,
                 cell.sensors.name,
                 String(cell.persona.maxHeartRate),
-                String(cell.persona.restingHeartRate)
+                String(cell.persona.restingHeartRate),
+                // The stated fitness level is part of the standard tier now, so
+                // it belongs in the key. What must still never appear here is
+                // anything the person has *done*: history, context, calibration,
+                // the thirty-day analysis. Two personas who answered the same
+                // two questions the same way get the same free-tier number
+                // however differently they train.
+                String(format: "%.6f", cell.persona.profile.fitnessScale)
             ].joined(separator: "|")
 
             if let existing = byKey[key] {
@@ -479,7 +486,7 @@ final class RecoveryMatrixTests: XCTestCase {
                 heartRateCoverage: 0.95,
                 activityLabel: "run"
             )
-            let hours = AthleteMatrix.standard(session).hours
+            let hours = AthleteMatrix.standard(session, persona: AthleteMatrix.unanswered).hours
             XCTAssertGreaterThanOrEqual(
                 hours, previousHours,
                 "the same 150 bpm hour got cheaper between \(previousAge) and \(age)"
@@ -636,7 +643,7 @@ final class RecoveryMatrixTests: XCTestCase {
                 let session = AthleteMatrix.session(
                     code: code.rawValue, shape: shape, persona: persona, sensors: sensors
                 )
-                let standard = AthleteMatrix.standard(session)
+                let standard = AthleteMatrix.standard(session, persona: persona)
                 let personalized = AthleteMatrix.personalized(session, persona: persona)
                 func window(_ estimate: RecoveryEstimate) -> String {
                     estimate.producesCountdown

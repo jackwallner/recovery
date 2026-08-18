@@ -44,12 +44,32 @@ public struct RecoveryBaseline: Sendable, Equatable {
     ///   session loads themselves, which is the right reading for a caller that
     ///   has no dates: one session per day is the assumption that changes
     ///   nothing.
-    public init(loads: [Double], profile: WorkoutProfile, dailyLoads: [Double]? = nil) {
+    /// Scales the population reference to the person's stated fitness level.
+    /// Only ever moves `referenceLoad`, so it changes the *bootstrap* and the
+    /// standard tier and has no effect once there is a full personal history.
+    public let fitnessScale: Double
+
+    public init(
+        loads: [Double],
+        profile: WorkoutProfile,
+        dailyLoads: [Double]? = nil,
+        fitnessScale: Double = 1
+    ) {
         let sessions = loads.filter { $0 > 0 }.sorted()
         self.loads = sessions
         self.dailyLoads = (dailyLoads ?? loads).filter { $0 > 0 }.sorted()
         self.profile = profile
+        self.fitnessScale = min(max(fitnessScale, Self.minimumFitnessScale), Self.maximumFitnessScale)
     }
+
+    /// Bounds on the fitness scale, so a future question cannot turn the
+    /// standard tier into an unbounded personalisation by the back door.
+    public static let minimumFitnessScale = 0.70
+    public static let maximumFitnessScale = 1.45
+
+    /// The population reference this baseline measures against: the profile's
+    /// standard training day, moved to the person's stated fitness level.
+    public var referenceLoad: Double { profile.standardTypicalLoad * fitnessScale }
 
     public var sampleCount: Int { loads.count }
 
@@ -109,12 +129,12 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// prior: on day three the estimate is mostly the standard table, and by
     /// eight training days it is entirely the person's own.
     public var typicalLoad: Double {
-        guard !dailyLoads.isEmpty else { return profile.standardTypicalLoad }
+        guard !dailyLoads.isEmpty else { return referenceLoad }
         let personal = Self.geometricMean(of: dailyLoads)
-        guard personal > 0 else { return profile.standardTypicalLoad }
+        guard personal > 0 else { return referenceLoad }
         let weight = min(Double(dayCount) / Double(Self.minimumSamples), 1)
         guard weight < 1 else { return personal }
-        return exp(weight * log(personal) + (1 - weight) * log(profile.standardTypicalLoad))
+        return exp(weight * log(personal) + (1 - weight) * log(referenceLoad))
     }
 
     /// Geometric mean of a positive sample. Empty or non-positive input returns
@@ -156,49 +176,67 @@ public struct RecoveryBaseline: Sendable, Equatable {
     }
 
     /// The population reference the free tier scores against: no samples, so
-    /// `typicalLoad` is the profile's standard reference and `quietThreshold` is
-    /// the absolute floor.
+    /// `typicalLoad` is the profile's standard reference scaled by the person's
+    /// stated fitness level, and `quietThreshold` is the absolute floor.
     ///
-    /// This is what makes the standard estimate the same for everyone. A given
-    /// session type, length, and intensity produces the same number of hours
-    /// whoever did it — which is the honest thing for a tier that has been told
-    /// not to look at the person's history.
-    public static func standard(for profile: WorkoutProfile) -> RecoveryBaseline {
-        RecoveryBaseline(loads: [], profile: profile)
+    /// - Parameter fitnessScale: `AthleteProfile.fitnessScale`, the only thing
+    ///   about the person that reaches this tier. 1 means "no claim about
+    ///   fitness", which is what an unanswered questionnaire gives.
+    ///
+    /// The standard estimate is the same for everyone **who answered the same
+    /// way**, which is the promise now and is what Garmin's own pre-measurement
+    /// number is. What it still contains none of is *measurement*: no session
+    /// history, no overnight context, no calibration, no thirty-day analysis.
+    /// That is the line the two tiers are drawn on, and it is a cleaner one than
+    /// the flat table it replaced — a free user is told what the model says for
+    /// somebody at their training level, and Recharge+ is what replaces "at your
+    /// level" with "you".
+    public static func standard(for profile: WorkoutProfile, fitnessScale: Double = 1) -> RecoveryBaseline {
+        RecoveryBaseline(loads: [], profile: profile, fitnessScale: fitnessScale)
     }
 
     /// Builds a baseline for `profile` from a mixed history. Falls back to the
     /// whole history when the profile itself is too sparse, so a user's first
     /// ever HYROX session is still scored against something real.
+    /// - Parameter fitnessScale: only reaches the bootstrap. Once there are
+    ///   `minimumSamples` training days the person's own figure is used exactly
+    ///   and their stated level stops mattering, which is the right order: a
+    ///   measurement beats a self-report as soon as there is one.
     public static func build(
         from history: [(profile: WorkoutProfile, load: Double, date: Date)],
         for profile: WorkoutProfile,
         now: Date = .now,
-        historyDays: Int = RecoveryBaseline.historyDays
+        historyDays: Int = RecoveryBaseline.historyDays,
+        fitnessScale: Double = 1
     ) -> RecoveryBaseline {
         let cutoff = now.addingTimeInterval(-Double(historyDays) * 86_400)
         let recent = history.filter { $0.date >= cutoff && $0.profile != .easy }
 
         let inProfile = recent.filter { $0.profile == profile }
         if inProfile.count >= minimumSamples {
-            return baseline(from: inProfile, for: profile)
+            return baseline(from: inProfile, for: profile, fitnessScale: fitnessScale)
         }
 
         // Not enough same-profile history. Pooling across profiles is a worse
         // comparison but a much better one than the standard reference, so use
         // it whenever it clears the threshold.
         if recent.count >= minimumSamples {
-            return baseline(from: recent, for: profile)
+            return baseline(from: recent, for: profile, fitnessScale: fitnessScale)
         }
 
-        return baseline(from: inProfile.isEmpty ? recent : inProfile, for: profile)
+        return baseline(
+            from: inProfile.isEmpty ? recent : inProfile,
+            for: profile,
+            fitnessScale: fitnessScale
+        )
     }
 
     /// Sessions and their per-day totals, which are the two different questions
     /// `quietThreshold` and `typicalLoad` ask.
     private static func baseline(
         from entries: [(profile: WorkoutProfile, load: Double, date: Date)],
-        for profile: WorkoutProfile
+        for profile: WorkoutProfile,
+        fitnessScale: Double
     ) -> RecoveryBaseline {
         var byDay: [String: Double] = [:]
         for entry in entries {
@@ -207,7 +245,8 @@ public struct RecoveryBaseline: Sendable, Equatable {
         return RecoveryBaseline(
             loads: entries.map(\.load),
             profile: profile,
-            dailyLoads: Array(byDay.values)
+            dailyLoads: Array(byDay.values),
+            fitnessScale: fitnessScale
         )
     }
 }

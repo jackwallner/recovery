@@ -9,7 +9,8 @@ import SwiftUI
 /// - **You** — the gap they actually leave. Measured, not modelled, and shown on
 ///   both tiers because it is a description of their own training rather than a
 ///   personalised estimate.
-/// - **Similar** — what the standard table gives someone with their answers.
+/// - **Similar** — what the standard model gives someone at their training
+///   level. This is exactly the free-tier number, not a separate adjustment.
 /// - **Yours** — what Recharge+ makes of it, blurred until they have it.
 ///
 /// The third column is the pitch and it is deliberately a real number under the
