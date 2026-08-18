@@ -12,12 +12,36 @@ final class RecoveryBaselineTests: XCTestCase {
         }
     }
 
-    func testMedianIsTheTypicalLoadOnceTheSampleIsBigEnough() {
-        let baseline = RecoveryBaseline(
-            loads: [10, 20, 30, 40, 50, 60, 70, 80, 90], profile: .endurance
-        )
+    /// The geometric mean of the day totals, once there are enough of them for
+    /// the shrinkage to have let go. It sits below the median on a right-skewed
+    /// sample, which is the whole reason it replaced it: a week whose middle day
+    /// is small does not mean the person trains small.
+    func testTheGeometricMeanIsTheTypicalLoadOnceTheSampleIsBigEnough() {
+        let loads: [Double] = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        let baseline = RecoveryBaseline(loads: loads, profile: .endurance)
         XCTAssertTrue(baseline.hasEnoughSamples)
-        XCTAssertEqual(baseline.typicalLoad, 50, accuracy: 0.0001)
+        XCTAssertEqual(baseline.typicalLoad, 41.4716627440, accuracy: 0.0001)
+        XCTAssertEqual(baseline.typicalLoad, RecoveryBaseline.geometricMean(of: loads), accuracy: 0.0001)
+    }
+
+    /// On a symmetric sample the two statistics agree, which is the guarantee
+    /// that switching to the geometric mean did not quietly retune every
+    /// ordinary user's window. They separate only where the sample is skewed.
+    func testTheGeometricMeanMatchesTheMedianOnAnEvenlySpreadHistory() {
+        let even: [Double] = [40, 44, 48, 52, 56, 60, 64, 68]
+        let baseline = RecoveryBaseline(loads: even, profile: .endurance)
+        XCTAssertEqual(baseline.typicalLoad, baseline.percentile(0.5), accuracy: baseline.percentile(0.5) * 0.04)
+    }
+
+    /// And it is not an arithmetic mean: one enormous session must not redefine
+    /// what a normal day costs for this person.
+    func testOneOutlierDoesNotRedefineATypicalDay() {
+        var loads: [Double] = Array(repeating: 50, count: 11)
+        loads.append(600)
+        let baseline = RecoveryBaseline(loads: loads, profile: .endurance)
+        let arithmetic = loads.reduce(0, +) / Double(loads.count)
+        XCTAssertLessThan(baseline.typicalLoad, arithmetic * 0.75)
+        XCTAssertLessThan(baseline.typicalLoad, 70)
     }
 
     /// A thin history is shrunk toward the population reference rather than
@@ -52,7 +76,7 @@ final class RecoveryBaselineTests: XCTestCase {
         let baseline = RecoveryBaseline(
             loads: [50, 10, 90, 40, 20, 80, 30, 70, 60], profile: .endurance
         )
-        XCTAssertEqual(baseline.typicalLoad, 50, accuracy: 0.0001)
+        XCTAssertEqual(baseline.typicalLoad, 41.4716627440, accuracy: 0.0001)
     }
 
     func testNonPositiveLoadsAreDiscarded() {
