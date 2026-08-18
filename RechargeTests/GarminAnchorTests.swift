@@ -149,6 +149,64 @@ final class GarminAnchorTests: XCTestCase {
         XCTAssertEqual(WorkoutProfile.mixed.standardTypicalLoad / endurance, 115.0 / 85.0, accuracy: 0.02)
     }
 
+    // MARK: - The fitness level
+
+    /// A hard hour stays a hard-session answer at every stated fitness level.
+    ///
+    /// `fitnessScale` is the one thing about the person that reaches the
+    /// standard tier, and it is the exact analogue of Garmin's activity class:
+    /// the same session costs a beginner more than it costs a seven-times-a-week
+    /// veteran. The envelope is wider than the 24-48h band the default is pinned
+    /// to, because the ends of the scale are *supposed* to leave it — a very fit
+    /// user getting a shade over twenty hours for a threshold hour is Garmin's
+    /// behaviour too, not a fault. What it may not do is leave the range of
+    /// answers a hard session can have at all.
+    func testEveryStatedFitnessLevelStillAnswersAHardHourLikeAHardHour() {
+        let anchor = anchors.first { $0.name == "60m threshold" }!
+        var seen: [Double] = []
+        for volume in WeeklyVolume.allCases {
+            for experience in TrainingExperience.allCases {
+                let scale = AthleteProfile(experience: experience, weeklyVolume: volume).fitnessScale
+                let hours = RecoveryCalculator.estimate(
+                    for: session(anchor),
+                    baseline: .standard(for: .endurance, fitnessScale: scale),
+                    now: now
+                ).hours
+                XCTAssertGreaterThanOrEqual(hours, 18, "\(volume)/\(experience): \(hours)h")
+                XCTAssertLessThanOrEqual(hours, 52, "\(volume)/\(experience): \(hours)h")
+                seen.append(hours)
+            }
+        }
+        // And it has to actually do something, or the questions are theatre.
+        XCTAssertGreaterThan(seen.max()! / seen.min()!, 1.5)
+    }
+
+    /// Monotone in the direction Firstbeat's scale runs: more training and more
+    /// years may only ever shorten the standard window, never lengthen it.
+    func testMoreTrainingNeverLengthensTheStandardWindow() {
+        let anchor = anchors.first { $0.name == "60m threshold" }!
+        let hours = { (v: WeeklyVolume, e: TrainingExperience) in
+            RecoveryCalculator.estimate(
+                for: self.session(anchor),
+                baseline: .standard(
+                    for: .endurance,
+                    fitnessScale: AthleteProfile(experience: e, weeklyVolume: v).fitnessScale
+                ),
+                now: self.now
+            ).hours
+        }
+        for experience in TrainingExperience.allCases {
+            for (lower, higher) in zip(WeeklyVolume.allCases, WeeklyVolume.allCases.dropFirst()) {
+                XCTAssertLessThanOrEqual(hours(higher, experience), hours(lower, experience) + 0.001)
+            }
+        }
+        for volume in WeeklyVolume.allCases {
+            for (lower, higher) in zip(TrainingExperience.allCases, TrainingExperience.allCases.dropFirst()) {
+                XCTAssertLessThanOrEqual(hours(volume, higher), hours(volume, lower) + 0.001)
+            }
+        }
+    }
+
     // MARK: - The table, for reading
 
     /// Prints the standard tier beside the bands it is fitted to. Not an

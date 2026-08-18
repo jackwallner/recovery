@@ -281,7 +281,7 @@ struct SettingsView: View {
         } footer: {
             Text(store.isPro
                 ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The standard estimate is the same table for everyone: session type, length, and intensity in, hours out. Recharge+ scores each session against your own history instead.")
+                : "The standard estimate uses your training level: session type, length, and intensity in, hours out, on the curve for someone who trains as much as you said you do. Recharge+ replaces \"someone like you\" with you, scoring each session against your own history.")
         }
     }
 
@@ -356,7 +356,7 @@ struct SettingsView: View {
 
     private var aboutYouFooter: String {
         let derived = settings.athleteProfile.healthDerivedFields
-        let base = "Age sets the heart-rate range every session is measured against, on both tiers. The rest shape your Recharge+ estimate until there is enough history to answer for itself."
+        let base = "Age sets the heart-rate range every session is measured against. Sessions a week and how long you have been training set your training level, which both tiers use. Ready again after shapes your Recharge+ estimate until there is enough history to answer for itself."
         guard !derived.isEmpty else { return base }
         var found: [String] = []
         if derived.contains(AthleteProfile.ageField) { found.append("your age") }

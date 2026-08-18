@@ -12,7 +12,7 @@ import Foundation
 /// | Column | What it is | Where it comes from |
 /// |---|---|---|
 /// | Your history | The gap you actually leave between sessions in this band | Measured. Median of the real intervals in `windowDays` of history. |
-/// | Similar profiles | What the standard table gives someone with your answers | The same population curve the free tier scores against, moved by `AthleteProfile.prior` — age, experience, weekly volume, bounce-back. |
+/// | Similar profiles | What the standard model gives someone at your training level | Exactly the free-tier estimate. The standard tier is already scaled to the person by `AthleteProfile.fitnessScale`, so this column *is* that number rather than a separate adjustment applied on top of it. |
 /// | Yours | What Recharge+ makes of it | The personalized estimate, computed against the person's own baseline. Never the standard figure times a multiplier. |
 ///
 /// **Training more means shorter windows, and this is where that becomes
@@ -187,7 +187,13 @@ public enum RestPattern {
             .sorted { $0.endDate < $1.endDate }
 
         let gaps = observedGaps(in: window)
-        let prior = profile.prior ?? 1
+        // The personal multiplier available before any session has been
+        // observed: the questionnaire prior, clamped to the same bounds the
+        // thirty-day analysis is clamped to.
+        let dayOneFactor = min(
+            max(profile.prior ?? 1, PersonalRecoveryModel.minimumFactor),
+            PersonalRecoveryModel.maximumFactor
+        )
         let dominant = profile.primaryProfile.flatMap { $0 == .easy ? nil : $0 } ?? .endurance
 
         return bands.map { band in
@@ -199,7 +205,7 @@ public enum RestPattern {
             let isExample: Bool
             if let standard = median(inBand.map(\.standardHours)),
                let personal = median(inBand.map(\.personalizedHours)) {
-                similar = clampToWindow(standard * prior)
+                similar = clampToWindow(standard)
                 personalized = clampToWindow(personal)
                 isExample = false
             } else {
@@ -207,9 +213,25 @@ public enum RestPattern {
                 // the person's dominant profile is a real point on the real
                 // curve, which is the same fallback `PersonalizedPreview` uses
                 // and for the same reason.
+                // Defined in *relative* terms, so it is the same number of
+                // hours whatever the person's fitness level scales their
+                // denominator to: a mid-band session is a bigger absolute
+                // session for a fitter person, and still a mid-band one.
                 let reference = referenceHours(for: band, profile: dominant)
-                similar = clampToWindow(reference * prior)
-                personalized = clampToWindow(reference * prior)
+                similar = clampToWindow(reference)
+                // The two columns must not print the same number here. This is
+                // the row a brand-new user sees, it is what the onboarding
+                // upgrade pitch is made of, and a blurred figure identical to
+                // the one beside it sells nothing and looks like a bug. Both
+                // columns used to be `reference * prior`, so on a fresh install
+                // the pitch was two identical numbers with a blur over one.
+                //
+                // `dayOneFactor` is not a device for making them differ: it is
+                // exactly what `PersonalRecoveryModel` returns for this person
+                // with no history, which is the multiplier a subscriber would
+                // actually get on their first day. The number under the blur
+                // stays a number the app will honour.
+                personalized = clampToWindow(reference * dayOneFactor)
                 isExample = true
             }
 

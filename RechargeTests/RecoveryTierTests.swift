@@ -22,22 +22,84 @@ final class RecoveryTierTests: XCTestCase {
 
     // MARK: - The standard tier is genuinely standard
 
-    /// The whole free-tier promise in one assertion: two people with completely
-    /// different training histories get the same number for the same session.
-    func testTheStandardEstimateIsIdenticalWhoeverDidTheSession() {
+    /// The free-tier promise, restated for the fitness-level split: the
+    /// standard estimate is the same for everyone **who answered the same way**.
+    /// What it may never contain is *measurement* — history, context,
+    /// calibration, the thirty-day analysis. That is the line the tiers are
+    /// drawn on.
+    func testTheStandardEstimateIsIdenticalForTwoPeopleWhoAnsweredTheSameWay() {
         let session = RecoveryFixtures.thresholdRun60
-        let couchToFiveK = RecoveryCalculator.estimate(
-            for: session, baseline: .standard(for: .endurance), now: now
+        let answers = AthleteProfile(age: 34, experience: .oneToThreeYears, weeklyVolume: .threeOrFour)
+
+        // Same answers, wildly different training histories. The histories are
+        // not passed, because on this tier they are not consulted.
+        let a = RecoveryCalculator.estimate(
+            for: session,
+            baseline: .standard(for: .endurance, fitnessScale: answers.fitnessScale),
+            now: now
         )
-        let seasonedMarathoner = RecoveryCalculator.estimate(
-            for: session, baseline: .standard(for: .endurance), now: now
+        let b = RecoveryCalculator.estimate(
+            for: session,
+            baseline: .standard(for: .endurance, fitnessScale: answers.fitnessScale),
+            now: now
         )
-        XCTAssertEqual(couchToFiveK.hours, seasonedMarathoner.hours)
-        XCTAssertEqual(couchToFiveK.tier, .standard)
-        XCTAssertEqual(couchToFiveK.personalFactor, 1)
+        XCTAssertEqual(a.hours, b.hours)
+        XCTAssertEqual(a.tier, .standard)
+        XCTAssertEqual(a.personalFactor, 1)
     }
 
-    /// The standard baseline must not depend on anything the person has done.
+    /// And it does move with the fitness answers, which is the point of the
+    /// change: one denominator cannot serve both a beginner and a
+    /// six-times-a-week runner.
+    func testTheStandardEstimateMovesWithTheStatedFitnessLevel() {
+        let session = RecoveryFixtures.thresholdRun60
+        let beginner = AthleteProfile(experience: .underOneYear, weeklyVolume: .oneOrTwo)
+        let veteran = AthleteProfile(experience: .tenYearsPlus, weeklyVolume: .sevenPlus)
+        let unanswered = AthleteProfile()
+
+        func hours(_ p: AthleteProfile) -> Double {
+            RecoveryCalculator.estimate(
+                for: session,
+                baseline: .standard(for: .endurance, fitnessScale: p.fitnessScale),
+                now: now
+            ).hours
+        }
+
+        XCTAssertEqual(unanswered.fitnessScale, 1, "no answers means no claim about fitness")
+        XCTAssertGreaterThan(hours(beginner), hours(unanswered))
+        XCTAssertLessThan(hours(veteran), hours(unanswered))
+        XCTAssertEqual(hours(beginner), hours(unanswered), accuracy: hours(unanswered) * 0.6)
+    }
+
+    /// Only the two questions that are about training level may reach this tier.
+    /// Age and bounce-back are claims about recovery kinetics and are what
+    /// Recharge+ sells; age reaches the standard tier through the heart-rate
+    /// ceiling instead, which is measurement rather than personalisation.
+    func testOnlyTheFitnessQuestionsReachTheStandardTier() {
+        let base = AthleteProfile(experience: .threeToTenYears, weeklyVolume: .fiveOrSix)
+        let withKinetics = AthleteProfile(
+            age: 66,
+            experience: .threeToTenYears,
+            bounceBack: .threeOrMoreDays,
+            weeklyVolume: .fiveOrSix
+        )
+        XCTAssertEqual(base.fitnessScale, withKinetics.fitnessScale, accuracy: 0.0001)
+        XCTAssertNotEqual(base.prior ?? 1, withKinetics.prior ?? 1, accuracy: 0.0001)
+    }
+
+    /// The scale is bounded, so a question added later cannot turn the standard
+    /// tier into an unbounded personalisation by the back door.
+    func testTheFitnessScaleStaysInsideItsBounds() {
+        for volume in WeeklyVolume.allCases {
+            for experience in TrainingExperience.allCases {
+                let scale = AthleteProfile(experience: experience, weeklyVolume: volume).fitnessScale
+                XCTAssertGreaterThanOrEqual(scale, RecoveryBaseline.minimumFitnessScale)
+                XCTAssertLessThanOrEqual(scale, RecoveryBaseline.maximumFitnessScale)
+            }
+        }
+    }
+
+    /// The standard baseline must not depend on anything the person has *done*.
     func testTheStandardBaselineHoldsNoSamples() {
         for profile in WorkoutProfile.allCases {
             let baseline = RecoveryBaseline.standard(for: profile)
@@ -45,6 +107,11 @@ final class RecoveryTierTests: XCTestCase {
             XCTAssertEqual(baseline.typicalLoad, profile.standardTypicalLoad)
             XCTAssertEqual(baseline.quietThreshold, RecoveryCalculator.absoluteCountdownFloor)
         }
+        // Scaled, it is still sample-free: the fitness level is an answer, not
+        // an observation.
+        let scaled = RecoveryBaseline.standard(for: .endurance, fitnessScale: 1.28)
+        XCTAssertEqual(scaled.sampleCount, 0)
+        XCTAssertEqual(scaled.typicalLoad, WorkoutProfile.endurance.standardTypicalLoad * 1.28, accuracy: 0.0001)
     }
 
     /// A free user is not "building" anything, so the badge must never say so —

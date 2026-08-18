@@ -56,13 +56,62 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 `RecoveryTier` is stored on every estimate, because the two answer different
 questions and a history list that mixes them silently is lying by omission.
 
-- **Standard (free).** `RecoveryBaseline.standard(for:)`, no context, no
-  calibration, `RecoveryPersonalization.standard`. The same table for everyone:
-  session type, length, and intensity in, hours out. Confidence is capped at
-  medium and never reports `buildingBaseline` — there is no baseline being
-  built. Category labels drop the "for you".
+**The line between them is measurement, not personalisation.**
+
+- **Standard (free).** The standard model at the training level the user
+  *stated*: `RecoveryBaseline.standard(for:fitnessScale:)`, no context, no
+  calibration, `RecoveryPersonalization.standard`. Session type, length and
+  intensity in, hours out, against a population reference scaled by
+  `AthleteProfile.fitnessScale`. Confidence is capped at medium and never
+  reports `buildingBaseline` — there is no baseline being built. Category labels
+  drop the "for you".
 - **Personalized (Recharge+).** The person's own 42-day baseline, overnight
-  context, calibration, and the `PersonalRecoveryModel` multiplier.
+  context, calibration, and the `PersonalRecoveryModel` multiplier. Everything
+  that comes from what they have actually *done*.
+
+`AthleteProfile.fitnessScale` is the one thing about the person that reaches the
+free tier, and it is there because Garmin's default is profile-based too:
+Firstbeat scales EPOC by an activity class the user enters at setup (0-2
+beginner, 3-5 already training, 6-7 highly fit), so the pre-measurement number is
+already tuned to a stated level. One denominator cannot serve both a beginner and
+a six-times-a-week runner, and `standardTypicalLoad` alone is only the right
+answer for somebody sitting exactly in the middle of the scale.
+
+Only the two questions that are genuinely about *training level* feed it —
+`WeeklyVolume` and `TrainingExperience` — combined as a geometric mean rather
+than a product, because they are **correlated**: someone who has trained ten
+years usually also trains often, and multiplying would count one fact twice. The
+span is 0.81 to 1.28, so a denominator between about 57 and 90 against the
+reference 70. `BounceBackHabit` and the age factor are claims about recovery
+*kinetics* rather than training level and stay in `AthleteProfile.prior`, on the
+paid tier.
+
+`testMoreTrainingNeverLengthensTheStandardWindow` pins the direction and
+`testEveryStatedFitnessLevelStillAnswersAHardHourLikeAHardHour` pins the
+envelope. The free-tier promise is now "the same estimate for everyone **who
+answered the same way**", asserted by
+`testTheStandardEstimateIsIdenticalForTwoPeopleWhoAnsweredTheSameWay`, and
+`RecoveryMatrixTests.testTheStandardTierDependsOnTheSessionAndTheHeartRateRangeOnly`
+carries the fitness scale in its key so nothing the person has *done* can leak in
+behind it.
+
+`RestPattern`'s "Similar" column is now a **pass-through** of the standard
+estimate rather than `standardHours * prior`. Keeping the multiplication would
+have counted volume and experience twice and put the card into open disagreement
+with the countdown on the same screen. Its *example* row (no history in a band,
+which is what a brand-new user and the onboarding pitch see) now shows
+`reference * dayOneFactor` in the blurred column, where `dayOneFactor` is what
+`PersonalRecoveryModel` actually returns with no sessions. Both columns used to
+print the same figure, so the pitch was two identical numbers with a blur over
+one of them; and when the answers are neutral it still shows no difference,
+because there genuinely is none yet.
+
+`weeklyVolume` may be **derived** from the imported history rather than typed
+(`RecoveryEngine.derivedTrainingProfile`, 6+ sessions in 28 days), so a free
+user's training level can move without them answering anything. Deliberate, and
+what Garmin does — activity class updates itself as the watch sees more training.
+It stays inside the tier line because what reaches the free estimate is a
+four-level bucket, not the person's own distribution of loads.
 
 Age-predicted maximum heart rate (Tanaka, or Gulati for women) applies on
 **both** tiers. It is a measurement input, not a personalisation: scoring a
@@ -111,9 +160,10 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **6**
-(the standard reference re-anchored to Firstbeat's activity class 3-5; 5 was the
-daily-load baseline fix; 4 moved the energy path onto the TRIMP curve and brought
+window disagrees with what the same session would produce today. Currently **7**
+(the standard tier scaled to the user's stated training level; 6 re-anchored the
+standard reference to Firstbeat's activity class 3-5; 5 was the daily-load
+baseline fix; 4 moved the energy path onto the TRIMP curve and brought
 the mixed blind guess down from RPE 7 to 6). `RecoveryEstimate` has a hand-written
 `init(from:)` so version-1 records decode as the unmultiplied standard windows
 they actually were.

@@ -226,17 +226,47 @@ final class RestPatternTests: XCTestCase {
         XCTAssertTrue(hard.isVisiblyPersonalized)
     }
 
-    /// Someone who trains more often must not be told to rest longer. Both
-    /// personal paths already work that way — a bigger median session makes the
-    /// same workout a smaller multiple of it, and `densityFactor` shrinks the
-    /// multiplier as chronic load rises — and this is the surface that finally
-    /// shows it, so it has to hold here too.
+    /// The middle column is a **pass-through** of the standard estimate, not a
+    /// second adjustment applied on top of it.
+    ///
+    /// It used to be `standardHours * AthleteProfile.prior`, which was the only
+    /// place in the app where the free tier acknowledged the questionnaire. Now
+    /// that the standard estimate is itself scaled by `fitnessScale`, keeping
+    /// the multiplication would count weekly volume and experience twice and put
+    /// this card into open disagreement with the countdown on the same screen.
+    func testTheSimilarColumnIsExactlyTheStandardEstimate() {
+        let sessions = evenlySpaced(4, band: .hard, everyHours: 30, standard: 24, personalized: 15)
+        for volume in WeeklyVolume.allCases {
+            for experience in TrainingExperience.allCases {
+                let profile = AthleteProfile(age: 34, experience: experience, weeklyVolume: volume)
+                let rows = RestPattern.rows(sessions: sessions, profile: profile, now: now)
+                XCTAssertEqual(
+                    row(rows, .hard).similarProfilesHours, 24, accuracy: 0.001,
+                    "\(volume.label) / \(experience.label) moved a figure the standard tier had already set"
+                )
+            }
+        }
+    }
+
+    /// Someone who trains more often must not be told to rest longer. The claim
+    /// still holds end to end; it is just made one stage earlier now, in the
+    /// standard estimate that feeds this card (`GarminAnchorTests`
+    /// `testMoreTrainingNeverLengthensTheStandardWindow`). Asserted here on the
+    /// figures a real engine would hand in, so the two halves cannot drift.
     func testAHigherTrainingVolumeNeverLengthensTheSimilarProfilesColumn() {
-        let volumes: [WeeklyVolume] = [.oneOrTwo, .threeOrFour, .fiveOrSix, .sevenPlus]
         var previous: [Double]?
-        for volume in volumes {
+        for volume in WeeklyVolume.allCases {
             let profile = AthleteProfile(age: 34, experience: .threeToTenYears, weeklyVolume: volume)
-            let hours = RestPattern.rows(sessions: [], profile: profile, now: now)
+            let standard = RecoveryCalculator.estimate(
+                for: RecoveryFixtures.thresholdRun60,
+                baseline: .standard(for: .endurance, fitnessScale: profile.fitnessScale),
+                now: now
+            )
+            let sessions = evenlySpaced(
+                4, band: .hard, everyHours: 30,
+                standard: standard.hours, personalized: standard.hours * 0.9
+            )
+            let hours = RestPattern.rows(sessions: sessions, profile: profile, now: now)
                 .map(\.similarProfilesHours)
             if let previous {
                 for (earlier, later) in zip(previous, hours) {
@@ -250,25 +280,48 @@ final class RestPatternTests: XCTestCase {
         }
     }
 
-    func testMoreTrainingExperienceNeverLengthensTheSimilarProfilesColumn() {
-        let levels: [TrainingExperience] = [.underOneYear, .oneToThreeYears, .threeToTenYears, .tenYearsPlus]
-        var previous: [Double]?
-        for level in levels {
-            let profile = AthleteProfile(age: 34, experience: level, weeklyVolume: .threeOrFour)
-            let hours = RestPattern.rows(sessions: [], profile: profile, now: now)
-                .map(\.similarProfilesHours)
-            if let previous {
-                for (earlier, later) in zip(previous, hours) {
-                    XCTAssertLessThanOrEqual(later, earlier + 0.0001, "\(level.label) was given a longer window")
-                }
-            }
-            previous = hours
+    /// The row a brand-new user sees, and the one the onboarding upgrade pitch
+    /// is made of. Both columns used to print `reference * prior`, so on a fresh
+    /// install the pitch was two identical numbers with a blur over one of them.
+    ///
+    /// The blurred figure is the multiplier `PersonalRecoveryModel` actually
+    /// returns for this person with no history, so it stays a number the app
+    /// will honour rather than a number invented to make the card sell.
+    func testTheExampleRowShowsWhatPersonalisationWouldActuallyDo() {
+        let profile = AthleteProfile(
+            age: 28, experience: .tenYearsPlus, bounceBack: .nextDay, weeklyVolume: .sevenPlus
+        )
+        let rows = RestPattern.rows(sessions: [], profile: profile, now: now)
+        let expected = PersonalRecoveryModel.analyse(
+            profile: profile, sessions: [], days: [], now: now
+        ).factor
+
+        for row in rows {
+            XCTAssertTrue(row.isExample)
+            XCTAssertLessThan(
+                row.personalizedHours, row.similarProfilesHours,
+                "this person's answers say they recover fast and the pitch showed them nothing"
+            )
+            XCTAssertEqual(
+                row.personalizedHours, row.similarProfilesHours * expected, accuracy: 0.05,
+                "the blurred figure is not the one a subscriber would get on day one"
+            )
         }
     }
 
-    /// A profile with no answers has no prior, so the middle column is the plain
-    /// standard curve — the same table for everyone, exactly as the free tier
-    /// promises.
+    /// And when the answers are neutral it shows no difference, because there is
+    /// none to show yet. A pitch is not allowed to manufacture one.
+    func testTheExampleRowClaimsNothingWhenTheAnswersSayNothing() {
+        let neutral = AthleteProfile(
+            age: 30, experience: .oneToThreeYears, bounceBack: .aboutTwoDays, weeklyVolume: .threeOrFour
+        )
+        for row in RestPattern.rows(sessions: [], profile: neutral, now: now) {
+            XCTAssertEqual(row.personalizedHours, row.similarProfilesHours, accuracy: 0.2)
+        }
+    }
+
+    /// A profile with no answers makes no claim about fitness, so the middle
+    /// column is the plain standard curve.
     func testAnUnansweredProfileGetsThePlainStandardCurve() {
         let rows = RestPattern.rows(sessions: [], profile: .empty, now: now)
         for row in rows {

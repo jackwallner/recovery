@@ -5,8 +5,9 @@ import SwiftUI
 /// trial page, and the What's New sheet, so the pitch can never drift between
 /// surfaces.
 enum ProFeature: CaseIterable {
-    /// The headline difference between the two tiers. Free is a standard table;
-    /// this is the one that reads the person's own history.
+    /// The headline difference between the two tiers. Free is the standard
+    /// model at the training level the user stated; this is the one that reads
+    /// what they have actually done.
     case personalizedTime
     case bodySignals
     case weeklyLoad
@@ -36,7 +37,7 @@ enum ProFeature: CaseIterable {
     var detail: String {
         switch self {
         case .personalizedTime:
-            "The free estimate is the same table for everyone. Recharge+ scores every session against your own \(RecoveryBaseline.historyDays)-day baseline, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
+            "The free estimate is the standard model at the training level you told us about. Recharge+ scores every session against your own \(RecoveryBaseline.historyDays)-day baseline instead, then reads the last \(PersonalRecoveryModel.windowDays) days — how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window — to set how fast your countdowns run."
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
         case .weeklyLoad:

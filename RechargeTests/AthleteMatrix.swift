@@ -43,7 +43,15 @@ enum AthleteMatrix {
         }
 
         func baseline(for workoutProfile: WorkoutProfile) -> RecoveryBaseline {
-            RecoveryBaseline(loads: loads[workoutProfile] ?? [], profile: workoutProfile)
+            // The fitness scale reaches the bootstrap on this tier too: below
+            // `minimumSamples` the shrinkage target is the population reference,
+            // and for a persona who said they train seven times a week that
+            // reference is not the population's.
+            RecoveryBaseline(
+                loads: loads[workoutProfile] ?? [],
+                profile: workoutProfile,
+                fitnessScale: profile.fitnessScale
+            )
         }
 
         /// The personal multiplier available on day one: the questionnaire prior,
@@ -164,6 +172,10 @@ enum AthleteMatrix {
             loads: [:]
         )
     ]
+
+    /// The persona who answered nothing, for sweeps that vary one thing and need
+    /// everything else held at "no claim made".
+    static let unanswered = personas.first { $0.profile.fitnessScale == 1 && $0.profile.age == nil }!
 
     // MARK: - Sessions
 
@@ -311,12 +323,20 @@ enum AthleteMatrix {
 
     // MARK: - Scoring
 
-    /// The free tier: the population reference, no context, no calibration, no
-    /// personal multiplier.
-    static func standard(_ session: SessionInput) -> RecoveryEstimate {
+    /// The free tier: the population reference scaled to the persona's *stated*
+    /// fitness level, no context, no calibration, no personal multiplier, and
+    /// above all no history.
+    ///
+    /// The fitness scale is here because it is now part of the standard tier and
+    /// the matrix is the audit — leaving it out would mean thirty thousand cells
+    /// that never exercise the path a real free user takes.
+    static func standard(_ session: SessionInput, persona: Persona) -> RecoveryEstimate {
         RecoveryCalculator.estimate(
             for: session,
-            baseline: .standard(for: session.profile),
+            baseline: .standard(
+                for: session.profile,
+                fitnessScale: persona.profile.fitnessScale
+            ),
             now: now
         )
     }
@@ -374,7 +394,7 @@ enum AthleteMatrix {
                                 persona: persona,
                                 sensors: sensors,
                                 session: input,
-                                standard: standard(input),
+                                standard: standard(input, persona: persona),
                                 personalized: personalized(input, persona: persona)
                             )
                         )

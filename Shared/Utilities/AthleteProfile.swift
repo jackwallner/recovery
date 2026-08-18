@@ -47,6 +47,21 @@ public enum TrainingExperience: Int, Codable, Sendable, CaseIterable {
         case .tenYearsPlus: 0.94
         }
     }
+
+    /// Contribution to `AthleteProfile.fitnessScale`, which moves the *standard*
+    /// tier's population denominator. Separate from `recoveryFactor` above
+    /// because it answers a different question: that one is how fast this person
+    /// clears a given load, this one is how much load their ordinary training
+    /// day carries. Firstbeat's activity class asks about both years of training
+    /// and weekly hours, so both are here.
+    var fitnessFactor: Double {
+        switch self {
+        case .underOneYear: 0.85
+        case .oneToThreeYears: 1.00
+        case .threeToTenYears: 1.10
+        case .tenYearsPlus: 1.18
+        }
+    }
 }
 
 /// The person's own read on how quickly they come back. Self-report is a weak
@@ -103,6 +118,19 @@ public enum WeeklyVolume: Int, Codable, Sendable, CaseIterable {
         case .threeOrFour: 1.00
         case .fiveOrSix: 0.96
         case .sevenPlus: 0.92
+        }
+    }
+
+    /// Contribution to `AthleteProfile.fitnessScale`. The closest thing Recharge
+    /// asks to Firstbeat's activity class, and the larger of the two terms:
+    /// how often someone trains says more about the size of their ordinary
+    /// training day than how long they have been doing it.
+    var fitnessFactor: Double {
+        switch self {
+        case .oneOrTwo: 0.78
+        case .threeOrFour: 1.00
+        case .fiveOrSix: 1.20
+        case .sevenPlus: 1.40
         }
     }
 
@@ -184,6 +212,56 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
             ? 206 - 0.88 * Double(age)
             : 208 - 0.7 * Double(age)
         return value.rounded()
+    }
+
+    // MARK: Fitness level
+
+    /// How this person's ordinary training day compares to the population
+    /// reference, as a multiplier on `WorkoutProfile.standardTypicalLoad`.
+    ///
+    /// **This is the one thing about the person that reaches the standard
+    /// tier**, and it is what makes the free estimate an answer rather than an
+    /// average. Firstbeat scales EPOC by an activity class the user enters at
+    /// setup — 0-2 beginner, 3-5 already training, 6-7 highly fit — so Garmin's
+    /// pre-measurement number is already tuned to a stated fitness level, and
+    /// `standardTypicalLoad` (70, the middle of that scale) is only the answer
+    /// for someone sitting exactly in the middle of it. One denominator cannot
+    /// serve both a beginner and a six-times-a-week runner.
+    ///
+    /// Only the two questions that are genuinely about *fitness* feed it:
+    /// weekly volume and training experience. Age and bounce-back are claims
+    /// about recovery *kinetics* rather than about training level, and those
+    /// stay in `prior`, on the personalized tier, which is what Recharge+ sells.
+    /// Age still reaches the standard tier through `predictedMaxHeartRate`,
+    /// because that is measuring the session rather than personalising the
+    /// answer.
+    ///
+    /// Geometric mean rather than a product, for a stronger reason than the one
+    /// in `prior`: the two terms are **correlated**. Someone who has trained for
+    /// ten years usually also trains often, and multiplying the two would count
+    /// one fact twice. The span is deliberately modest — 0.81 for a beginner
+    /// doing one or two sessions a week, 1.28 for a ten-year athlete training
+    /// seven times, so a denominator between about 57 and 90 against the
+    /// reference 70. `GarminAnchorTests` pins what that does to a hard hour at
+    /// both ends.
+    ///
+    /// Returns 1 when neither question has been answered, which is the honest
+    /// reading: no claim about fitness, so the population reference stands.
+    ///
+    /// `weeklyVolume` may have been **derived** from the imported history rather
+    /// than typed (`RecoveryEngine.derivedTrainingProfile`), so a free user's
+    /// training level can move without them answering anything. That is
+    /// deliberate and it is what Garmin does too — activity class updates itself
+    /// as the watch sees more training — and it stays inside the tier line
+    /// because what reaches the estimate is a four-level bucket, not the
+    /// person's baseline. The paid tier is the one that scores each session
+    /// against their own distribution of loads.
+    public var fitnessScale: Double {
+        var factors: [Double] = []
+        if let weeklyVolume { factors.append(weeklyVolume.fitnessFactor) }
+        if let experience { factors.append(experience.fitnessFactor) }
+        guard !factors.isEmpty else { return 1 }
+        return exp(factors.reduce(0) { $0 + log($1) } / Double(factors.count))
     }
 
     // MARK: Prior
