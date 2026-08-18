@@ -1,6 +1,6 @@
 # Positioning decision
 
-Decided 2026-08-04, on the evidence in `scoping-2026-08-04.md`. This is the working
+Decided 2026-08-04, on the evidence in `../archive/scoping-2026-08-04.md`. This is the working
 brief. `README.md` remains the product/model dossier; nothing here overrides its
 mechanics, it only settles framing, scope, and go-to-market.
 
@@ -274,7 +274,7 @@ second most searched term in the whole set, and it is the honest platform claim.
 
 **Five popularity-5 terms were removed from the keyword field**: `rest day` (5/70),
 `training load` (5/11), `readiness` (5/7), `overtraining` (5/7), `strain` (5/41).
-They were shipped in the first draft despite `scoping-2026-08-04.md` already
+They were shipped in the first draft despite `../archive/scoping-2026-08-04.md` already
 recording them at the floor. Anything measuring 5 is the floor, not a small
 number, so it is not a cheap term, it is a dead one.
 
