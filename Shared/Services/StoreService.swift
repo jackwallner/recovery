@@ -456,7 +456,7 @@ public final class StoreService: NSObject, ObservableObject {
         let wasResolved = entitlementStatusResolved
         self.customerInfo = customerInfo
         let active = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
-        logger.info("Applied customerInfo — active: [\(active, privacy: .public)]")
+        logger.info("Applied customerInfo, active: [\(active, privacy: .public)]")
         let hasActive = customerInfo.hasRechargeProEntitlement
         if isPro != hasActive {
             isPro = hasActive

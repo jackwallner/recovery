@@ -135,6 +135,37 @@ arithmetic.
 session first, because `PersonalRecoveryModel` needs to know what window each
 session *would* have had, then the tier-appropriate one.
 
+### Recovery time stacks, and the residual has to be persisted
+A session done inside a running countdown starts its own from where that
+countdown would have finished rather than from now, so two hard sessions in a day
+cost more than one. Recharge used to take the **maximum** of overlapping windows,
+which is the simplest defensible rule and the wrong one: a same-day double read
+exactly like a single session, at the one moment somebody coming from a Garmin
+expects the number to jump.
+
+`RecoveryCalculator.carriedHours(into:from:)` is the whole rule and it is pure.
+The caller that walks the chain lives in `RecoveryEngine.rescore`, which is also
+where the subtlety is. **The two tiers carry separate chains.** A standard window
+and a personalized window for the same session end at different times, so one
+shared residual would splice one tier's arithmetic into the other's.
+
+`hours` stays the session's own cost and `totalHours` is what the countdown
+actually runs for, because the two answer different questions: the tier
+comparison, the rest-pattern bands and the history *rows* are about the session,
+while the ring, `readyAt` and the snapshot are about the countdown. Only a
+session that earns a countdown of its own may inherit one, so an easy walk taken
+mid-window still cannot start or lengthen anything.
+
+**`carriedHours` has to be stored, and the first cut did not store it.** It was
+computed, published and rendered without ever reaching `RecoveryStateRecord`.
+`readyAt` is persisted and `hours` is the session cost, so a record that forgets
+the residual rehydrates self-contradictory: the countdown ends where an 18-hour
+window ends while every figure derived from `totalHours` says 12, and the
+"incl. 6h carried" line disappears from exactly the rows that need it. Nothing in
+the suite could see it, because `Shared/Models/RecoveryRecords.swift` was not in
+the test target. It is now, and `StackedRecoveryPersistenceTests` covers the
+round-trip, the rescore path, the legacy nil, and the version bump.
+
 ### What the 30-day analysis actually measures
 Three independent signals, blended geometrically with the questionnaire prior on
 a weight that grows with evidence and caps at 0.70, then clamped to
@@ -160,13 +191,13 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **7**
-(the standard tier scaled to the user's stated training level; 6 re-anchored the
-standard reference to Firstbeat's activity class 3-5; 5 was the daily-load
-baseline fix; 4 moved the energy path onto the TRIMP curve and brought
-the mixed blind guess down from RPE 7 to 6). `RecoveryEstimate` has a hand-written
-`init(from:)` so version-1 records decode as the unmultiplied standard windows
-they actually were.
+window disagrees with what the same session would produce today. Currently **8**
+(recovery time is cumulative, see "Recovery time stacks"; 7 scaled the standard
+tier to the user's stated training level; 6 re-anchored the standard reference to
+Firstbeat's activity class 3-5; 5 was the daily-load baseline fix; 4 moved the
+energy path onto the TRIMP curve and brought the mixed blind guess down from RPE
+7 to 6). `RecoveryEstimate` has a hand-written `init(from:)` so version-1 records
+decode as the unmultiplied standard windows they actually were.
 
 ### The load ladder is an order of trust, and for strength it was wrong
 Heart rate, then reported effort, then energy, then duration. For endurance that
@@ -355,21 +386,15 @@ an estimate scored by an older model is not what the app would say today, and
 leaving it frozen means a user who updates sees their whole history in the old
 numbers with no way to get the new ones.
 
-**Still open: the free tier throws away the questionnaire.** Garmin's default is
-profile-based — activity class is exactly the "how much do you train" question
-Recharge asks in onboarding as `WeeklyVolume`. Recharge collects age, experience,
-weekly volume and bounce-back and then uses **none** of it on the standard tier
-except the age-predicted heart-rate ceiling, so one denominator has to serve both
-a beginner and a six-times-a-week runner. `RestPattern`'s "Similar" column
-already applies `AthleteProfile.prior` on both tiers, so the inconsistency is
-visible in the app today. Letting the prior (or just `WeeklyVolume`, which is the
-one field that is genuinely a statement about the denominator rather than about
-recovery kinetics) reach the standard estimate would match Garmin and costs
-little of the paywall — the prior spans only about 0.92 to 1.12, against a
-measured personal baseline that moves the denominator by 2-3x. It has **not**
-been done, because "the standard estimate is the same for everyone" is a
-deliberate product promise and `RecoveryMatrixTests` asserts it as a property.
-That is a monetisation decision, not a tuning one.
+**Closed: the free tier no longer throws away the questionnaire.** It used to,
+and this section used to describe that as an open decision. `fitnessScale` is
+the resolution: see "The two tiers" above for what feeds it and why only two of
+the four questions do. The point kept here is the one that outlived the change:
+"the same table for everyone" was a *product promise*, so retiring it meant
+retiring the sentence too, in the App Store description for all 50 locales and
+in the `reasons` line the app prints under every standard estimate. Copy that
+describes the model is part of the model's surface area, and a claim the code
+has stopped honouring is a claim the app is making falsely.
 
 ### A thin baseline is shrunk, because everything is divided by it
 `RecoveryBaseline.typicalLoad` is the denominator of every relative load, so on a
@@ -389,6 +414,20 @@ personalisation earns its way in.
 `quietThreshold` already had this property — it stays at the absolute floor until
 the sample is big enough — so the two halves of the baseline now agree about when
 the person's own history starts counting.
+
+**Confidence counts training days; the quiet threshold counts sessions.** They
+are two properties now (`hasEstablishedBaseline` and `hasEnoughSamples`) because
+they gate different statistics, and collapsing them into one session count made
+the app overclaim. The shrinkage above weights by `dayCount`, so confidence (a
+claim about the denominator) has to be counted the same way: somebody training
+three times a day clears eight *sessions* on day three, and used to stop
+reporting `buildingBaseline` while `typicalLoad` was still five-eighths the
+population reference. It overclaimed soonest for the heaviest trainers, who are
+the users most likely to go and check. `quietThreshold` keeps the session count,
+because whether one workout was substantial enough to earn a countdown is a
+question about that workout.
+`testAnEstablishedBaselineIsExactlyWhenTheShrinkageHasLetGo` pins the
+equivalence over the whole range rather than at one point.
 
 ### The six-hour floor is Garmin's, and it is sourced
 `RecoveryCalculator.minimumCountdownHours` is 6, because Garmin documents its
@@ -499,6 +538,32 @@ Two things went wrong on the wrist and both looked like a broken complication:
   and if a user reports it persisting, the background-wake path is what to look
   at, not the copy.
 
+- **"Never synced" was being inferred from the wrong question.** The complication
+  asked `snapshot.hasSession`, so a user who had synced perfectly well but simply
+  had not trained in four days was told to open Recharge and set it up, with
+  nothing to set up and no way to clear it short of doing a workout. An empty
+  snapshot and a *missing* one decode to the same value, so only the presence of
+  the App Group key separates them: `RecoverySnapshotStore.loadIfPresent` and
+  `hasEverSynced` are that distinction, and `load` keeps its forgiving behaviour
+  for every caller that just wants something to draw. "No recent qualifying
+  workout" is `noRecentWorkout`, and it already existed.
+
+- **A late payload used to win.** The phone reaches the wrist by two routes with
+  different delivery semantics (the application context is a latest-value-wins
+  slot, `transferUserInfo` is a FIFO queue that drains on reconnect), so a
+  transfer queued before an outage can arrive *after* a newer context. On screen
+  that is a countdown jumping backwards to a window the user watched expire.
+  `sentAt` was already on every payload as a cache-buster (`updateApplicationContext`
+  no-ops on a byte-identical dict), and `applyInboundSnapshot` now believes it,
+  against a high-water mark persisted in the App Group because the Watch app is
+  killed between background wakes. The snapshot's own `calculatedAt` would be
+  the more natural key and is the wrong one: `RecoverySnapshot.empty` carries
+  `.distantPast`, and the phone legitimately publishes an empty snapshot when the
+  last workout is deleted from Health, so ordering on it would refuse the one
+  payload whose job is to clear the wrist. The reply to an explicit
+  `requestSnapshot` bypasses the check, because it is current by construction,
+  and it is the way out if a phone's clock ever moves backwards.
+
 **Recharge's Watch app is the only one in the fleet that cannot read Health.**
 `VitalsWatch` and `VO2MaxWatch` both carry `com.apple.developer.healthkit` and
 compute their own numbers on the wrist, so their complications work with no
@@ -516,6 +581,37 @@ entitlement and — the part that is actually the work — syncing
 and the tier, without which the watch would score against defaults and visibly
 disagree with the phone. Do not take this path to fix a delivery bug; take it
 only if mirroring is decided against on purpose.
+
+### Clearance for the floating tab bar is the shell's job
+`RootView` draws a translucent capsule over the content rather than a system
+`TabView`, so every scrollable tab has to reserve room for it at rest. Each
+screen used to reserve its own, and it went the way hand-copied numbers go:
+Today padded 72, History padded 96, and `SettingsView`, a `Form` with no
+padding to copy onto, padded nothing at all, so the capsule sat on top of the
+last rows of the model and profile sections. `TabBarMetrics` holds the geometry
+once and `tabBarClearance()` applies it, so the bar and the room made for it come
+from the same constants.
+
+**The modifier goes inside each `NavigationStack`, not around it.** One call in
+`RootView.tabContent` would cover all three tabs and does not work: a
+`NavigationStack` manages the safe area of its own content, so an inset applied
+from outside never reaches the scroll view within. Nothing about that failure is
+visible: it compiles, the layout looks unchanged, and the last row still sits
+under the blur.
+
+An inset rather than bottom padding, so the scroll-behind look survives: it moves
+where the content comes to rest, not the scroll view's frame, so passing content
+still runs under the capsule and only the last row is guaranteed to clear it.
+
+`testTheTabBarDoesNotCoverTheBottomOf{Today,History,Settings}` assert frames, and
+writing them was most of the work. Three traps, all of which produce a green test
+that checks nothing: an element scrolled off-screen reports a frame hundreds of
+points below the window, so `exists` is not "visible"; the tab bar's own labels
+are elements too, so "the lowest thing on screen" measures the bar against
+itself; and a `#if DEBUG` section sits below the Settings disclaimer, so
+asserting on the disclaimer passes in a test build whether or not the fix is
+there. Settings measures the bottom-most element of the `Form`, the other two
+name their genuinely-last row.
 
 ### Onboarding reads Health before it asks anything
 The flow is welcome → Health → what Health found → the gap questions → what the
@@ -639,7 +735,12 @@ StoreKit product identifiers are bundle-prefixed
 - `RevenueCatConfig.apiKey` is a placeholder in the repo. `scripts/testflight.sh`
   substitutes `RC_PUBLIC_KEY` from `~/.recovery_credentials` for the archive and
   restores the placeholder on exit, so the key never lands in a commit. Never
-  configure it on simulator.
+  configure it on simulator. The substitution is a `sed` on a source file and a
+  `sed` that matches nothing succeeds, so the script now **verifies the archive**
+  rather than trusting the edit: the placeholder must be absent from
+  `$ARCHIVE/Products` and the real key present, both checked before upload.
+  Every way this goes wrong produces a valid archive whose paywall silently never
+  loads an offering on a real device, and nothing downstream notices.
 - **App Store ID is `6797089337`** (`com.jackwallner.recovery`). `fastlane/metadata/`
   is canonical and is uploaded, not aspirational: as of 2026-08-16 the ASC record
   is named "Recharge Workout Recovery Time", version 1.0.0 is in

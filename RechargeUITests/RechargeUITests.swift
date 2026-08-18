@@ -410,4 +410,130 @@ final class RechargeUITests: XCTestCase {
         ).firstMatch
         XCTAssertTrue(disclaimer.waitForExistence(timeout: 15))
     }
+
+    // MARK: - The floating tab bar must not sit on top of anything
+
+    /// The three tab buttons, whose own labels have to be excluded from any
+    /// "what is lowest on screen" question: they sit below the bar's top edge by
+    /// construction, so counting them measures the bar against itself and the
+    /// assertion can never pass.
+    private func tabBarButtons(in app: XCUIApplication) -> [CGRect] {
+        ["Today", "History", "Settings"].map { app.buttons[$0].firstMatch.frame }
+    }
+
+    /// The bottom-most on-screen content once a tab has been scrolled to its
+    /// end, ignoring the tab bar itself.
+    ///
+    /// Asked as "whatever is lowest" rather than about a named row, because a
+    /// `#if DEBUG` section sits below the Settings disclaimer: asserting on the
+    /// disclaimer would clear the bar in a test build whether or not the fix
+    /// were there.
+    ///
+    /// Two filters, and both were needed. Scoping to the scroll `container`
+    /// drops the app-level chrome, one item of which is a static text spanning
+    /// the whole window and would answer this question with the window height
+    /// every time. Excluding frames *contained in* a tab button drops the bar's
+    /// own labels, which sit below the bar's top edge by construction and would
+    /// otherwise measure the bar against itself.
+    ///
+    /// Containment rather than matching on the label text, because a day heading
+    /// in History can legitimately read "Today". A tab label is wholly inside
+    /// its button; real content is not: even the narrow centred "Show N light
+    /// sessions" row starts to the left of any single tab button.
+    ///
+    /// Off-screen rows report frames far below the window and are filtered out.
+    /// A row *under the bar* is still inside the window, which is exactly the
+    /// case that has to fail.
+    private func lowestVisibleContent(
+        in container: XCUIElement,
+        of app: XCUIApplication
+    ) -> CGRect? {
+        let window = app.windows.firstMatch.frame
+        let bar = tabBarButtons(in: app)
+        return container.staticTexts.allElementsBoundByIndex
+            .map(\.frame)
+            .filter { frame in
+                frame.minY >= 0
+                    && frame.maxY <= window.maxY
+                    && frame.height > 0
+                    && !bar.contains { $0.contains(frame) }
+            }
+            .max { $0.maxY < $1.maxY }
+    }
+
+    /// Fixed-count scrolling, not "stop when the frame stops moving". The
+    /// adaptive version returned early against a `Form`, whose reported frames
+    /// lag a swipe, and a scroll test that silently fails to scroll asserts
+    /// nothing.
+    private func scrollToBottom(of app: XCUIApplication) {
+        for _ in 0..<14 { app.swipeUp() }
+    }
+
+    /// The bar floats over the content, so every scrollable tab has to reserve
+    /// room for it at rest. Settings reserved none: it is a `Form`, it had no
+    /// bottom padding to copy from the two screens that hand-rolled their own
+    /// (72 on Today, 96 on History), and the capsule sat on top of the last
+    /// rows of the model and profile sections.
+    func testTheTabBarDoesNotCoverTheBottomOfSettings() {
+        let app = launch(scene: "settings")
+        XCTAssertTrue(app.staticTexts["Apple Health"].waitForExistence(timeout: 15))
+        scrollToBottom(of: app)
+        attach(app, named: "settings-bottom")
+
+        let tabBar = app.buttons["Settings"].firstMatch
+        XCTAssertTrue(tabBar.exists)
+        // A SwiftUI `Form` is a collection view.
+        let lowest = lowestVisibleContent(in: app.collectionViews.firstMatch, of: app)
+        XCTAssertNotNil(lowest, "no visible Settings content to measure")
+        XCTAssertLessThanOrEqual(
+            lowest?.maxY ?? .greatestFiniteMagnitude, tabBar.frame.minY,
+            "the floating tab bar is covering the bottom of Settings"
+        )
+    }
+
+    /// Same claim on Today, whose disclaimer is the one App Review reads. It
+    /// cleared the bar before by a hand-copied 72 points; it clears it now
+    /// because `tabBarClearance()` reserves the room from the same constants
+    /// that lay the bar out.
+    func testTheTabBarDoesNotCoverTheBottomOfToday() {
+        let app = launch(scene: "recovering")
+        let disclaimer = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] %@", "not medical advice")
+        ).firstMatch
+        XCTAssertTrue(disclaimer.waitForExistence(timeout: 15))
+        scrollToBottom(of: app)
+
+        let tabBar = app.buttons["Today"].firstMatch
+        XCTAssertTrue(tabBar.exists)
+        XCTAssertLessThanOrEqual(
+            disclaimer.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the Today disclaimer"
+        )
+    }
+
+    /// And History, the third tab, which reserved 96 points for a 68-point bar.
+    func testTheTabBarDoesNotCoverTheBottomOfHistory() {
+        let app = launch(scene: "history")
+        XCTAssertTrue(app.staticTexts["Run"].firstMatch.waitForExistence(timeout: 15))
+        scrollToBottom(of: app)
+        attach(app, named: "history-bottom")
+
+        let tabBar = app.buttons["History"].firstMatch
+        XCTAssertTrue(tabBar.exists)
+        // The quiet-session toggle is the last row of the list, so it is the row
+        // with nothing below it to be pushed clear by. Named rather than
+        // discovered, because History's scroll view reports the tab bar's own
+        // labels among its descendants and "the lowest thing" then means the
+        // bar.
+        // A `Button` wrapping a `Text` surfaces as a button carrying that label,
+        // not as a static text.
+        let lastRow = app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH %@", "Show ")
+        ).firstMatch
+        XCTAssertTrue(lastRow.exists, "the quiet-session toggle is missing from History")
+        XCTAssertLessThanOrEqual(
+            lastRow.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the bottom of History"
+        )
+    }
 }

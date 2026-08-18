@@ -154,5 +154,59 @@ final class RecoveryBaselineTests: XCTestCase {
         XCTAssertEqual(baseline.sampleCount, 0)
         XCTAssertEqual(baseline.typicalLoad, WorkoutProfile.endurance.standardTypicalLoad)
         XCTAssertFalse(baseline.hasEnoughSamples)
+        XCTAssertFalse(baseline.hasEstablishedBaseline)
+    }
+
+    // MARK: - Confidence counts the same thing the shrinkage does
+
+    /// The disagreement, in one case. Someone training three times a day clears
+    /// eight *sessions* on day three, and `typicalLoad` is still shrunk
+    /// three-eighths of the way toward the population reference, so a
+    /// confidence rating built on the session count announced a measured
+    /// baseline while the denominator underneath was mostly a guess. It
+    /// announced it soonest for the heaviest trainers, who are the users most
+    /// likely to go looking.
+    func testAThickSessionCountOnThreeDaysIsNotAnEstablishedBaseline() {
+        let baseline = RecoveryBaseline(
+            loads: Array(repeating: 40, count: 9),
+            profile: .endurance,
+            dailyLoads: [120, 120, 120]
+        )
+        XCTAssertTrue(baseline.hasEnoughSamples, "nine sessions is a usable per-session percentile")
+        XCTAssertFalse(
+            baseline.hasEstablishedBaseline,
+            "three training days is still mostly the population reference"
+        )
+    }
+
+    /// The claim the split is for: `hasEstablishedBaseline` is true exactly when
+    /// `typicalLoad` has stopped blending in the reference. Asserted as an
+    /// equivalence over a range rather than at one point, because the two are
+    /// only worth separating if they agree everywhere.
+    func testAnEstablishedBaselineIsExactlyWhenTheShrinkageHasLetGo() {
+        for days in 1...16 {
+            let baseline = RecoveryBaseline(
+                loads: Array(repeating: 40, count: 40),
+                profile: .endurance,
+                dailyLoads: Array(repeating: 120, count: days)
+            )
+            let isPurelyPersonal = abs(baseline.typicalLoad - 120) < 0.0001
+            XCTAssertEqual(
+                baseline.hasEstablishedBaseline, isPurelyPersonal,
+                "day \(days): confidence and shrinkage disagree about the sample"
+            )
+        }
+    }
+
+    /// And the per-session statistic keeps its per-session gate, because whether
+    /// one workout was substantial enough to earn a countdown is a question
+    /// about that workout.
+    func testTheQuietThresholdStillCountsSessions() {
+        let baseline = RecoveryBaseline(
+            loads: Array(repeating: 40, count: 9),
+            profile: .endurance,
+            dailyLoads: [120, 120, 120]
+        )
+        XCTAssertGreaterThan(baseline.quietThreshold, RecoveryCalculator.absoluteCountdownFloor)
     }
 }

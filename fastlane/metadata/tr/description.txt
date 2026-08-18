@@ -22,7 +22,7 @@ Recharge, yanlış kesinlikte bir sayı yerine sınırlı bir pencere gösterir 
 
 STANDART, ÜCRETSİZ
 
-Standart tahmin herkes için aynı tablodur: seansın türü, süresi ve zorluğu, yaşına karşılık gelen nabız aralığına göre ölçülür.
+Standart tahmin ortak bir tablodur, belirttiğin ya da Recharge'ın gözlemlediği antrenman düzeyine ayarlanır: seansın türü, süresi ve zorluğu, yaşına karşılık gelen nabız aralığına göre ölçülür.
 
 • Apple Sağlık'tan antrenman aktarımı
 • Geri sayım ve Hazır durumu
@@ -53,7 +53,7 @@ Kullanım Koşulları (Apple standart EULA): https://www.apple.com/legal/interne
 
 GİZLİLİK
 
-Recharge Apple Sağlık'tan okur ve oraya hiçbir şey yazmaz. Verilerin cihazlarında kalır. Hesap yok, oturum açma yok, sunucu yok.
+Recharge Apple Sağlık'tan okur ve oraya hiçbir şey yazmaz. Verilerin cihazlarında kalır. Hesap yok, oturum açma yok. Satın almaları ve abonelik durumunu Apple ve RevenueCat yürütür.
 
 ÖNEMLİ
 

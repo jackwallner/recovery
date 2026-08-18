@@ -22,7 +22,7 @@ Recharge menampilkan rentang yang berbatas, bukan angka berpresisi palsu, lengka
 
 STANDAR, GRATIS
 
-Perkiraan standar adalah tabel yang sama untuk semua orang: jenis sesi, durasi, dan beratnya, diukur terhadap rentang detak jantung sesuai usiamu.
+Perkiraan standar adalah satu tabel bersama, disetel ke tingkat latihan yang kamu sebutkan atau yang diamati Recharge: jenis sesi, durasi, dan beratnya, diukur terhadap rentang detak jantung sesuai usiamu.
 
 • Impor latihan dari Apple Kesehatan
 • Hitung mundur dan status Siap
@@ -53,7 +53,7 @@ Ketentuan Penggunaan (EULA standar Apple): https://www.apple.com/legal/internet-
 
 PRIVASI
 
-Recharge membaca dari Apple Kesehatan dan tidak menulis apa pun kembali. Datamu tetap di perangkatmu. Tanpa akun, tanpa login, tanpa server.
+Recharge membaca dari Apple Kesehatan dan tidak menulis apa pun kembali. Datamu tetap di perangkatmu. Tanpa akun dan tanpa login. Pembelian dan status langganan ditangani Apple dan RevenueCat.
 
 PENTING
 

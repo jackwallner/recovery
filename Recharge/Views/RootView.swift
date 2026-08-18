@@ -42,9 +42,18 @@ struct RootView: View {
     /// content in `ultraThinMaterial`, so the countdown and the history list run
     /// under it and the app reads as one surface.
     ///
-    /// Screens keep their own bottom padding to clear it (`TodayView` and
-    /// `HistoryView` both pad 72), because the content scrolls behind rather
-    /// than stopping above.
+    /// Clearance is the shell's job, not each screen's. Every tab gets the same
+    /// `safeAreaInset` from `tabContent`, sized by `TabBarMetrics` from the very
+    /// constants that lay the bar out, so the two cannot drift. Screens used to
+    /// pad their own bottom edge and it went exactly the way hand-copied numbers
+    /// go: Today padded 72, History padded 96, and `SettingsView`, a `Form`
+    /// with no padding to copy onto, padded nothing at all, so the capsule sat
+    /// on top of the Recovery time section explaining the model.
+    ///
+    /// An inset rather than padding also keeps the scroll-behind look: it moves
+    /// the content's resting bottom, not the scroll view's frame, so passing
+    /// content still runs under the blur and only the *last* row is guaranteed
+    /// to clear it.
     private var main: some View {
         ZStack(alignment: .bottom) {
             tabContent(.today) { TodayView(isPresentingSheet: $todayIsPresentingSheet) }
@@ -65,10 +74,10 @@ struct RootView: View {
                 }
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.vertical, TabBarMetrics.verticalPadding)
             .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
             .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
-            .padding(.bottom, 12)
+            .padding(.bottom, TabBarMetrics.bottomPadding)
         }
         // Deliberately *not* `.ignoresSafeArea(edges: .bottom)`, which is what
         // Protein does. Applied here it leaks into every sheet this view
@@ -219,6 +228,52 @@ struct RootView: View {
 }
 
 /// One tab. Ported from Protein, which is where this bar's shape comes from.
+/// The floating tab bar's geometry, in one place, because the bar is drawn by
+/// `RootView` and cleared by every tab and those two facts have to stay equal.
+///
+/// Constants rather than a measured height on purpose: every term below is
+/// fixed, including `buttonHeight` and the 10pt label inside it, so the bar is
+/// the same size at every Dynamic Type setting and there is nothing to measure.
+/// If the bar is ever allowed to grow with text, this becomes a measurement and
+/// `RootView` has to read it back, not a constant somebody remembers to update.
+enum TabBarMetrics {
+    /// Matches `TabButton`'s frame, which is 44 because that is the minimum
+    /// comfortable touch target.
+    static let buttonHeight: CGFloat = 44
+    static let verticalPadding: CGFloat = 6
+    static let bottomPadding: CGFloat = 12
+
+    /// What a scrollable tab reserves at its bottom edge: the capsule's full
+    /// height plus the gap under it.
+    static var clearance: CGFloat { buttonHeight + verticalPadding * 2 + bottomPadding }
+}
+
+extension View {
+    /// Reserves room for the floating tab bar at the bottom of a scrollable
+    /// tab. Apply it to the `ScrollView`, `List` or `Form` itself.
+    ///
+    /// **Inside the `NavigationStack`, not outside it.** The obvious place for
+    /// this is `RootView.tabContent`, one call for all three tabs, and it does
+    /// not work: a `NavigationStack` manages the safe area of its own content,
+    /// so an inset applied to the stack from outside never reaches the scroll
+    /// view within. The symptom is silent: everything compiles, the layout
+    /// looks unchanged, and the last row still sits under the blur. It was
+    /// caught by `testTheTabBarDoesNotCoverTheBottomOfToday`, which measures
+    /// frames rather than trusting the modifier.
+    ///
+    /// An inset rather than bottom padding, so the scroll-behind look survives:
+    /// it moves where the content comes to rest, not the scroll view's frame,
+    /// so passing content still runs under the capsule and only the last row is
+    /// guaranteed to clear it.
+    func tabBarClearance() -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear
+                .frame(height: TabBarMetrics.clearance)
+                .accessibilityHidden(true)
+        }
+    }
+}
+
 private struct TabButton: View {
     let icon: String
     let label: String
@@ -234,7 +289,7 @@ private struct TabButton: View {
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(isSelected ? Theme.recovering : Color(.tertiaryLabel))
-            .frame(width: 78, height: 44)
+            .frame(width: 78, height: TabBarMetrics.buttonHeight)
             .background(
                 isSelected ? Theme.recovering.opacity(0.14) : .clear,
                 in: Capsule()

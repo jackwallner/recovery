@@ -7,6 +7,11 @@ struct RecoveryEntry: TimelineEntry {
     let date: Date
     let snapshot: RecoverySnapshot
     let style: ComplicationStyle
+    /// Whether the phone has ever published into this container. Carried on the
+    /// entry rather than re-read per string, because a timeline is built once
+    /// and rendered many times, possibly long after the App Group was last
+    /// touched.
+    var hasEverSynced = true
 
     var phase: RecoveryPhase { snapshot.phase(at: date) }
     var remaining: TimeInterval { snapshot.remainingSeconds(at: date) }
@@ -50,39 +55,51 @@ struct RecoveryTimelineProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<RecoveryEntry>) -> Void) {
         let now = Date.now
-        let snapshot = snapshotForTimeline(at: now)
+        let state = snapshotForTimeline(at: now)
         let style = loadComplicationStyle()
 
-        let entries = CountdownTimeline.entryDates(for: snapshot, now: now).map {
-            RecoveryEntry(date: $0, snapshot: snapshot, style: style)
+        let entries = CountdownTimeline.entryDates(for: state.snapshot, now: now).map {
+            RecoveryEntry(
+                date: $0,
+                snapshot: state.snapshot,
+                style: style,
+                hasEverSynced: state.hasEverSynced
+            )
         }
         completion(Timeline(
             entries: entries.isEmpty ? [currentEntry(at: now)] : entries,
-            policy: .after(CountdownTimeline.refreshDate(for: snapshot, now: now))
+            policy: .after(CountdownTimeline.refreshDate(for: state.snapshot, now: now))
         ))
     }
 
     private func currentEntry(at date: Date) -> RecoveryEntry {
-        RecoveryEntry(
+        let state = snapshotForTimeline(at: date)
+        return RecoveryEntry(
             date: date,
-            snapshot: snapshotForTimeline(at: date),
-            style: loadComplicationStyle()
+            snapshot: state.snapshot,
+            style: loadComplicationStyle(),
+            hasEverSynced: state.hasEverSynced
         )
     }
 
-    private func snapshotForTimeline(at date: Date) -> RecoverySnapshot {
-        let snapshot = RecoverySnapshotStore.load()
+    /// The snapshot plus whether one has ever been written here. The second half
+    /// cannot be recovered from the first: an empty snapshot and a missing one
+    /// decode to the same value, and only the presence of the key separates
+    /// "the phone has never reached this wrist" from "the phone says you have
+    /// not trained recently".
+    private func snapshotForTimeline(at date: Date) -> (snapshot: RecoverySnapshot, hasEverSynced: Bool) {
+        let stored = RecoverySnapshotStore.loadIfPresent()
 #if DEBUG
         // The capture app seeds the fixture in the App Group. The watch
         // simulator may keep a cached empty timeline until the next reload,
         // so the debug-only fallback keeps the production complication view
         // honest while making the screenshot deterministic.
-        if !snapshot.hasSession,
+        if stored?.hasSession != true,
            UserDefaults(suiteName: rechargeAppGroupID)?.bool(forKey: "rechargeScreenshotMode") == true {
-            return ScreenshotFixtures.snapshot(now: date)
+            return (ScreenshotFixtures.snapshot(now: date), true)
         }
 #endif
-        return snapshot
+        return (stored ?? .empty, stored != nil)
     }
 }
 
@@ -104,8 +121,14 @@ extension RecoveryEntry {
     /// and a widget extension cannot hold a `WCSession`. Someone who installs
     /// Recharge and adds the complication before opening the Watch app is in
     /// this state, and used to be shown a bare `--`.
+    /// Derived from whether anything has ever *arrived*, not from whether the
+    /// snapshot has a session in it. Those are different questions, and asking
+    /// the second one meant a user who synced fine but had not trained in four
+    /// days was told to open Recharge and set it up — with nothing to set up,
+    /// and no way to make the message go away short of doing a workout. The
+    /// "no workout" answer is `noRecentWorkout`, and it already exists.
     var dataState: ComplicationCopy.DataState {
-        snapshot.hasSession ? .synced : .neverSynced
+        hasEverSynced ? .synced : .neverSynced
     }
 
     var primaryText: String {

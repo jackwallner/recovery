@@ -22,7 +22,7 @@ Recharge visar ett avgränsat fönster i stället för en siffra med falsk preci
 
 STANDARD, GRATIS
 
-Standarduppskattningen är samma tabell för alla: typ av pass, längd och hårdhet, mätt mot pulsintervallet för din ålder.
+Standarduppskattningen är en gemensam tabell, inställd på den träningsnivå du anger eller som Recharge ser: typ av pass, längd och hårdhet, mätt mot pulsintervallet för din ålder.
 
 • Import av pass från Apple Hälsa
 • Nedräkningen och Redo-läget
@@ -53,7 +53,7 @@ Användarvillkor (Apples standard-EULA): https://www.apple.com/legal/internet-se
 
 INTEGRITET
 
-Recharge läser från Apple Hälsa och skriver inget tillbaka. Dina data stannar på dina enheter. Inget konto, ingen inloggning, ingen server.
+Recharge läser från Apple Hälsa och skriver inget tillbaka. Dina data stannar på dina enheter. Inget konto och ingen inloggning. Köp och prenumerationsstatus hanteras av Apple och RevenueCat.
 
 VIKTIGT
 

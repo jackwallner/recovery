@@ -131,7 +131,7 @@ struct OnboardingView: View {
             symbol: "hourglass",
             tint: Theme.recovering,
             title: "Recovery time,\non the watch you own",
-            message: "Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready — the answer a Garmin gives you, from Apple Health.",
+            message: "Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready. It is the answer a Garmin gives you, from Apple Health.",
             primaryTitle: "Continue",
             primaryAction: advance
         )
@@ -460,7 +460,7 @@ private struct OnboardingReadoutPage: View {
     private var footer: String {
         switch remainingQuestions {
         case 0: "That's everything Recharge needs."
-        case 1: "One question left — Health can't answer this one."
+        case 1: "One question left. Health can't answer this one."
         default: "\(remainingQuestions) short questions left, for the things Health can't answer."
         }
     }

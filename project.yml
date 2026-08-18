@@ -137,6 +137,11 @@ targets:
       - path: RechargeTests
       - path: Shared/Models/RecoveryModels.swift
       - path: Shared/Models/RecoverySnapshot.swift
+      # The SwiftData schema, so the persistence round-trip is testable. It was
+      # out of the target and the gap showed: `carriedHours` was computed,
+      # published, and rendered without ever being written to a record, and
+      # nothing in a 252-test suite could see it.
+      - path: Shared/Models/RecoveryRecords.swift
       - path: Shared/Utilities/SessionLoadCalculator.swift
       - path: Shared/Utilities/RecoveryBaseline.swift
       - path: Shared/Utilities/RecoveryCalculator.swift

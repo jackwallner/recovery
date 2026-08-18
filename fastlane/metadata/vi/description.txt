@@ -22,7 +22,7 @@ Recharge hiển thị một khoảng có giới hạn thay vì một con số ch
 
 TIÊU CHUẨN, MIỄN PHÍ
 
-Ước tính tiêu chuẩn là cùng một bảng cho mọi người: loại buổi tập, độ dài và độ nặng, đo theo dải nhịp tim tương ứng với tuổi bạn.
+Ước tính tiêu chuẩn là một bảng chung, đặt theo mức độ tập luyện bạn khai báo hoặc Recharge quan sát được: loại buổi tập, độ dài và độ nặng, đo theo dải nhịp tim tương ứng với tuổi bạn.
 
 • Nhập buổi tập từ Apple Sức khỏe
 • Đếm ngược và trạng thái Sẵn sàng
@@ -53,7 +53,7 @@ Chính sách quyền riêng tư: https://jackwallner.github.io/recovery/privacy-
 
 QUYỀN RIÊNG TƯ
 
-Recharge đọc từ Apple Sức khỏe và không ghi gì trở lại. Dữ liệu của bạn ở lại trên thiết bị của bạn. Không tài khoản, không đăng nhập, không máy chủ.
+Recharge đọc từ Apple Sức khỏe và không ghi gì trở lại. Dữ liệu của bạn ở lại trên thiết bị của bạn. Không tài khoản, không đăng nhập. Việc mua và trạng thái đăng ký do Apple và RevenueCat xử lý.
 
 QUAN TRỌNG
 

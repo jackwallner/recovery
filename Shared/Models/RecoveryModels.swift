@@ -30,7 +30,15 @@ import Foundation
 /// they put the two tiers the right way round: training more now shortens the
 /// window instead of lengthening it. Free-tier windows get longer; windows for
 /// anyone training more than a couple of times a week get shorter.
-public let recoveryModelVersion = 7
+///
+/// 8: recovery time is cumulative. A session done inside a running countdown now
+/// starts its own from where that countdown would have finished rather than from
+/// now, so a same-day double costs more than a single session. Recharge used to
+/// take the *maximum* of overlapping windows, which made two hard sessions four
+/// hours apart read exactly like one, at the one moment somebody coming from a
+/// Garmin expects the number to jump. Only windows that overlap change, so a
+/// user who trains once a day sees nothing move.
+public let recoveryModelVersion = 8
 
 // MARK: - Tier
 
@@ -497,6 +505,41 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
     /// overnight context, or calibration.
     public let standardHours: Double
 
+    /// Recovery still outstanding from earlier sessions at the moment this one
+    /// ended, in hours. Zero for a session that started from Ready.
+    ///
+    /// **Recovery time is cumulative, and this is what makes it so.** Garmin
+    /// documents the behaviour plainly: if eighteen hours were left from
+    /// yesterday's run and another session is done today, the new time stacks on
+    /// top. Recharge used to take the *maximum* of overlapping windows instead,
+    /// which meant two hard sessions four hours apart read exactly the same as
+    /// one, and the number failed to move at the one moment a Garmin user would
+    /// expect it to spike.
+    ///
+    /// Kept separate from `hours` rather than folded into it, because the two
+    /// answer different questions and both are needed. `hours` is what *this
+    /// session* cost, which is what the tier comparison, the rest-pattern bands
+    /// and the history rows are about. `totalHours` is how long the countdown
+    /// actually runs.
+    ///
+    /// Decodes to 0 for any record written before stacking existed, which is the
+    /// truthful legacy value: those estimates were not stacked.
+    public let carriedHours: Double
+
+    /// How long the countdown actually runs: this session's own cost plus
+    /// whatever was still outstanding, bounded by the same ceiling every other
+    /// window obeys. Zero when the session started no countdown, so an
+    /// active-recovery walk can neither start one nor inherit one.
+    public var totalHours: Double {
+        guard producesCountdown else { return 0 }
+        return min(hours + max(carriedHours, 0), RecoveryCalculator.maximumHours)
+    }
+
+    /// True when this session landed on top of recovery that was still running.
+    /// The surfaces that show a countdown have to be able to say so, or a number
+    /// larger than the session appears to justify looks like a bug.
+    public var isStacked: Bool { producesCountdown && carriedHours > 0.05 }
+
     public var producesCountdown: Bool { hours > 0 }
 
     public init(
@@ -517,7 +560,8 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         modelVersion: Int = recoveryModelVersion,
         tier: RecoveryTier = .standard,
         personalFactor: Double = 1,
-        standardHours: Double? = nil
+        standardHours: Double? = nil,
+        carriedHours: Double = 0
     ) {
         self.sessionID = sessionID
         self.profile = profile
@@ -538,6 +582,7 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         self.personalFactor = personalFactor
         self.standardHours = standardHours
             ?? (personalFactor > 0 ? hours / personalFactor : hours)
+        self.carriedHours = max(carriedHours, 0)
     }
 
     /// Tier metadata arrived in model version 2, and `standardHours` was added
@@ -563,6 +608,7 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         personalFactor = try container.decodeIfPresent(Double.self, forKey: .personalFactor) ?? 1
         standardHours = try container.decodeIfPresent(Double.self, forKey: .standardHours)
             ?? (personalFactor > 0 ? hours / personalFactor : hours)
+        carriedHours = try container.decodeIfPresent(Double.self, forKey: .carriedHours) ?? 0
     }
 
     /// Phase at a given instant. Derived rather than stored so a cached estimate

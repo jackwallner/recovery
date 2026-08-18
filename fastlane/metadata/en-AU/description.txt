@@ -24,7 +24,7 @@ Recharge shows you a bounded window, not a false-precision number. It shows whic
 
 STANDARD, FREE
 
-The standard estimate is the same table for everyone: what kind of session it was, how long it ran, and how hard it was, scored against the heart-rate range for your age.
+The standard estimate is one shared table, set to your training level: session type, length, and intensity, scored against the heart-rate range for your age.
 
 • Apple Health workout import
 • The countdown and the Ready state
@@ -55,7 +55,7 @@ Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-service
 
 PRIVACY
 
-Recharge reads from Apple Health and writes nothing back. Your data stays on your devices. There is no account, no sign-in, and no server.
+Recharge reads from Apple Health and writes nothing back. Your data stays on your devices. There is no account and no sign-in. Purchases go through Apple and RevenueCat.
 
 IMPORTANT
 

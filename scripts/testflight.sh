@@ -50,6 +50,25 @@ xcodebuild -project Recharge.xcodeproj \
   -allowProvisioningUpdates \
   archive
 
+# The substitution above is a `sed` on a source file, and a `sed` that matches
+# nothing succeeds. Every way that can go wrong (an interrupted earlier run that
+# left the key in place and the restore trap then reverted it, a rename of the
+# constant, a stale DerivedData object file) produces a perfectly valid archive
+# whose paywall cannot configure RevenueCat on a real device. Nothing downstream
+# notices: the app builds, launches, and simply never loads an offering.
+#
+# So verify the product rather than trusting the edit. Both the iPhone app and
+# the embedded Watch app compile `Shared`, hence the whole-archive search.
+echo "==> Verify the production key reached the archive"
+if grep -rq "appl_RECHARGE_PLACEHOLDER" "$ARCHIVE/Products"; then
+  echo "error: RevenueCat placeholder is in the archive; the key substitution did not take" >&2
+  exit 1
+fi
+if ! grep -rq "$RC_PUBLIC_KEY" "$ARCHIVE/Products"; then
+  echo "error: production RevenueCat key not found in the archive" >&2
+  exit 1
+fi
+
 echo "==> Upload build $NEXT_BUILD"
 "$ROOT/scripts/upload-testflight.sh" "$ARCHIVE"
 

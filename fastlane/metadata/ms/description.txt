@@ -22,7 +22,7 @@ Recharge memaparkan tempoh yang bersempadan, bukan nombor berketepatan palsu, be
 
 STANDARD, PERCUMA
 
-Anggaran standard ialah jadual yang sama untuk semua orang: jenis sesi, tempoh dan keberatannya, diukur terhadap julat degupan jantung mengikut umur anda.
+Anggaran standard ialah satu jadual sepunya pada tahap latihan anda: jenis sesi, tempoh dan keberatannya, pada julat degupan jantung mengikut umur anda.
 
 • Import latihan daripada Apple Kesihatan
 • Kiraan detik dan status Sedia
@@ -53,7 +53,7 @@ Syarat Penggunaan (EULA standard Apple): https://www.apple.com/legal/internet-se
 
 PRIVASI
 
-Recharge membaca daripada Apple Kesihatan dan tidak menulis apa-apa kembali. Data anda kekal pada peranti anda. Tiada akaun, tiada log masuk, tiada pelayan.
+Recharge membaca daripada Apple Kesihatan dan tidak menulis apa-apa kembali. Data anda kekal pada peranti anda. Tiada akaun, tiada log masuk. Pembelian melalui Apple dan RevenueCat.
 
 PENTING
 

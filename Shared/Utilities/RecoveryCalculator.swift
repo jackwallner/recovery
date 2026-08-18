@@ -73,8 +73,10 @@ public enum RecoveryCalculator {
     ///   - calibration: the running personal factor from expired-countdown
     ///     feedback. `RecoveryCalibration.neutral` when there is none.
     ///   - personalization: the Recharge+ multiplier from
-    ///     `PersonalRecoveryModel`. `.standard` for the free tier, which is the
-    ///     same table for everyone.
+    ///     `PersonalRecoveryModel`. `.standard` for the free tier, which is one
+    ///     shared table read at the person's stated training level (the
+    ///     `fitnessScale` on `baseline`) rather than the same number for
+    ///     everyone.
     ///   - now: the calculation instant. Injected so tests are deterministic.
     public static func estimate(
         for session: SessionInput,
@@ -83,6 +85,7 @@ public enum RecoveryCalculator {
         calibration: Double = RecoveryCalibration.neutral,
         personalization: RecoveryPersonalization = .standard,
         standardHours: Double? = nil,
+        carriedHours: Double = 0,
         now: Date = .now
     ) -> RecoveryEstimate {
         let load = SessionLoadCalculator.profiledLoad(for: session)
@@ -96,6 +99,11 @@ public enum RecoveryCalculator {
 
         var hours = 0.0
         var adjustment = 0.0
+        // Recovery still outstanding when this session ended. Only a session
+        // that earns a countdown of its own may inherit it: an easy walk taken
+        // mid-window neither starts a countdown nor lengthens the one already
+        // running, which is the same guarantee `RecoveryResolver` gives.
+        let carried = qualifies ? max(carriedHours, 0) : 0
         if qualifies {
             let base = baseHours(forRelativeLoad: relative) * session.profile.windowMultiplier
             adjustment = contextAdjustment(context)
@@ -105,6 +113,12 @@ public enum RecoveryCalculator {
                 maximumHours
             )
         }
+
+        // The countdown runs for this session's cost *plus* what was left over,
+        // bounded by the same ceiling a single session obeys. `hours` stays the
+        // session's own cost: it is what the tier comparison, the rest-pattern
+        // bands and the history rows are asking about.
+        let total = qualifies ? min(hours + carried, maximumHours) : 0
 
         let confidence = confidence(
             load: load,
@@ -120,10 +134,13 @@ public enum RecoveryCalculator {
             activityLabel: session.activityLabel,
             calculatedAt: now,
             sessionEnd: session.endDate,
-            readyAt: session.endDate.addingTimeInterval(hours * 3600),
+            readyAt: session.endDate.addingTimeInterval(total * 3600),
             hours: hours,
-            windowLowHours: hours * (1 - windowSpread),
-            windowHighHours: hours * (1 + windowSpread),
+            // The displayed range is the uncertainty on the countdown the user
+            // is looking at, so it spreads around the stacked total rather than
+            // around the session's own cost.
+            windowLowHours: total * (1 - windowSpread),
+            windowHighHours: total * (1 + windowSpread),
             load: load,
             relativeLoad: relative,
             category: category,
@@ -140,8 +157,34 @@ public enum RecoveryCalculator {
             ),
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,
-            standardHours: standardHours
+            standardHours: standardHours,
+            carriedHours: carried
         )
+    }
+
+    // MARK: - Stacking
+
+    /// Recovery still outstanding when `session` ended, given where the previous
+    /// countdown was due to finish. The whole of the stacking rule.
+    ///
+    /// Recovery time is cumulative: a session done inside a running countdown
+    /// starts its own from where that countdown would have ended rather than
+    /// from now, so two hard sessions in a day cost more than one. Recharge used
+    /// to take the *maximum* of overlapping windows, which is the simplest
+    /// defensible rule and the wrong one — it made a same-day double read
+    /// exactly like a single session, at the one moment somebody coming from a
+    /// Garmin would expect the number to jump.
+    ///
+    /// A previous window that has already expired carries nothing, which is what
+    /// the clamp at zero is for: without it a session a week after the last one
+    /// would be *credited* with negative recovery.
+    ///
+    /// Pure and static, deliberately: the caller that walks the chain lives in
+    /// `RecoveryEngine`, but the rule itself needs no store, no clock and no
+    /// actor, so it is testable beside every other stage of the model.
+    public static func carriedHours(into session: SessionInput, from previousReadyAt: Date?) -> Double {
+        guard let previousReadyAt else { return 0 }
+        return max(previousReadyAt.timeIntervalSince(session.endDate) / 3600, 0)
     }
 
     // MARK: - Stage 3: relative load to hours
@@ -254,7 +297,7 @@ public enum RecoveryCalculator {
             }
         }
 
-        guard baseline.hasEnoughSamples else { return .buildingBaseline }
+        guard baseline.hasEstablishedBaseline else { return .buildingBaseline }
 
         switch load.source {
         case .duration:
@@ -307,10 +350,15 @@ public enum RecoveryCalculator {
 
         switch tier {
         case .standard:
-            reasons.append("Standard estimate: the same table for everyone, from session type, length, and intensity.")
+            // Not "the same table for everyone", which stopped being true when
+            // the standard tier started reading the shared curve at the user's
+            // stated training level. Two free users who answered differently
+            // get different numbers, and a reason line that denies it is the
+            // app arguing with itself.
+            reasons.append("Standard estimate: one shared table at your training level, from session type, length, and intensity.")
         case .personalized:
-            if !baseline.hasEnoughSamples {
-                reasons.append("Still building your baseline from \(baseline.sampleCount) recent \(baseline.sampleCount == 1 ? "session" : "sessions").")
+            if !baseline.hasEstablishedBaseline {
+                reasons.append("Still building your baseline from \(baseline.dayCount) recent training \(baseline.dayCount == 1 ? "day" : "days").")
             }
             let percent = Int(((personalization.factor - 1) * 100).rounded())
             if percent <= -3 {

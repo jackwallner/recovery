@@ -322,15 +322,29 @@ public final class RecoveryEngine: ObservableObject {
         // each session *would* have had before it can say whether the person
         // training inside it held up.
         let inputs = workouts.map { sessionInput(for: $0, settings: settings) }
-        let standardEstimates = inputs.map { session in
-            RecoveryCalculator.estimate(
+
+        // Sequential rather than a `map`, because recovery time is cumulative:
+        // each session's countdown starts from wherever the previous one would
+        // have finished, so the chain has to be walked in order. `workouts` is
+        // sorted by `endDate` above, which is what makes that walk meaningful.
+        //
+        // The two tiers carry separate chains. A standard window and a
+        // personalized window for the same session end at different times, so a
+        // shared residual would splice one tier's arithmetic into the other's.
+        var standardEstimates: [RecoveryEstimate] = []
+        var standardReadyAt: Date?
+        for session in inputs {
+            let estimate = RecoveryCalculator.estimate(
                 for: session,
                 baseline: .standard(
                     for: session.profile,
                     fitnessScale: settings.athleteProfile.fitnessScale
                 ),
+                carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardReadyAt),
                 now: now
             )
+            standardEstimates.append(estimate)
+            if estimate.producesCountdown { standardReadyAt = estimate.readyAt }
         }
 
         let isPro = StoreService.shared.isPro
@@ -343,7 +357,11 @@ public final class RecoveryEngine: ObservableObject {
                     endDate: session.endDate,
                     load: standard.load.value,
                     intensityFraction: SessionLoadCalculator.intensityFraction(for: session),
-                    standardHours: standard.hours
+                    // The window that was actually predicted, which is the
+                    // stacked total. The tolerance signal asks whether the next
+                    // session started *inside* it, and a same-day double
+                    // genuinely did start inside a countdown that was running.
+                    standardHours: standard.totalHours
                 )
             },
             days: contexts.map {
@@ -359,6 +377,11 @@ public final class RecoveryEngine: ObservableObject {
 
         var history: [(profile: WorkoutProfile, load: Double, date: Date)] = []
         var results: [RecoveryEstimate] = []
+        // The personalized tier's own residual chain. Fed from the freshly
+        // computed estimate rather than the published one for the same reason
+        // the load chain is: a frozen record is a historical display artifact,
+        // and a later session must never be stacked on a stale window.
+        var personalizedReadyAt: Date?
         var preview: PersonalizedPreview?
         var patternSessions: [RestPattern.Session] = []
 
@@ -390,8 +413,10 @@ public final class RecoveryEngine: ObservableObject {
                 calibration: settings.calibrationFactor,
                 personalization: .personalized(factor: analysis.factor),
                 standardHours: standardEstimates[index].hours,
+                carriedHours: RecoveryCalculator.carriedHours(into: session, from: personalizedReadyAt),
                 now: now
             )
+            if personalized.producesCountdown { personalizedReadyAt = personalized.readyAt }
             let estimate = isPro ? personalized : standardEstimates[index]
 
             // Overwrites as the loop walks forward, so the survivor is the most
@@ -416,8 +441,14 @@ public final class RecoveryEngine: ObservableObject {
                         endDate: session.endDate,
                         profile: session.profile,
                         band: standardEstimates[index].category,
-                        standardHours: standardEstimates[index].hours,
-                        personalizedHours: personalized.hours
+                        // Totals, not session costs: this card compares the gaps
+                        // the person actually leaves against the windows the app
+                        // actually gave them, and a stacked window is what they
+                        // were given. The *band* still comes from the session's
+                        // own standard category, so a double session does not
+                        // migrate to a harder row than it earned.
+                        standardHours: standardEstimates[index].totalHours,
+                        personalizedHours: personalized.totalHours
                     )
                 )
             }

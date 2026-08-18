@@ -22,7 +22,7 @@ O Recharge mostra uma janela delimitada em vez de um número de falsa precisão,
 
 PADRÃO, GRÁTIS
 
-A estimativa padrão é a mesma tabela para todo mundo: tipo de treino, duração e dureza, medidos na faixa cardíaca correspondente à sua idade.
+A estimativa padrão é uma tabela comum, ajustada ao nível de treino que você informa ou que o Recharge observa: tipo de treino, duração e dureza, medidos na faixa cardíaca correspondente à sua idade.
 
 • Importação de treinos do Saúde da Apple
 • A contagem regressiva e o estado Pronto
@@ -53,7 +53,7 @@ Termos de Uso (EULA padrão da Apple): https://www.apple.com/legal/internet-serv
 
 PRIVACIDADE
 
-O Recharge lê do Saúde da Apple e não escreve nada de volta. Seus dados ficam nos seus aparelhos. Sem conta, sem login, sem servidor.
+O Recharge lê do Saúde da Apple e não escreve nada de volta. Seus dados ficam nos seus aparelhos. Sem conta e sem login. As compras e o status da assinatura são tratados pela Apple e pela RevenueCat.
 
 IMPORTANTE
 

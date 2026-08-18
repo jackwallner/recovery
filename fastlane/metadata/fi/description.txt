@@ -22,7 +22,7 @@ Recharge näyttää rajatun ikkunan eikä väärän tarkan luvun, ja kertoo sign
 
 VAKIO, ILMAINEN
 
-Vakioarvio on sama taulukko kaikille: treenin tyyppi, kesto ja kovuus, mitattuna ikääsi vastaavalla sykealueella.
+Vakioarvio on yksi yhteinen taulukko, asetettuna ilmoittamallesi tai Rechargen havaitsemalle harjoitustasolle: treenin tyyppi, kesto ja kovuus, mitattuna ikääsi vastaavalla sykealueella.
 
 • Treenien tuonti Apple Terveydestä
 • Laskuri ja Valmis-tila
@@ -53,7 +53,7 @@ Käyttöehdot (Applen vakio-EULA): https://www.apple.com/legal/internet-services
 
 TIETOSUOJA
 
-Recharge lukee Apple Terveydestä eikä kirjoita sinne mitään. Tietosi pysyvät laitteillasi. Ei tiliä, ei kirjautumista, ei palvelinta.
+Recharge lukee Apple Terveydestä eikä kirjoita sinne mitään. Tietosi pysyvät laitteillasi. Ei tiliä eikä kirjautumista. Ostot ja tilauksen tilan hoitavat Apple ja RevenueCat.
 
 TÄRKEÄÄ
 

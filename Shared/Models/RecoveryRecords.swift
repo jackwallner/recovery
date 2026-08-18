@@ -120,6 +120,17 @@ public final class RecoveryStateRecord {
     public var tierRaw: String?
     public var personalFactor: Double?
     public var standardHours: Double?
+    /// Recovery still outstanding when this session ended. Optional for the same
+    /// reason the three above are: SwiftData migrates an existing store by
+    /// filling new optionals with nil rather than dropping the cache.
+    ///
+    /// It has to be *persisted* rather than recomputed, because `readyAt` is
+    /// stored and `hours` is the session's own cost, so a record that forgets
+    /// what it carried rehydrates with the two disagreeing: the countdown ends
+    /// where a stacked window ends while the row prints the unstacked figure.
+    /// nil decodes as zero, which is truthful for every record written before
+    /// stacking existed. Those estimates were not stacked.
+    public var carriedHours: Double?
     public var userFeedbackRaw: String?
 
     public init(estimate: RecoveryEstimate) {
@@ -143,6 +154,7 @@ public final class RecoveryStateRecord {
         self.tierRaw = estimate.tier.rawValue
         self.personalFactor = estimate.personalFactor
         self.standardHours = estimate.standardHours
+        self.carriedHours = estimate.carriedHours
         self.userFeedbackRaw = nil
     }
 
@@ -175,7 +187,8 @@ public final class RecoveryStateRecord {
             modelVersion: modelVersion,
             tier: tierRaw.flatMap(RecoveryTier.init(rawValue:)) ?? .standard,
             personalFactor: personalFactor ?? 1,
-            standardHours: standardHours
+            standardHours: standardHours,
+            carriedHours: carriedHours ?? 0
         )
     }
 
@@ -205,6 +218,7 @@ public final class RecoveryStateRecord {
         tierRaw = estimate.tier.rawValue
         personalFactor = estimate.personalFactor
         standardHours = estimate.standardHours
+        carriedHours = estimate.carriedHours
     }
 }
 

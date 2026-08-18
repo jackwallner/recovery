@@ -76,6 +76,11 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
     private static let pendingQueueKey = "pendingEffortQueue"
     private static let lastSnapshotReceivedKey = "lastSnapshotReceived"
+    /// The phone-side `sentAt` of the newest payload the Watch has accepted.
+    /// Persisted rather than held in memory because the Watch app is killed
+    /// between background wakes, and an ordering rule that forgets its high
+    /// water mark on every launch is not an ordering rule.
+    private static let lastAcceptedSentAtKey = "lastAcceptedSentAt"
     private var clearTask: Task<Void, Never>?
     private var isSnapshotRequestInFlight = false
 
@@ -252,6 +257,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         let data = payload[MessageKey.snapshot] as? Data
         let pending = payload[MessageKey.pendingEffortSessionID] as? String
         let style = payload[MessageKey.complicationStyle] as? Int
+        let sentAt = payload[MessageKey.sentAt] as? TimeInterval
         Task { @MainActor in
             PhoneWatchSession.shared.isSnapshotRequestInFlight = false
             guard data != nil else { return }
@@ -259,7 +265,11 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
             narrowed[MessageKey.snapshot] = data
             narrowed[MessageKey.pendingEffortSessionID] = pending
             narrowed[MessageKey.complicationStyle] = style
-            PhoneWatchSession.shared.applyInboundSnapshot(narrowed)
+            narrowed[MessageKey.sentAt] = sentAt
+            // A direct answer to "send me the current model" is current by
+            // construction, and it is also the only way out if the phone's
+            // clock ever moves backwards far enough to wedge the ordering rule.
+            PhoneWatchSession.shared.applyInboundSnapshot(narrowed, isAuthoritative: true)
         }
     }
 
@@ -273,13 +283,48 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
     /// Writes a phone-authored payload into the Watch's own App Group, which is
     /// what every Watch surface already reads.
-    private func applyInboundSnapshot(_ payload: [String: Any]) {
+    ///
+    /// **Late payloads are dropped.** The phone reaches the wrist by two routes
+    /// with different delivery semantics: the application context is a single
+    /// latest-value-wins slot, while `transferUserInfo` is a FIFO queue that
+    /// drains whenever the two next manage to talk. A queued transfer from
+    /// before a reconnect can therefore arrive *after* a newer context and
+    /// overwrite it, which on screen is a countdown that jumps backwards to a
+    /// window the user already watched expire. That reads as a broken app, and
+    /// worse, it can change what somebody does next.
+    ///
+    /// `sentAt` was already on every payload as a cache-buster, because
+    /// `updateApplicationContext` is free to no-op on a byte-identical dict. It
+    /// costs nothing to also believe it.
+    ///
+    /// The snapshot's own `calculatedAt` would be the more natural key and is
+    /// the wrong one: `RecoverySnapshot.empty` carries `.distantPast`, and the
+    /// phone legitimately publishes an empty snapshot when the last workout is
+    /// deleted from Health. Ordering on `calculatedAt` would refuse the one
+    /// payload whose whole job is to clear the wrist.
+    ///
+    /// - Parameter isAuthoritative: skips the ordering check for a payload that
+    ///   is current by construction, i.e. the reply to an explicit request.
+    private func applyInboundSnapshot(_ payload: [String: Any], isAuthoritative: Bool = false) {
         guard let data = payload[MessageKey.snapshot] as? Data,
               let snapshot = try? JSONDecoder().decode(RecoverySnapshot.self, from: data)
         else { return }
 
         let defaults = UserDefaults(suiteName: rechargeAppGroupID) ?? .standard
+        let sentAt = payload[MessageKey.sentAt] as? TimeInterval
+        if !isAuthoritative, let sentAt, let accepted = lastAcceptedSentAt(defaults: defaults),
+           sentAt < accepted {
+            connectivityLogger.info(
+                "Dropped a late snapshot, sentAt=\(sentAt, privacy: .public) behind \(accepted, privacy: .public)"
+            )
+            return
+        }
+
         RecoverySnapshotStore.save(snapshot, defaults: defaults)
+        // A payload with no `sentAt` is a degraded path rather than an error:
+        // it is applied, but it must not advance the high water mark, or one
+        // undated delivery would start rejecting dated ones.
+        if let sentAt { defaults.set(sentAt, forKey: Self.lastAcceptedSentAtKey) }
 
         if let sessionID = payload[MessageKey.pendingEffortSessionID] as? String {
             defaults.set(sessionID, forKey: "pendingEffortSessionID")
@@ -296,6 +341,13 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
         WidgetCenter.shared.reloadAllTimelines()
         connectivityLogger.info("Applied phone snapshot, readyAt=\(String(describing: snapshot.readyAt), privacy: .public)")
+    }
+
+    /// The newest `sentAt` accepted so far, or nil when the two have never
+    /// talked. Read back off disk rather than cached, because a widget-driven
+    /// background wake gets a fresh process.
+    private func lastAcceptedSentAt(defaults: UserDefaults) -> TimeInterval? {
+        defaults.object(forKey: Self.lastAcceptedSentAtKey) as? TimeInterval
     }
     #endif
 
@@ -436,12 +488,14 @@ extension PhoneWatchSession: WCSessionDelegate {
         let data = payload[MessageKey.snapshot] as? Data
         let pending = payload[MessageKey.pendingEffortSessionID] as? String
         let style = payload[MessageKey.complicationStyle] as? Int
+        let sentAt = payload[MessageKey.sentAt] as? TimeInterval
         guard data != nil else { return }
         Task { @MainActor [weak self] in
             var narrowed: [String: Any] = [:]
             narrowed[MessageKey.snapshot] = data
             narrowed[MessageKey.pendingEffortSessionID] = pending
             narrowed[MessageKey.complicationStyle] = style
+            narrowed[MessageKey.sentAt] = sentAt
             self?.applyInboundSnapshot(narrowed)
         }
     }

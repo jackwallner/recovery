@@ -22,7 +22,7 @@ Recharge toont een begrensd venster in plaats van een getal met valse precisie, 
 
 STANDAARD, GRATIS
 
-De standaardschatting is dezelfde tabel voor iedereen: soort sessie, duur en zwaarte, gemeten tegen het hartslagbereik dat bij je leeftijd hoort.
+De standaardschatting is één gedeelde tabel, afgestemd op het trainingsniveau dat je opgeeft of dat Recharge waarneemt: soort sessie, duur en zwaarte, gemeten tegen het hartslagbereik dat bij je leeftijd hoort.
 
 • Workouts importeren uit Apple Gezondheid
 • De aftelling en de Klaar-status
@@ -53,7 +53,7 @@ Gebruiksvoorwaarden (Apple standaard-EULA): https://www.apple.com/legal/internet
 
 PRIVACY
 
-Recharge leest uit Apple Gezondheid en schrijft er niets naartoe. Je gegevens blijven op je eigen apparaten. Geen account, geen inloggen, geen server.
+Recharge leest uit Apple Gezondheid en schrijft er niets naartoe. Je gegevens blijven op je eigen apparaten. Geen account en geen inloggen. Aankopen en abonnementsstatus worden afgehandeld door Apple en RevenueCat.
 
 BELANGRIJK
 

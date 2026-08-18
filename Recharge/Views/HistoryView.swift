@@ -71,6 +71,7 @@ struct HistoryView: View {
                     empty
                 }
             }
+            .tabBarClearance()
             .background(Theme.background)
             .navigationTitle("History")
             // Inline, as on Today and across the fleet: a large title draws its
@@ -171,7 +172,6 @@ struct HistoryView: View {
                 if quietSessionCount > 0 { quietToggle }
             }
             .padding(.horizontal, 16)
-            .padding(.bottom, 96)
         }
     }
 
@@ -294,7 +294,11 @@ private struct HistoryRow: View {
                     // to lose: `easy` produces no window on either tier, so
                     // there is no day-one figure being withheld here. Say so in
                     // a word instead of punctuating it.
-                    Text(estimate.producesCountdown ? CountdownFormat.hours(estimate.hours) : "None")
+                    // The countdown this session actually set, which is the
+                    // stacked total. Showing its own cost instead would put a
+                    // different number in the list from the one the hero showed
+                    // on the day.
+                    Text(estimate.producesCountdown ? CountdownFormat.hours(estimate.totalHours) : "None")
                         .font(.system(
                             .title3,
                             design: .rounded,
@@ -303,8 +307,17 @@ private struct HistoryRow: View {
                         .monospacedDigit()
                         .foregroundStyle(estimate.producesCountdown ? Theme.textPrimary : Theme.textSecondary)
                         .accessibilityLabel(estimate.producesCountdown
-                                            ? CountdownFormat.hours(estimate.hours)
+                                            ? CountdownFormat.hours(estimate.totalHours)
                                             : "No countdown")
+                    // And where that total came from, so a 30h row under a
+                    // 40-minute session is legible rather than suspicious.
+                    if estimate.isStacked {
+                        Text("incl. \(CountdownFormat.hours(estimate.carriedHours)) carried")
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
                     ConfidencePips(confidence: estimate.confidence, showsLabel: false)
                 }
             }
@@ -377,6 +390,18 @@ private struct EstimateDetailView: View {
                     Text("Ready \(CountdownFormat.readyAt(estimate.readyAt, now: estimate.sessionEnd))")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
+                }
+                // The arithmetic behind a stacked window, stated where there is
+                // room for it. Recovery time is cumulative, so this session
+                // landed on a countdown that was still running.
+                if estimate.isStacked {
+                    Text(CountdownFormat.stackedNote(
+                        sessionHours: estimate.hours,
+                        carriedHours: estimate.carriedHours
+                    ))
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 8) {
                     ProfileChip(

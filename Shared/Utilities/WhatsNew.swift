@@ -29,7 +29,7 @@ public enum WhatsNew {
         Item(
             symbol: "hourglass",
             title: "A standard recharge time, free",
-            detail: "Session type, length, and intensity in, hours out — the same clear countdown for everyone, with no history required."
+            detail: "Session type, length, and intensity in, hours out, on the curve for someone who trains as much as you do. No history required."
         ),
         Item(
             symbol: "person.crop.circle.badge.clock",
