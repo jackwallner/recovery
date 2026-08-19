@@ -132,9 +132,15 @@ struct HistoryView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// The list's own geometry. The pinned day headers have to mask the rows
+    /// passing behind them, so the header background is inflated by exactly
+    /// these two numbers and they cannot be typed twice.
+    private static let horizontalMargin: CGFloat = 16
+    private static let rowSpacing: CGFloat = 10
+
     private var list: some View {
         ScrollView {
-            LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
+            LazyVStack(spacing: Self.rowSpacing, pinnedViews: [.sectionHeaders]) {
                 if !store.isPro { weeklyLoadTeaser }
                 ForEach(grouped) { group in
                     Section {
@@ -165,12 +171,25 @@ struct HistoryView: View {
                         }
                         .padding(.horizontal, 4)
                         .padding(.top, 8)
-                        .background(Theme.background)
+                        // A pinned header is drawn over the rows still
+                        // scrolling behind it, so its background has to cover
+                        // more than the text: the negative padding inflates it
+                        // past the stack's 16pt side margins and over the 10pt
+                        // gap on each side of it. Sized to the text alone, the
+                        // header let the outgoing card show through in three
+                        // strips — above it, beside it, and below it — which on
+                        // a dark screen reads as a second, broken row wedged
+                        // under the navigation bar.
+                        .background(
+                            Theme.background
+                                .padding(.horizontal, -Self.horizontalMargin)
+                                .padding(.vertical, -Self.rowSpacing)
+                        )
                     }
                 }
                 if quietSessionCount > 0 { quietToggle }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Self.horizontalMargin)
         }
     }
 
