@@ -223,7 +223,7 @@ def main() -> None:
     check([item.get("fileName") for item in live_attrs] == expected_names, "screenshot order and filenames are current", failures)
     check([item.get("sourceFileChecksum") for item in live_attrs] == expected_checksums, "screenshot checksums match local artwork", failures)
     check(
-        all(item.get("imageAsset", {}).get("width") == 1320 and item.get("imageAsset", {}).get("height") == 2868 for item in live_attrs),
+        all((item.get("imageAsset") or {}).get("width") == 1320 and (item.get("imageAsset") or {}).get("height") == 2868 for item in live_attrs),
         "screenshots are 1320x2868",
         failures,
     )
@@ -245,8 +245,8 @@ def main() -> None:
     )
     check(
         all(
-            item.get("imageAsset", {}).get("width") == 368
-            and item.get("imageAsset", {}).get("height") == 448
+            (item.get("imageAsset") or {}).get("width") == 368
+            and (item.get("imageAsset") or {}).get("height") == 448
             for item in watch_attrs
         ),
         "Apple Watch screenshot is 368x448",
