@@ -30,7 +30,11 @@ for line in block.splitlines():
 
 # ── The app's pinned table ─────────────────────────────────────────────────
 app_source = open("/Users/jackwallner/recovery/Shared/Utilities/WorkoutClassifier.swift").read()
-enum_block = re.search(r"enum ActivityCode: UInt, Sendable \{(.*?)\n    \}", app_source, re.S).group(1)
+enum_block = re.search(
+    r"enum ActivityCode: UInt, Sendable, CaseIterable \{(.*?)\n    \}",
+    app_source,
+    re.S,
+).group(1)
 app = {}
 for m in re.finditer(r"case (\w+) = (\d+)", enum_block):
     app[m.group(1)] = int(m.group(2))

@@ -198,11 +198,12 @@ public enum PersonalRecoveryModel {
         let window = sessions
             .filter { $0.endDate >= cutoff && $0.endDate <= now && $0.profile != .easy }
             .sorted { $0.endDate < $1.endDate }
+        let recentDays = days.filter { $0.date >= cutoff && $0.date <= now }
 
         let weeklyLoad = window.reduce(0) { $0 + $1.load } / (Double(windowDays) / 7)
         let sessionsPerWeek = Double(window.count) / (Double(windowDays) / 7)
 
-        let rebound = reboundEvidence(sessions: window, days: days)
+        let rebound = reboundEvidence(sessions: window, days: recentDays)
         let tolerance = toleranceEvidence(sessions: window)
         let density = window.count >= 4 ? densityFactor(weeklyLoad: weeklyLoad) : nil
 
@@ -449,7 +450,8 @@ public enum PersonalRecoveryModel {
     // MARK: - Helpers
 
     static func clamp(_ value: Double) -> Double {
-        min(max(value, minimumFactor), maximumFactor)
+        guard value.isFinite else { return 1 }
+        return min(max(value, minimumFactor), maximumFactor)
     }
 
     private static func geometricMean(_ items: [(factor: Double, weight: Double)]) -> Double {

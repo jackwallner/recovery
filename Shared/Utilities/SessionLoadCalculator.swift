@@ -140,12 +140,13 @@ public enum SessionLoadCalculator {
     public static func intensityFraction(for session: SessionInput) -> Double? {
         guard session.heartRateCoverage >= minimumHeartRateCoverage,
               let average = session.averageHeartRate,
+              average.isFinite,
               average > 0
         else { return nil }
 
         let resting = session.restingHeartRate ?? defaultRestingHeartRate
         let max = session.maxHeartRate ?? defaultMaxHeartRate
-        guard max > resting else { return nil }
+        guard resting.isFinite, max.isFinite, max > resting else { return nil }
         return min(Swift.max((average - resting) / (max - resting), 0), 1)
     }
 
@@ -203,6 +204,7 @@ public enum SessionLoadCalculator {
     /// is the same floor expressed once, in the place that documents why.
     static func energyLoad(for session: SessionInput) -> SessionLoad? {
         guard let energy = session.activeEnergyKilocalories,
+              energy.isFinite,
               energy > 0,
               session.durationMinutes > 0
         else { return nil }

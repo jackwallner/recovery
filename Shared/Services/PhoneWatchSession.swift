@@ -161,9 +161,11 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
                 connectivityLogger.error("sendMessage failed: \(String(describing: error), privacy: .public)")
                 // The immediate path failed, so fall back to the durable queue
                 // rather than dropping the user's answer.
-                Task { @MainActor [weak self] in
-                    session.transferUserInfo(payload)
-                    self?.enqueue(payload)
+                Task { @MainActor in
+                    _ = session.transferUserInfo(payload)
+                    // `transferUserInfo` is already the durable FIFO path. Do
+                    // not also place the same payload in the local backstop,
+                    // or activation would deliver the answer twice.
                 }
             }
             confirm(confirmation)
@@ -225,6 +227,17 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// documented way to ask.
     public func waitForPendingContent(timeout: TimeInterval) async {
         let deadline = Date.now.addingTimeInterval(timeout)
+        // `activate()` is asynchronous. A false `hasContentPending` value
+        // before activation completes means "not ready to report", not "the
+        // payload has landed".
+        while WCSession.default.activationState != .activated, Date.now < deadline {
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        guard WCSession.default.activationState == .activated else {
+            connectivityLogger.error("Connectivity activation timed out")
+            return
+        }
+
         while WCSession.default.hasContentPending, Date.now < deadline {
             try? await Task.sleep(for: .milliseconds(150))
         }

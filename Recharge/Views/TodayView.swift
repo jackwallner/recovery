@@ -89,7 +89,6 @@ struct TodayView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .tabBarClearance()
             .background(Theme.background)
             .navigationTitle("Recharge")
             .navigationBarTitleDisplayMode(.inline)

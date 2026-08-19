@@ -138,9 +138,10 @@ struct TrialOfferPage: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else if let disclosure = store.yearlySheetDisclosureText {
                 Text(disclosure)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

@@ -56,8 +56,35 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.progress(at: now.addingTimeInterval(40 * 3600)), 1, accuracy: 0.001)
     }
 
-    func testProgressIsFullWhenThereIsNoWindow() {
-        XCTAssertEqual(RecoverySnapshot.empty.progress(at: now), 1)
+    func testProgressIsEmptyWhenThereIsNoSession() {
+        XCTAssertEqual(RecoverySnapshot.empty.progress(at: now), 0)
+    }
+
+    func testProgressIsFullWhenACompletedSessionHasNoWindow() {
+        XCTAssertEqual(
+            RecoverySnapshot(estimate: estimate(hours: 0), isPro: false).progress(at: now),
+            1
+        )
+    }
+
+    func testMissingAdditiveFieldsDecodeWithTheirCurrentDefaults() throws {
+        let snapshot = RecoverySnapshot(estimate: estimate(hours: 20), isPro: true)
+        var object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(snapshot)) as? [String: Any]
+        )
+        object.removeValue(forKey: "windowLowHours")
+        object.removeValue(forKey: "windowHighHours")
+        object.removeValue(forKey: "modelVersion")
+        object.removeValue(forKey: "isPro")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        let decoded = try JSONDecoder().decode(RecoverySnapshot.self, from: legacyData)
+
+        XCTAssertEqual(decoded.hours, 20)
+        XCTAssertEqual(decoded.windowLowHours, 0)
+        XCTAssertEqual(decoded.windowHighHours, 0)
+        XCTAssertEqual(decoded.modelVersion, recoveryModelVersion)
+        XCTAssertFalse(decoded.isPro)
     }
 
     func testAStaleSnapshotReadsAsNoRecentWorkout() {

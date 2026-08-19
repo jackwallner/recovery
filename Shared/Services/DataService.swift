@@ -20,13 +20,12 @@ public enum DataService {
             return container
         }
 
-        // A schema change or a half-written store leaves the file unusable.
-        // Losing the cache costs one re-import from HealthKit, so wiping is
-        // strictly better than refusing to launch.
-        logger.error("ModelContainer failed to open; deleting the store and retrying")
-        for file in [url, url.appendingPathExtension("wal"), url.appendingPathExtension("shm")] {
-            try? FileManager.default.removeItem(at: file)
-        }
+        // A schema change or a half-written store can leave the file unusable.
+        // Keep a recoverable copy rather than deleting the user's history. A
+        // later migration or support investigation can still inspect it, while
+        // HealthKit repopulates a fresh cache for this launch.
+        logger.error("ModelContainer failed to open; quarantining the store and retrying")
+        quarantinePersistentStore(at: url)
         if let container = makeContainer(schema: schema, url: url) {
             return container
         }
@@ -44,6 +43,27 @@ public enum DataService {
     private static func makeContainer(schema: Schema, url: URL) -> ModelContainer? {
         let config = ModelConfiguration("Recharge", schema: schema, url: url, cloudKitDatabase: .none)
         return try? ModelContainer(for: schema, configurations: [config])
+    }
+
+    private static func quarantinePersistentStore(at url: URL) {
+        let suffix = ".corrupt-\(UUID().uuidString)"
+        let candidates = [
+            url,
+            URL(fileURLWithPath: url.path + "-wal"),
+            URL(fileURLWithPath: url.path + "-shm"),
+            url.appendingPathExtension("wal"),
+            url.appendingPathExtension("shm")
+        ]
+
+        for file in candidates where FileManager.default.fileExists(atPath: file.path) {
+            let destination = URL(fileURLWithPath: file.path + suffix)
+            do {
+                try FileManager.default.moveItem(at: file, to: destination)
+                logger.info("Quarantined persistent store component \(file.lastPathComponent, privacy: .public)")
+            } catch {
+                logger.error("Could not quarantine store component \(file.lastPathComponent, privacy: .public): \(String(describing: error), privacy: .public)")
+            }
+        }
     }
 
     private static var containerURL: URL {

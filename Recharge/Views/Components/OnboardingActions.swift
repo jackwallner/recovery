@@ -138,20 +138,23 @@ struct OnboardingLegalSlot: View {
     var onRestore: (() -> Void)?
 
     var body: some View {
-        HStack(spacing: 16) {
-            Button(isRestoring ? "Restoring…" : "Restore") { onRestore?() }
-                .disabled(isRestoring || onRestore == nil)
-            Link("Terms", destination: RechargeLinks.standardEULA)
-            Link("Privacy", destination: RechargeLinks.privacyPolicy)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 16) { links }
+            VStack(spacing: 8) { links }
         }
         .font(.system(.caption, design: .rounded))
-        // The row is a constant-height spacer on four pages out of five, so it
-        // must not be free to grow into several lines at an accessibility size
-        // and start moving the button it exists to hold still.
-        .dynamicTypeSize(...DynamicTypeSize.large)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
         .foregroundStyle(Theme.textSecondary)
         .opacity(isVisible ? 1 : 0)
         .allowsHitTesting(isVisible)
         .accessibilityHidden(!isVisible)
+    }
+
+    @ViewBuilder
+    private var links: some View {
+        Button(isRestoring ? "Restoring…" : "Restore") { onRestore?() }
+            .disabled(isRestoring || onRestore == nil)
+        Link("Terms", destination: RechargeLinks.standardEULA)
+        Link("Privacy", destination: RechargeLinks.privacyPolicy)
     }
 }

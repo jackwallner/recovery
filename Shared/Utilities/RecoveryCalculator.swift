@@ -103,11 +103,13 @@ public enum RecoveryCalculator {
         // that earns a countdown of its own may inherit it: an easy walk taken
         // mid-window neither starts a countdown nor lengthens the one already
         // running, which is the same guarantee `RecoveryResolver` gives.
-        let carried = qualifies ? max(carriedHours, 0) : 0
+        let carried = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
         if qualifies {
             let base = baseHours(forRelativeLoad: relative) * session.profile.windowMultiplier
             adjustment = contextAdjustment(context)
-            let personal = min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
+            let personal = personalization.factor.isFinite
+                ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
+                : 1
             hours = min(
                 max(base * (1 + adjustment) * clampCalibration(calibration) * personal, minimumCountdownHours),
                 maximumHours
@@ -140,7 +142,7 @@ public enum RecoveryCalculator {
             // is looking at, so it spreads around the stacked total rather than
             // around the session's own cost.
             windowLowHours: total * (1 - windowSpread),
-            windowHighHours: total * (1 + windowSpread),
+            windowHighHours: min(total * (1 + windowSpread), maximumHours),
             load: load,
             relativeLoad: relative,
             category: category,
@@ -270,7 +272,8 @@ public enum RecoveryCalculator {
     }
 
     static func clampCalibration(_ factor: Double) -> Double {
-        min(max(factor, RecoveryCalibration.minimum), RecoveryCalibration.maximum)
+        guard factor.isFinite else { return RecoveryCalibration.neutral }
+        return min(max(factor, RecoveryCalibration.minimum), RecoveryCalibration.maximum)
     }
 
     // MARK: - Confidence

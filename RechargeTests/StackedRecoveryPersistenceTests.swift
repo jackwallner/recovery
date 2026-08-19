@@ -133,7 +133,7 @@ final class StackedRecoveryPersistenceTests: XCTestCase {
     /// pre-stacking semantics and the user has no way to reach the new ones.
     func testTheStackingBehaviourCarriesItsOwnModelVersion() {
         XCTAssertGreaterThanOrEqual(
-            recoveryModelVersion, 8,
+            recoveryModelVersion, 9,
             "stacking changed the numbers; bump recoveryModelVersion so old records thaw"
         )
         XCTAssertEqual(stacked().modelVersion, recoveryModelVersion)

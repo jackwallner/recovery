@@ -209,7 +209,10 @@ public final class RecoveryEngine: ObservableObject {
             context.delete(record)
         }
 
-        try? context.save()
+        guard saveContext(reason: "workout import") else {
+            lastImportFailed = true
+            return
+        }
     }
 
     private func importContext() async {
@@ -256,7 +259,7 @@ public final class RecoveryEngine: ObservableObject {
                 byKey[key] = record
             }
         }
-        try? context.save()
+        saveContext(reason: "context import")
     }
 
     // MARK: - Scoring
@@ -309,7 +312,9 @@ public final class RecoveryEngine: ObservableObject {
             return
         }
 
+        let contextCutoff = now.addingTimeInterval(-Double(PersonalRecoveryModel.windowDays) * 86_400)
         let contexts = ((try? context.fetch(FetchDescriptor<DailyContextRecord>())) ?? [])
+            .filter { $0.date >= contextCutoff && $0.date <= now }
         let contextByKey = Dictionary(contexts.map { ($0.dateKey, $0) }, uniquingKeysWith: { first, _ in first })
         let restingBaseline = median(contexts.map(\.restingHeartRate).filter { $0 > 0 })
         let hrvBaseline = median(contexts.map(\.heartRateVariability).filter { $0 > 0 })
@@ -503,7 +508,7 @@ public final class RecoveryEngine: ObservableObject {
         for state in existingStates where !liveIDs.contains(state.sessionID) {
             context.delete(state)
         }
-        try? context.save()
+        saveContext(reason: "rescore")
 
         // No qualifying session yet is not a reason to show nothing, and neither
         // is a session where the two happen to land on the same rounded hour:
@@ -576,8 +581,11 @@ public final class RecoveryEngine: ObservableObject {
     }
 
     private func latestRestingHeartRate(before date: Date) -> Double? {
+        let cutoff = date.addingTimeInterval(-Double(PersonalRecoveryModel.windowDays) * 86_400)
         var descriptor = FetchDescriptor<DailyContextRecord>(
-            predicate: #Predicate { $0.date <= date && $0.restingHeartRate > 0 }
+            predicate: #Predicate {
+                $0.date >= cutoff && $0.date <= date && $0.restingHeartRate > 0
+            }
         )
         descriptor.sortBy = [SortDescriptor(\DailyContextRecord.date, order: .reverse)]
         descriptor.fetchLimit = 1
@@ -595,7 +603,10 @@ public final class RecoveryEngine: ObservableObject {
         } else {
             snapshot = .empty
         }
-        RecoverySnapshotStore.save(snapshot)
+        guard RecoverySnapshotStore.save(snapshot) else {
+            engineLogger.error("Snapshot encoding failed; keeping the previous published state")
+            return
+        }
 
         // The Watch cannot work out on its own which session needs an effort
         // answer — it has no workout history — so the phone names it here.
@@ -648,7 +659,7 @@ public final class RecoveryEngine: ObservableObject {
             return
         }
         workout.reportedEffort = min(max(effort, 1), 10)
-        try? context.save()
+        guard saveContext(reason: "effort answer") else { return }
         rescore(unfreezing: sessionID)
         publish()
     }
@@ -675,7 +686,7 @@ public final class RecoveryEngine: ObservableObject {
         )
         descriptor.fetchLimit = 1
         (try? context.fetch(descriptor))?.first?.userFeedback = feedback
-        try? context.save()
+        guard saveContext(reason: "readiness feedback") else { return }
 
         RechargeSettings.shared.applyFeedback(feedback)
         RechargeSettings.shared.recordFeedbackAnswered(sessionID)
@@ -697,7 +708,7 @@ public final class RecoveryEngine: ObservableObject {
         descriptor.fetchLimit = 1
         guard let workout = (try? context.fetch(descriptor))?.first else { return }
         workout.profileOverride = profile
-        try? context.save()
+        guard saveContext(reason: "profile override") else { return }
         rescore(unfreezing: sessionID)
         publish()
     }
@@ -779,6 +790,17 @@ public final class RecoveryEngine: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    @discardableResult
+    private func saveContext(reason: String) -> Bool {
+        do {
+            try context.save()
+            return true
+        } catch {
+            engineLogger.error("SwiftData save failed during \(reason, privacy: .public): \(String(describing: error), privacy: .public)")
+            return false
+        }
+    }
 
     private func median(_ values: [Double]) -> Double? {
         guard !values.isEmpty else { return nil }

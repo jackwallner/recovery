@@ -33,59 +33,21 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.25), value: settings.hasCompletedSetup)
     }
 
-    /// A floating translucent bar over the content rather than a system
-    /// `TabView`, the same shape Protein and Vitals use.
-    ///
-    /// The system bar draws an opaque slab across the bottom of a screen whose
-    /// whole point is a tinted full-bleed background, and on iOS 26 it renders
-    /// as a solid pill that cuts the page in half. This sits on top of the
-    /// content in `ultraThinMaterial`, so the countdown and the history list run
-    /// under it and the app reads as one surface.
-    ///
-    /// Clearance is the shell's job, not each screen's. Every tab gets the same
-    /// `safeAreaInset` from `tabContent`, sized by `TabBarMetrics` from the very
-    /// constants that lay the bar out, so the two cannot drift. Screens used to
-    /// pad their own bottom edge and it went exactly the way hand-copied numbers
-    /// go: Today padded 72, History padded 96, and `SettingsView`, a `Form`
-    /// with no padding to copy onto, padded nothing at all, so the capsule sat
-    /// on top of the Recovery time section explaining the model.
-    ///
-    /// An inset rather than padding also keeps the scroll-behind look: it moves
-    /// the content's resting bottom, not the scroll view's frame, so passing
-    /// content still runs under the blur and only the *last* row is guaranteed
-    /// to clear it.
+    /// A translucent bar below the content rather than a system `TabView`, the
+    /// same shape Protein and Vitals use. The bar has its own layout row, so a
+    /// scroll view can never place a live row underneath the material.
     private var main: some View {
-        ZStack(alignment: .bottom) {
-            tabContent(.today) { TodayView(isPresentingSheet: $todayIsPresentingSheet) }
-            tabContent(.history) { HistoryView() }
-            tabContent(.settings) { SettingsView() }
-
-            HStack(spacing: 0) {
-                TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
-                    selectedTab = .today
-                }
-                TabButton(
-                    icon: "list.bullet.rectangle",
-                    label: "History",
-                    isSelected: selectedTab == .history
-                ) { selectedTab = .history }
-                TabButton(icon: "gearshape", label: "Settings", isSelected: selectedTab == .settings) {
-                    selectedTab = .settings
-                }
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                tabContent(.today) { TodayView(isPresentingSheet: $todayIsPresentingSheet) }
+                tabContent(.history) { HistoryView() }
+                tabContent(.settings) { SettingsView() }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, TabBarMetrics.verticalPadding)
-            .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
-            .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
-            .padding(.bottom, TabBarMetrics.bottomPadding)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            tabBar
+                .background(Theme.background)
         }
-        // Deliberately *not* `.ignoresSafeArea(edges: .bottom)`, which is what
-        // Protein does. Applied here it leaks into every sheet this view
-        // presents: the paywall pins its CTA to the bottom of the sheet, and
-        // with the bottom inset zeroed that button sat under the home indicator
-        // and stopped being hittable. `testPaywallRendersRealProductsUnderStoreKitTesting`
-        // caught it. The bar sits inside the safe area instead, which costs a few
-        // points and no correctness.
         .tint(Theme.recovering)
         .task { await evaluateLaunchSurfaces() }
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
@@ -102,6 +64,10 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: NotificationService.routeRequested)) { note in
             guard (note.userInfo?[NotificationService.routeKey] as? String)
                     == NotificationService.readyRouteValue else { return }
+            selectedTab = .today
+        }
+        .onOpenURL { url in
+            guard url.scheme == "recharge" else { return }
             selectedTab = .today
         }
         .sheet(isPresented: $showWhatsNew) {
@@ -131,6 +97,28 @@ struct RootView: View {
             if ScreenshotConfig.wantsPaywall { showPaywall = true }
         }
         #endif
+    }
+
+    private var tabBar: some View {
+        HStack(spacing: 0) {
+            TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
+                selectedTab = .today
+            }
+            TabButton(
+                icon: "list.bullet.rectangle",
+                label: "History",
+                isSelected: selectedTab == .history
+            ) { selectedTab = .history }
+            TabButton(icon: "gearshape", label: "Settings", isSelected: selectedTab == .settings) {
+                selectedTab = .settings
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, TabBarMetrics.verticalPadding)
+        .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
+        .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
+        .padding(.bottom, TabBarMetrics.bottomPadding)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Launch surfaces
@@ -228,8 +216,8 @@ struct RootView: View {
 }
 
 /// One tab. Ported from Protein, which is where this bar's shape comes from.
-/// The floating tab bar's geometry, in one place, because the bar is drawn by
-/// `RootView` and cleared by every tab and those two facts have to stay equal.
+/// The tab bar's geometry lives in one place so the bar and its layout row stay
+/// equal.
 ///
 /// Constants rather than a measured height on purpose: every term below is
 /// fixed, including `buttonHeight` and the 10pt label inside it, so the bar is
@@ -243,35 +231,8 @@ enum TabBarMetrics {
     static let verticalPadding: CGFloat = 6
     static let bottomPadding: CGFloat = 12
 
-    /// What a scrollable tab reserves at its bottom edge: the capsule's full
-    /// height plus the gap under it.
+    /// The capsule's full height plus the gap under it.
     static var clearance: CGFloat { buttonHeight + verticalPadding * 2 + bottomPadding }
-}
-
-extension View {
-    /// Reserves room for the floating tab bar at the bottom of a scrollable
-    /// tab. Apply it to the `ScrollView`, `List` or `Form` itself.
-    ///
-    /// **Inside the `NavigationStack`, not outside it.** The obvious place for
-    /// this is `RootView.tabContent`, one call for all three tabs, and it does
-    /// not work: a `NavigationStack` manages the safe area of its own content,
-    /// so an inset applied to the stack from outside never reaches the scroll
-    /// view within. The symptom is silent: everything compiles, the layout
-    /// looks unchanged, and the last row still sits under the blur. It was
-    /// caught by `testTheTabBarDoesNotCoverTheBottomOfToday`, which measures
-    /// frames rather than trusting the modifier.
-    ///
-    /// An inset rather than bottom padding, so the scroll-behind look survives:
-    /// it moves where the content comes to rest, not the scroll view's frame,
-    /// so passing content still runs under the capsule and only the last row is
-    /// guaranteed to clear it.
-    func tabBarClearance() -> some View {
-        safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear
-                .frame(height: TabBarMetrics.clearance)
-                .accessibilityHidden(true)
-        }
-    }
 }
 
 private struct TabButton: View {

@@ -1,5 +1,5 @@
 import Foundation
-import HealthKit
+@preconcurrency import HealthKit
 import os
 #if os(watchOS)
 import WatchKit
@@ -52,6 +52,21 @@ public final class HealthKitService: ObservableObject {
 
     private var installedObserverTypes: Set<String> = []
     private var pendingRefreshTask: Task<Void, Never>?
+    private var pendingObserverCompletions: [ObserverCompletion] = []
+
+    /// HealthKit's completion closure is supplied by a nonisolated callback.
+    /// This box keeps that callback on its originating path while allowing the
+    /// coalesced refresh task to carry an explicit, audited boundary to the
+    /// main actor.
+    private final class ObserverCompletion: @unchecked Sendable {
+        private let handler: () -> Void
+
+        init(_ handler: @escaping () -> Void) {
+            self.handler = handler
+        }
+
+        func call() { handler() }
+    }
 
     private init() {
         if ScreenshotConfig.isEnabled {
@@ -374,53 +389,75 @@ public final class HealthKitService: ObservableObject {
 
     // MARK: - Background delivery
 
+    /// Coalesces observer callbacks while keeping every HealthKit completion
+    /// handler open until the import and publish have finished. HealthKit may
+    /// terminate a background launch as soon as its handler returns, so calling
+    /// it before `RecoveryEngine.refresh()` loses the very workout that woke us.
+    private func enqueueObserverRefresh(completion: ObserverCompletion) {
+        pendingObserverCompletions.append(completion)
+        guard pendingRefreshTask == nil else { return }
+
+        pendingRefreshTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled, let self else { return }
+
+            await RecoveryEngine.shared.refresh()
+            let completions = self.pendingObserverCompletions
+            self.pendingObserverCompletions.removeAll()
+            self.pendingRefreshTask = nil
+            completions.forEach { $0.call() }
+        }
+    }
+
     /// Wakes the app when a workout lands, so the countdown appears without the
     /// user opening anything.
     public func enableBackgroundDelivery() {
         if ScreenshotConfig.isEnabled { return }
         guard HKHealthStore.isHealthDataAvailable() else { return }
 
-        let types: [HKSampleType] = [HKObjectType.workoutType()]
+        let deliveries: [(type: HKSampleType, frequency: HKUpdateFrequency)] = [
+            (HKObjectType.workoutType(), .immediate),
+            (HKQuantityType(.restingHeartRate), .daily),
+            (HKQuantityType(.heartRateVariabilitySDNN), .daily),
+            (HKCategoryType(.sleepAnalysis), .daily)
+        ]
 
-        for type in types {
-            store.enableBackgroundDelivery(for: type, frequency: .immediate) { _, error in
+        for delivery in deliveries {
+            store.enableBackgroundDelivery(for: delivery.type, frequency: delivery.frequency) { _, error in
                 if let error {
                     healthLogger.error("Background delivery failed: \(String(describing: error), privacy: .public)")
                 }
             }
         }
 
-        for type in types {
-            let identifier = type.identifier
+        for delivery in deliveries {
+            let identifier = delivery.type.identifier
             guard !installedObserverTypes.contains(identifier) else { continue }
             installedObserverTypes.insert(identifier)
 
-            let query = HKObserverQuery(sampleType: type, predicate: nil) { [weak self] _, completionHandler, error in
-                // Call this immediately — watchOS kills the app if it does not
-                // arrive within fifteen seconds.
-                completionHandler()
+            let query = HKObserverQuery(sampleType: delivery.type, predicate: nil) { [weak self] _, completionHandler, error in
                 if let error {
                     healthLogger.error("Observer error: \(String(describing: error), privacy: .public)")
+                    completionHandler()
                     return
                 }
                 #if os(watchOS)
                 // The CAROUSEL watchdog has a tight CPU budget, so the observer
                 // callback only schedules; the protected handler does the work.
+                let completion = ObserverCompletion(completionHandler)
                 Task { @MainActor in
                     WKApplication.shared().scheduleBackgroundRefresh(
                         withPreferredDate: Date(timeIntervalSinceNow: 5), userInfo: nil
                     ) { _ in }
+                    completion.call()
                 }
                 #else
+                let completion = ObserverCompletion(completionHandler)
                 Task { @MainActor in
                     // Health often delivers several notifications for one
-                    // workout. Coalesce them into a single recalculation.
-                    self?.pendingRefreshTask?.cancel()
-                    self?.pendingRefreshTask = Task {
-                        try? await Task.sleep(for: .milliseconds(800))
-                        guard !Task.isCancelled else { return }
-                        await RecoveryEngine.shared.refresh()
-                    }
+                    // workout. Coalesce them, but keep every observer task
+                    // alive until the shared refresh has published.
+                    self?.enqueueObserverRefresh(completion: completion) ?? completion.call()
                 }
                 #endif
             }
