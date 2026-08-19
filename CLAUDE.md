@@ -660,6 +660,30 @@ asserting on the disclaimer passes in a test build whether or not the fix is
 there. Settings measures the bottom-most element of the `Form`, the other two
 name their genuinely-last row.
 
+### A pinned header has to mask what scrolls behind it
+History pins its day headers (`pinnedViews: [.sectionHeaders]`), so the outgoing
+day's card slides *behind* the header rather than pushing it off. The header's
+`Theme.background` was sized to the text plus 8pt of top padding, inside a
+`LazyVStack` with `spacing: 10` and a 16pt side margin, so three strips stayed
+transparent: 16pt down each side, and the 10pt gap above and below. On a dark
+screen the card's fill, its glyph and its hours all showed through around the
+pinned label, which reads as a second broken row wedged under the navigation
+bar. Reported from a real device and reproduced on the simulator from the
+`history` fixture.
+
+The background is inflated by exactly those two constants
+(`HistoryView.horizontalMargin`, `HistoryView.rowSpacing`) with negative padding,
+so the mask and the layout can never be given different numbers. It is not
+covered by a test: XCUITest reports the frames of elements the header is drawing
+over, not whether they are visible, so the guard here is the constants being
+shared rather than an assertion.
+
+Unrelated to the tab bar, and a different bug from Baby Docs' clipped page
+height, though both surface as content ghosting under a bar. What remains on
+iOS 26 is the system's own soft scroll-edge blur, which leaves a faint ghost of
+the top row on all three tabs; that is Apple's default and a design decision to
+change, not a defect.
+
 ### Onboarding reads Health before it asks anything
 The flow is welcome → Health → what Health found → the gap questions → what the
 number means → the tier decision. Two structural rules, both of which were bugs
