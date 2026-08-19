@@ -71,6 +71,13 @@ if [[ -n "$WATCH_UDID" ]]; then
     axe button home --udid "$WATCH_UDID" >/dev/null
     sleep 3
     xcrun simctl io "$WATCH_UDID" screenshot "$RAW/06-watch.png" >/dev/null 2>&1
+    # App Store Connect's Series 4 slot is 368x448. The simulator face is
+    # captured at 416x496, so preserve the face aspect ratio and crop the
+    # narrow side margins before uploading the canonical raw asset.
+    watch_tmp=$(mktemp -d "${TMPDIR:-/tmp}/recharge-watch.XXXXXX")
+    trap 'rm -rf "$watch_tmp"' EXIT
+    sips -z 448 376 "$RAW/06-watch.png" --out "$watch_tmp/resized.png" >/dev/null
+    sips -c 448 368 "$watch_tmp/resized.png" --out "$RAW/06-watch.png" >/dev/null
     echo "captured 06-watch (watch face complication)"
   fi
 fi
