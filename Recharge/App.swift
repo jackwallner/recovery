@@ -15,6 +15,11 @@ struct RechargeApp: App {
     /// the app claims and does not use.
     private static let refreshTaskID = "com.jackwallner.recovery.refresh"
 
+    /// How long a background wake may wait for `WCSession` to activate before
+    /// giving up and doing the work anyway. Activation is normally immediate;
+    /// this is a ceiling, not a budget to plan around.
+    private static let activationTimeout: TimeInterval = 5
+
     init() {
         UNUserNotificationCenter.current().delegate = RechargeNotificationDelegate.shared
         ReviewPromptTracker.recordAppLaunch()
@@ -41,6 +46,16 @@ struct RechargeApp: App {
         if RechargeSettings.shared.hasCompletedSetup, !RechargeSettings.shared.hasDeferredHealthAccess {
             HealthKitService.shared.enableBackgroundDelivery()
         }
+
+        // Same reasoning, one link further along the chain, and moving only the
+        // observer left this one behind. `sendSnapshot` is guarded on
+        // `activationState == .activated` and returns silently otherwise, so a
+        // background wake that recalculated perfectly well still published to
+        // nobody: the phone's own App Group and the iOS widgets updated, and the
+        // wrist heard nothing until the app was next opened by hand. Apple's
+        // guidance is to configure and activate the session early in the app's
+        // life cycle, not when a view appears.
+        PhoneWatchSession.shared.activate()
     }
 
     /// The backstop wake. HealthKit background delivery is the primary path and
@@ -59,6 +74,11 @@ struct RechargeApp: App {
         scheduleAppRefresh()
 
         let work = Task { @MainActor in
+            // Before the refresh, so the `publish()` at the end of it has a
+            // session to send on. `activationDidCompleteWith` republishes as a
+            // backstop, but only if the process is still alive to receive it,
+            // and this task is what keeps it alive.
+            await PhoneWatchSession.shared.waitForActivation(timeout: activationTimeout)
             await RecoveryEngine.shared.refresh(force: true)
         }
         task.expirationHandler = { work.cancel() }
@@ -77,9 +97,9 @@ struct RechargeApp: App {
                 .preferredColorScheme(settings.appearance.colorScheme)
                 .task {
                     store.start()
-                    // The phone is the model owner, so it is also the side that
-                    // listens for the Watch's effort answers.
-                    PhoneWatchSession.shared.activate()
+                    // `PhoneWatchSession.activate()` is in `init` above, not
+                    // here: a scene is not connected on a background wake, and
+                    // the phone is the side that has to be able to push.
                     // Onboarding owns the first Health prompt — it explains what
                     // Recharge reads and why before asking. Firing the system
                     // sheet at launch would put the permission dialog in front

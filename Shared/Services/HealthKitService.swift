@@ -401,6 +401,13 @@ public final class HealthKitService: ObservableObject {
             try? await Task.sleep(for: .milliseconds(800))
             guard !Task.isCancelled, let self else { return }
 
+            // The refresh ends in `publish()`, and `sendSnapshot` returns
+            // silently unless `WCSession` has finished activating. Activation
+            // starts in `RechargeApp.init` and is normally done long before
+            // this, so the wait almost always returns at once; it is here so
+            // the workout that woke us cannot reach the wrist late on the one
+            // launch where it does not.
+            await PhoneWatchSession.shared.waitForActivation(timeout: 5)
             await RecoveryEngine.shared.refresh()
             let completions = self.pendingObserverCompletions
             self.pendingObserverCompletions.removeAll()

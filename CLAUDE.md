@@ -552,6 +552,25 @@ Two things went wrong on the wrist and both looked like a broken complication:
   (`installedObserverTypes` de-duplicates), so the scene path calling it again
   costs nothing.
 
+  **Moving only the observer left the next link behind.** `sendSnapshot` is
+  guarded on `activationState == .activated` and returns silently otherwise,
+  and `PhoneWatchSession.activate()` was itself called only from the scene's
+  `.task` — so a background wake recalculated correctly, wrote the phone's App
+  Group, updated the iOS widgets, and published to nobody. The wrist heard
+  nothing until the app was next opened by hand, which is the same symptom with
+  a different cause one step down the chain. Activation is in `RechargeApp.init`
+  now, where Apple says to put it, and `waitForActivation` holds the
+  `BGAppRefreshTask` and the observer refresh open until it lands rather than
+  trusting the `activationDidCompleteWith` republish, which only helps while the
+  process is still alive.
+
+  The general shape is worth stating once: **every link in this chain is guarded
+  by a silent `return`, and each one is only as good as the link before it.**
+  HealthKit observer, `WCSession` activation, `updateApplicationContext`, the
+  Watch's background task, the App Group write, the timeline reload. Fixing one
+  and leaving the next in a scene callback moves the failure rather than
+  removing it.
+
   `BGTaskSchedulerPermittedIdentifiers` and `UIBackgroundModes: fetch` were in
   `Info.plist` with nothing registering or submitting a task — a background mode
   the app claimed and did not use, which is also an App Review 2.5.4 problem.
