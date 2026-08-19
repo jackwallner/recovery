@@ -538,6 +538,53 @@ Two things went wrong on the wrist and both looked like a broken complication:
   and if a user reports it persisting, the background-wake path is what to look
   at, not the copy.
 
+- **The chain starts on the phone, and its first link was missing.**
+  `HealthKitService.enableBackgroundDelivery` installs the observer queries, and
+  it was reachable only from the scene's `.task`, by way of
+  `synchronizeAuthorization`. A scene is not connected when HealthKit background
+  delivery relaunches the app, so the wake a finished workout generates arrived
+  at a process with no observer running and did nothing: the phone never
+  rescored, never published, and every downstream link — application context,
+  Watch wake, App Group write, timeline reload — was waiting on a push that was
+  never sent. Apple's guidance is to re-execute observer queries as early in
+  launch as possible, so it runs from `RechargeApp.init` now, gated on
+  `hasCompletedSetup && !hasDeferredHealthAccess`. It is idempotent
+  (`installedObserverTypes` de-duplicates), so the scene path calling it again
+  costs nothing.
+
+  `BGTaskSchedulerPermittedIdentifiers` and `UIBackgroundModes: fetch` were in
+  `Info.plist` with nothing registering or submitting a task — a background mode
+  the app claimed and did not use, which is also an App Review 2.5.4 problem.
+  `com.jackwallner.recovery.refresh` is a real `BGAppRefreshTask` now, on the
+  same 30-minute backstop cadence as the Watch's, and Vitals has had exactly
+  this since the beginning.
+
+- **A watch background task must not complete before the write lands, and two
+  ways of getting that wrong survived the first fix.** `hasContentPending` going
+  false means WatchConnectivity has *called its delegate*, not that anything is
+  on disk: `forwardSnapshot` still has to hop to the main actor before
+  `applyInboundSnapshot` writes the App Group, and completing the task in that
+  gap suspends the app between "delivered" and "saved". `inflightApplies` is
+  incremented on the delegate queue, before the hop, so `waitForPendingContent`
+  can see deliveries that have not finished landing.
+
+  The `WKApplicationRefreshBackgroundTask` case had the same shape as the bug it
+  was written to fix: it called `activate()`, which is asynchronous, and
+  completed. That task almost always runs in a *fresh* process — the app is
+  killed between wakes — so it completed before the session finished activating,
+  which made the backstop a no-op in precisely the case it exists for. And on
+  that wake there is no pending content to wait for, so the replayed
+  `receivedApplicationContext` is the only thing there is to apply and the
+  `activationDidCompleteWith` hop that would have applied it loses the race by
+  default. `applyReplayedContext` does it synchronously at the end of
+  `waitForPendingContent`.
+
+  That replay runs on every wake, so it is usually the *same* payload the wrist
+  already holds, and `reloadAllTimelines` spends the budget the countdown needs.
+  `applyInboundSnapshot` compares before reloading, and
+  `testAReplayedSnapshotComparesEqualSoTheWakeCanSkipTheReload` pins the
+  round-trip equality that comparison rests on.
+
 - **"Never synced" was being inferred from the wrong question.** The complication
   asked `snapshot.hasSession`, so a user who had synced perfectly well but simply
   had not trained in four days was told to open Recharge and set it up, with

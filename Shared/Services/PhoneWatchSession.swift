@@ -213,6 +213,10 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         connectivityLogger.info("Flushed \(queue.count, privacy: .public) queued effort answers")
     }
 
+    /// Inbound snapshots handed over by the WatchConnectivity delegate queue
+    /// but not yet written to the App Group. See `waitForPendingContent`.
+    private nonisolated static let inflightApplies = OSAllocatedUnfairLock(initialState: 0)
+
     /// Waits until WatchConnectivity has finished handing over whatever it woke
     /// us for.
     ///
@@ -238,12 +242,24 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
             return
         }
 
-        while WCSession.default.hasContentPending, Date.now < deadline {
+        // `hasContentPending` clearing is not the same as the payload being on
+        // disk. WatchConnectivity calls its delegate on its own queue, and
+        // `forwardSnapshot` has to hop to the main actor before
+        // `applyInboundSnapshot` writes the App Group — so the flag can go
+        // false with that hop still queued. Completing the task there suspends
+        // the app between "delivered" and "saved", which loses the payload as
+        // surely as completing the task too early does, and leaves the
+        // complication rendering the previous countdown. The counter is
+        // incremented on the delegate queue, before the hop, so by the time
+        // `hasContentPending` is false every delivery is accounted for.
+        while WCSession.default.hasContentPending || Self.inflightApplies.withLock({ $0 > 0 }),
+              Date.now < deadline {
             try? await Task.sleep(for: .milliseconds(150))
         }
         if WCSession.default.hasContentPending {
             connectivityLogger.error("Connectivity wake timed out with content still pending")
         }
+        applyReplayedContext()
     }
 
     /// Pulls a fresh snapshot when the phone is right there. The application
@@ -333,27 +349,57 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
             return
         }
 
+        // Applying the same payload twice is normal and has to stay cheap. The
+        // system replays the last application context on every activation, so
+        // a wrist that has heard nothing new since yesterday still runs this
+        // path on each background wake, and `reloadAllTimelines` spends
+        // WidgetKit's refresh budget whether or not anything moved.
+        let pendingSessionID = payload[MessageKey.pendingEffortSessionID] as? String
+        let style = payload[MessageKey.complicationStyle] as? Int
+        let isUnchanged = RecoverySnapshotStore.loadIfPresent(defaults: defaults) == snapshot
+            && pendingSessionID == defaults.string(forKey: "pendingEffortSessionID")
+            && (style == nil || style == defaults.integer(forKey: SettingsKeys.complicationStyle))
+
         RecoverySnapshotStore.save(snapshot, defaults: defaults)
         // A payload with no `sentAt` is a degraded path rather than an error:
         // it is applied, but it must not advance the high water mark, or one
         // undated delivery would start rejecting dated ones.
         if let sentAt { defaults.set(sentAt, forKey: Self.lastAcceptedSentAtKey) }
 
-        if let sessionID = payload[MessageKey.pendingEffortSessionID] as? String {
-            defaults.set(sessionID, forKey: "pendingEffortSessionID")
+        if let pendingSessionID {
+            defaults.set(pendingSessionID, forKey: "pendingEffortSessionID")
         } else {
             defaults.removeObject(forKey: "pendingEffortSessionID")
         }
-        if let style = payload[MessageKey.complicationStyle] as? Int {
+        if let style {
             defaults.set(style, forKey: SettingsKeys.complicationStyle)
         }
         let now = Date.now
         defaults.set(now, forKey: Self.lastSnapshotReceivedKey)
         lastSnapshotReceived = now
-        snapshotRevision &+= 1
 
+        guard !isUnchanged else {
+            connectivityLogger.info("Re-applied an unchanged phone snapshot; timelines left alone")
+            return
+        }
+        snapshotRevision &+= 1
         WidgetCenter.shared.reloadAllTimelines()
         connectivityLogger.info("Applied phone snapshot, readyAt=\(String(describing: snapshot.readyAt), privacy: .public)")
+    }
+
+    /// Writes whatever the system replayed into `receivedApplicationContext`,
+    /// synchronously, on the main actor.
+    ///
+    /// The delegate route cannot cover this. `didReceiveApplicationContext`
+    /// fires only for something newly delivered, and the replay on activation
+    /// arrives with no callback at all — `activationDidCompleteWith` reads it,
+    /// but through a `Task` hop that a background task is free to complete out
+    /// from under. On a backstop wake there is no pending content to wait for,
+    /// so that hop is the *only* thing that would have written the App Group,
+    /// and it loses the race by default. Idempotent: an unchanged payload stops
+    /// before touching the timelines.
+    private func applyReplayedContext() {
+        applyInboundSnapshot(WCSession.default.receivedApplicationContext)
     }
 
     /// The newest `sentAt` accepted so far, or nil when the two have never
@@ -503,7 +549,12 @@ extension PhoneWatchSession: WCSessionDelegate {
         let style = payload[MessageKey.complicationStyle] as? Int
         let sentAt = payload[MessageKey.sentAt] as? TimeInterval
         guard data != nil else { return }
+        // Counted here, on the delegate queue, rather than inside the task:
+        // the whole point is to be visible before the hop, so a background wake
+        // cannot complete in the gap.
+        Self.inflightApplies.withLock { $0 += 1 }
         Task { @MainActor [weak self] in
+            defer { Self.inflightApplies.withLock { $0 -= 1 } }
             var narrowed: [String: Any] = [:]
             narrowed[MessageKey.snapshot] = data
             narrowed[MessageKey.pendingEffortSessionID] = pending

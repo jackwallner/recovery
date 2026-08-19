@@ -91,6 +91,16 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate {
                     // ends here and this is the last time the app ever runs on
                     // its own.
                     Self.scheduleNextRefresh()
+                    // `activate()` is asynchronous, and this task almost always
+                    // runs in a *fresh* process — the app is killed between
+                    // wakes — so completing here would suspend the app before
+                    // the session finished activating and before
+                    // `receivedApplicationContext` could be replayed into the
+                    // App Group. That made the backstop wake a no-op in exactly
+                    // the case it exists for: a push that was missed entirely.
+                    await PhoneWatchSession.shared.waitForPendingContent(
+                        timeout: Self.connectivityDeliveryTimeout
+                    )
                     refresh.setTaskCompletedWithSnapshot(false)
                 }
 
