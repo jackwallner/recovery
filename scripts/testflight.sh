@@ -69,6 +69,37 @@ if ! grep -rq "$RC_PUBLIC_KEY" "$ARCHIVE/Products"; then
   exit 1
 fi
 
+# Entitlements are applied by the signing step, so anything that stops the
+# archive being signed silently strips them: `CODE_SIGN_IDENTITY: ""` in
+# `project.yml` did exactly that for builds 21 and 22, and the result was an
+# app that installs, launches, and can never read Health. HealthKit's own
+# failure is quiet too — `requestAuthorization` throws, no sheet appears, and
+# the app never registers under Health > Sharing > Apps, so there is nothing on
+# screen that names the cause. Check the product, not the build settings.
+echo "==> Verify entitlements survived signing"
+APP="$ARCHIVE/Products/Applications/Recharge.app"
+APP_ENTITLEMENTS=$(codesign -d --entitlements - --xml "$APP" 2>/dev/null || true)
+if [[ -z "$APP_ENTITLEMENTS" ]]; then
+  echo "error: $APP is unsigned, so its entitlements were never applied" >&2
+  exit 1
+fi
+for key in com.apple.developer.healthkit com.apple.security.application-groups; do
+  if ! grep -q "$key" <<<"$APP_ENTITLEMENTS"; then
+    echo "error: $key is missing from the archived app's entitlements" >&2
+    exit 1
+  fi
+done
+for embedded in "$APP/Watch/RechargeWatch.app" \
+                "$APP/PlugIns/RechargeWidget.appex" \
+                "$APP/Watch/RechargeWatch.app/PlugIns/RechargeWatchWidget.appex"; do
+  [[ -e "$embedded" ]] || { echo "error: missing $embedded" >&2; exit 1; }
+  if ! codesign -d --entitlements - --xml "$embedded" 2>/dev/null \
+       | grep -q "group.com.jackwallner.recovery"; then
+    echo "error: App Group missing from $(basename "$embedded")" >&2
+    exit 1
+  fi
+done
+
 echo "==> Upload build $NEXT_BUILD"
 "$ROOT/scripts/upload-testflight.sh" "$ARCHIVE"
 

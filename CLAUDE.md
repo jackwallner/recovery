@@ -672,6 +672,24 @@ widget extension, with the whole suite passing. Anything touching
 `-configuration Release -destination generic/platform=iOS` build before you
 trust it.
 
+**`CODE_SIGN_IDENTITY: ""` strips every entitlement, and nothing says so.**
+It was added to `project.yml` on 2026-08-18 (base settings *and* the `Recharge`
+target) and it shipped in builds 21 and 22. An unsigned archive never runs the
+step that compiles `Recharge.entitlements` into `Recharge.app.xcent`, so
+`com.apple.developer.healthkit` and the App Group were simply absent from the
+product; `exportArchive` then re-signed an app that had nothing to carry
+forward. On device that reads as HealthKit being broken with no error anywhere:
+`requestAuthorization` throws, no permission sheet appears, and the app never
+shows up under Health > Sharing > Apps, which is also why restarting the phone
+does nothing. Neither Vitals nor VO2 Max sets it, which is the whole reason
+their Health access "just works".
+
+The archive is the only place this is visible, so `testflight.sh` now checks the
+signed product before uploading: HealthKit and the App Group on the iPhone app,
+the App Group on the Watch app and both widget extensions. `codesign -d
+--entitlements - --xml` on `$ARCHIVE/Products/Applications/Recharge.app` is the
+one-line manual version.
+
 **StoreKit Testing does not activate under `xcodebuild test`.** The `.storekit`
 file was referenced from the scheme's Test action, from a test plan (every
 relative-path spelling), and started with `SKTestSession` from the UI-test
