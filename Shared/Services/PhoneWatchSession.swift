@@ -109,6 +109,30 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         #endif
     }
 
+    /// Waits for `WCSession` to finish activating, which `activate()` starts
+    /// and does not await.
+    ///
+    /// Both platforms need this and for the same reason: a background wake runs
+    /// in a process that has only just called `activate()`, and every send and
+    /// every delivery check is guarded on `activationState == .activated`. A
+    /// task that completes before activation lands does its work against a
+    /// session that cannot carry it — silently, because each of those guards is
+    /// a bare `return`.
+    ///
+    /// - Returns: whether the session reached `.activated` within the timeout.
+    @discardableResult
+    public func waitForActivation(timeout: TimeInterval) async -> Bool {
+        let deadline = Date.now.addingTimeInterval(timeout)
+        while WCSession.default.activationState != .activated, Date.now < deadline {
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        guard WCSession.default.activationState == .activated else {
+            connectivityLogger.error("Connectivity activation timed out")
+            return false
+        }
+        return true
+    }
+
     // MARK: - Watch side
 
     #if os(watchOS)
@@ -231,16 +255,9 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// documented way to ask.
     public func waitForPendingContent(timeout: TimeInterval) async {
         let deadline = Date.now.addingTimeInterval(timeout)
-        // `activate()` is asynchronous. A false `hasContentPending` value
-        // before activation completes means "not ready to report", not "the
-        // payload has landed".
-        while WCSession.default.activationState != .activated, Date.now < deadline {
-            try? await Task.sleep(for: .milliseconds(150))
-        }
-        guard WCSession.default.activationState == .activated else {
-            connectivityLogger.error("Connectivity activation timed out")
-            return
-        }
+        // A false `hasContentPending` value before activation completes means
+        // "not ready to report", not "the payload has landed".
+        guard await waitForActivation(timeout: timeout) else { return }
 
         // `hasContentPending` clearing is not the same as the payload being on
         // disk. WatchConnectivity calls its delegate on its own queue, and
