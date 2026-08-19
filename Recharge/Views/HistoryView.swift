@@ -71,7 +71,6 @@ struct HistoryView: View {
                     empty
                 }
             }
-            .tabBarClearance()
             .background(Theme.background)
             .navigationTitle("History")
             // Inline, as on Today and across the fleet: a large title draws its

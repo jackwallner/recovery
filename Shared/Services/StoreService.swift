@@ -600,7 +600,7 @@ public final class StoreService: NSObject, ObservableObject {
             await refreshIntroEligibility()
         } catch {
             logger.error("StoreKit Testing product fetch failed: \(String(describing: error), privacy: .public)")
-            lastError = nil
+            lastError = "StoreKit Testing could not load plans. Run this from the Recharge or RechargeUITests scheme, or check the StoreKit configuration."
         }
     }
 

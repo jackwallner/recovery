@@ -73,7 +73,24 @@ final class RecoveryCalculatorTests: XCTestCase {
             now: now
         )
         XCTAssertEqual(estimate.hours, RecoveryCalculator.maximumHours, accuracy: 0.001)
+        XCTAssertLessThanOrEqual(estimate.windowHighHours, RecoveryCalculator.maximumHours)
         XCTAssertEqual(estimate.category, .unusuallyHard)
+    }
+
+    func testNonFiniteCalibrationAndCarriedHoursFallBackToSafeValues() {
+        let estimate = RecoveryCalculator.estimate(
+            for: RecoveryFixtures.thresholdRun60,
+            baseline: RecoveryFixtures.settledEnduranceBaseline(),
+            calibration: .nan,
+            carriedHours: .infinity,
+            now: now
+        )
+
+        XCTAssertTrue(estimate.hours.isFinite)
+        XCTAssertTrue(estimate.windowLowHours.isFinite)
+        XCTAssertTrue(estimate.windowHighHours.isFinite)
+        XCTAssertEqual(estimate.carriedHours, 0)
+        XCTAssertLessThanOrEqual(estimate.windowHighHours, RecoveryCalculator.maximumHours)
     }
 
     // MARK: - Monotonicity within a profile

@@ -7,11 +7,9 @@ struct RecoveryEntry: TimelineEntry {
     let date: Date
     let snapshot: RecoverySnapshot
     let style: ComplicationStyle
-    /// Whether the phone has ever published into this container. Carried on the
-    /// entry rather than re-read per string, because a timeline is built once
-    /// and rendered many times, possibly long after the App Group was last
-    /// touched.
-    var hasEverSynced = true
+    /// The read state is carried on the entry rather than re-read per string,
+    /// because a timeline is built once and rendered many times.
+    var dataState: ComplicationCopy.DataState = .synced
 
     var phase: RecoveryPhase { snapshot.phase(at: date) }
     var remaining: TimeInterval { snapshot.remainingSeconds(at: date) }
@@ -33,7 +31,8 @@ struct RecoveryEntry: TimelineEntry {
                 reasons: [],
                 calculatedAt: date
             ),
-            style: .countdown
+            style: .countdown,
+            dataState: .synced
         )
     }
 }
@@ -63,7 +62,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
                 date: $0,
                 snapshot: state.snapshot,
                 style: style,
-                hasEverSynced: state.hasEverSynced
+                dataState: state.dataState
             )
         }
         completion(Timeline(
@@ -78,7 +77,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
             date: date,
             snapshot: state.snapshot,
             style: loadComplicationStyle(),
-            hasEverSynced: state.hasEverSynced
+            dataState: state.dataState
         )
     }
 
@@ -87,7 +86,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
     /// decode to the same value, and only the presence of the key separates
     /// "the phone has never reached this wrist" from "the phone says you have
     /// not trained recently".
-    private func snapshotForTimeline(at date: Date) -> (snapshot: RecoverySnapshot, hasEverSynced: Bool) {
+    private func snapshotForTimeline(at date: Date) -> (snapshot: RecoverySnapshot, dataState: ComplicationCopy.DataState) {
         let stored = RecoverySnapshotStore.loadIfPresent()
 #if DEBUG
         // The capture app seeds the fixture in the App Group. The watch
@@ -96,10 +95,14 @@ struct RecoveryTimelineProvider: TimelineProvider {
         // honest while making the screenshot deterministic.
         if stored?.hasSession != true,
            UserDefaults(suiteName: rechargeAppGroupID)?.bool(forKey: "rechargeScreenshotMode") == true {
-            return (ScreenshotFixtures.snapshot(now: date), true)
+            return (ScreenshotFixtures.snapshot(now: date), .synced)
         }
 #endif
-        return (stored ?? .empty, stored != nil)
+        if let stored { return (stored, .synced) }
+        return (
+            .empty,
+            RecoverySnapshotStore.hasEverSynced() ? .unreadable : .neverSynced
+        )
     }
 }
 
@@ -127,10 +130,6 @@ extension RecoveryEntry {
     /// days was told to open Recharge and set it up — with nothing to set up,
     /// and no way to make the message go away short of doing a workout. The
     /// "no workout" answer is `noRecentWorkout`, and it already exists.
-    var dataState: ComplicationCopy.DataState {
-        hasEverSynced ? .synced : .neverSynced
-    }
-
     var primaryText: String {
         ComplicationCopy.primary(
             phase: phase, style: style, remaining: remaining, readyAt: snapshot.readyAt,
@@ -171,7 +170,7 @@ struct RecoveryCircularView: View {
             ZStack {
                 AccessoryWidgetBackground()
                 VStack(spacing: 0) {
-                    Image(systemName: Theme.symbol(for: entry.phase))
+                    Image(systemName: entry.symbolName)
                         .font(.system(size: 15, weight: .semibold))
                     Text(entry.primaryText)
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -201,7 +200,7 @@ struct RecoveryRectangularView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: Theme.symbol(for: entry.phase))
+            Image(systemName: entry.symbolName)
                 .font(.title3)
                 .foregroundStyle(Theme.color(for: entry.phase))
                 .widgetAccentable()
@@ -228,7 +227,7 @@ struct RecoveryInlineView: View {
 
     var body: some View {
         // Inline renders as one text run beside the system's own glyph slot.
-        Label(entry.inlineText, systemImage: Theme.symbol(for: entry.phase))
+        Label(entry.inlineText, systemImage: entry.symbolName)
     }
 }
 
@@ -237,7 +236,7 @@ struct RecoveryCornerView: View {
 
     var body: some View {
         if entry.phase == .ready || entry.phase == .noRecentWorkout {
-            Image(systemName: Theme.symbol(for: entry.phase))
+            Image(systemName: entry.symbolName)
                 .font(.title2)
                 .widgetLabel { Text(entry.primaryText) }
         } else {
@@ -271,6 +270,7 @@ struct RecoveryComplicationView: View {
     var body: some View {
         content
             .containerBackground(.fill.tertiary, for: .widget)
+            .widgetURL(URL(string: "recharge://today"))
     }
 
     @ViewBuilder
@@ -282,6 +282,12 @@ struct RecoveryComplicationView: View {
         case .accessoryCorner: RecoveryCornerView(entry: entry)
         default: RecoveryCircularView(entry: entry)
         }
+    }
+}
+
+private extension RecoveryEntry {
+    var symbolName: String {
+        dataState == .synced ? Theme.symbol(for: phase) : "arrow.triangle.2.circlepath"
     }
 }
 

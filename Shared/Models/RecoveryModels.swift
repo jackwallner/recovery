@@ -38,7 +38,11 @@ import Foundation
 /// hours apart read exactly like one, at the one moment somebody coming from a
 /// Garmin expects the number to jump. Only windows that overlap change, so a
 /// user who trains once a day sees nothing move.
-public let recoveryModelVersion = 8
+///
+/// 9: uncertainty ranges obey the same 72-hour ceiling as the point estimate,
+/// and non-finite sensor, calibration, and residual inputs fall back to safe
+/// finite values instead of reaching a view or a persisted record.
+public let recoveryModelVersion = 9
 
 // MARK: - Tier
 
@@ -325,9 +329,9 @@ public struct SessionLoad: Codable, Sendable, Equatable {
     public let heartRateCoverage: Double
 
     public init(value: Double, source: LoadSource, heartRateCoverage: Double = 0) {
-        self.value = max(0, value)
+        self.value = value.isFinite ? max(0, value) : 0
         self.source = source
-        self.heartRateCoverage = min(max(heartRateCoverage, 0), 1)
+        self.heartRateCoverage = heartRateCoverage.isFinite ? min(max(heartRateCoverage, 0), 1) : 0
     }
 }
 
@@ -369,13 +373,14 @@ public struct SessionInput: Sendable, Equatable {
         self.profile = profile
         self.startDate = startDate
         self.endDate = endDate
-        self.durationMinutes = durationMinutes ?? max(endDate.timeIntervalSince(startDate) / 60, 0)
-        self.averageHeartRate = averageHeartRate
-        self.restingHeartRate = restingHeartRate
-        self.maxHeartRate = maxHeartRate
-        self.heartRateCoverage = min(max(heartRateCoverage, 0), 1)
-        self.activeEnergyKilocalories = activeEnergyKilocalories
-        self.reportedEffort = reportedEffort.map { min(max($0, 1), 10) }
+        let duration = durationMinutes ?? max(endDate.timeIntervalSince(startDate) / 60, 0)
+        self.durationMinutes = duration.isFinite ? max(duration, 0) : 0
+        self.averageHeartRate = averageHeartRate.flatMap { $0.isFinite ? $0 : nil }
+        self.restingHeartRate = restingHeartRate.flatMap { $0.isFinite ? $0 : nil }
+        self.maxHeartRate = maxHeartRate.flatMap { $0.isFinite ? $0 : nil }
+        self.heartRateCoverage = heartRateCoverage.isFinite ? min(max(heartRateCoverage, 0), 1) : 0
+        self.activeEnergyKilocalories = activeEnergyKilocalories.flatMap { $0.isFinite ? $0 : nil }
+        self.reportedEffort = reportedEffort.flatMap { $0.isFinite ? min(max($0, 1), 10) : nil }
         self.activityLabel = activityLabel
     }
 }
@@ -563,26 +568,33 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         standardHours: Double? = nil,
         carriedHours: Double = 0
     ) {
+        let safeHours = hours.isFinite ? max(hours, 0) : 0
+        let safeLow = windowLowHours.isFinite ? max(windowLowHours, 0) : 0
+        let safeHigh = windowHighHours.isFinite ? max(windowHighHours, 0) : 0
+        let safeRelative = relativeLoad.isFinite ? max(relativeLoad, 0) : 0
+        let safePersonalFactor = personalFactor.isFinite && personalFactor > 0 ? personalFactor : 1
+        let safeCarried = carriedHours.isFinite ? max(carriedHours, 0) : 0
+
         self.sessionID = sessionID
         self.profile = profile
         self.activityLabel = activityLabel
         self.calculatedAt = calculatedAt
         self.sessionEnd = sessionEnd
         self.readyAt = readyAt
-        self.hours = hours
-        self.windowLowHours = windowLowHours
-        self.windowHighHours = windowHighHours
+        self.hours = safeHours
+        self.windowLowHours = safeLow
+        self.windowHighHours = safeHigh
         self.load = load
-        self.relativeLoad = relativeLoad
+        self.relativeLoad = safeRelative
         self.category = category
         self.confidence = confidence
         self.reasons = reasons
         self.modelVersion = modelVersion
         self.tier = tier
-        self.personalFactor = personalFactor
-        self.standardHours = standardHours
-            ?? (personalFactor > 0 ? hours / personalFactor : hours)
-        self.carriedHours = max(carriedHours, 0)
+        self.personalFactor = safePersonalFactor
+        self.standardHours = standardHours.flatMap { $0.isFinite ? max($0, 0) : nil }
+            ?? (safeHours / safePersonalFactor)
+        self.carriedHours = safeCarried
     }
 
     /// Tier metadata arrived in model version 2, and `standardHours` was added
@@ -595,20 +607,27 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         calculatedAt = try container.decode(Date.self, forKey: .calculatedAt)
         sessionEnd = try container.decode(Date.self, forKey: .sessionEnd)
         readyAt = try container.decode(Date.self, forKey: .readyAt)
-        hours = try container.decode(Double.self, forKey: .hours)
-        windowLowHours = try container.decode(Double.self, forKey: .windowLowHours)
-        windowHighHours = try container.decode(Double.self, forKey: .windowHighHours)
+        let decodedHours = try container.decode(Double.self, forKey: .hours)
+        let decodedLow = try container.decode(Double.self, forKey: .windowLowHours)
+        let decodedHigh = try container.decode(Double.self, forKey: .windowHighHours)
+        hours = decodedHours.isFinite ? max(decodedHours, 0) : 0
+        windowLowHours = decodedLow.isFinite ? max(decodedLow, 0) : 0
+        windowHighHours = decodedHigh.isFinite ? max(decodedHigh, 0) : 0
         load = try container.decode(SessionLoad.self, forKey: .load)
-        relativeLoad = try container.decode(Double.self, forKey: .relativeLoad)
+        let decodedRelative = try container.decode(Double.self, forKey: .relativeLoad)
+        relativeLoad = decodedRelative.isFinite ? max(decodedRelative, 0) : 0
         category = try container.decode(LoadCategory.self, forKey: .category)
         confidence = try container.decode(RecoveryConfidence.self, forKey: .confidence)
         reasons = try container.decode([String].self, forKey: .reasons)
         modelVersion = try container.decode(Int.self, forKey: .modelVersion)
         tier = try container.decodeIfPresent(RecoveryTier.self, forKey: .tier) ?? .standard
-        personalFactor = try container.decodeIfPresent(Double.self, forKey: .personalFactor) ?? 1
-        standardHours = try container.decodeIfPresent(Double.self, forKey: .standardHours)
-            ?? (personalFactor > 0 ? hours / personalFactor : hours)
-        carriedHours = try container.decodeIfPresent(Double.self, forKey: .carriedHours) ?? 0
+        let decodedFactor = try container.decodeIfPresent(Double.self, forKey: .personalFactor) ?? 1
+        personalFactor = decodedFactor.isFinite && decodedFactor > 0 ? decodedFactor : 1
+        let decodedStandard = try container.decodeIfPresent(Double.self, forKey: .standardHours)
+        standardHours = decodedStandard.flatMap { $0.isFinite ? max($0, 0) : nil }
+            ?? (hours / personalFactor)
+        let decodedCarried = try container.decodeIfPresent(Double.self, forKey: .carriedHours) ?? 0
+        carriedHours = decodedCarried.isFinite ? max(decodedCarried, 0) : 0
     }
 
     /// Phase at a given instant. Derived rather than stored so a cached estimate
@@ -661,7 +680,8 @@ public enum RecoveryCalibration {
     /// Folds one answer into the running factor, bounded so a run of "not ready"
     /// taps can stretch windows by at most a quarter.
     public static func apply(_ feedback: ReadinessFeedback, to factor: Double) -> Double {
-        min(max(factor * feedback.calibrationNudge, minimum), maximum)
+        let safeFactor = factor.isFinite ? factor : neutral
+        return min(max(safeFactor * feedback.calibrationNudge, minimum), maximum)
     }
 }
 

@@ -68,30 +68,28 @@ struct PaywallView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 22) {
-                    hero
-                    features
-                    plans
-                    footer
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 22) {
+                        hero
+                        plans
+                        features
+                        footer
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 12)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 12)
-            }
-            .background(Theme.background)
-            // The hero, features, and three plan cards are taller than the sheet
-            // on every current iPhone, so a CTA at the end of the scroll view
-            // was below the fold on first presentation: the user could read the
-            // prices but could not see the action, and the auto-renew disclosure
-            // Apple 3.1.2 wants beside the button went with it. Pinning both
-            // keeps the decision and its terms on screen at every scroll offset.
-            .safeAreaInset(edge: .bottom) {
+
+                // The hero, features, and three plan cards are taller than the
+                // sheet on every current iPhone. A separate action row keeps
+                // the decision and its terms visible without covering a plan.
                 cta
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
                     .padding(.bottom, 8)
                     .background(.regularMaterial)
             }
+            .background(Theme.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -240,6 +238,8 @@ struct PaywallView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 
     // MARK: - CTA
@@ -274,9 +274,10 @@ struct PaywallView: View {
 
             if let disclosure {
                 Text(disclosure)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             }
 
             if let errorMessage {
@@ -315,32 +316,40 @@ struct PaywallView: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 18) {
-                Button("Restore") {
-                    Task {
-                        isRestoring = true
-                        await store.restorePurchases()
-                        isRestoring = false
-                        if store.isPro {
-                            dismiss()
-                        } else {
-                            errorMessage = store.lastError
-                                ?? "No active Recharge+ purchase was found for this Apple ID."
-                        }
-                    }
-                }
-                .disabled(isRestoring)
-                Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-                Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 18) { legalLinks }
+                VStack(spacing: 8) { legalLinks }
             }
             .font(.system(.footnote, design: .rounded))
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .foregroundStyle(Theme.textSecondary)
 
             Text("Recharge gives a cardiovascular training estimate. It is not medical advice. Talk with a qualified health professional before making medical decisions.")
-                .font(.system(size: 10, design: .rounded))
+                .font(.system(.footnote, design: .rounded))
+                .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .foregroundStyle(Theme.textTertiary)
                 .multilineTextAlignment(.center)
         }
+    }
+
+    @ViewBuilder
+    private var legalLinks: some View {
+        Button("Restore") {
+            Task {
+                isRestoring = true
+                await store.restorePurchases()
+                isRestoring = false
+                if store.isPro {
+                    dismiss()
+                } else {
+                    errorMessage = store.lastError
+                        ?? "No active Recharge+ purchase was found for this Apple ID."
+                }
+            }
+        }
+        .disabled(isRestoring)
+        Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+        Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
     }
 
     // MARK: - Actions

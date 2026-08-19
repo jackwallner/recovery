@@ -85,6 +85,43 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         )
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case readyAt
+        case sessionEnd
+        case hours
+        case windowLowHours
+        case windowHighHours
+        case profile
+        case activityLabel
+        case category
+        case confidence
+        case reasons
+        case calculatedAt
+        case modelVersion
+        case isPro
+    }
+
+    /// Newer fields must not turn an older snapshot into a never-synced state.
+    /// The Watch can receive a payload written by the previous app version while
+    /// its extension is still being updated, so absent additive fields use the
+    /// same defaults as a newly-created snapshot.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        readyAt = try container.decodeIfPresent(Date.self, forKey: .readyAt)
+        sessionEnd = try container.decodeIfPresent(Date.self, forKey: .sessionEnd)
+        hours = try container.decodeIfPresent(Double.self, forKey: .hours) ?? 0
+        windowLowHours = try container.decodeIfPresent(Double.self, forKey: .windowLowHours) ?? 0
+        windowHighHours = try container.decodeIfPresent(Double.self, forKey: .windowHighHours) ?? 0
+        profile = try container.decodeIfPresent(WorkoutProfile.self, forKey: .profile)
+        activityLabel = try container.decodeIfPresent(String.self, forKey: .activityLabel) ?? ""
+        category = try container.decodeIfPresent(LoadCategory.self, forKey: .category)
+        confidence = try container.decodeIfPresent(RecoveryConfidence.self, forKey: .confidence) ?? .buildingBaseline
+        reasons = try container.decodeIfPresent([String].self, forKey: .reasons) ?? []
+        calculatedAt = try container.decodeIfPresent(Date.self, forKey: .calculatedAt) ?? .distantPast
+        modelVersion = try container.decodeIfPresent(Int.self, forKey: .modelVersion) ?? recoveryModelVersion
+        isPro = try container.decodeIfPresent(Bool.self, forKey: .isPro) ?? false
+    }
+
     /// True when there is nothing to talk about yet — no import has run, or no
     /// qualifying session exists.
     public var hasSession: Bool { sessionEnd != nil }
@@ -106,6 +143,7 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
 
     /// Fraction of the original window still to run, 0...1. Drives the ring.
     public func progress(at now: Date) -> Double {
+        guard hasSession else { return 0 }
         guard hours > 0, let readyAt else { return 1 }
         let total = hours * 3600
         let remaining = max(readyAt.timeIntervalSince(now), 0)
@@ -148,11 +186,13 @@ public enum RecoverySnapshotStore {
         (defaults ?? .standard).data(forKey: key) != nil
     }
 
+    @discardableResult
     public static func save(
         _ snapshot: RecoverySnapshot,
         defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
-    ) {
-        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+    ) -> Bool {
+        guard let data = try? JSONEncoder().encode(snapshot) else { return false }
         (defaults ?? .standard).set(data, forKey: key)
+        return true
     }
 }

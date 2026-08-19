@@ -1,5 +1,4 @@
 import XCTest
-@testable import Recharge
 
 /// What the standard tier is anchored *to*.
 ///

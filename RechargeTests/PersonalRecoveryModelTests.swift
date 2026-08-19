@@ -1,5 +1,4 @@
 import XCTest
-@testable import Recharge
 
 /// The thirty-day analysis: the part of Recharge+ that has to be more than a
 /// number with a nice label on it.
@@ -169,6 +168,31 @@ final class PersonalRecoveryModelTests: XCTestCase {
         let factor = try? XCTUnwrap(rebound.factor)
         XCTAssertNotNil(factor)
         XCTAssertGreaterThan(factor ?? 0, 1.25)
+    }
+
+    func testContextDaysOutsideTheAnalysisWindowDoNotAffectTheResult() {
+        let sessionDays: [Double] = [4, 9, 14, 19]
+        var recentDays = flatDays()
+        for day in sessionDays {
+            recentDays = setResting(recentDays, daysAgo: day - 1, to: 58)
+            recentDays = setResting(recentDays, daysAgo: day - 2, to: 58)
+        }
+        let sessions = sessionDays.map { session(daysAgo: $0) }
+        let oldOutlier = PersonalRecoveryModel.DayPoint(
+            date: now.addingTimeInterval(-40 * 86_400),
+            restingHeartRate: 500,
+            heartRateVariability: 0
+        )
+
+        let withoutOldData = PersonalRecoveryModel.analyse(
+            profile: .empty, sessions: sessions, days: recentDays, now: now
+        )
+        let withOldData = PersonalRecoveryModel.analyse(
+            profile: .empty, sessions: sessions, days: recentDays + [oldOutlier], now: now
+        )
+
+        XCTAssertEqual(withOldData.factor, withoutOldData.factor, accuracy: 0.0001)
+        XCTAssertEqual(withOldData.reboundSamples, withoutOldData.reboundSamples)
     }
 
     /// Resting heart rate and HRV are two views of the same night, so a session

@@ -43,6 +43,8 @@ public enum ComplicationCopy {
         case synced
         /// Nothing has ever been received. Distinct from "no workout".
         case neverSynced
+        /// A payload was written, but it no longer decodes with this build.
+        case unreadable
     }
 
     /// The big value in the middle of a circular or corner slot.
@@ -53,7 +55,11 @@ public enum ComplicationCopy {
         readyAt: Date?,
         dataState: DataState = .synced
     ) -> String {
-        guard dataState == .synced else { return "Open" }
+        switch dataState {
+        case .neverSynced: return "Open"
+        case .unreadable: return "Retry"
+        case .synced: break
+        }
         switch phase {
         case .noRecentWorkout:
             return "--"
@@ -83,7 +89,11 @@ public enum ComplicationCopy {
         // Deliberately device-neutral: the extension and the app that has to be
         // opened always live on the same device, whether that is the wrist or
         // the phone, so naming one would be wrong on the other.
-        guard dataState == .synced else { return "Open Recharge to set up" }
+        switch dataState {
+        case .neverSynced: return "Open Recharge to set up"
+        case .unreadable: return "Open Recharge to refresh"
+        case .synced: break
+        }
         switch phase {
         case .noRecentWorkout:
             return "No workout"
@@ -116,7 +126,11 @@ public enum ComplicationCopy {
         readyAt: Date?,
         dataState: DataState = .synced
     ) -> String {
-        guard dataState == .synced else { return "Open Recharge" }
+        switch dataState {
+        case .neverSynced: return "Open Recharge"
+        case .unreadable: return "Refresh Recharge"
+        case .synced: break
+        }
         switch phase {
         case .noRecentWorkout: return "No workout"
         // The inline slot has room for one word, and "Ready" is the token every
@@ -138,7 +152,10 @@ public enum ComplicationCopy {
         readyAt: Date?,
         dataState: DataState = .synced
     ) -> String {
-        guard dataState == .synced else { return "Recharge" }
+        switch dataState {
+        case .neverSynced, .unreadable: return "Recharge"
+        case .synced: break
+        }
         switch phase {
         case .noRecentWorkout: return "Recharge"
         case .ready: return "Ready"

@@ -9,7 +9,11 @@ import WatchKit
 struct WatchTodayView: View {
     @State private var snapshot = WatchTodayView.currentSnapshot()
     @State private var now = Date.now
+#if DEBUG
+    @State private var showEffort = ScreenshotConfig.wantsEffortPrompt
+#else
     @State private var showEffort = false
+#endif
 
     /// Screenshot runs have no paired phone to write the App Group, so the
     /// capture scene supplies the snapshot instead.
@@ -63,8 +67,9 @@ struct WatchTodayView: View {
                 now = .now
                 snapshot = WatchTodayView.currentSnapshot()
             }
-            .sheet(isPresented: $showEffort) {
+            .navigationDestination(isPresented: $showEffort) {
                 WatchEffortPrompt(activityLabel: snapshot.activityLabel) { effort in
+                    showEffort = false
                     guard let sessionID = pendingEffortSessionID else { return }
                     if let effort {
                         connectivity.sendEffort(effort, forSessionID: sessionID)
@@ -74,6 +79,7 @@ struct WatchTodayView: View {
                         connectivity.declineEffort(forSessionID: sessionID)
                     }
                 }
+                .navigationTitle("Rate effort")
             }
         }
     }
@@ -124,9 +130,9 @@ struct WatchTodayView: View {
         .padding(.top, 4)
     }
 
-    /// The ring shrinks while a request is pending so the button below it lands
-    /// inside the first viewport on the smallest watch.
-    private var ringSize: CGFloat { wantsEffortPrompt ? 96 : 120 }
+    /// The ring shrinks while a request is pending so the button and its
+    /// headline both land inside the first viewport on the smallest watch.
+    private var ringSize: CGFloat { wantsEffortPrompt ? 72 : 120 }
 
     // MARK: - Effort
 
@@ -138,6 +144,7 @@ struct WatchTodayView: View {
                 .font(.system(.caption, design: .rounded, weight: .semibold))
         }
         .buttonStyle(.bordered)
+        .controlSize(.small)
         .tint(Theme.recovering)
     }
 
@@ -244,17 +251,21 @@ struct WatchEffortPrompt: View {
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
 
-                ForEach([(4.0, "Easy"), (7.0, "Moderate"), (9.0, "Hard")], id: \.0) { effort, title in
-                    Button {
-                        onSelect(effort)
-                        dismiss()
-                    } label: {
-                        Text(title)
-                            .font(.system(.headline, design: .rounded))
-                            .frame(maxWidth: .infinity)
+                HStack(spacing: 6) {
+                    ForEach([(4.0, "Easy"), (7.0, "Moderate"), (9.0, "Hard")], id: \.0) { effort, title in
+                        Button {
+                            onSelect(effort)
+                            dismiss()
+                        } label: {
+                            Text(title)
+                                .font(.system(.caption, design: .rounded, weight: .semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(Theme.recovering)
                     }
-                    .buttonStyle(.bordered)
-                    .tint(Theme.recovering)
                 }
 
                 // Named to match the phone sheet, and now durable on both: the
