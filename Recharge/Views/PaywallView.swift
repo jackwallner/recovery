@@ -57,6 +57,12 @@ enum ProFeature: CaseIterable {
 /// button, and Restore / Terms / Privacy are always reachable.
 struct PaywallView: View {
     let source: String
+    /// False when the paywall *is* a tab rather than a sheet over something.
+    /// A close button there has nothing to close, and the tab bar underneath is
+    /// already the way out — which is also what keeps the arrangement inside
+    /// Apple 3.1.2(a): the auto-renew disclosure scrolls with the content and is
+    /// never covered by the bar.
+    var displayCloseButton = true
 
     @EnvironmentObject private var store: StoreService
     @Environment(\.dismiss) private var dismiss
@@ -92,13 +98,15 @@ struct PaywallView: View {
             .background(Theme.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Theme.textSecondary)
+                if displayCloseButton {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        .accessibilityLabel("Close")
                     }
-                    .accessibilityLabel("Close")
                 }
             }
             .task {

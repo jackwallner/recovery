@@ -9,6 +9,7 @@ struct SettingsView: View {
 
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.dismiss) private var dismiss
     @State private var showPaywall = false
     @State private var showReviewPrompt = false
     @State private var maxHeartRateText = ""
@@ -23,8 +24,9 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 if !store.isPro { proSection }
-                healthSection
                 recoveryTimeSection
+                healthSection
+                ingestSection
                 complicationSection
                 modelSection
                 // Directly under Model, because that is what it feeds.
@@ -39,6 +41,15 @@ struct SettingsView: View {
             // Inline, as on Today, History, and the rest of the fleet: a large
             // title draws its own bar over the page the moment the form scrolls.
             .navigationBarTitleDisplayMode(.inline)
+            // Settings is a sheet raised from Today's gear button rather than a
+            // tab, which is the Vitals arrangement: a tab is somewhere the user
+            // is meant to spend time, and this is somewhere they go twice. The
+            // third tab is Recharge+, which is worth going to.
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "settings")
                     .environmentObject(store)
@@ -62,28 +73,69 @@ struct SettingsView: View {
 
     // MARK: - Pro
 
+    /// The upgrade row, and it makes the same argument every other conversion
+    /// surface in the app now makes: the average recovery time, and theirs.
+    ///
+    /// It used to read "Body signals, weekly load, session overrides and Ready
+    /// alerts", which is a list of mechanisms rather than of outcomes. Nobody
+    /// buys a body signal. Two numbers and an arrow say the thing the feature
+    /// list was trying to imply, and unlike the list they are real: both figures
+    /// come from `RecoveryEngine.personalizedPreview`, computed on this tier for
+    /// exactly this purpose.
     private var proSection: some View {
         Section {
             Button { showPaywall = true } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "bolt.badge.clock.fill")
-                        .font(.title2)
-                        .foregroundStyle(Theme.pro)
-                    VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "bolt.badge.clock.fill")
+                            .font(.title3)
+                            .foregroundStyle(Theme.pro)
                         Text(RechargeConversionCopy.proName)
                             .font(.system(.headline, design: .rounded))
                             .foregroundStyle(Theme.textPrimary)
-                        Text("Body signals, weekly load, session overrides and Ready alerts.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textTertiary)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(Theme.textTertiary)
+
+                    HStack(alignment: .center, spacing: 14) {
+                        settingsFigure("Average", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Theme.textTertiary)
+                        settingsFigure("Yours", CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                        Spacer(minLength: 0)
+                    }
+
+                    Text(proPitchDetail)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.vertical, 4)
             }
+        }
+    }
+
+    private var preview: PersonalizedPreview { engine.personalizedPreview }
+
+    private var proPitchDetail: String {
+        let subject = preview.isExample ? "a hard 60-minute session" : preview.label.lowercased()
+        return "What the standard table says for \(subject), beside what your own sessions, sleep, and heart rate say. \(RechargeConversionCopy.proName) gives you the second one."
+    }
+
+    private func settingsFigure(_ label: String, _ value: String, _ tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(value)
+                .font(Theme.bigNumber(24))
+                .monospacedDigit()
+                .foregroundStyle(tint)
+            Text(label)
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.textTertiary)
         }
     }
 
@@ -198,6 +250,31 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - What was read
+
+    /// The receipt, in Settings because this is where somebody comes when they
+    /// are wondering whether the app is actually doing anything.
+    ///
+    /// It also closes the honest gap in the row above it: iOS never reports
+    /// which read permissions were granted, so the status row can only say what
+    /// Health *returned*. This is that, itemised — which turns out to be a
+    /// better answer to "did my permissions work" than a permission state would
+    /// have been, because a granted permission with no data behind it is not
+    /// what the user was asking about.
+    @ViewBuilder
+    private var ingestSection: some View {
+        if !engine.healthIngest.isEmpty {
+            Section {
+                HealthIngestList(summary: engine.healthIngest)
+                    .padding(.vertical, 4)
+            } header: {
+                Text("Read from Apple Health")
+            } footer: {
+                Text("Every figure here is going into your estimate. Anything Recharge asked for and is not using does not appear.")
+            }
+        }
+    }
+
     private func requestHealthAccess() async {
         isRequestingHealth = true
         healthMessage = nil
@@ -281,7 +358,7 @@ struct SettingsView: View {
         } footer: {
             Text(store.isPro
                 ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The standard estimate uses your training level: session type, length, and intensity in, hours out, on the curve for someone who trains as much as you said you do. Recharge+ replaces \"someone like you\" with you, scoring each session against your own history.")
+                : "The standard estimate is the average one for your training level: session type, length, and intensity in, hours out. Recharge+ replaces the average with yours, measured from your own sessions, sleep, and heart rate.")
         }
     }
 
@@ -432,14 +509,27 @@ struct SettingsView: View {
         !maxHeartRateText.isEmpty && settings.maxHeartRate == 0
     }
 
+    /// What "Auto" is currently resolving to, said out loud.
+    ///
+    /// The field used to accept "250", store zero, and leave the number on
+    /// screen — so Settings said 250 while the model used its default. And
+    /// "Auto" used to name nothing at all, which mattered more once Auto stopped
+    /// meaning a formula: for most people it is now their own observed maximum,
+    /// and a user who can see that Recharge measured 187 from their own sessions
+    /// has no reason to go and type a number in.
     private var maxHeartRateNote: String? {
         if maxHeartRateIsRejected {
             return "Enter a value between 120 and 230 bpm. Recharge is using its own estimate until then."
         }
-        if maxHeartRateText.isEmpty {
-            return "Auto uses the model's own estimate. Set yours for a sharper heart-rate load."
+        guard maxHeartRateText.isEmpty else { return nil }
+        let profile = settings.athleteProfile
+        if profile.usesObservedMaxHeartRate, let observed = profile.observedMaxHeartRate {
+            return "Auto is \(Int(observed.rounded())) bpm, the highest your own sessions have shown. Override it only if you have tested higher."
         }
-        return nil
+        if let predicted = profile.predictedMaxHeartRate {
+            return "Auto is \(Int(predicted.rounded())) bpm, predicted from your age. It becomes a measured figure once your sessions show a higher one."
+        }
+        return "Auto uses the model's own estimate. Set yours for a sharper heart-rate load."
     }
 
     private var calibrationLabel: String {

@@ -14,6 +14,7 @@ import Foundation
 /// | Rebound | How much of the day-after disturbance in resting heart rate and HRV is still there on day two | The closest thing to a direct measurement of individual recovery kinetics that a wrist sensor can produce |
 /// | Tolerance | Whether sessions started *inside* a predicted window held their intensity | Revealed preference: what actually happened when they trained through it |
 /// | Density | Chronic weekly load against a population reference | The classic activity-class adjustment; someone doing 500 load-units a week is adapted to a shorter turnaround than someone doing 150 |
+/// | Kinetics | How far the heart rate falls in the minute after a workout ends | The one thing here that is a *direct* reading of parasympathetic reactivation rather than an inference from it, and Apple Watch writes it for free |
 ///
 /// Each is a mild multiplier. They are blended with the onboarding prior on a
 /// weight that grows with the amount of evidence, so a Recharge+ user gets a
@@ -41,6 +42,15 @@ public enum PersonalRecoveryModel {
     /// Evidence needed before a signal is used at all.
     static let minimumReboundSamples = 3
     static let minimumToleranceSamples = 3
+    static let minimumKineticsSamples = 3
+
+    /// One-minute heart-rate recovery, in bpm, for somebody the standard model
+    /// already describes correctly. Around 25 bpm is the figure clinical work
+    /// treats as ordinary; under about 12 is the abnormal end, and the
+    /// well-trained sit comfortably above 30. Anchoring here means the signal
+    /// says nothing at all about an average responder, which is what a
+    /// multiplier on a population table should do.
+    static let referenceHeartRateRecovery = 25.0
 
     /// Evidence count at which history has taken over from the questionnaire as
     /// far as it ever will.
@@ -95,11 +105,23 @@ public enum PersonalRecoveryModel {
         public let date: Date
         public let restingHeartRate: Double?
         public let heartRateVariability: Double?
+        /// The best one-minute heart-rate recovery Health recorded that day, in
+        /// bpm. The best rather than the average, because the quantity is only
+        /// meaningful after a session hard enough to have somewhere to fall
+        /// from, and a gentle walk on the same day would drag the figure down
+        /// for reasons that have nothing to do with how this person recovers.
+        public let heartRateRecovery: Double?
 
-        public init(date: Date, restingHeartRate: Double? = nil, heartRateVariability: Double? = nil) {
+        public init(
+            date: Date,
+            restingHeartRate: Double? = nil,
+            heartRateVariability: Double? = nil,
+            heartRateRecovery: Double? = nil
+        ) {
             self.date = date
             self.restingHeartRate = restingHeartRate
             self.heartRateVariability = heartRateVariability
+            self.heartRateRecovery = heartRateRecovery
         }
     }
 
@@ -115,6 +137,12 @@ public enum PersonalRecoveryModel {
         public let toleranceFactor: Double?
         public let toleranceSamples: Int
         public let densityFactor: Double?
+        public let kineticsFactor: Double?
+        public let kineticsSamples: Int
+        /// The person's own median one-minute heart-rate recovery, in bpm.
+        /// Carried for display: it is the most legible number the analysis
+        /// produces, and the only one a user can check against anything.
+        public let medianHeartRateRecovery: Double?
         public let weeklyLoad: Double
         public let sessionsPerWeek: Double
         public let qualifyingSessions: Int
@@ -129,6 +157,9 @@ public enum PersonalRecoveryModel {
             toleranceFactor: Double?,
             toleranceSamples: Int,
             densityFactor: Double?,
+            kineticsFactor: Double? = nil,
+            kineticsSamples: Int = 0,
+            medianHeartRateRecovery: Double? = nil,
             weeklyLoad: Double,
             sessionsPerWeek: Double,
             qualifyingSessions: Int,
@@ -141,6 +172,9 @@ public enum PersonalRecoveryModel {
             self.toleranceFactor = toleranceFactor
             self.toleranceSamples = toleranceSamples
             self.densityFactor = densityFactor
+            self.kineticsFactor = kineticsFactor
+            self.kineticsSamples = kineticsSamples
+            self.medianHeartRateRecovery = medianHeartRateRecovery
             self.weeklyLoad = weeklyLoad
             self.sessionsPerWeek = sessionsPerWeek
             self.qualifyingSessions = qualifyingSessions
@@ -206,6 +240,7 @@ public enum PersonalRecoveryModel {
         let rebound = reboundEvidence(sessions: window, days: recentDays)
         let tolerance = toleranceEvidence(sessions: window)
         let density = window.count >= 4 ? densityFactor(weeklyLoad: weeklyLoad) : nil
+        let kinetics = kineticsEvidence(days: recentDays)
 
         // Density is a weaker inference than the other two — it says what the
         // person trains, not how they respond — so it is capped at a third of
@@ -214,6 +249,7 @@ public enum PersonalRecoveryModel {
         if let value = rebound.factor { weighted.append((value, Double(rebound.samples))) }
         if let value = tolerance.factor { weighted.append((value, Double(tolerance.samples))) }
         if let value = density { weighted.append((value, min(Double(window.count), saturationSamples / 3))) }
+        if let value = kinetics.factor { weighted.append((value, Double(kinetics.samples))) }
 
         let prior = profile.prior
         let totalWeight = weighted.reduce(0) { $0 + $1.weight }
@@ -229,6 +265,9 @@ public enum PersonalRecoveryModel {
                 toleranceFactor: nil,
                 toleranceSamples: tolerance.samples,
                 densityFactor: nil,
+                kineticsFactor: nil,
+                kineticsSamples: kinetics.samples,
+                medianHeartRateRecovery: kinetics.median,
                 weeklyLoad: weeklyLoad,
                 sessionsPerWeek: sessionsPerWeek,
                 qualifyingSessions: window.count,
@@ -257,11 +296,47 @@ public enum PersonalRecoveryModel {
             toleranceFactor: tolerance.factor,
             toleranceSamples: tolerance.samples,
             densityFactor: density,
+            kineticsFactor: kinetics.factor,
+            kineticsSamples: kinetics.samples,
+            medianHeartRateRecovery: kinetics.median,
             weeklyLoad: weeklyLoad,
             sessionsPerWeek: sessionsPerWeek,
             qualifyingSessions: window.count,
             evidenceWeight: prior == nil ? 1 : evidenceWeight
         )
+    }
+
+    // MARK: - Signal 4: kinetics
+
+    /// How fast this person's heart rate falls in the minute after a session
+    /// ends, against the population's.
+    ///
+    /// This is the only signal in the file that is a *reading* rather than an
+    /// inference. Rebound infers recovery kinetics from two overnight
+    /// measurements taken a day apart; tolerance infers them from what the
+    /// person chose to do next; density infers them from how much they train.
+    /// One-minute heart-rate recovery is the thing itself — parasympathetic
+    /// reactivation, measured directly, on a scale with published norms — and
+    /// Apple Watch writes it after qualifying workouts for nothing.
+    ///
+    /// The median rather than the mean, because the sample is small and one
+    /// truncated cool-down (a workout ended at the car door) produces a low
+    /// outlier that no amount of averaging survives.
+    ///
+    /// The exponent is a third, which is deliberately timid: heart-rate recovery
+    /// varies with how hard the session that preceded it was, and Health does
+    /// not say which workout each sample belongs to. So the signal is used for
+    /// the direction and the rough size of the effect and nothing finer, and the
+    /// clamp keeps it inside a range the other three can outvote.
+    static func kineticsEvidence(days: [DayPoint]) -> (factor: Double?, samples: Int, median: Double?) {
+        let values = days.compactMap(\.heartRateRecovery).filter { $0.isFinite && $0 > 0 }
+        guard let middle = median(values) else { return (nil, values.count, nil) }
+        guard values.count >= minimumKineticsSamples else { return (nil, values.count, middle) }
+
+        // Inverted: a *larger* fall is a faster response, which shortens.
+        let ratio = referenceHeartRateRecovery / middle
+        let factor = min(max(pow(ratio, 0.35), 0.85), 1.18)
+        return (factor, values.count, middle)
     }
 
     // MARK: - Signal 1: rebound

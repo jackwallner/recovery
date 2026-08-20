@@ -210,12 +210,15 @@ public final class RechargeSettings: ObservableObject {
     /// its own default.
     ///
     /// A value the user typed in Settings always wins. Failing that, the
-    /// age-predicted figure is far better than the blunt 185 bpm constant, and
-    /// it applies on both tiers: measuring a 58-year-old's session against a
-    /// 30-year-old's ceiling is not "standard", it is wrong.
+    /// ceiling comes from `AthleteProfile.effectiveMaxHeartRate`: what their own
+    /// workouts have actually shown, and only failing *that* the age formula.
+    /// It applies on both tiers, because measuring a 58-year-old's session
+    /// against a 30-year-old's ceiling is not "standard", it is wrong — and so
+    /// is measuring anybody against a formula when a hundred and twenty days of
+    /// their real heart rate are sitting in Health.
     public var effectiveMaxHeartRate: Double? {
         if maxHeartRate > 0 { return maxHeartRate }
-        return athleteProfile.predictedMaxHeartRate
+        return athleteProfile.effectiveMaxHeartRate
     }
 
     private func persistAthleteProfile() {
@@ -230,7 +233,10 @@ public final class RechargeSettings: ObservableObject {
         age: Int?,
         sex: AthleteSex?,
         weeklyVolume: WeeklyVolume?,
-        primaryProfile: WorkoutProfile?
+        primaryProfile: WorkoutProfile?,
+        vo2Max: Double? = nil,
+        observedMaxHeartRate: Double? = nil,
+        bodyMassKilograms: Double? = nil
     ) {
         var profile = athleteProfile
         if let age {
@@ -251,6 +257,26 @@ public final class RechargeSettings: ObservableObject {
         if let primaryProfile {
             profile.primaryProfile = primaryProfile
             profile.healthDerivedFields.insert(AthleteProfile.primaryProfileField)
+        }
+        if let vo2Max, vo2Max.isFinite, (10...90).contains(vo2Max) {
+            profile.vo2Max = vo2Max
+            profile.healthDerivedFields.insert(AthleteProfile.vo2MaxField)
+        }
+        // Monotone on purpose. A maximum heart rate is the highest the person
+        // has been seen to reach, and a quiet month of easy running is not
+        // evidence that their ceiling has come down — it is evidence that they
+        // did not go looking for it. Letting the figure fall would quietly
+        // inflate the intensity of every session in the following month.
+        if let observedMaxHeartRate,
+           observedMaxHeartRate.isFinite,
+           (120...230).contains(observedMaxHeartRate),
+           observedMaxHeartRate > (profile.observedMaxHeartRate ?? 0) {
+            profile.observedMaxHeartRate = observedMaxHeartRate
+            profile.healthDerivedFields.insert(AthleteProfile.observedMaxHeartRateField)
+        }
+        if let bodyMassKilograms, bodyMassKilograms.isFinite, (30...250).contains(bodyMassKilograms) {
+            profile.bodyMassKilograms = bodyMassKilograms
+            profile.healthDerivedFields.insert(AthleteProfile.bodyMassField)
         }
         guard profile != athleteProfile else { return }
         athleteProfile = profile

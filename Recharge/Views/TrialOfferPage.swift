@@ -1,12 +1,21 @@
 import SwiftUI
 @preconcurrency import RevenueCat
 
-/// The single-decision trial page: the final onboarding screen, and the only
-/// place Recharge asks for money before the user has seen a countdown.
+/// The single-decision trial page: the final onboarding screen, and the passive
+/// half sheet later in the app's life.
 ///
-/// One plan (yearly), one button in the thumb zone, one skip. A plan grid here
-/// converts worse than a single decision, and the full paywall is one tap away
-/// in Settings for anyone who wants to compare.
+/// **One argument, made with two numbers.** The pitch used to be a headline, a
+/// three-column rest-pattern table with a blur over one column, and a bulleted
+/// feature list — three different shapes of claim on one screen, none of which
+/// answered "what do I get" in a form anybody could hold in their head. What is
+/// sold is a recovery time, so what is shown is a recovery time: the average
+/// one, an arrow, and theirs. Both figures are real and both are computed the
+/// same way a subscriber's would be.
+///
+/// Underneath it, on the onboarding page, is the receipt: everything Recharge
+/// just read out of Apple Health. That is the evidence the number on the right
+/// came from somewhere, and it is far more persuasive than a feature list
+/// because the user recognises their own data in it.
 struct TrialOfferPage: View {
     let onDecline: () -> Void
     let onPurchased: () -> Void
@@ -14,10 +23,11 @@ struct TrialOfferPage: View {
     /// onboarding it is wrong: declining there is not postponing anything, it is
     /// choosing the free tier and starting to use the app.
     var declineTitle: String = "Not now"
-    /// Onboarding leads with what personalisation would actually do to this
-    /// user's numbers. The passive sheet leads with the feature list, because by
-    /// then they have seen the app work.
-    var showsPersonalization: Bool = false
+    /// Onboarding has a full screen and has just finished reading Health, so it
+    /// shows the receipt. The passive sheet is a half sheet over the app the
+    /// person is already using, and the list would not fit — nor does it need
+    /// to, because by then they have seen the app work.
+    var showsIngestProof: Bool = false
 
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
@@ -40,13 +50,13 @@ struct TrialOfferPage: View {
     /// disclosure, an error — is handed to `OnboardingActions` as content
     /// *above* the button. The only thing below the button is the legal slot
     /// that every other page also reserves, so this CTA lands in the identical
-    /// frame the four Continue buttons before it occupied.
+    /// frame the Continue buttons before it occupied.
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 pitch
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 8)
             }
             .scrollBounceBehavior(.basedOnSize)
 
@@ -67,66 +77,160 @@ struct TrialOfferPage: View {
         .padding(.horizontal, 28)
         .padding(.bottom, 16)
         .task {
-            store.trackPaywallImpression(id: "onboarding_trial")
+            store.trackPaywallImpression(id: showsIngestProof ? "onboarding_trial" : "passive_trial")
             if store.products.isEmpty { await store.fetchProducts() }
         }
     }
 
     private var pitch: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 0)
-
-            Image(systemName: "bolt.badge.clock.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(Theme.pro)
-                .padding(.bottom, 20)
-                .accessibilityHidden(true)
-
             Text(headline)
                 .font(.system(.title, design: .rounded, weight: .bold))
-                // As on the onboarding pages: capping the headline keeps it large
-                // without letting it crowd out the terms that have to be read
-                // before the button is pressed.
+                // Capping the headline keeps it large without letting it crowd
+                // out the terms that have to be read before the button is
+                // pressed.
                 .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 18)
 
-            if showsPersonalization {
-                // The same table Today shows, with the same blur over the same
-                // real numbers. What the user is sold here is literally what
-                // they get, which is the only reason it is allowed to be the
-                // pitch.
-                RestPatternCard(rows: engine.restPattern, isPro: false, isCompact: true)
-                    .padding(.bottom, 18)
-            }
+            comparison
+                .padding(.bottom, 14)
 
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(features, id: \.self) { feature in
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(Theme.pro)
-                        Text(feature.title)
-                            .font(.system(.subheadline, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 0)
-                    }
-                }
-            }
-            .padding(.horizontal, 12)
+            Text(subheadline)
+                .font(.system(.subheadline, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
 
-            Spacer(minLength: 0)
+            if showsIngestProof, !engine.healthIngest.isEmpty {
+                proof.padding(.top, 20)
+            } else if !showsIngestProof {
+                features.padding(.top, 20)
+            }
         }
     }
+
+    // MARK: - The two numbers
+
+    /// The whole pitch. Left is what the standard table says for somebody at
+    /// this person's training level; right is what their own data says.
+    ///
+    /// Both are real. `RecoveryEngine.personalizedPreview` computes them on both
+    /// tiers precisely so this screen never has to invent one, and it falls back
+    /// to a canonical hard session — a genuine point on the genuine curve —
+    /// when the user has no qualifying session yet. Neither figure is blurred
+    /// here: this is the page where the difference is the argument, and hiding
+    /// half of an argument is not an argument.
+    private var comparison: some View {
+        let preview = engine.personalizedPreview
+        return VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 18) {
+                numberColumn(
+                    "Average",
+                    CountdownFormat.hours(preview.standardHours),
+                    Theme.textSecondary
+                )
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Theme.textTertiary)
+                numberColumn(
+                    "Yours",
+                    CountdownFormat.hours(preview.personalizedHours),
+                    Theme.pro
+                )
+            }
+            .padding(.vertical, 16)
+            .padding(.horizontal, 22)
+            .frame(maxWidth: .infinity)
+            .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+
+            Text(preview.isExample
+                 ? "For a hard 60-minute session. An example on the real curve until you have recorded one."
+                 : preview.label)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Theme.textTertiary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func numberColumn(_ label: String, _ value: String, _ tint: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(Theme.bigNumber(38))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .foregroundStyle(tint)
+            Text(label)
+                .font(.system(.caption2, design: .rounded, weight: .semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.textTertiary)
+        }
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - The receipt
+
+    private var proof: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Measured from your own data")
+                .font(.system(.footnote, design: .rounded, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            // Values only, no explanations: the explanations were read two pages
+            // ago on the readout, and repeating them here would bury the two
+            // numbers this page is actually about. Capped at five rows for the
+            // same reason — the full receipt runs to nine and pushed the price
+            // block off the bottom of the scroll view, so the page that takes
+            // money was the one page in the flow whose terms needed scrolling
+            // to.
+            HealthIngestList(summary: engine.healthIngest, showsDetail: false, limit: 5)
+            if engine.healthIngest.rows.count > 5 {
+                Text("…and \(engine.healthIngest.rows.count - 5) more, all going into your estimate.")
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+        }
+        .padding(16)
+        .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+    }
+
+    /// The sheet variant's substitute for the receipt: three lines, because a
+    /// half sheet has room for three lines.
+    private var features: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(sheetFeatures, id: \.self) { feature in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.pro)
+                    Text(feature.title)
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+    }
+
+    private var sheetFeatures: [ProFeature] {
+        [.personalizedTime, .bodySignals, .weeklyLoad]
+    }
+
+    // MARK: - Terms
 
     /// Everything the purchase decision needs stated beside it, and nothing that
     /// is allowed to sit below the button. Rendered on every state of the page,
     /// so it can grow and shrink freely without touching the CTA's frame.
     private var purchaseTerms: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             trialCallout
             price
 
@@ -138,7 +242,7 @@ struct TrialOfferPage: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else if let disclosure = store.yearlySheetDisclosureText {
                 Text(disclosure)
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
                     .dynamicTypeSize(...DynamicTypeSize.accessibility3)
@@ -156,22 +260,17 @@ struct TrialOfferPage: View {
     @ViewBuilder
     private var trialCallout: some View {
         if let package, let trialLabel = store.eligibleIntroLabel(for: package) {
-            VStack(spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "gift.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                    Text(trialLabel.replacingOccurrences(of: " free trial", with: " free"))
-                        .font(.system(.subheadline, design: .rounded, weight: .bold))
-                }
-                .foregroundStyle(Theme.pro)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(Theme.pro.opacity(0.15), in: Capsule())
-
-                Text("You are not charged today.")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
+            HStack(spacing: 6) {
+                Image(systemName: "gift.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("\(trialLabel.replacingOccurrences(of: " free trial", with: " free")) · Nothing charged today")
+                    .font(.system(.footnote, design: .rounded, weight: .semibold))
+                    .multilineTextAlignment(.center)
             }
+            .foregroundStyle(Theme.pro)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Theme.pro.opacity(0.15), in: Capsule())
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .accessibilityElement(children: .combine)
         }
@@ -229,18 +328,14 @@ struct TrialOfferPage: View {
     }
 
     private var headline: String {
-        guard showsPersonalization else {
-            return store.canPitchFreeTrial ? "Try Recharge+ free" : "Go further with Recharge+"
-        }
-        return "Your own\nrecharge time"
+        showsIngestProof ? "Your own\nrecharge time" : "Make it yours"
     }
 
-    /// Personalisation leads the onboarding list, because it is the thing the
-    /// previous four screens were about.
-    private var features: [ProFeature] {
-        showsPersonalization
-            ? [.personalizedTime, .bodySignals, .weeklyLoad]
-            : [.bodySignals, .weeklyLoad, .sessionOverrides]
+    private var subheadline: String {
+        let name = RechargeConversionCopy.proName
+        return engine.personalizedPreview.isExample
+            ? "Free gives you the standard estimate for your training level. \(name) measures it from your own sessions, sleep, and heart rate."
+            : "That's what the standard table says, beside what your own data says. \(name) gives you the second one."
     }
 
     private func purchase() async {
@@ -266,17 +361,26 @@ struct TrialOfferPage: View {
             onPurchased()
         } else {
             errorMessage = store.lastError
-                ?? "No active Recharge+ purchase was found for this Apple ID."
+                ?? "No active \(RechargeConversionCopy.proName) purchase was found for this Apple ID."
         }
     }
 }
 
-/// The same single decision, presented as a sheet from a passive trigger later
-/// in the app's life. Respects the 14-day cooldown in `RechargeSettings`.
+/// The same single decision as a half sheet, from a passive trigger later in the
+/// app's life. Respects the 14-day cooldown in `RechargeSettings`.
+///
+/// A **half** sheet, as in Vitals, and that is not a cosmetic choice: the thing
+/// the sheet is arguing about is the countdown on the screen behind it, and a
+/// full-screen cover hides the one piece of evidence the pitch depends on.
 struct TrialOfferSheet: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
+
+    /// Tall enough for the two numbers, three feature lines, the price block and
+    /// the buttons, and no taller. A fixed height rather than `.medium` because
+    /// `.medium` is half the screen on every device and this content is not.
+    static let detentHeight: CGFloat = 600
 
     var body: some View {
         NavigationStack {

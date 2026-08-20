@@ -33,7 +33,16 @@ final class RechargeUITests: XCTestCase {
 
     func testTodayShowsTheCountdown() {
         let app = launch(scene: "recovering")
-        XCTAssertTrue(app.staticTexts["Why"].waitForExistence(timeout: 15))
+        // The ring and the sentence naming the session that set it. "Why" used
+        // to be a card on this screen and is now the sheet behind the ring —
+        // Today is the number, not the explanation of the number.
+        XCTAssertTrue(app.buttons["today.hero"].waitForExistence(timeout: 15))
+        XCTAssertTrue(
+            app.staticTexts.containing(
+                NSPredicate(format: "label CONTAINS[c] %@", "from your run")
+            ).firstMatch.exists,
+            "the countdown does not name the session that set it"
+        )
         attach(app, named: "today-recovering")
     }
 
@@ -132,7 +141,10 @@ final class RechargeUITests: XCTestCase {
     /// whenever a section is added above it — which says nothing about the row.
     @discardableResult
     private func scrollToFind(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
-        for _ in 0..<8 {
+        // Fourteen rather than eight. Settings grew a "Read from Apple Health"
+        // section of up to nine explained rows, and a row below it needs more
+        // swipes to reach than the sections above it ever did.
+        for _ in 0..<14 {
             if element.exists { return true }
             app.swipeUp()
         }
@@ -142,8 +154,14 @@ final class RechargeUITests: XCTestCase {
     func testSettingsExposesTheComplicationStyleSetting() {
         let app = launch(scene: "settings")
         XCTAssertTrue(app.staticTexts["Apple Health"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.buttons["Request Apple Health access"].exists)
         attach(app, named: "settings")
+
+        // Scrolled to, not asserted in place. The Recharge+ pitch and the
+        // recovery-model section now sit above Apple Health, so its rows start
+        // below the fold — and a row below the fold in a SwiftUI `Form` is not
+        // in the accessibility tree at all, which reports as absent rather than
+        // as off-screen.
+        XCTAssertTrue(scrollToFind(app.buttons["Request Apple Health access"], in: app))
 
         XCTAssertTrue(scrollToFind(app.staticTexts["Watch complication"], in: app))
         XCTAssertTrue(app.staticTexts["Style"].exists)
@@ -364,51 +382,112 @@ final class RechargeUITests: XCTestCase {
     // MARK: - The comparison card
 
     /// A countdown on its own is unreadable: "18h" gives no way to tell whether
-    /// that is a lot, a little, or what you were going to do anyway. The three
-    /// columns are the frame, so they have to be on Today, above the explanation.
-    func testTodayShowsTheRestPatternComparison() {
+    /// that is a lot, a little, or what you were going to do anyway. One card on
+    /// Today answers it with two numbers — the average recovery time for
+    /// somebody at this training level, and theirs.
+    ///
+    /// It replaces a three-column rest-pattern table that tried to answer the
+    /// same question with nine figures, three of which were measurements, three
+    /// estimates, and three blurred. Nobody could hold that in their head, and
+    /// the column that mattered was the one under the blur.
+    func testTodayShowsTheRecoveryTimeComparison() {
         let app = launch(scene: "recovering")
         XCTAssertTrue(
-            app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15),
+            app.staticTexts["Your own recharge time"].waitForExistence(timeout: 15),
             "the comparison that makes the countdown mean something is missing"
         )
-        for band in ["Moderate", "Hard", "Very hard"] {
-            XCTAssertTrue(app.staticTexts[band].firstMatch.exists, "the \(band) band is missing")
+        // `.textCase(.uppercase)` is a rendering transform: the accessibility
+        // label stays as it was written.
+        for column in ["Average", "Yours"] {
+            XCTAssertTrue(app.staticTexts[column].firstMatch.exists, "the \(column) column is missing")
         }
-        attach(app, named: "today-rest-pattern")
+        attach(app, named: "today-comparison")
     }
 
-    /// The third column is the pitch, and on the free tier it has to be locked —
-    /// with the real number under the blur, not a mock-up, because
-    /// `RecoveryEngine` computes it on both tiers precisely so this can be honest.
-    func testTheRestPatternLocksThePersonalizedColumnOnTheFreeTier() {
+    /// The right-hand figure is the pitch, and on the free tier it is a **real**
+    /// number under a blur rather than a mock-up — `RecoveryEngine` computes it
+    /// on both tiers precisely so this can be honest. What the test can see is
+    /// the lock: the blur itself is not in the accessibility tree.
+    func testTheComparisonLocksThePersonalizedFigureOnTheFreeTier() {
         let app = launch(scene: "recovering")
-        XCTAssertTrue(app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Your own recharge time"].waitForExistence(timeout: 15))
         XCTAssertTrue(
-            app.buttons["See your own numbers"].firstMatch.exists,
-            "the free tier is not offered the personalized column"
+            app.staticTexts["Hidden until you upgrade"].firstMatch.exists,
+            "the free tier is not being shown a locked personalized figure"
         )
     }
 
     /// And a subscriber must not be sold what they already have.
-    func testTheRestPatternIsUnlockedForASubscriber() {
+    func testTheComparisonIsUnlockedForASubscriber() {
         let app = launch(scene: "premiumActive")
-        XCTAssertTrue(app.staticTexts["Your rest pattern"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Your recharge time"].waitForExistence(timeout: 15))
         XCTAssertFalse(
-            app.buttons["See your own numbers"].firstMatch.exists,
-            "a subscriber is still being pitched the column they are paying for"
+            app.staticTexts["Hidden until you upgrade"].firstMatch.exists,
+            "a subscriber is still being shown the blur they are paying to remove"
         )
-        attach(app, named: "today-rest-pattern-pro")
+        attach(app, named: "today-comparison-pro")
+    }
+
+    /// The third tab is the paywall before purchase and the feature page after
+    /// it — the Vitals arrangement, and the reason the thing somebody bought
+    /// keeps a place in the navigation instead of dissolving into settings rows.
+    func testTheThirdTabIsTheUpgradeBeforePurchaseAndRechargePlusAfter() {
+        let free = launch(scene: "recovering")
+        XCTAssertTrue(free.buttons["Upgrade"].waitForExistence(timeout: 15))
+        XCTAssertFalse(free.buttons["Recharge+"].exists)
+
+        let pro = launch(scene: "premiumActive")
+        XCTAssertTrue(pro.buttons["Recharge+"].waitForExistence(timeout: 15))
+        XCTAssertFalse(pro.buttons["Upgrade"].exists)
+        pro.buttons["Recharge+"].tap()
+        XCTAssertTrue(pro.staticTexts["Recharge+ active"].waitForExistence(timeout: 15))
+        attach(pro, named: "recharge-plus-tab")
+    }
+
+    /// **Settings is not a tab any more.** It is a gear button on Today, which
+    /// is what freed the third slot for Recharge+.
+    ///
+    /// Asserted by opening it, not by looking for the button: the gear is the
+    /// only "Settings" element on the screen either way, so an existence check
+    /// would pass on a build where tapping it did nothing.
+    func testSettingsOpensFromTheGearButtonOnToday() {
+        let app = launch(scene: "recovering")
+        let gear = app.buttons["Settings"].firstMatch
+        XCTAssertTrue(gear.waitForExistence(timeout: 15), "the Settings gear is missing from Today")
+        gear.tap()
+
+        XCTAssertTrue(
+            app.navigationBars["Settings"].waitForExistence(timeout: 15),
+            "the gear button did not open Settings"
+        )
+        // A sheet needs a way out, and a `Form` inside one has no navigation
+        // bar back button to fall back on.
+        XCTAssertTrue(app.buttons["Done"].exists, "Settings has no way to dismiss")
     }
 
     /// App Review 1.4.1: the non-diagnostic disclaimer has to be present and
-    /// readable, not buried under the tab bar.
-    func testTheDisclaimerIsPresentOnToday() {
+    /// readable.
+    ///
+    /// It is no longer on Today. Today is the ring and one card, and a paragraph
+    /// of legal copy pinned under a screen whose whole point is one number is
+    /// exactly the furniture that redesign removed. It lives where the estimate
+    /// is *explained* instead — the detail sheet a tap on the ring opens — which
+    /// is also the first place a user asking "what does this number mean" ends
+    /// up, and therefore a better place for it than the bottom of a page nobody
+    /// scrolls.
+    func testTheDisclaimerIsPresentOnTheExplanation() {
         let app = launch(scene: "recovering")
+        XCTAssertTrue(app.buttons["today.hero"].waitForExistence(timeout: 15))
+        app.buttons["today.hero"].tap()
+
         let disclaimer = app.staticTexts.containing(
             NSPredicate(format: "label CONTAINS[c] %@", "not medical advice")
         ).firstMatch
-        XCTAssertTrue(disclaimer.waitForExistence(timeout: 15))
+        XCTAssertTrue(
+            disclaimer.waitForExistence(timeout: 15),
+            "the non-diagnostic disclaimer is not reachable from the countdown"
+        )
+        attach(app, named: "estimate-detail")
     }
 
     // MARK: - The floating tab bar must not sit on top of anything
@@ -470,44 +549,70 @@ final class RechargeUITests: XCTestCase {
     }
 
     /// The bar floats over the content, so every scrollable tab has to reserve
-    /// room for it at rest. Settings reserved none: it is a `Form`, it had no
-    /// bottom padding to copy from the two screens that hand-rolled their own
-    /// (72 on Today, 96 on History), and the capsule sat on top of the last
-    /// rows of the model and profile sections.
-    func testTheTabBarDoesNotCoverTheBottomOfSettings() {
-        let app = launch(scene: "settings")
-        XCTAssertTrue(app.staticTexts["Apple Health"].waitForExistence(timeout: 15))
+    /// room for it at rest.
+    ///
+    /// The Recharge+ tab is where that is easiest to get wrong now, because it
+    /// is two different screens in one slot: a `ScrollView` when subscribed and
+    /// the paywall when not, and the paywall keeps its CTA in its own bottom bar
+    /// rather than inside the scroll view — so it cannot reserve its own room
+    /// the way a scroll view can, and `RootView` has to hand it an inset.
+    ///
+    /// Settings used to be the third tab and the one this check was written for.
+    /// It is a sheet now, raised from Today's gear button, so nothing about it
+    /// can be covered by a bar that is not on screen while it is up.
+    func testTheTabBarDoesNotCoverTheBottomOfRechargePlus() {
+        let app = launch(scene: "premiumActive")
+        XCTAssertTrue(app.buttons["Recharge+"].waitForExistence(timeout: 15))
+        app.buttons["Recharge+"].tap()
+        XCTAssertTrue(app.staticTexts["Recharge+ active"].waitForExistence(timeout: 15))
         scrollToBottom(of: app)
-        attach(app, named: "settings-bottom")
+        attach(app, named: "recharge-plus-bottom")
 
-        let tabBar = app.buttons["Settings"].firstMatch
-        XCTAssertTrue(tabBar.exists)
-        // A SwiftUI `Form` is a collection view.
-        let lowest = lowestVisibleContent(in: app.collectionViews.firstMatch, of: app)
-        XCTAssertNotNil(lowest, "no visible Settings content to measure")
+        let tabBar = app.buttons["Recharge+"].firstMatch
+        let lastRow = app.buttons["Manage subscription"].firstMatch
+        XCTAssertTrue(lastRow.exists, "the account row is missing from Recharge+")
         XCTAssertLessThanOrEqual(
-            lowest?.maxY ?? .greatestFiniteMagnitude, tabBar.frame.minY,
-            "the floating tab bar is covering the bottom of Settings"
+            lastRow.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the bottom of Recharge+"
         )
     }
 
-    /// Same claim on Today, whose disclaimer is the one App Review reads. It
-    /// cleared the bar before by a hand-copied 72 points; it clears it now
+    /// Same claim on the paywall, which is the same tab before purchase.
+    func testTheTabBarDoesNotCoverTheUpgradeTabsCTA() {
+        let app = launch(scene: "recovering")
+        XCTAssertTrue(app.buttons["Upgrade"].waitForExistence(timeout: 15))
+        app.buttons["Upgrade"].tap()
+
+        let cta = app.buttons["paywall-cta"].firstMatch
+        XCTAssertTrue(cta.waitForExistence(timeout: 20), "the paywall CTA is missing from the Upgrade tab")
+        attach(app, named: "upgrade-tab-bottom")
+
+        let tabBar = app.buttons["Upgrade"].firstMatch
+        XCTAssertLessThanOrEqual(
+            cta.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the Upgrade tab's purchase button"
+        )
+    }
+
+    /// Same claim on Today, whose bottom-most element is now the comparison card
+    /// rather than the disclaimer paragraph that used to close the page.
+    ///
+    /// It cleared the bar before by a hand-copied 72 points; it clears it now
     /// because `tabBarClearance()` reserves the room from the same constants
     /// that lay the bar out.
     func testTheTabBarDoesNotCoverTheBottomOfToday() {
         let app = launch(scene: "recovering")
-        let disclaimer = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] %@", "not medical advice")
+        let caption = app.staticTexts.containing(
+            NSPredicate(format: "label CONTAINS[c] %@", "standard estimate for your training level")
         ).firstMatch
-        XCTAssertTrue(disclaimer.waitForExistence(timeout: 15))
+        XCTAssertTrue(caption.waitForExistence(timeout: 15))
         scrollToBottom(of: app)
 
         let tabBar = app.buttons["Today"].firstMatch
         XCTAssertTrue(tabBar.exists)
         XCTAssertLessThanOrEqual(
-            disclaimer.frame.maxY, tabBar.frame.minY,
-            "the floating tab bar is covering the Today disclaimer"
+            caption.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the bottom of Today"
         )
     }
 
@@ -520,17 +625,21 @@ final class RechargeUITests: XCTestCase {
 
         let tabBar = app.buttons["History"].firstMatch
         XCTAssertTrue(tabBar.exists)
-        // The quiet-session toggle is the last row of the list, so it is the row
-        // with nothing below it to be pushed clear by. Named rather than
-        // discovered, because History's scroll view reports the tab bar's own
-        // labels among its descendants and "the lowest thing" then means the
+        // The oldest session in the fixture is the last row of the list, so it
+        // is the row with nothing below it to be pushed clear by. Named rather
+        // than discovered, because History's scroll view reports the tab bar's
+        // own labels among its descendants and "the lowest thing" then means the
         // bar.
-        // A `Button` wrapping a `Text` surfaces as a button carrying that label,
-        // not as a static text.
-        let lastRow = app.buttons.matching(
-            NSPredicate(format: "label BEGINSWITH %@", "Show ")
-        ).firstMatch
-        XCTAssertTrue(lastRow.exists, "the quiet-session toggle is missing from History")
+        //
+        // There used to be a "Show N light sessions" toggle here to measure
+        // against, and it is gone with the collapsing that made it necessary:
+        // every session carries a cost now, so a light one is an ordinary row
+        // rather than one of a wall of the word "None" that had to be hidden.
+        let rows = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS[c] %@", "Functional Session")
+        ).allElementsBoundByIndex
+        XCTAssertFalse(rows.isEmpty, "no rows in History to measure")
+        guard let lastRow = rows.last else { return }
         XCTAssertLessThanOrEqual(
             lastRow.frame.maxY, tabBar.frame.minY,
             "the floating tab bar is covering the bottom of History"

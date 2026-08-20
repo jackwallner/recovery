@@ -97,6 +97,18 @@ struct RechargeApp: App {
                 .preferredColorScheme(settings.appearance.colorScheme)
                 .task {
                     store.start()
+                    #if DEBUG
+                    // Writes a plausible training history into the simulator's
+                    // Health store, then falls through to the ordinary launch
+                    // path so everything below runs against real HealthKit
+                    // reads rather than against fixtures. Off unless
+                    // `RECHARGE_SEED_HEALTH=1` is in the environment.
+                    if HealthSeederConfig.isEnabled {
+                        await HealthSeeder.seedIfRequested()
+                        settings.hasCompletedSetup = true
+                        settings.hasDeferredHealthAccess = false
+                    }
+                    #endif
                     // `PhoneWatchSession.activate()` is in `init` above, not
                     // here: a scene is not connected on a background wake, and
                     // the phone is the side that has to be able to push.

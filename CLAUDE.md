@@ -38,19 +38,19 @@ mirror the schema.
 
 ### The model (`Shared/Utilities/`)
 Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
-196-test suite in `RechargeTests` possible without a Health store.
+269-test suite in `RechargeTests` possible without a Health store.
 
 | File | Stage |
 |---|---|
 | `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. Also `intensityFraction`, the HR-reserve quality proxy. |
 | `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. Below `minimumSamples` the median is shrunk toward the population reference (see below). `.standard(for:)` is the no-samples reference the free tier uses. |
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
-| `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
+| `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus what Health measured — VO2 max, the observed maximum heart rate, body mass. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
 | `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
 | `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. All 84 raw values are pinned and tested against the SDK's own numbering; the table was silently off by one from `badminton` (4) through `crossTraining` (11) for the app's whole life, because it omitted `australianFootball` (3). |
 | `CountdownTimeline` | the entry schedule a decaying countdown needs. |
-| `RestPattern` | the comparison: per intensity band, the gap the person actually leaves, what the standard table gives someone with their answers, and what Recharge+ makes of it. |
+| `HealthIngestSummary` | the receipt: every reading Health actually supplied, phrased for the user. Onboarding, the trial page, Settings, and the Recharge+ tab all render it. |
 
 ### The two tiers
 `RecoveryTier` is stored on every estimate, because the two answer different
@@ -95,17 +95,6 @@ answered the same way**", asserted by
 carries the fitness scale in its key so nothing the person has *done* can leak in
 behind it.
 
-`RestPattern`'s "Similar" column is now a **pass-through** of the standard
-estimate rather than `standardHours * prior`. Keeping the multiplication would
-have counted volume and experience twice and put the card into open disagreement
-with the countdown on the same screen. Its *example* row (no history in a band,
-which is what a brand-new user and the onboarding pitch see) now shows
-`reference * dayOneFactor` in the blurred column, where `dayOneFactor` is what
-`PersonalRecoveryModel` actually returns with no sessions. Both columns used to
-print the same figure, so the pitch was two identical numbers with a blur over
-one of them; and when the answers are neutral it still shows no difference,
-because there genuinely is none yet.
-
 `weeklyVolume` may be **derived** from the imported history rather than typed
 (`RecoveryEngine.derivedTrainingProfile`, 6+ sessions in 28 days), so a free
 user's training level can move without them answering anything. Deliberate, and
@@ -113,10 +102,36 @@ what Garmin does — activity class updates itself as the watch sees more traini
 It stays inside the tier line because what reaches the free estimate is a
 four-level bucket, not the person's own distribution of loads.
 
-Age-predicted maximum heart rate (Tanaka, or Gulati for women) applies on
-**both** tiers. It is a measurement input, not a personalisation: scoring a
-58-year-old against a flat 185 bpm ceiling does not make the free estimate
-standard, it makes it wrong.
+**VO2 max reaches the free tier**, alongside the two training-level questions,
+through `AthleteProfile.vo2Factor` — anchored at 45 ml/kg/min (the same
+reference adult `referenceEnergyAtFullReserve` is derived from), square-rooted
+because an ordinary training day grows more slowly than capacity does, and
+bounded to the same 0.78–1.40 the weekly-volume term already spans so a third
+measured term cannot widen the range `GarminAnchorTests` was fitted at. It is
+never asked for: it is read or it is absent. It belongs on this side of the tier
+line for the same reason the heart-rate ceiling does — it is a *measurement of
+training level*, not a personalisation of the window, and what Recharge+ sells
+is scoring a session against the person's own distribution of loads.
+
+The maximum heart rate every session's intensity is measured against is now the
+person's **observed** one, with the age formula as the fallback rather than the
+answer (`AthleteProfile.effectiveMaxHeartRate`). An age formula is a population
+average with a standard deviation of 10–12 bpm, which is enormous at the scale it
+is used: the whole heart-rate path is `(average − resting) / (max − resting)`, so
+a ceiling 12 bpm wrong misprices every session that person will ever record, in
+the same direction, forever. Two percentiles guard it — the 98th *within* a
+session in `HealthKitService`, the 90th *across* sessions in
+`RecoveryEngine.observedMaxHeartRate()` — so one optical artefact cannot become
+somebody's permanent ceiling, and `mergeHealthDerivedProfile` only ever lets the
+stored figure **rise**, because a quiet month is not evidence the ceiling came
+down. The observed figure is only believed when it is at least as high as the
+predicted one: a real maximum is elicited by a maximal effort, and a user who has
+never gone that hard would otherwise have every intensity reading inflated.
+
+Both apply on **both** tiers. Scoring a 58-year-old against a flat 185 bpm
+ceiling does not make the free estimate standard, it makes it wrong; and so does
+scoring anybody against a formula when 120 days of their real heart rate are
+sitting in Health.
 
 Every session is scored **both** ways on both tiers, and
 `RecoveryEngine.personalizedPreview` carries the most recent qualifying one:
@@ -151,8 +166,8 @@ shared residual would splice one tier's arithmetic into the other's.
 
 `hours` stays the session's own cost and `totalHours` is what the countdown
 actually runs for, because the two answer different questions: the tier
-comparison, the rest-pattern bands and the history *rows* are about the session,
-while the ring, `readyAt` and the snapshot are about the countdown. Only a
+comparison and `recoveryCostHours` are about the session, while the ring,
+`readyAt` and the snapshot are about the countdown. Only a
 session that earns a countdown of its own may inherit one, so an easy walk taken
 mid-window still cannot start or lengthen anything.
 
@@ -191,12 +206,18 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **8**
-(recovery time is cumulative, see "Recovery time stacks"; 7 scaled the standard
-tier to the user's stated training level; 6 re-anchored the standard reference to
-Firstbeat's activity class 3-5; 5 was the daily-load baseline fix; 4 moved the
-energy path onto the TRIMP curve and brought the mixed blind guess down from RPE
-7 to 6). `RecoveryEstimate` has a hand-written `init(from:)` so version-1 records
+window disagrees with what the same session would produce today. Currently **10**
+(the app measures more of what it was guessing: the heart-rate ceiling is the
+person's own observed maximum rather than an age formula, VO2 max joins the two
+training-level questions in `fitnessScale`, body mass closes the energy path's
+mass residual, overnight respiratory rate joins the context adjustment,
+heart-rate recovery joins the 30-day analysis, and every session carries a
+`recoveryCostHours`; 9 clamped the uncertainty range and the non-finite inputs;
+8 made recovery time cumulative, see "Recovery time stacks"; 7 scaled the
+standard tier to the user's stated training level; 6 re-anchored the standard
+reference to Firstbeat's activity class 3-5; 5 was the daily-load baseline fix;
+4 moved the energy path onto the TRIMP curve and brought the mixed blind guess
+down from RPE 7 to 6). `RecoveryEstimate` has a hand-written `init(from:)` so version-1 records
 decode as the unmultiplied standard windows they actually were.
 
 ### The load ladder is an order of trust, and for strength it was wrong
@@ -241,12 +262,24 @@ strength's came down from 6 to 5: at 7 the blind guess outscored every informed
 source for a typical session, so a manually entered game beat a recorded one and
 the longest window in the app belonged to the session it knew least about.
 
-**The residual is body mass, not intensity.** HealthKit's active energy already
-accounts for weight, so a heavier or fitter person burns more at the same reserve
-fraction and the inference over-reads them. Reading body mass would fix it and
-costs a new row in the Health permission sheet; it has not been done. An
-energy-derived load never rates better than low confidence on a session that can
-set a long window, which is the honest thing available today.
+**The residual was body mass, and it is now corrected.** HealthKit's active
+energy already accounts for weight, so at the same fraction of heart-rate reserve
+a 95 kg athlete burns about a quarter more than a 75 kg one, and dividing both by
+the same constant read the heavier one as having worked harder — in the same
+direction, on every calorie-derived session they ever record.
+`SessionLoadCalculator.referenceEnergy(forBodyMass:)` scales the 15.6 kcal/min
+reference linearly with mass (bounded 0.6–1.7, because the rest of the derivation
+is fixed and one implausible weight sample must not halve or double a history),
+falling back to the reference adult when Health has no weight — which is exactly
+what this path did before. It is what body mass is in the permission sheet for,
+and it is consumed by nothing else: how much somebody weighs says nothing about
+how fast they clear a training load, and an app that quietly made heavier users
+wait longer would be making a claim it cannot support.
+
+What is left is fitness: at the same reserve fraction a fitter person of the same
+mass burns more, and nothing in Health measures that closely enough to divide by.
+So an energy-derived load still never rates better than low confidence on a
+session that can set a long window.
 
 ### The audit is in the repo, and it is what found the last two bugs
 `RechargeTests/AthleteMatrix.swift` is the population: every activity type
@@ -462,35 +495,107 @@ reference. Say so rather than implying otherwise.
   any UI existed. Run it any time:
   `xcodebuild test -project Recharge.xcodeproj -scheme Recharge -destination "id=$UDID" -only-testing:RechargeTests/FixtureTableTests/testPrintFixtureTable`
 
-### Training more means shorter windows, and `RestPattern` is where you can see it
-Both personal paths already worked that way and neither was legible. Relative
-load is divided by `RecoveryBaseline.typicalLoad`, the person's own median, so a
-bigger median makes the same workout a smaller multiple of it; and
-`PersonalRecoveryModel.densityFactor` shrinks the multiplier as chronic weekly
-load rises. But a lone "18h" has nothing to be shorter *than*, so the app was
-answering a question nobody had asked.
+### Every session carries a cost, and only some of them start a countdown
+`hours` is an instruction to the countdown; `recoveryCostHours` is a description
+of the session. They are the same figure for a qualifying session and they
+diverge in exactly two places, both of which used to render as the word **None**:
+an `easy` session, where `hours` must be zero so a walk can never start or
+lengthen a countdown; and a session under the person's quiet threshold, which
+does not earn a countdown of its own but is not nothing either.
 
-`RestPattern.rows` returns one row per band (`typical`, `hard`, `unusuallyHard`
-— never `easy`, which starts no countdown) with three figures:
+That word was most of History for anyone who walks or spins on their easy days.
+A list whose job is to be the evidence the app is paying attention cannot be a
+column of the word "None" — it reads as an import that lost the numbers, and it
+made the app look like it had ignored two thirds of the user's training.
 
-- **You** — median hours between a session in that band and the next qualifying
-  one. A *measurement*, over `windowDays` (90, deliberately longer than the 42
-  the baseline uses and the 30 the analysis uses: those track who the person is
-  now, this needs enough intervals in the rare bands to have a median). Needs
-  `minimumGapSamples` (2) — one interval is not "you usually". Gaps over
-  `maximumGapHours` (14 days) are a layoff, not rest, and are dropped.
-- **Similar** — the median standard window for that band times
-  `AthleteProfile.prior`, so it moves with age, experience, weekly volume and
-  bounce-back. Shown on both tiers; it is not an estimate the app acts on.
-- **Yours** — the personalized window, **computed**, never
-  `standardHours * factor`. Same mistake `personalizedPreview` was fixed for.
-  Blurred on the free tier with the real number underneath, because a mocked-up
-  figure on a paywall is one someone will hold the app to.
+The fix is in the model rather than in the copy. `WorkoutProfile.costMultiplier`
+is `windowMultiplier` for every profile except `easy`, where it is 0.30 rather
+than zero, and the cost skips `minimumCountdownHours` — that floor exists so a
+*countdown* is not over before bedtime and has nothing to say about what forty
+minutes of walking cost. **Nothing downstream of the countdown reads it**:
+`producesCountdown`, `readyAt`, `totalHours`, the snapshot, the complication and
+the stacking chain are all still `hours`, so the guarantee the `easy` profile
+exists to make is untouched.
 
-Bands come from the *standard* scoring so a session does not jump rows the
-moment the user subscribes. Every band falls back to the canonical mid-band
-session on the real curve when there is no history in it, so the card is
-populated on first launch and reports `isExample`.
+It is persisted on `RecoveryStateRecord`, for the reason `carriedHours` is and
+after the same near-miss: a computed-published-rendered figure that never reaches
+the record rehydrates with History showing a walk as costing nothing while the
+app that wrote the record said otherwise. nil decodes as `hours`, which is the
+truthful legacy value both ways round.
+
+Today says the same thing in a sentence. The hero **always** narrates the last
+session — `"9h from your run 3h ago"`, `"2h from your walk 40m ago · active
+recovery, so nothing to wait out"` — including the two states that used to
+disown it. "Your ride 12h ago didn't start a countdown" told the user what the
+app declined to do rather than what it found, on a first launch, about the only
+workout they had come to see.
+
+### The screens are the Vitals shape now
+Total Calories and VO2 Max are one large figure on an otherwise empty screen, and
+they are the two in the fleet that read as finished products. Recharge's Today
+was a stack of eight cards with the countdown as the first of them rather than
+the whole of it.
+
+- **Three tabs**: Today, History, and Recharge+ — the paywall before purchase and
+  `RechargePlusView` after it, so the thing somebody bought keeps a place in the
+  navigation instead of dissolving into settings rows. **Settings is not a tab**;
+  it is a gear button on Today, which is what freed the third slot.
+- **The tab bar floats over the content.** `ZStack(alignment: .bottom)` plus
+  `.ignoresSafeArea(edges: .bottom)`. It was briefly given a layout row of its
+  own — `VStack { content; tabBar.background(Theme.background) }` — which paints
+  an opaque strip the width of the screen under the capsule and reads as a black
+  box with a pill inside it. The cost of overlaying is that every scrollable tab
+  must reserve room at rest: `tabBarClearance()`, applied **inside** each
+  `NavigationStack` (see below), and a `safeAreaInset` on the paywall, whose CTA
+  lives in its own bottom bar and cannot reserve its own.
+- **The third tab is built on first visit.** An opacity-zero `PaywallView`
+  sitting behind Today puts a second element with every one of its identifiers
+  into the accessibility tree, so `firstMatch` on the purchase button picks the
+  invisible one and then truthfully reports that it is not hittable. It also
+  stopped the paywall fetching products on every cold launch.
+- **Everything that explained the number moved to `EstimateDetailView`**, one
+  sheet reached from either the ring on Today or a row in History. Everything
+  that configured it moved to Settings. The App Review 1.4.1 disclaimer went with
+  the explanation, which is where somebody asking what the number means ends up.
+
+### The onboarding copy is centred, and it was not before
+`OnboardingScroll` is the container every page uses. The previous version wrapped
+its content in a plain `ScrollView` whose inner stack carried `minHeight: 0`, so
+the two `Spacer`s meant to centre it had nothing to expand into and collapsed:
+the title sat against the top of the screen, the buttons against the bottom, and
+every page whose copy was short — most of them — had a hand's width of nothing in
+between. That is the "lot of blank space" the flow was reported for.
+
+The scroll view is not optional even so: at an accessibility content size the
+icon, title and message are several times taller than the screen, and a fixed
+`VStack` there clipped them. `minHeight: proxy.size.height` is what makes one
+container do both jobs. The slack is deliberately **not** split evenly — the
+lower spacer is capped at 32pt so the surplus goes upward and the copy always
+comes to rest just above the decision.
+
+### The pitch is two numbers
+Average recovery time, an arrow, theirs. That is the whole of it, on the
+onboarding offer page, the passive half sheet, Today's one card, and the Settings
+row. Both figures come from `RecoveryEngine.personalizedPreview`, computed on
+both tiers so no surface ever has to invent one, and the free tier blurs the
+right-hand figure rather than replacing it — a mocked-up number on a paywall is a
+number somebody will hold the app to.
+
+It replaced a three-column rest-pattern table (You / Similar / Yours, per
+intensity band) that answered the same question with nine figures, three of them
+measurements, three estimates and three blurred. `RestPattern` and
+`RestPatternCard` are deleted.
+
+Under it, on the onboarding page, is `HealthIngestSummary`: every reading Health
+actually supplied, printed back. That is the evidence the number on the right came
+from somewhere, and it is more persuasive than a feature list because the user
+recognises their own data in it. **A row only exists when there is a real value
+behind it** — no "not available", no em dashes. A receipt for something that was
+not read is not evidence of anything.
+
+The passive offer is a **half sheet** (`TrialOfferSheet.detentHeight`), as in
+Vitals: the thing it is arguing about is the countdown on the screen behind it,
+and a full-screen cover hides the one piece of evidence the pitch depends on.
 
 ### The countdown timeline
 The one piece with no precedent in the fleet. Every other complication here
@@ -652,11 +757,16 @@ only if mirroring is decided against on purpose.
 `RootView` draws a translucent capsule over the content rather than a system
 `TabView`, so every scrollable tab has to reserve room for it at rest. Each
 screen used to reserve its own, and it went the way hand-copied numbers go:
-Today padded 72, History padded 96, and `SettingsView`, a `Form` with no
-padding to copy onto, padded nothing at all, so the capsule sat on top of the
-last rows of the model and profile sections. `TabBarMetrics` holds the geometry
-once and `tabBarClearance()` applies it, so the bar and the room made for it come
-from the same constants.
+Today padded 72, History padded 96, and Settings, a `Form` with no padding to
+copy onto, padded nothing at all. `TabBarMetrics` holds the geometry once and
+`tabBarClearance()` applies it, so the bar and the room made for it come from the
+same constants.
+
+**Do not "fix" the overlay by giving the bar its own layout row.** That was tried
+— `VStack { content; tabBar.background(Theme.background) }` — and it removes the
+clearance problem by painting an opaque strip the full width of the screen under
+the capsule, which reads as a black box with a pill inside it and is the reason
+this shell looked wrong next to Vitals.
 
 **The modifier goes inside each `NavigationStack`, not around it.** One call in
 `RootView.tabContent` would cover all three tabs and does not work: a
@@ -669,15 +779,16 @@ An inset rather than bottom padding, so the scroll-behind look survives: it move
 where the content comes to rest, not the scroll view's frame, so passing content
 still runs under the capsule and only the last row is guaranteed to clear it.
 
-`testTheTabBarDoesNotCoverTheBottomOf{Today,History,Settings}` assert frames, and
-writing them was most of the work. Three traps, all of which produce a green test
-that checks nothing: an element scrolled off-screen reports a frame hundreds of
-points below the window, so `exists` is not "visible"; the tab bar's own labels
-are elements too, so "the lowest thing on screen" measures the bar against
-itself; and a `#if DEBUG` section sits below the Settings disclaimer, so
-asserting on the disclaimer passes in a test build whether or not the fix is
-there. Settings measures the bottom-most element of the `Form`, the other two
-name their genuinely-last row.
+`testTheTabBarDoesNotCoverTheBottomOf{Today,History,RechargePlus}` and
+`testTheTabBarDoesNotCoverTheUpgradeTabsCTA` assert frames, and writing them was
+most of the work. Three traps, all of which produce a green test that checks
+nothing: an element scrolled off-screen reports a frame hundreds of points below
+the window, so `exists` is not "visible"; the tab bar's own labels are elements
+too, so "the lowest thing on screen" measures the bar against itself; and an
+opacity-zero tab is still in the accessibility tree, so `firstMatch` on a button
+that exists on two screens can pick the invisible one and then truthfully report
+that it is not hittable. Each test names its genuinely-last row. The Settings
+variant is gone with the Settings tab.
 
 ### A pinned header has to mask what scrolls behind it
 History pins its day headers (`pinnedViews: [.sectionHeaders]`), so the outgoing
@@ -704,9 +815,9 @@ the top row on all three tabs; that is Apple's default and a design decision to
 change, not a defect.
 
 ### Onboarding reads Health before it asks anything
-The flow is welcome → Health → what Health found → the gap questions → what the
-number means → the tier decision. Two structural rules, both of which were bugs
-first:
+The flow is welcome → Health → what Health gave us → the gap questions → what the
+number means → the tier decision. Three structural rules, all of which were bugs
+first (the third is in "The onboarding copy is centred" above):
 
 - **The buttons never move**, the trial offer included. Every page ends in the
   same `OnboardingActions` block, which reserves *both* variable rows: the
@@ -729,11 +840,32 @@ first:
   is measured against the longest possible flow until Health answers, so it can
   only ever jump forward.
 
-`HKCharacteristicType(.dateOfBirth)` and `.biologicalSex` are in `readTypes`
-because age drives the heart-rate ceiling on both tiers. Same rule as before:
-nothing goes in that sheet unless something the user can see consumes it. VO2
-max is still out — the evidence tying it to *recovery rate* is weak, so it does
-not earn a row in the permission sheet.
+**The rule for `readTypes` has not changed; what changed is that the app
+consumes more and now shows its working.** Nothing goes in that sheet unless
+something the user can see uses it — and `HealthIngestSummary` is what makes that
+literally checkable, because every type in the set has a line in the receipt and
+a row with no consumer would be a row with no line. Eleven types:
+
+| Type | Consumed by |
+|---|---|
+| workouts, heart rate | the session load, and the *observed* maximum heart rate |
+| active energy | the energy path when heart rate is missing |
+| resting HR, HRV | overnight context, and the rebound signal |
+| sleep, respiratory rate | overnight context |
+| heart-rate recovery | the kinetics signal in `PersonalRecoveryModel` |
+| VO2 max | `AthleteProfile.fitnessScale`, on both tiers |
+| body mass | the energy path's mass residual |
+| date of birth, sex | the age-predicted ceiling, when nothing was measured |
+
+VO2 max was out of this set once, on the grounds that the evidence tying it to
+*recovery rate* is weak. That is still true and it is not what it is used for: it
+sets the training **level** the session is compared against, which is what
+Firstbeat's activity class does at setup on a Garmin.
+
+The readout page prints those readings rather than the app's summary of them
+("mostly endurance work", "age 34"). The two do different jobs: a summary asks to
+be believed, and a list of the user's own numbers is evidence. It is also the
+honest counterpart to a sheet asking for eleven types.
 
 The last onboarding decision is "Continue with Recharge+" or "Get Started". It is
 not a "Not now": declining there is choosing the free tier and starting to use
@@ -808,7 +940,10 @@ StoreKit product identifiers are bundle-prefixed
   present, and a review prompt that never appeared has still spent the one
   chance the funnel gets. The trial offer additionally needs the 14-day
   `passiveTrialOfferAllowed` cooldown, a resolved `customerInfo`, and a loaded
-  package.
+  package. A locked surface anywhere in the app posts
+  `.rechargeUpgradeRequested` rather than raising its own sheet, so that
+  ordering is the only ordering; a subscriber's tap on the same card posts
+  `.rechargePlusRequested` and lands on the tab instead.
 - **What a screen may explain:** `RecoveryResolver.current` keeps returning a
   stale estimate so history and the snapshot have something to carry;
   `RecoveryResolver.explanation` is what a screen showing the phase may narrate.
@@ -816,7 +951,8 @@ StoreKit product identifiers are bundle-prefixed
   window beside a "no workout yet" hero.
 - **Freshness is user-visible.** A failed HealthKit query returns nothing rather
   than an empty store, so `RecoveryEngine.lastSuccessfulImport` /
-  `lastImportFailed` drive the Today footer and the Settings Health status row.
+  `lastImportFailed` drive the line under Today's date and the Settings Health
+  status row.
   iOS never reports read authorization, so that row reports what Health
   *returned*, never which categories were granted.
 - **Paywall verification:** it renders empty under plain `simctl launch` — no
@@ -830,16 +966,43 @@ StoreKit product identifiers are bundle-prefixed
 - **A fixture that agrees with itself proves nothing.**
   `ScreenshotFixtures.history` never passed `standardHours`, so it defaulted to
   `hours` and every two-tier comparison in the app rendered the same number
-  twice on every capture. The rest-pattern card's whole third column — the one
-  the upgrade sells — read identically to the free column in `premiumActive`.
-  The fixture now carries both figures explicitly, spread the way the fixture
-  user's own analysis implies (0.86 multiplier *and* a personal baseline above
-  the population reference). If you add a field that a conversion surface
-  compares, put a real difference in the fixture or the capture will show the
-  app doing nothing.
+  twice on every capture. The comparison the upgrade sells read identically on
+  both sides in `premiumActive`. The fixture now carries both figures
+  explicitly, spread the way the fixture user's own analysis implies (0.86
+  multiplier *and* a personal baseline above the population reference), plus a
+  `recoveryCostHours` that differs from `hours` on the two rows where it has to
+  (a walk, and a spin under the quiet threshold) and a filled-in
+  `healthIngest`. If you add a field that a conversion surface compares, put a
+  real difference in the fixture or the capture will show the app doing nothing.
+- **Two ways to look at the app, and they answer different questions.**
+  Screenshot mode hands `RecoveryEngine` a fixed array of finished estimates, so
+  it is fast, reproducible, and proves nothing about the import path.
+  `RECHARGE_SEED_HEALTH=1` writes a real training history into the simulator's
+  Health store (`Recharge/Debug/HealthSeeder.swift`, DEBUG only, requests
+  **write** authorization the real app never asks for) and everything downstream
+  runs for real: classification, coverage, the observed maximum, the quiet
+  threshold, day grouping, stacking, the 30-day analysis.
+  `SeededWalkthroughTests` drives it, and **it is skipped by default because it
+  does not currently work**: the app blocks inside `seedIfRequested()` and the
+  tab bar never appears, on a clean install, at every seed window tried. The
+  failure takes the same 364 seconds each time — the test's own timeout, not the
+  seeder's — so the size of the write is not the problem, and nothing reaches the
+  device log at all, so it is hung rather than erroring. `HKWorkoutBuilder` never
+  resuming a continuation under the simulator's HealthKit daemon is the leading
+  candidate. Set `RECHARGE_RUN_SEEDED_WALKTHROUGH=1` to work on it.
+
+  Two things that are already known and cost an hour each: HealthKit **never
+  re-asks** once a permission sheet has been answered, so a run that was denied
+  write access stays denied until the app is uninstalled (`xcrun simctl uninstall
+  <udid> com.jackwallner.recovery`); and tapping "Turn On All" is not the same as
+  everything being on — the first version of that test dismissed the sheet with
+  every switch off, passed, and the only evidence was one line in the device log
+  reading `Seeding failed: Not authorized`.
 - **Screenshot mode:** `RECHARGE_SCREENSHOT_MODE=1` +
   `RECHARGE_SCREENSHOT_SCENE=<recovering|ready|history|settings|paywall|premiumActive|onboarding|watchRecovering|watchReady>`.
-  Bypasses HealthKit entirely and seeds `ScreenshotFixtures`.
+  Bypasses HealthKit entirely and seeds `ScreenshotFixtures`. The `settings`
+  scene raises the Settings **sheet** from Today, because Settings stopped being
+  a tab; `RedesignCaptureTests` walks every screen this way in about a minute.
 - `RevenueCatConfig.apiKey` is a placeholder in the repo. `scripts/testflight.sh`
   substitutes `RC_PUBLIC_KEY` from `~/.recovery_credentials` for the archive and
   restores the placeholder on exit, so the key never lands in a commit. Never
@@ -914,6 +1077,18 @@ StoreKit product identifiers are bundle-prefixed
    constants first. It is the largest remaining source of sensor spread and the
    thing to do first when the model is next opened. `RecoveryMatrixTests` will
    show the improvement directly.
+4. **`costMultiplier` for `easy` is 0.30 and it is a first-pass value.** It is
+   the only constant in the model fitted to nothing at all: `windowMultiplier`
+   for the other three profiles is anchored through the Garmin bands, and easy
+   has no band because Garmin gives it no countdown either. What it has to
+   satisfy is weak — a 40-minute walk should read as a small number rather than
+   as zero — and it satisfies that at almost any value between 0.2 and 0.4.
+5. **The 90th-percentile observed maximum heart rate has never been checked
+   against a real store with a known maximum.** The two guards around it are
+   sound in opposite directions (a spike cannot raise it, a quiet month cannot
+   lower it) and the choice between the 90th and, say, the 95th is a guess about
+   how often somebody's hardest sessions are genuinely maximal. Worth revisiting
+   the first time a user reports an intensity reading that looks wrong.
 
 ---
 Shared iOS conventions (build, simulator, release/TestFlight, ASC key, signing,

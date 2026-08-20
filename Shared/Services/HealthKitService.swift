@@ -23,16 +23,29 @@ public final class HealthKitService: ObservableObject {
     /// Requested in a single sheet. Splitting them across prompts is what makes
     /// HealthKit silently suppress the second one.
     ///
-    /// Every type here has to be read by something the user can see, or the
-    /// permission sheet asks for more than the app does. VO2 max was in this set
-    /// and nothing consumed it, which put an unexplained Cardio Fitness row in
-    /// front of exactly the audience that reads the sheet carefully. Add it back
-    /// only alongside a feature that uses it and copy that names it.
-    /// Date of birth and biological sex earn their place the same way: age sets
-    /// the age-predicted maximum heart rate every session's intensity is
-    /// measured against, and sex selects the formula (Gulati for women, Tanaka
-    /// otherwise). Both are consumed on **both** tiers, and reading them is what
-    /// lets onboarding stop asking for what the phone already knows.
+    /// **Every type here is read by something the user can see, and the
+    /// ingest summary is what makes that literally true.** The rule used to be
+    /// enforced by keeping the set small — VO2 max was removed once because
+    /// nothing consumed it, which had put an unexplained Cardio Fitness row in
+    /// front of exactly the audience that reads the sheet carefully. The rule
+    /// has not changed; what changed is that the app now consumes more, and
+    /// `HealthIngestSummary` prints every one of these back to the user as the
+    /// evidence the estimate is built on. A row here with no consumer and no
+    /// line in that summary is still a bug.
+    ///
+    /// What each one buys:
+    ///
+    /// | Type | Consumed by |
+    /// |---|---|
+    /// | workouts, heart rate | the session load, and the *observed* maximum heart rate |
+    /// | active energy | the energy path when heart rate is missing |
+    /// | resting HR, HRV | overnight context, and the rebound signal |
+    /// | sleep | overnight context |
+    /// | respiratory rate | overnight context |
+    /// | heart-rate recovery | the kinetics signal in `PersonalRecoveryModel` |
+    /// | VO2 max | `AthleteProfile.fitnessScale`, on both tiers |
+    /// | body mass | the energy path's mass residual |
+    /// | date of birth, sex | the age-predicted ceiling, when nothing was measured |
     public static var readTypes: Set<HKObjectType> {
         [
             HKObjectType.workoutType(),
@@ -40,6 +53,10 @@ public final class HealthKitService: ObservableObject {
             HKQuantityType(.restingHeartRate),
             HKQuantityType(.heartRateVariabilitySDNN),
             HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.vo2Max),
+            HKQuantityType(.bodyMass),
+            HKQuantityType(.heartRateRecoveryOneMinute),
+            HKQuantityType(.respiratoryRate),
             HKCategoryType(.sleepAnalysis),
             HKCharacteristicType(.dateOfBirth),
             HKCharacteristicType(.biologicalSex)
@@ -186,6 +203,9 @@ public final class HealthKitService: ObservableObject {
         public let durationMinutes: Double
         public let activeEnergy: Double?
         public let averageHeartRate: Double?
+        /// Highest heart-rate sample seen inside the session. The raw material
+        /// for an *observed* maximum, which beats an age-predicted one.
+        public let peakHeartRate: Double?
         public let heartRateCoverage: Double
         public let sourceName: String
     }
@@ -244,6 +264,7 @@ public final class HealthKitService: ObservableObject {
                 activeEnergy: workout.statistics(for: HKQuantityType(.activeEnergyBurned))?
                     .sumQuantity()?.doubleValue(for: .kilocalorie()),
                 averageHeartRate: heartRate.average,
+                peakHeartRate: heartRate.peak,
                 heartRateCoverage: heartRate.coverage,
                 sourceName: workout.sourceRevision.source.name
             ))
@@ -257,9 +278,24 @@ public final class HealthKitService: ObservableObject {
     /// Coverage is the load model's honesty check: a lifting session where the
     /// optical sensor dropped out returns a plausible-looking average over three
     /// minutes of a sixty-minute session, and TRIMP built on that is a lie.
-    /// Apple Watch samples roughly every five seconds during a workout, so we
-    /// treat each sample as covering that much of the clock.
-    private func heartRateSummary(for workout: HKWorkout) async -> (average: Double?, coverage: Double) {
+    ///
+    /// Each sample is treated as covering the clock until the next one, and the
+    /// per-session **median** gap is what that interval is measured as. It used
+    /// to be a hardcoded five seconds, on the grounds that an Apple Watch
+    /// samples roughly that often during a workout. Which it does — and nothing
+    /// else does. A third-party app, a chest strap, a backfilled import, or a
+    /// Watch in power-saving mode all write at their own cadence, and every one
+    /// of them was being read as having dropped out for five sixths of the
+    /// session. That is not a small error: below 50% coverage the model stops
+    /// believing heart rate at all and falls through to energy, so a legitimate
+    /// 30-second cadence turned every recorded session into an inferred one.
+    ///
+    /// The median rather than the mean, because a genuine dropout in the middle
+    /// of a session is one enormous gap, and averaging it in would credit the
+    /// session with the coverage it actually lost.
+    private func heartRateSummary(
+        for workout: HKWorkout
+    ) async -> (average: Double?, peak: Double?, coverage: Double) {
         let bpm = HKUnit.count().unitDivided(by: .minute())
         let predicate = HKQuery.predicateForSamples(
             withStart: workout.startDate, end: workout.endDate, options: .strictStartDate
@@ -282,16 +318,59 @@ public final class HealthKitService: ObservableObject {
             store.execute(query)
         }
 
-        guard !samples.isEmpty, workout.duration > 0 else { return (nil, 0) }
+        guard !samples.isEmpty, workout.duration > 0 else { return (nil, nil, 0) }
 
-        let values = samples.map { $0.quantity.doubleValue(for: bpm) }
+        let sorted = samples.sorted { $0.startDate < $1.startDate }
+        let values = sorted.map { $0.quantity.doubleValue(for: bpm) }
         let average = values.reduce(0, +) / Double(values.count)
 
-        let assumedSampleInterval: TimeInterval = 5
-        let covered = Double(samples.count) * assumedSampleInterval
+        // The 98th percentile rather than the literal maximum. A single optical
+        // spike of 210 bpm in a lifting session is an artefact, and it would
+        // otherwise become this person's permanent heart-rate ceiling and
+        // quietly flatten every intensity reading they ever get.
+        let peak = Self.percentile(0.98, of: values)
+
+        let covered = Double(sorted.count) * Self.sampleInterval(of: sorted)
         let coverage = min(covered / workout.duration, 1)
 
-        return (average, coverage)
+        return (average, peak, coverage)
+    }
+
+    /// How much of the clock one heart-rate sample stands for, from the median
+    /// gap between consecutive samples.
+    ///
+    /// Bounded at both ends. Below a second is a burst of samples sharing a
+    /// timestamp, which would report a whole session as a fraction of a second
+    /// of coverage; above a minute the source is writing summaries rather than a
+    /// trace, and treating one of those as covering ten minutes of a workout
+    /// would manufacture the coverage this figure exists to doubt.
+    static func sampleInterval(of sorted: [HKQuantitySample]) -> TimeInterval {
+        guard sorted.count > 1 else { return defaultSampleInterval }
+        var gaps: [TimeInterval] = []
+        gaps.reserveCapacity(sorted.count - 1)
+        for (previous, next) in zip(sorted, sorted.dropFirst()) {
+            let gap = next.startDate.timeIntervalSince(previous.startDate)
+            if gap > 0 { gaps.append(gap) }
+        }
+        guard let median = percentile(0.5, of: gaps) else { return defaultSampleInterval }
+        return min(max(median, 1), 60)
+    }
+
+    /// What a lone sample is assumed to stand for: an Apple Watch's in-workout
+    /// cadence, which is the only cadence a single sample gives no evidence
+    /// about.
+    static let defaultSampleInterval: TimeInterval = 5
+
+    /// Linear-interpolated percentile over an unsorted sample.
+    static func percentile(_ fraction: Double, of values: [Double]) -> Double? {
+        let sorted = values.filter { $0.isFinite && $0 > 0 }.sorted()
+        guard !sorted.isEmpty else { return nil }
+        guard sorted.count > 1 else { return sorted[0] }
+        let position = min(max(fraction, 0), 1) * Double(sorted.count - 1)
+        let lower = Int(position.rounded(.down))
+        let upper = min(lower + 1, sorted.count - 1)
+        let weight = position - Double(lower)
+        return sorted[lower] + (sorted[upper] - sorted[lower]) * weight
     }
 
     // MARK: - Context signals
@@ -306,6 +385,90 @@ public final class HealthKitService: ObservableObject {
 
     public func fetchHeartRateVariability(days: Int = 30) async -> [(date: Date, value: Double)] {
         await quantitySeries(type: HKQuantityType(.heartRateVariabilitySDNN), unit: .secondUnit(with: .milli), days: days)
+    }
+
+    /// Breaths per minute overnight. A fourth overnight context signal beside
+    /// sleep, resting heart rate and HRV: an elevated respiratory rate is one of
+    /// the earlier markers that the previous day has not been absorbed.
+    public func fetchRespiratoryRate(days: Int = 30) async -> [(date: Date, value: Double)] {
+        await quantitySeries(
+            type: HKQuantityType(.respiratoryRate),
+            unit: HKUnit.count().unitDivided(by: .minute()),
+            days: days
+        )
+    }
+
+    /// How far the heart rate fell in the minute after a workout ended, in bpm.
+    ///
+    /// The closest thing a wrist sensor produces to a direct reading of
+    /// parasympathetic reactivation, which is the mechanism the whole model is
+    /// guessing at from load. Watch only writes it for some workout types, so it
+    /// is a bonus signal, never a requirement.
+    public func fetchHeartRateRecovery(days: Int = PersonalRecoveryModel.windowDays) async -> [(date: Date, value: Double)] {
+        await quantitySeries(
+            type: HKQuantityType(.heartRateRecoveryOneMinute),
+            unit: HKUnit.count().unitDivided(by: .minute()),
+            days: days
+        )
+    }
+
+    /// The most recent VO2 max Health holds, in ml/kg/min.
+    ///
+    /// A *measurement* of training level, which is why it reaches both tiers:
+    /// it goes into `AthleteProfile.fitnessScale`, the same place the two
+    /// training-level questions go, and for the same reason. Apple only writes
+    /// it after outdoor walks/runs with the Watch on, so plenty of users have
+    /// none, and the questionnaire still has to work on its own.
+    public func fetchVO2Max() async -> Double? {
+        await latestQuantity(
+            type: HKQuantityType(.vo2Max),
+            unit: HKUnit(from: "ml/kg*min"),
+            days: 180
+        )
+    }
+
+    /// The most recent body mass, in kilograms.
+    ///
+    /// The energy path's known residual: HealthKit's active energy already
+    /// accounts for weight, so a heavier person burns more at the same fraction
+    /// of heart-rate reserve and the inference over-reads them. This is what
+    /// closes it, and it is why body mass is in the permission sheet.
+    public func fetchBodyMass() async -> Double? {
+        await latestQuantity(
+            type: HKQuantityType(.bodyMass),
+            unit: .gramUnit(with: .kilo),
+            days: 365
+        )
+    }
+
+    /// Newest sample of a quantity type, or nil when there is none in range.
+    private func latestQuantity(type: HKQuantityType, unit: HKUnit, days: Int) async -> Double? {
+        #if DEBUG
+        if ScreenshotConfig.isEnabled { return nil }
+        #endif
+        guard HKHealthStore.isHealthDataAvailable() else { return nil }
+        let predicate = HKQuery.predicateForSamples(
+            withStart: DateHelpers.daysAgo(days), end: .now, options: .strictEndDate
+        )
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: type,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sort]
+            ) { _, samples, error in
+                if let error {
+                    healthLogger.error("Latest quantity query failed: \(String(describing: error), privacy: .public)")
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let value = (samples as? [HKQuantitySample])?.first?.quantity.doubleValue(for: unit)
+                continuation.resume(returning: value.flatMap { $0.isFinite && $0 > 0 ? $0 : nil })
+            }
+            store.execute(query)
+        }
     }
 
     private func quantitySeries(

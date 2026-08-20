@@ -38,6 +38,14 @@ public final class RecoveryEngine: ObservableObject {
     /// True when the most recent workout read did not happen at all.
     @Published public private(set) var lastImportFailed = false
 
+    /// What Health actually gave us, ready to be printed back to the user.
+    ///
+    /// The app asks for eleven types in one sheet; this is the receipt. Rebuilt
+    /// on every rescore rather than on every import, because a couple of its
+    /// rows (the observed heart-rate ceiling, the median one-minute recovery)
+    /// are products of the analysis rather than raw readings.
+    @Published public private(set) var healthIngest = HealthIngestSummary()
+
     /// The Recharge+ thirty-day analysis behind the current estimates.
     ///
     /// Computed even on the free tier, where it changes no number: the
@@ -58,19 +66,6 @@ public final class RecoveryEngine: ObservableObject {
     /// the same number twice and the conversion card vanished, on exactly the
     /// screens whose whole argument is that the number changes.
     @Published public private(set) var personalizedPreview = PersonalizedPreview.reference(factor: 1)
-
-    /// One row per intensity band: the gap the person actually leaves, what the
-    /// standard table gives someone with their answers, and what Recharge+ makes
-    /// of it.
-    ///
-    /// Computed on both tiers for the same reason `personalAnalysis` is. It is
-    /// also the only place in the app where "training more means shorter windows"
-    /// is visible: both personal paths already work that way — a bigger median
-    /// session makes the same workout a smaller multiple of it, and
-    /// `PersonalRecoveryModel.densityFactor` shrinks the multiplier as chronic
-    /// load rises — but a lone countdown has nothing to be shorter *than*, so
-    /// nobody could see it.
-    @Published public private(set) var restPattern: [RestPattern.Row] = []
 
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
@@ -94,7 +89,7 @@ public final class RecoveryEngine: ObservableObject {
 
         await importWorkouts()
         await importContext()
-        updateAthleteProfileFromHealth()
+        await updateAthleteProfileFromHealth()
         rescore()
         publish()
         lastRefresh = .now
@@ -106,15 +101,41 @@ public final class RecoveryEngine: ObservableObject {
     /// Safe to call on every refresh: `mergeHealthDerivedProfile` never
     /// overwrites an answer the user typed, and publishes nothing when nothing
     /// changed.
-    public func updateAthleteProfileFromHealth() {
+    public func updateAthleteProfileFromHealth() async {
         let characteristics = HealthKitService.shared.fetchCharacteristics()
         let derived = derivedTrainingProfile()
+        async let vo2 = HealthKitService.shared.fetchVO2Max()
+        async let mass = HealthKitService.shared.fetchBodyMass()
         RechargeSettings.shared.mergeHealthDerivedProfile(
             age: characteristics.age,
             sex: characteristics.sex,
             weeklyVolume: derived.volume,
-            primaryProfile: derived.primaryProfile
+            primaryProfile: derived.primaryProfile,
+            vo2Max: await vo2,
+            observedMaxHeartRate: observedMaxHeartRate(),
+            bodyMassKilograms: await mass
         )
+    }
+
+    /// The heart-rate ceiling the person's own workouts support.
+    ///
+    /// Two percentiles, deliberately. `HealthKitService` already takes the 98th
+    /// percentile *within* a session, which drops the single optical artefact;
+    /// this takes the 90th percentile *across* sessions, which drops the session
+    /// that was one long artefact. What survives both is a figure several
+    /// different hard efforts agree on, which is the only kind of observation
+    /// that should be allowed to redefine every intensity reading the user will
+    /// ever get.
+    ///
+    /// Needs a real sample before it says anything: four sessions with usable
+    /// heart-rate coverage. `mergeHealthDerivedProfile` then only ever lets the
+    /// stored figure rise, so a quiet month cannot lower somebody's ceiling.
+    private func observedMaxHeartRate() -> Double? {
+        let peaks = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
+            .filter { $0.heartRateCoverage >= SessionLoadCalculator.minimumHeartRateCoverage }
+            .compactMap { $0.peakHeartRate > 0 ? $0.peakHeartRate : nil }
+        guard peaks.count >= 4 else { return nil }
+        return HealthKitService.percentile(0.90, of: peaks)
     }
 
     /// Weekly session count and dominant workout type, from the imported
@@ -180,6 +201,7 @@ public final class RecoveryEngine: ObservableObject {
                 // but never touch the user's own override or effort answer.
                 record.activeEnergy = workout.activeEnergy ?? record.activeEnergy
                 record.averageHeartRate = workout.averageHeartRate ?? record.averageHeartRate
+                record.peakHeartRate = workout.peakHeartRate ?? record.peakHeartRate
                 record.heartRateCoverage = workout.heartRateCoverage
                 record.profileRaw = profile.rawValue
                 record.activityLabel = label
@@ -192,6 +214,7 @@ public final class RecoveryEngine: ObservableObject {
                     durationMinutes: workout.durationMinutes,
                     activeEnergy: workout.activeEnergy ?? 0,
                     averageHeartRate: workout.averageHeartRate ?? 0,
+                    peakHeartRate: workout.peakHeartRate ?? 0,
                     heartRateCoverage: workout.heartRateCoverage,
                     profile: profile,
                     sourceName: workout.sourceName,
@@ -219,23 +242,46 @@ public final class RecoveryEngine: ObservableObject {
         async let restingSeries = HealthKitService.shared.fetchRestingHeartRate()
         async let hrvSeries = HealthKitService.shared.fetchHeartRateVariability()
         async let sleepByDay = HealthKitService.shared.fetchSleepHours()
+        async let respiratorySeries = HealthKitService.shared.fetchRespiratoryRate()
+        async let recoverySeries = HealthKitService.shared.fetchHeartRateRecovery()
 
         let resting = await restingSeries
         let hrv = await hrvSeries
         let sleep = await sleepByDay
-        guard !resting.isEmpty || !hrv.isEmpty || !sleep.isEmpty else { return }
+        let respiratory = await respiratorySeries
+        let recovery = await recoverySeries
+        guard !resting.isEmpty || !hrv.isEmpty || !sleep.isEmpty
+                || !respiratory.isEmpty || !recovery.isEmpty else { return }
 
-        var byDay: [String: (resting: Double, hrv: Double, sleep: Double)] = [:]
+        typealias DayValues = (resting: Double, hrv: Double, sleep: Double, respiratory: Double, recovery: Double)
+        let zero: DayValues = (0, 0, 0, 0, 0)
+        var byDay: [String: DayValues] = [:]
         for point in resting {
             let key = DateHelpers.dayKey(for: point.date)
-            byDay[key, default: (0, 0, 0)].resting = point.value
+            byDay[key, default: zero].resting = point.value
         }
         for point in hrv {
             let key = DateHelpers.dayKey(for: point.date)
-            byDay[key, default: (0, 0, 0)].hrv = point.value
+            byDay[key, default: zero].hrv = point.value
         }
         for (key, hours) in sleep {
-            byDay[key, default: (0, 0, 0)].sleep = hours
+            byDay[key, default: zero].sleep = hours
+        }
+        // Health writes several respiratory-rate samples a night; the median of
+        // the night would be better and the last one is what every other series
+        // here uses, so keep the shapes the same and let the day-to-day
+        // comparison absorb it.
+        for point in respiratory {
+            let key = DateHelpers.dayKey(for: point.date)
+            byDay[key, default: zero].respiratory = point.value
+        }
+        // The *best* of the day, not the last. Heart-rate recovery is only
+        // meaningful after a session hard enough to have somewhere to fall from,
+        // and an easy evening walk logged after a hard morning session would
+        // otherwise overwrite the reading that meant something.
+        for point in recovery {
+            let key = DateHelpers.dayKey(for: point.date)
+            byDay[key, default: zero].recovery = max(byDay[key, default: zero].recovery, point.value)
         }
 
         let existing = (try? context.fetch(FetchDescriptor<DailyContextRecord>())) ?? []
@@ -247,13 +293,17 @@ public final class RecoveryEngine: ObservableObject {
                 if values.resting > 0 { record.restingHeartRate = values.resting }
                 if values.hrv > 0 { record.heartRateVariability = values.hrv }
                 if values.sleep > 0 { record.sleepHours = values.sleep }
+                if values.respiratory > 0 { record.respiratoryRate = values.respiratory }
+                if values.recovery > 0 { record.heartRateRecovery = values.recovery }
                 record.lastUpdated = .now
             } else {
                 let record = DailyContextRecord(
                     date: date,
                     sleepHours: values.sleep,
                     restingHeartRate: values.resting,
-                    heartRateVariability: values.hrv
+                    heartRateVariability: values.hrv,
+                    respiratoryRate: values.respiratory,
+                    heartRateRecovery: values.recovery
                 )
                 context.insert(record)
                 byKey[key] = record
@@ -303,12 +353,7 @@ public final class RecoveryEngine: ObservableObject {
                 profile: settings.athleteProfile, sessions: [], days: [], now: now
             )
             personalizedPreview = .reference(factor: personalAnalysis.factor)
-            // Every row falls back to the canonical mid-band session, so the
-            // comparison is on screen from the first launch rather than after
-            // the first workout.
-            restPattern = RestPattern.rows(
-                sessions: [], profile: settings.athleteProfile, now: now
-            )
+            rebuildHealthIngest(workouts: [], contexts: [], settings: settings)
             return
         }
 
@@ -318,6 +363,7 @@ public final class RecoveryEngine: ObservableObject {
         let contextByKey = Dictionary(contexts.map { ($0.dateKey, $0) }, uniquingKeysWith: { first, _ in first })
         let restingBaseline = median(contexts.map(\.restingHeartRate).filter { $0 > 0 })
         let hrvBaseline = median(contexts.map(\.heartRateVariability).filter { $0 > 0 })
+        let respiratoryBaseline = median(contexts.map(\.respiratoryRate).filter { $0 > 0 })
 
         let existingStates = ((try? context.fetch(FetchDescriptor<RecoveryStateRecord>())) ?? [])
         var statesByID = Dictionary(existingStates.map { ($0.sessionID, $0) }, uniquingKeysWith: { first, _ in first })
@@ -373,7 +419,8 @@ public final class RecoveryEngine: ObservableObject {
                 PersonalRecoveryModel.DayPoint(
                     date: $0.date,
                     restingHeartRate: $0.restingHeartRate > 0 ? $0.restingHeartRate : nil,
-                    heartRateVariability: $0.heartRateVariability > 0 ? $0.heartRateVariability : nil
+                    heartRateVariability: $0.heartRateVariability > 0 ? $0.heartRateVariability : nil,
+                    heartRateRecovery: $0.heartRateRecovery > 0 ? $0.heartRateRecovery : nil
                 )
             },
             now: now
@@ -388,7 +435,6 @@ public final class RecoveryEngine: ObservableObject {
         // and a later session must never be stacked on a stale window.
         var personalizedReadyAt: Date?
         var preview: PersonalizedPreview?
-        var patternSessions: [RestPattern.Session] = []
 
         // Pass two: the estimate the user actually gets. On the free tier that is
         // the standard one already computed — no personal baseline, no overnight
@@ -412,7 +458,8 @@ public final class RecoveryEngine: ObservableObject {
                         workout: workout,
                         contextByKey: contextByKey,
                         restingBaseline: restingBaseline,
-                        hrvBaseline: hrvBaseline
+                        hrvBaseline: hrvBaseline,
+                        respiratoryBaseline: respiratoryBaseline
                     )
                     : .empty,
                 calibration: settings.calibrationFactor,
@@ -432,29 +479,6 @@ public final class RecoveryEngine: ObservableObject {
                     standardHours: standardEstimates[index].hours,
                     personalizedHours: personalized.hours,
                     isExample: false
-                )
-            }
-
-            // Banded by the *standard* category so a session does not jump rows
-            // the moment the user subscribes, and carrying both windows because
-            // deriving one from the other is exactly the shortcut that made
-            // `personalizedPreview` understate the difference.
-            if standardEstimates[index].producesCountdown {
-                patternSessions.append(
-                    RestPattern.Session(
-                        id: session.id,
-                        endDate: session.endDate,
-                        profile: session.profile,
-                        band: standardEstimates[index].category,
-                        // Totals, not session costs: this card compares the gaps
-                        // the person actually leaves against the windows the app
-                        // actually gave them, and a stacked window is what they
-                        // were given. The *band* still comes from the session's
-                        // own standard category, so a double session does not
-                        // migrate to a harder row than it earned.
-                        standardHours: standardEstimates[index].totalHours,
-                        personalizedHours: personalized.totalHours
-                    )
                 )
             }
 
@@ -521,11 +545,7 @@ public final class RecoveryEngine: ObservableObject {
             personalizedPreview = reference.isVisiblyDifferent ? reference : (preview ?? reference)
         }
 
-        restPattern = RestPattern.rows(
-            sessions: patternSessions,
-            profile: settings.athleteProfile,
-            now: now
-        )
+        rebuildHealthIngest(workouts: workouts, contexts: contexts, settings: settings)
 
         estimates = results.sorted { $0.sessionEnd > $1.sessionEnd }
         // Every "is this still running / recent enough to ask about" decision
@@ -547,6 +567,56 @@ public final class RecoveryEngine: ObservableObject {
             .max { $0.endDate < $1.endDate }
     }
 
+    /// Assembles the receipt for everything Health handed over.
+    ///
+    /// Built from what is *already in the store* rather than from a fresh set of
+    /// queries, which is the only version of this that can be trusted: a summary
+    /// that ran its own reads could report a signal the estimate never saw. Two
+    /// of the rows are products of the model rather than raw readings — the
+    /// heart-rate ceiling is the cross-session percentile, the one-minute
+    /// recovery is the analysis median — so this runs at the end of `rescore`,
+    /// where both exist.
+    private func rebuildHealthIngest(
+        workouts: [WorkoutRecord],
+        contexts: [DailyContextRecord],
+        settings: RechargeSettings
+    ) {
+        let profile = settings.athleteProfile
+        var readings = HealthIngestSummary.Readings()
+
+        readings.workoutCount = workouts.count
+        readings.activityTypes = Set(workouts.map(\.activityCode)).count
+        readings.sessionsWithHeartRate = workouts.count {
+            $0.heartRateCoverage >= SessionLoadCalculator.minimumHeartRateCoverage
+        }
+        if let earliest = workouts.map(\.endDate).min() {
+            let days = Calendar.current.dateComponents([.day], from: earliest, to: .now).day ?? 0
+            readings.daysCovered = min(max(days, 1), HealthKitService.importDays)
+        }
+
+        readings.observedMaxHeartRate = settings.maxHeartRate > 0
+            ? settings.maxHeartRate
+            : profile.observedMaxHeartRate
+        readings.age = profile.age
+        readings.vo2Max = profile.vo2Max
+        readings.bodyMassKilograms = profile.bodyMassKilograms
+
+        // Medians rather than latest values, for the same reason the model uses
+        // medians: a single night is not a description of anybody, and this list
+        // is being read as evidence.
+        readings.restingHeartRate = median(contexts.map(\.restingHeartRate).filter { $0 > 0 })
+        readings.heartRateVariability = median(contexts.map(\.heartRateVariability).filter { $0 > 0 })
+        readings.averageSleepHours = median(contexts.map(\.sleepHours).filter { $0 > 0 })
+        readings.respiratoryRate = median(contexts.map(\.respiratoryRate).filter { $0 > 0 })
+        readings.heartRateRecovery = personalAnalysis.medianHeartRateRecovery
+            ?? median(contexts.map(\.heartRateRecovery).filter { $0 > 0 })
+
+        healthIngest = HealthIngestSummary(
+            readings: readings,
+            usesObservedMaxHeartRate: settings.maxHeartRate > 0 || profile.usesObservedMaxHeartRate
+        )
+    }
+
     private func sessionInput(for workout: WorkoutRecord, settings: RechargeSettings) -> SessionInput {
         SessionInput(
             id: workout.healthKitUUID,
@@ -560,6 +630,7 @@ public final class RecoveryEngine: ObservableObject {
             heartRateCoverage: workout.heartRateCoverage,
             activeEnergyKilocalories: workout.activeEnergy > 0 ? workout.activeEnergy : nil,
             reportedEffort: workout.reportedEffort,
+            bodyMassKilograms: settings.athleteProfile.bodyMassKilograms,
             activityLabel: workout.activityLabel
         )
     }
@@ -568,7 +639,8 @@ public final class RecoveryEngine: ObservableObject {
         workout: WorkoutRecord,
         contextByKey: [String: DailyContextRecord],
         restingBaseline: Double?,
-        hrvBaseline: Double?
+        hrvBaseline: Double?,
+        respiratoryBaseline: Double?
     ) -> RecoveryContext {
         let record = contextByKey[DateHelpers.dayKey(for: workout.endDate)]
         return RecoveryContext(
@@ -576,7 +648,9 @@ public final class RecoveryEngine: ObservableObject {
             heartRateVariability: (record?.heartRateVariability).flatMap { $0 > 0 ? $0 : nil },
             heartRateVariabilityBaseline: hrvBaseline,
             restingHeartRate: (record?.restingHeartRate).flatMap { $0 > 0 ? $0 : nil },
-            restingHeartRateBaseline: restingBaseline
+            restingHeartRateBaseline: restingBaseline,
+            respiratoryRate: (record?.respiratoryRate).flatMap { $0 > 0 ? $0 : nil },
+            respiratoryRateBaseline: respiratoryBaseline
         )
     }
 
@@ -827,7 +901,7 @@ public final class RecoveryEngine: ObservableObject {
         estimates = ScreenshotFixtures.history()
         personalAnalysis = ScreenshotFixtures.personalAnalysis()
         personalizedPreview = ScreenshotFixtures.personalizedPreview()
-        restPattern = ScreenshotFixtures.restPattern()
+        healthIngest = ScreenshotFixtures.healthIngest()
         current = RecoveryResolver.current(in: estimates)
         awaitingFeedback = nil
         awaitingEffort = nil
