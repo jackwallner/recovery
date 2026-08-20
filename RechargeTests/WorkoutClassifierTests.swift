@@ -154,6 +154,28 @@ final class WorkoutClassifierTests: XCTestCase {
         XCTAssertEqual(WorkoutClassifier.profile(activityCode: 7), .easy, "bowling")
     }
 
+    /// `String.capitalized` lowercases the rest of every word, so the one label
+    /// with an acronym in it rendered in History and on the detail sheet as
+    /// "Hiit Session". Nothing in the suite could see it, because every fixture
+    /// and every other label is ordinary words; a seeded Health store with a
+    /// real HIIT session in it is what surfaced it.
+    func testAnAcronymSurvivesBeingTitleCased() {
+        XCTAssertEqual(WorkoutClassifier.title(activityCode: 63), "HIIT Session")
+        XCTAssertEqual("HIIT session".capitalized, "Hiit Session", "the behaviour being avoided")
+    }
+
+    /// Every label has to survive the same treatment: a title is the label with
+    /// word-initial capitals and nothing else changed.
+    func testTitleCasingOnlyEverRaisesTheFirstLetterOfAWord() {
+        for raw in (UInt(1)...UInt(84)) where raw != 81 {
+            let label = WorkoutClassifier.label(activityCode: raw)
+            let title = WorkoutClassifier.title(activityCode: raw)
+            XCTAssertEqual(title.count, label.count, "\(label) changed length")
+            XCTAssertEqual(title.lowercased(), label.lowercased(), "\(label) changed letters")
+            XCTAssertEqual(title.first, label.first?.uppercased().first, "\(label) is not capitalised")
+        }
+    }
+
     /// No real HealthKit code may fall through to the unknown-code fallback.
     func testEveryHealthKitCodeHasAHome() {
         for raw in (UInt(1)...UInt(84)) where raw != 81 {

@@ -44,7 +44,7 @@ struct EstimateDetailView: View {
                 .padding(.bottom, 24)
             }
             .background(Theme.background)
-            .navigationTitle(estimate.activityLabel.capitalized)
+            .navigationTitle(estimate.activityLabel.asSessionTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

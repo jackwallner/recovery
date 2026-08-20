@@ -208,7 +208,7 @@ private struct HistoryRow: View {
                     .foregroundStyle(estimate.producesCountdown ? Theme.recovering : Theme.idle)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(estimate.activityLabel.capitalized)
+                    Text(estimate.activityLabel.asSessionTitle)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     // An easy session's category is measured against the easy

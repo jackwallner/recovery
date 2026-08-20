@@ -212,4 +212,34 @@ public enum WorkoutClassifier {
         default: return "workout"
         }
     }
+
+    /// The same label as a heading.
+    ///
+    /// `label(activityCode:)` is deliberately lowercase, because most of its
+    /// uses are mid-sentence ("9h from your run 3h ago"). The two places that
+    /// need it as a title (History's rows and `EstimateDetailView`'s
+    /// navigation title) used `String.capitalized`, which uppercases the first
+    /// letter of every word **and lowercases the rest**, so "HIIT session"
+    /// rendered as "Hiit Session". It is the only label with an acronym in it,
+    /// which is why nothing caught it until a seeded store put a real HIIT
+    /// session in History.
+    ///
+    /// This raises the first character of each word and leaves every other
+    /// character alone.
+    public static func title(activityCode: UInt) -> String {
+        label(activityCode: activityCode).asSessionTitle
+    }
+}
+
+extension String {
+    /// Uppercases the first character of each whitespace-separated word and
+    /// touches nothing else, so acronyms survive.
+    public var asSessionTitle: String {
+        split(separator: " ", omittingEmptySubsequences: false)
+            .map { word in
+                guard let first = word.first else { return String(word) }
+                return first.uppercased() + word.dropFirst()
+            }
+            .joined(separator: " ")
+    }
 }
