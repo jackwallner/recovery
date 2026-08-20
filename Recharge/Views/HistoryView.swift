@@ -1,37 +1,40 @@
 import SwiftUI
 
-/// Every estimate the app has produced, newest first, plus what it said and why.
+/// Every session Recharge has scored, newest first, and what each one cost.
 ///
-/// The list itself is free — a user who cannot see what the app told them
-/// yesterday has no reason to trust it today. The per-session detail (accuracy
-/// feedback, profile override, the load figure) is Pro.
+/// **Every row carries a number.** It did not used to: a session that started no
+/// countdown printed the word "None", and for anyone who walks or spins on their
+/// easy days that was most of the list. A history whose job is to be the
+/// evidence the app is paying attention cannot be a column of the word "None" —
+/// it reads as an import that lost the numbers, and it made the app look like it
+/// had ignored two thirds of the user's training.
+///
+/// The fix is in the model rather than in the copy. `recoveryCostHours` is
+/// computed for every session, easy ones included, and it is a different
+/// question from `hours`: what the session cost, rather than how long a
+/// countdown should run. A walk costs something and starts nothing, and both
+/// halves of that are now sayable.
+///
+/// Quiet sessions are still visually subordinate — lighter type, a muted glyph —
+/// because the distinction is real and the list would otherwise flatten a
+/// three-hour ride and a walk to the shops into the same row.
 struct HistoryView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
 
-    @State private var showPaywall = false
     @State private var selected: RecoveryEstimate?
-
-    /// Whether the sessions that produced no countdown are expanded.
-    ///
-    /// Collapsed by default, and that is the whole point. Somebody who walks
-    /// three times a day and rides easy in between had a History tab that was
-    /// twenty identical rows of "Walk · Active recovery · None" with the two
-    /// estimates that actually matter buried somewhere inside it. The list is
-    /// supposed to be the evidence that the app is paying attention; a wall of
-    /// "None" is the opposite.
-    @State private var showsQuietSessions = false
 
     private struct DayGroup: Identifiable {
         let key: String
         let date: Date
-        /// Sessions that started a countdown. These are the list.
-        let scored: [RecoveryEstimate]
-        /// Everything else — walks, easy spins, anything under the threshold.
-        let quiet: [RecoveryEstimate]
+        let estimates: [RecoveryEstimate]
+        /// The day's total cost, which is the figure the model itself works in:
+        /// `RecoveryBaseline.typicalLoad` is built from daily totals precisely
+        /// because adaptation is a property of how much someone trains rather
+        /// than of how they slice it up.
+        let totalCostHours: Double
 
         var id: String { key }
-        var isEmpty: Bool { scored.isEmpty && quiet.isEmpty }
     }
 
     private var grouped: [DayGroup] {
@@ -45,19 +48,11 @@ struct HistoryView: View {
                 return DayGroup(
                     key: key,
                     date: sorted.first?.sessionEnd ?? .now,
-                    scored: sorted.filter(\.producesCountdown),
-                    quiet: sorted.filter { !$0.producesCountdown }
+                    estimates: sorted,
+                    totalCostHours: sorted.reduce(0) { $0 + $1.recoveryCostHours }
                 )
             }
-            // A day with nothing but walks still gets a header and a one-line
-            // summary, because "you walked four times and none of it counted" is
-            // information. A day with nothing at all does not exist.
-            .filter { !$0.isEmpty }
             .sorted { $0.key > $1.key }
-    }
-
-    private var quietSessionCount: Int {
-        engine.estimates.count { !$0.producesCountdown }
     }
 
     var body: some View {
@@ -77,15 +72,12 @@ struct HistoryView: View {
             // own opaque bar over the page background as soon as the list
             // scrolls, and the tinted background is meant to run edge to edge.
             .navigationBarTitleDisplayMode(.inline)
+            .tabBarClearance()
             .refreshable { await engine.refresh(force: true) }
             .sheet(item: $selected) { estimate in
                 EstimateDetailView(capturedEstimate: estimate)
                     .environmentObject(store)
                     .environmentObject(engine)
-            }
-            .sheet(isPresented: $showPaywall) {
-                PaywallView(source: "history")
-                    .environmentObject(store)
             }
         }
     }
@@ -141,125 +133,52 @@ struct HistoryView: View {
     private var list: some View {
         ScrollView {
             LazyVStack(spacing: Self.rowSpacing, pinnedViews: [.sectionHeaders]) {
-                if !store.isPro { weeklyLoadTeaser }
                 ForEach(grouped) { group in
                     Section {
-                        ForEach(group.scored, id: \.sessionID) { estimate in
+                        ForEach(group.estimates, id: \.sessionID) { estimate in
                             Button { selected = estimate } label: {
                                 HistoryRow(estimate: estimate)
                             }
                             .buttonStyle(.plain)
                         }
-                        if !group.quiet.isEmpty {
-                            if showsQuietSessions {
-                                ForEach(group.quiet, id: \.sessionID) { estimate in
-                                    Button { selected = estimate } label: {
-                                        HistoryRow(estimate: estimate)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            } else {
-                                quietSummary(group)
-                            }
-                        }
                     } header: {
-                        HStack {
-                            Text(dayHeading(group.date))
-                                .font(.system(.caption, design: .rounded, weight: .semibold))
-                                .foregroundStyle(Theme.textSecondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 4)
-                        .padding(.top, 8)
-                        // A pinned header is drawn over the rows still
-                        // scrolling behind it, so its background has to cover
-                        // more than the text: the negative padding inflates it
-                        // past the stack's 16pt side margins and over the 10pt
-                        // gap on each side of it. Sized to the text alone, the
-                        // header let the outgoing card show through in three
-                        // strips — above it, beside it, and below it — which on
-                        // a dark screen reads as a second, broken row wedged
-                        // under the navigation bar.
-                        .background(
-                            Theme.background
-                                .padding(.horizontal, -Self.horizontalMargin)
-                                .padding(.vertical, -Self.rowSpacing)
-                        )
+                        dayHeader(group)
                     }
                 }
-                if quietSessionCount > 0 { quietToggle }
             }
             .padding(.horizontal, Self.horizontalMargin)
         }
     }
 
-    /// One line in place of a day's worth of walks.
-    private func quietSummary(_ group: DayGroup) -> some View {
-        Button { showsQuietSessions = true } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "figure.walk")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.textTertiary)
-                Text(quietSummaryText(group))
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                    .multilineTextAlignment(.leading)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func quietSummaryText(_ group: DayGroup) -> String {
-        let count = group.quiet.count
-        let noun = count == 1 ? "session" : "sessions"
-        return group.scored.isEmpty
-            ? "\(count) light \(noun), no countdown"
-            : "and \(count) light \(noun)"
-    }
-
-    private var quietToggle: some View {
-        Button { showsQuietSessions.toggle() } label: {
-            Text(showsQuietSessions
-                 ? "Hide light sessions"
-                 : "Show \(quietSessionCount) light \(quietSessionCount == 1 ? "session" : "sessions")")
-                .font(.system(.footnote, design: .rounded, weight: .semibold))
+    private func dayHeader(_ group: DayGroup) -> some View {
+        HStack {
+            Text(dayHeading(group.date))
+                .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(Theme.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-        }
-        .buttonStyle(.plain)
-        .padding(.top, 4)
-    }
-
-    @ViewBuilder
-    private var weeklyLoadTeaser: some View {
-        Button { showPaywall = true } label: {
-            Card {
-                HStack(spacing: 12) {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.title3)
-                        .foregroundStyle(Theme.pro)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Weekly load and accuracy")
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("See how your week compares to your own four-week average, and tell Recharge when it got an estimate wrong.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer()
-                    ProBadge()
-                }
+            Spacer()
+            // The day's total, which is the number a training log is actually
+            // about and the one the baseline is built from.
+            if group.estimates.count > 1 {
+                Text("\(CountdownFormat.hours(group.totalCostHours)) total")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .monospacedDigit()
             }
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 4)
         .padding(.top, 8)
+        // A pinned header is drawn over the rows still scrolling behind it, so
+        // its background has to cover more than the text: the negative padding
+        // inflates it past the stack's 16pt side margins and over the 10pt gap
+        // on each side of it. Sized to the text alone, the header let the
+        // outgoing card show through in three strips — above it, beside it, and
+        // below it — which on a dark screen reads as a second, broken row
+        // wedged under the navigation bar.
+        .background(
+            Theme.background
+                .padding(.horizontal, -Self.horizontalMargin)
+                .padding(.vertical, -Self.rowSpacing)
+        )
     }
 
     private func dayHeading(_ date: Date) -> String {
@@ -294,29 +213,22 @@ private struct HistoryRow: View {
                         .foregroundStyle(Theme.textPrimary)
                     // An easy session's category is measured against the easy
                     // population reference, which makes a three-hour round of
-                    // golf read "Very hard" on the row that also says its
-                    // countdown is "None". The category answers a question
-                    // nobody asked of an active-recovery session; say what the
-                    // row actually means instead.
+                    // golf read "Very hard" on a row that also says it started
+                    // no countdown. The category answers a question nobody asked
+                    // of an active-recovery session; say what the row means.
                     Text("\(estimate.profile == .easy ? "Active recovery" : estimate.category.shortLabel) · \(timeLabel)")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 VStack(alignment: .trailing, spacing: 3) {
-                    // A bare dash was a deliberate classification that nobody
-                    // read as one. A history full of them looks like an import
-                    // that lost the numbers, and an easy session has no number
-                    // to lose: `easy` produces no window on either tier, so
-                    // there is no day-one figure being withheld here. Say so in
-                    // a word instead of punctuating it.
-                    // The countdown this session actually set, which is the
-                    // stacked total. Showing its own cost instead would put a
-                    // different number in the list from the one the hero showed
-                    // on the day.
-                    Text(estimate.producesCountdown ? CountdownFormat.hours(estimate.totalHours) : "None")
+                    // What the session cost, on every row without exception.
+                    // Which is a different figure from the countdown it set: a
+                    // walk costs a couple of hours and starts nothing, and the
+                    // subtitle underneath is what keeps those two apart.
+                    Text(CountdownFormat.hours(estimate.recoveryCostHours))
                         .font(.system(
                             .title3,
                             design: .rounded,
@@ -324,22 +236,40 @@ private struct HistoryRow: View {
                         ))
                         .monospacedDigit()
                         .foregroundStyle(estimate.producesCountdown ? Theme.textPrimary : Theme.textSecondary)
-                        .accessibilityLabel(estimate.producesCountdown
-                                            ? CountdownFormat.hours(estimate.totalHours)
-                                            : "No countdown")
-                    // And where that total came from, so a 30h row under a
-                    // 40-minute session is legible rather than suspicious.
-                    if estimate.isStacked {
-                        Text("incl. \(CountdownFormat.hours(estimate.carriedHours)) carried")
-                            .font(.system(.caption2, design: .rounded))
-                            .foregroundStyle(Theme.textTertiary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    ConfidencePips(confidence: estimate.confidence, showsLabel: false)
+                    Text(subtitle)
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(accessibilityValue)
             }
         }
+    }
+
+    /// What the figure above it means. Three states, and the distinction is the
+    /// whole reason a cost and a countdown are separate numbers.
+    private var subtitle: String {
+        guard estimate.producesCountdown else {
+            return estimate.profile == .easy ? "no countdown" : "under the threshold"
+        }
+        if estimate.isStacked {
+            return "\(CountdownFormat.hours(estimate.totalHours)) countdown"
+        }
+        return "countdown"
+    }
+
+    private var accessibilityValue: String {
+        let cost = CountdownFormat.hours(estimate.recoveryCostHours)
+        guard estimate.producesCountdown else {
+            return estimate.profile == .easy
+                ? "Cost \(cost). Active recovery, no countdown."
+                : "Cost \(cost). Below the threshold, no countdown."
+        }
+        return estimate.isStacked
+            ? "Cost \(cost). Countdown ran \(CountdownFormat.hours(estimate.totalHours)) including carried recovery."
+            : "Countdown \(cost)."
     }
 
     private var timeLabel: String {
@@ -347,192 +277,5 @@ private struct HistoryRow: View {
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter.string(from: estimate.sessionEnd)
-    }
-}
-
-// MARK: - Detail
-
-private struct EstimateDetailView: View {
-    /// What the row was showing when it was tapped. Only ever a fallback: the
-    /// sheet renders the engine's live copy so an override recalculates the
-    /// header, the window, the reasons, and the numbers in place. Without that,
-    /// changing Endurance to Strength moved the segmented control and left every
-    /// figure on the sheet describing the estimate the app had already replaced.
-    let capturedEstimate: RecoveryEstimate
-
-    @EnvironmentObject private var store: StoreService
-    @EnvironmentObject private var engine: RecoveryEngine
-    @Environment(\.dismiss) private var dismiss
-    @State private var showPaywall = false
-
-    private var estimate: RecoveryEstimate {
-        engine.estimates.first { $0.sessionID == capturedEstimate.sessionID } ?? capturedEstimate
-    }
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    header
-                    reasons
-                    numbers
-                    if store.isPro { profileOverride } else { proTeaser }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
-            }
-            .background(Theme.background)
-            .navigationTitle(estimate.activityLabel.capitalized)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .sheet(isPresented: $showPaywall) {
-                PaywallView(source: "history_detail")
-                    .environmentObject(store)
-            }
-        }
-    }
-
-    private var header: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(estimate.producesCountdown
-                     ? CountdownFormat.window(low: estimate.windowLowHours, high: estimate.windowHighHours)
-                     : "No countdown")
-                    .font(Theme.bigNumber(34))
-                    .foregroundStyle(Theme.textPrimary)
-                if estimate.producesCountdown {
-                    Text("Ready \(CountdownFormat.readyAt(estimate.readyAt, now: estimate.sessionEnd))")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                // The arithmetic behind a stacked window, stated where there is
-                // room for it. Recovery time is cumulative, so this session
-                // landed on a countdown that was still running.
-                if estimate.isStacked {
-                    Text(CountdownFormat.stackedNote(
-                        sessionHours: estimate.hours,
-                        carriedHours: estimate.carriedHours
-                    ))
-                        .font(.system(.footnote, design: .rounded))
-                        .foregroundStyle(Theme.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                HStack(spacing: 8) {
-                    ProfileChip(
-                        profile: estimate.profile,
-                        category: estimate.category,
-                        activityLabel: estimate.activityLabel
-                    )
-                    ConfidencePips(confidence: estimate.confidence)
-                }
-            }
-        }
-    }
-
-    private var reasons: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Why")
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                ForEach(Array(estimate.reasons.enumerated()), id: \.offset) { _, reason in
-                    Text("• \(reason)")
-                        .font(.system(.footnote, design: .rounded))
-                        .foregroundStyle(Theme.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-        }
-    }
-
-    private var numbers: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Numbers")
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                detailRow("Session load", String(format: "%.0f", estimate.load.value))
-                // The comparison a standard estimate makes is against a fixed
-                // population reference, not against the person, and labelling it
-                // "your usual" would be the one claim the free tier is not
-                // entitled to make.
-                detailRow(
-                    estimate.tier == .standard ? "Compared to a typical session" : "Compared to your usual",
-                    String(format: "%.2f×", estimate.relativeLoad)
-                )
-                detailRow("Load from", estimate.load.source.label)
-                if estimate.load.source == .heartRate {
-                    detailRow("Heart-rate coverage", "\(Int((estimate.load.heartRateCoverage * 100).rounded()))%")
-                }
-                detailRow("Estimate", estimate.tier.label)
-                if estimate.tier == .personalized, estimate.personalFactor != 1 {
-                    detailRow(
-                        "Your adjustment",
-                        String(format: "%+.0f%%", (estimate.personalFactor - 1) * 100)
-                    )
-                }
-                detailRow("Model version", "v\(estimate.modelVersion)")
-            }
-        }
-    }
-
-    private func detailRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(Theme.textSecondary)
-            Spacer()
-            Text(value)
-                .font(.system(.footnote, design: .rounded, weight: .medium))
-                .monospacedDigit()
-                .foregroundStyle(Theme.textPrimary)
-        }
-    }
-
-    private var profileOverride: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Session type")
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                Text("Recharge scored this as \(estimate.profile.label.lowercased()). Change it if that is wrong for this session.")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
-                Picker("Session type", selection: Binding(
-                    get: { estimate.profile },
-                    set: { engine.overrideProfile($0, forSessionID: capturedEstimate.sessionID) }
-                )) {
-                    ForEach(WorkoutProfile.allCases, id: \.self) { profile in
-                        Text(profile.label).tag(profile)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-        }
-    }
-
-    private var proTeaser: some View {
-        Button { showPaywall = true } label: {
-            Card {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Correct this session")
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("Recharge+ lets you re-classify a session and tell Recharge when an estimate was off.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer()
-                    ProBadge()
-                }
-            }
-        }
-        .buttonStyle(.plain)
     }
 }

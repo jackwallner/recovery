@@ -13,7 +13,7 @@ settings:
     DEVELOPMENT_TEAM: YXG4MP6W39
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "26"
+    CURRENT_PROJECT_VERSION: "27"
     GENERATE_INFOPLIST_FILE: NO
 
 packages:
@@ -148,12 +148,16 @@ targets:
       - path: Shared/Utilities/RecoveryResolver.swift
       - path: Shared/Utilities/AthleteProfile.swift
       - path: Shared/Utilities/PersonalRecoveryModel.swift
-      - path: Shared/Utilities/RestPattern.swift
       - path: Shared/Utilities/WorkoutClassifier.swift
       - path: Shared/Utilities/CountdownFormat.swift
       - path: Shared/Utilities/CountdownTimeline.swift
       - path: Shared/Utilities/ComplicationCopy.swift
       - path: Shared/Utilities/RechargeConversionCopy.swift
+      # The receipt the app prints back to the user for every Health type it
+      # asks for. In the target because it owns user-facing copy about what the
+      # model consumes, and copy that describes the model is part of the model's
+      # surface area.
+      - path: Shared/Utilities/HealthIngestSummary.swift
       - path: Shared/Utilities/DateHelpers.swift
     settings:
       base:

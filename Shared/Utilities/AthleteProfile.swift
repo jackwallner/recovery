@@ -165,6 +165,34 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
     /// per-profile curves already handle the model side.
     public var primaryProfile: WorkoutProfile?
 
+    /// Health's most recent VO2 max estimate, in ml/kg/min.
+    ///
+    /// Never asked for — it is read or it is absent. It feeds `fitnessScale`,
+    /// which means it reaches the **standard** tier, and that is deliberate for
+    /// the same reason the age-predicted heart-rate ceiling does: it is a
+    /// *measurement of training level*, not a personalisation of the recovery
+    /// window. The tier line is measurement versus personalisation, and what
+    /// Recharge+ sells is scoring a session against the person's own
+    /// distribution of loads. Knowing that somebody's cardiorespiratory fitness
+    /// is 58 rather than 34 does not do that; it picks which population
+    /// denominator was the right one to start from, which is what Firstbeat's
+    /// activity class does at setup on a Garmin.
+    public var vo2Max: Double?
+
+    /// The highest heart rate actually observed across the imported workout
+    /// history, in bpm. Written by `RecoveryEngine`, never asked for.
+    public var observedMaxHeartRate: Double?
+
+    /// Health's most recent body mass, in kilograms.
+    ///
+    /// Consumed by exactly one thing — `SessionLoadCalculator`'s energy path,
+    /// where it corrects a burn rate that already includes the person's weight.
+    /// It is not a recovery input and it must never become one: how much
+    /// somebody weighs says nothing about how fast they clear a training load,
+    /// and a health app that quietly made heavier users wait longer would be
+    /// making a claim it cannot support.
+    public var bodyMassKilograms: Double?
+
     /// Which fields arrived from Health rather than from an answer. Drives both
     /// the "here's what we found" page and the decision about what to ask.
     public var healthDerivedFields: Set<String>
@@ -173,6 +201,9 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
     public static let sexField = "sex"
     public static let weeklyVolumeField = "weeklyVolume"
     public static let primaryProfileField = "primaryProfile"
+    public static let vo2MaxField = "vo2Max"
+    public static let observedMaxHeartRateField = "observedMaxHeartRate"
+    public static let bodyMassField = "bodyMass"
 
     public static let empty = AthleteProfile()
 
@@ -183,6 +214,9 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
         bounceBack: BounceBackHabit? = nil,
         weeklyVolume: WeeklyVolume? = nil,
         primaryProfile: WorkoutProfile? = nil,
+        vo2Max: Double? = nil,
+        observedMaxHeartRate: Double? = nil,
+        bodyMassKilograms: Double? = nil,
         healthDerivedFields: Set<String> = []
     ) {
         self.age = age
@@ -191,6 +225,13 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
         self.bounceBack = bounceBack
         self.weeklyVolume = weeklyVolume
         self.primaryProfile = primaryProfile
+        self.vo2Max = vo2Max.flatMap { $0.isFinite && (10...90).contains($0) ? $0 : nil }
+        self.observedMaxHeartRate = observedMaxHeartRate.flatMap {
+            $0.isFinite && (120...230).contains($0) ? $0 : nil
+        }
+        self.bodyMassKilograms = bodyMassKilograms.flatMap {
+            $0.isFinite && (30...250).contains($0) ? $0 : nil
+        }
         self.healthDerivedFields = healthDerivedFields
     }
 
@@ -212,6 +253,43 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
             ? 206 - 0.88 * Double(age)
             : 208 - 0.7 * Double(age)
         return value.rounded()
+    }
+
+    /// The ceiling every session's intensity is actually measured against:
+    /// what was **observed**, and only failing that what age predicts.
+    ///
+    /// An age formula is a population average with a standard deviation around
+    /// 10 to 12 bpm, which is enormous at the scale it is used here — the whole
+    /// heart-rate path is `(average − resting) / (max − resting)`, so a ceiling
+    /// that is 12 bpm wrong misprices every session that person will ever
+    /// record, in the same direction, forever. Tanaka was the right answer when
+    /// the app had nothing to compare against; it is the wrong one when a
+    /// hundred and twenty days of workout heart rate are sitting in Health.
+    ///
+    /// The observed figure is not the single highest sample ever recorded
+    /// (`HealthKitService` takes a high percentile within each session, and
+    /// `RecoveryEngine` a high percentile across sessions), because one optical
+    /// artefact should not become somebody's permanent ceiling. It is only
+    /// believed when it is at least as high as what age predicts: a real max
+    /// heart rate is elicited by a genuinely maximal effort, so a user who has
+    /// never gone that hard will show an observed peak well below their true
+    /// ceiling, and taking it literally would inflate every intensity reading
+    /// they have.
+    public var effectiveMaxHeartRate: Double? {
+        switch (observedMaxHeartRate, predictedMaxHeartRate) {
+        case let (.some(observed), .some(predicted)): return max(observed, predicted)
+        case let (.some(observed), .none): return observed
+        case let (.none, .some(predicted)): return predicted
+        case (.none, .none): return nil
+        }
+    }
+
+    /// True when the ceiling above came from the person's own workouts rather
+    /// than from a formula. The onboarding readout and Settings both say which.
+    public var usesObservedMaxHeartRate: Bool {
+        guard let observed = observedMaxHeartRate else { return false }
+        guard let predicted = predictedMaxHeartRate else { return true }
+        return observed >= predicted
     }
 
     // MARK: Fitness level
@@ -260,8 +338,28 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
         var factors: [Double] = []
         if let weeklyVolume { factors.append(weeklyVolume.fitnessFactor) }
         if let experience { factors.append(experience.fitnessFactor) }
+        if let vo2Factor { factors.append(vo2Factor) }
         guard !factors.isEmpty else { return 1 }
         return exp(factors.reduce(0) { $0 + log($1) } / Double(factors.count))
+    }
+
+    /// VO2 max as a training-level multiplier, on the same scale as the two
+    /// questionnaire terms and folded in by the same geometric mean.
+    ///
+    /// Anchored at 45 ml/kg/min, which is not a coincidence: it is the same
+    /// reference adult `SessionLoadCalculator.referenceEnergyAtFullReserve` is
+    /// derived from, so the one number that describes the population elsewhere
+    /// in the model describes it here too.
+    ///
+    /// The square root is what keeps it honest. VO2 max is a *capacity*, and the
+    /// quantity `fitnessScale` needs is the size of an ordinary training day,
+    /// which grows more slowly than capacity does — somebody at 60 does not
+    /// train a third harder every day than somebody at 45. The bounds are the
+    /// same 0.78 to 1.40 the weekly-volume term already spans, so adding a third
+    /// measured term cannot widen the range the standard tier was fitted at.
+    var vo2Factor: Double? {
+        guard let vo2Max, vo2Max.isFinite, (10...90).contains(vo2Max) else { return nil }
+        return min(max((vo2Max / 45).squareRoot(), 0.78), 1.40)
     }
 
     // MARK: Prior

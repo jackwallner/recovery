@@ -98,20 +98,33 @@ public enum RecoveryCalculator {
         let qualifies = session.profile != .easy && load.value >= baseline.quietThreshold
 
         var hours = 0.0
-        var adjustment = 0.0
         // Recovery still outstanding when this session ended. Only a session
         // that earns a countdown of its own may inherit it: an easy walk taken
         // mid-window neither starts a countdown nor lengthens the one already
         // running, which is the same guarantee `RecoveryResolver` gives.
         let carried = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
+
+        // Computed for **every** session, qualifying or not, because "what did
+        // this session cost" is a different question from "how long should the
+        // countdown run", and only the second one has a reason to be zero for a
+        // walk. History asks the first; the ring, `readyAt` and the snapshot ask
+        // the second.
+        let adjustment = contextAdjustment(context)
+        let personal = personalization.factor.isFinite
+            ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
+            : 1
+        let scaled = baseHours(forRelativeLoad: relative)
+            * (1 + adjustment)
+            * clampCalibration(calibration)
+            * personal
+        // No `minimumCountdownHours` here: that floor exists so a countdown is
+        // not over before bedtime, and it has nothing to say about what forty
+        // minutes of walking cost.
+        let cost = min(max(scaled * session.profile.costMultiplier, 0), maximumHours)
+
         if qualifies {
-            let base = baseHours(forRelativeLoad: relative) * session.profile.windowMultiplier
-            adjustment = contextAdjustment(context)
-            let personal = personalization.factor.isFinite
-                ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
-                : 1
             hours = min(
-                max(base * (1 + adjustment) * clampCalibration(calibration) * personal, minimumCountdownHours),
+                max(scaled * session.profile.windowMultiplier, minimumCountdownHours),
                 maximumHours
             )
         }
@@ -160,7 +173,8 @@ public enum RecoveryCalculator {
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,
             standardHours: standardHours,
-            carriedHours: carried
+            carriedHours: carried,
+            recoveryCostHours: cost
         )
     }
 
@@ -268,6 +282,21 @@ public enum RecoveryCalculator {
             }
         }
 
+        // Half the weight of resting heart rate, deliberately. Overnight
+        // respiratory rate is a real signal that the previous day has not been
+        // absorbed, and it is also the noisiest of the four; four signals each
+        // pulling as hard as one another would between them swamp the session
+        // the estimate is supposed to be about.
+        if let rate = context.respiratoryRate,
+           let baseline = context.respiratoryRateBaseline,
+           baseline > 0 {
+            if rate >= baseline + 1.5 {
+                delta += 0.04
+            } else if rate <= baseline - 1 {
+                delta -= 0.02
+            }
+        }
+
         return min(max(delta, minimumContextAdjustment), maximumContextAdjustment)
     }
 
@@ -337,14 +366,15 @@ public enum RecoveryCalculator {
 
         let minutes = Int(session.durationMinutes.rounded())
         if session.profile == .easy {
-            reasons.append("\(minutes)-minute \(session.activityLabel) counts as active recovery, so it does not start a countdown.")
+            reasons.append("\(minutes)-minute \(session.activityLabel) counts as active recovery.")
+            reasons.append("Light enough to leave the countdown where it is.")
             return reasons
         }
 
         if !qualifies {
             let comparison = tier == .standard ? "below the level that starts a countdown" : "below your usual session load"
             reasons.append("\(categoryLabel.lowercased()): a \(minutes)-minute \(session.activityLabel) \(comparison).")
-            reasons.append("No countdown started.")
+            reasons.append("Counted toward your training load, but no countdown started.")
             return reasons
         }
 
@@ -404,6 +434,14 @@ public enum RecoveryCalculator {
                 signals.append("resting heart rate up \(Int((rhr - base).rounded())) bpm")
             } else if !lengthened, rhr <= base - 2 {
                 signals.append("resting heart rate below your usual range")
+            }
+        }
+        if let rate = context.respiratoryRate,
+           let base = context.respiratoryRateBaseline, base > 0 {
+            if lengthened, rate >= base + 1.5 {
+                signals.append("breathing rate up overnight")
+            } else if !lengthened, rate <= base - 1 {
+                signals.append("breathing rate below your usual range")
             }
         }
         guard !signals.isEmpty else { return "" }

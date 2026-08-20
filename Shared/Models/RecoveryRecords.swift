@@ -15,6 +15,10 @@ public final class WorkoutRecord {
     public var durationMinutes: Double
     public var activeEnergy: Double
     public var averageHeartRate: Double
+    /// The session's own heart-rate peak, already de-spiked by
+    /// `HealthKitService`. Defaulted rather than optional so SwiftData migrates
+    /// an existing store in place; zero means "no usable heart rate here".
+    public var peakHeartRate: Double = 0
     public var heartRateCoverage: Double
     public var sessionLoad: Double
     public var loadSourceRaw: String
@@ -36,6 +40,7 @@ public final class WorkoutRecord {
         durationMinutes: Double,
         activeEnergy: Double = 0,
         averageHeartRate: Double = 0,
+        peakHeartRate: Double = 0,
         heartRateCoverage: Double = 0,
         sessionLoad: Double = 0,
         loadSource: LoadSource = .duration,
@@ -52,6 +57,7 @@ public final class WorkoutRecord {
         self.durationMinutes = durationMinutes
         self.activeEnergy = activeEnergy
         self.averageHeartRate = averageHeartRate
+        self.peakHeartRate = peakHeartRate
         self.heartRateCoverage = heartRateCoverage
         self.sessionLoad = sessionLoad
         self.loadSourceRaw = loadSource.rawValue
@@ -131,6 +137,16 @@ public final class RecoveryStateRecord {
     /// nil decodes as zero, which is truthful for every record written before
     /// stacking existed. Those estimates were not stacked.
     public var carriedHours: Double?
+    /// What the session cost, whether or not it started a countdown.
+    ///
+    /// Persisted for exactly the reason `carriedHours` is, and it is the same
+    /// trap: it is computed, published and rendered, and a record that forgets
+    /// it rehydrates with History showing a walk as costing nothing while the
+    /// app that produced the record said otherwise. nil decodes as `hours`,
+    /// which is the truthful legacy value — for every record written before
+    /// this existed, a countdown-producing session's cost *was* its hours, and
+    /// a quiet session's recorded cost genuinely was zero.
+    public var recoveryCostHours: Double?
     public var userFeedbackRaw: String?
 
     public init(estimate: RecoveryEstimate) {
@@ -155,6 +171,7 @@ public final class RecoveryStateRecord {
         self.personalFactor = estimate.personalFactor
         self.standardHours = estimate.standardHours
         self.carriedHours = estimate.carriedHours
+        self.recoveryCostHours = estimate.recoveryCostHours
         self.userFeedbackRaw = nil
     }
 
@@ -188,7 +205,8 @@ public final class RecoveryStateRecord {
             tier: tierRaw.flatMap(RecoveryTier.init(rawValue:)) ?? .standard,
             personalFactor: personalFactor ?? 1,
             standardHours: standardHours,
-            carriedHours: carriedHours ?? 0
+            carriedHours: carriedHours ?? 0,
+            recoveryCostHours: recoveryCostHours
         )
     }
 
@@ -219,6 +237,7 @@ public final class RecoveryStateRecord {
         personalFactor = estimate.personalFactor
         standardHours = estimate.standardHours
         carriedHours = estimate.carriedHours
+        recoveryCostHours = estimate.recoveryCostHours
     }
 }
 
@@ -231,6 +250,12 @@ public final class DailyContextRecord {
     public var sleepHours: Double
     public var restingHeartRate: Double
     public var heartRateVariability: Double
+    /// Overnight breaths per minute. Defaulted rather than optional so SwiftData
+    /// migrates an existing store in place; zero is "not recorded", the same
+    /// convention every other field here uses.
+    public var respiratoryRate: Double = 0
+    /// The best one-minute heart-rate recovery Health wrote that day, in bpm.
+    public var heartRateRecovery: Double = 0
     public var acuteLoad: Double
     public var chronicLoad: Double
     public var lastUpdated: Date
@@ -240,6 +265,8 @@ public final class DailyContextRecord {
         sleepHours: Double = 0,
         restingHeartRate: Double = 0,
         heartRateVariability: Double = 0,
+        respiratoryRate: Double = 0,
+        heartRateRecovery: Double = 0,
         acuteLoad: Double = 0,
         chronicLoad: Double = 0
     ) {
@@ -249,6 +276,8 @@ public final class DailyContextRecord {
         self.sleepHours = sleepHours
         self.restingHeartRate = restingHeartRate
         self.heartRateVariability = heartRateVariability
+        self.respiratoryRate = respiratoryRate
+        self.heartRateRecovery = heartRateRecovery
         self.acuteLoad = acuteLoad
         self.chronicLoad = chronicLoad
         self.lastUpdated = .now
@@ -262,7 +291,9 @@ public final class DailyContextRecord {
             heartRateVariability: heartRateVariability > 0 ? heartRateVariability : nil,
             heartRateVariabilityBaseline: nil,
             restingHeartRate: restingHeartRate > 0 ? restingHeartRate : nil,
-            restingHeartRateBaseline: nil
+            restingHeartRateBaseline: nil,
+            respiratoryRate: respiratoryRate > 0 ? respiratoryRate : nil,
+            respiratoryRateBaseline: nil
         )
     }
 }

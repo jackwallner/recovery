@@ -42,7 +42,21 @@ import Foundation
 /// 9: uncertainty ranges obey the same 72-hour ceiling as the point estimate,
 /// and non-finite sensor, calibration, and residual inputs fall back to safe
 /// finite values instead of reaching a view or a persisted record.
-public let recoveryModelVersion = 9
+///
+/// 10: the app measures more of what it was guessing. The heart-rate ceiling is
+/// now the person's own *observed* maximum where the workout history has one,
+/// and the age formula is the fallback rather than the answer — which moves
+/// every intensity reading for anyone whose real ceiling is not what Tanaka
+/// predicts. VO2 max joins the two training-level questions in
+/// `AthleteProfile.fitnessScale`, on both tiers, because it is a measurement of
+/// training level rather than a personalisation of the window. Body mass closes
+/// the energy path's known residual, so an 95 kg lifter's calorie-derived load
+/// stops reading as a harder session than it was. Overnight respiratory rate
+/// joins sleep, resting heart rate and HRV in the context adjustment, and
+/// heart-rate recovery joins the thirty-day analysis as a fourth signal. And
+/// **every** session now carries a `recoveryCostHours`, easy ones included, so
+/// history has a figure for a walk without a walk ever starting a countdown.
+public let recoveryModelVersion = 10
 
 // MARK: - Tier
 
@@ -122,6 +136,28 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
         case .strength: 1.15
         case .mixed: 1.30
         case .easy: 0.0
+        }
+    }
+
+    /// Recovery **cost** multiplier, which is `windowMultiplier` everywhere it
+    /// matters and a small positive number for `easy`.
+    ///
+    /// The two are separate because they answer different questions, and
+    /// collapsing them is what put the word "None" beside every walk in
+    /// history. `windowMultiplier` decides how long a *countdown* runs, and easy
+    /// has to be exactly zero there or an active-recovery walk could start or
+    /// lengthen one — the guarantee the whole `easy` profile exists to make.
+    /// `costMultiplier` decides what the session *cost*, which is a description
+    /// of the session rather than an instruction to the countdown, and a
+    /// forty-minute walk did not cost nothing.
+    ///
+    /// Nothing downstream of the countdown reads this: `producesCountdown`,
+    /// `readyAt`, `totalHours`, the snapshot, the complication and the stacking
+    /// chain are all still driven by `hours`, which is still zero for easy.
+    public var costMultiplier: Double {
+        switch self {
+        case .easy: 0.30
+        default: windowMultiplier
         }
     }
 
@@ -353,6 +389,15 @@ public struct SessionInput: Sendable, Equatable {
     public let activeEnergyKilocalories: Double?
     /// Session RPE on the 1-10 Borg CR10 scale, if the user supplied one.
     public let reportedEffort: Double?
+    /// The person's body mass in kilograms, when Health knows it.
+    ///
+    /// Only the energy path reads it, and only to undo the thing that path was
+    /// always known to get wrong: HealthKit's active energy already accounts for
+    /// weight, so at the same fraction of heart-rate reserve a 95 kg athlete
+    /// burns more per minute than a 60 kg one and the inference reads them as
+    /// having worked harder. It is a correction to a measurement, not a fact
+    /// about how fast someone recovers, which is why it applies on both tiers.
+    public let bodyMassKilograms: Double?
     public let activityLabel: String
 
     public init(
@@ -367,6 +412,7 @@ public struct SessionInput: Sendable, Equatable {
         heartRateCoverage: Double = 0,
         activeEnergyKilocalories: Double? = nil,
         reportedEffort: Double? = nil,
+        bodyMassKilograms: Double? = nil,
         activityLabel: String = "workout"
     ) {
         self.id = id
@@ -381,6 +427,12 @@ public struct SessionInput: Sendable, Equatable {
         self.heartRateCoverage = heartRateCoverage.isFinite ? min(max(heartRateCoverage, 0), 1) : 0
         self.activeEnergyKilocalories = activeEnergyKilocalories.flatMap { $0.isFinite ? $0 : nil }
         self.reportedEffort = reportedEffort.flatMap { $0.isFinite ? min(max($0, 1), 10) : nil }
+        // Bounded to a plausible adult range. A stray 0.2 kg sample from a
+        // kitchen scale would otherwise divide the reference burn rate by
+        // nothing and turn a gentle walk into a 72-hour window.
+        self.bodyMassKilograms = bodyMassKilograms.flatMap {
+            $0.isFinite && (30...250).contains($0) ? $0 : nil
+        }
         self.activityLabel = activityLabel
     }
 }
@@ -394,6 +446,16 @@ public struct RecoveryContext: Sendable, Equatable {
     public let heartRateVariabilityBaseline: Double?
     public let restingHeartRate: Double?
     public let restingHeartRateBaseline: Double?
+    /// Overnight breaths per minute, and the person's own usual figure.
+    ///
+    /// The fourth overnight signal, and the smallest: it moves the estimate
+    /// half as far as resting heart rate does, because it is noisier and
+    /// because four signals that each move the number as much as one would
+    /// between them swamp the session that the estimate is supposed to be
+    /// about. Like the other three it is bounded by `contextAdjustment`'s
+    /// overall clamp, so adding it cannot widen the total range.
+    public let respiratoryRate: Double?
+    public let respiratoryRateBaseline: Double?
 
     public static let empty = RecoveryContext()
 
@@ -402,19 +464,26 @@ public struct RecoveryContext: Sendable, Equatable {
         heartRateVariability: Double? = nil,
         heartRateVariabilityBaseline: Double? = nil,
         restingHeartRate: Double? = nil,
-        restingHeartRateBaseline: Double? = nil
+        restingHeartRateBaseline: Double? = nil,
+        respiratoryRate: Double? = nil,
+        respiratoryRateBaseline: Double? = nil
     ) {
         self.sleepHours = sleepHours
         self.heartRateVariability = heartRateVariability
         self.heartRateVariabilityBaseline = heartRateVariabilityBaseline
         self.restingHeartRate = restingHeartRate
         self.restingHeartRateBaseline = restingHeartRateBaseline
+        self.respiratoryRate = respiratoryRate
+        self.respiratoryRateBaseline = respiratoryRateBaseline
     }
 
     /// True when nothing at all is known. Used to distinguish "no context" from
     /// "context that happens to be neutral".
     public var isEmpty: Bool {
-        sleepHours == nil && heartRateVariability == nil && restingHeartRate == nil
+        sleepHours == nil
+            && heartRateVariability == nil
+            && restingHeartRate == nil
+            && respiratoryRate == nil
     }
 }
 
@@ -531,6 +600,31 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
     /// truthful legacy value: those estimates were not stacked.
     public let carriedHours: Double
 
+    /// What this session cost, in hours, whether or not it started a countdown.
+    ///
+    /// **`hours` is an instruction to the countdown; this is a description of
+    /// the session.** They are the same number for a qualifying session and
+    /// they diverge in exactly two places, both of which used to render as the
+    /// word "None":
+    ///
+    /// - an `easy` session, where `hours` must be zero so a walk can never start
+    ///   or lengthen a countdown, but the walk still cost something;
+    /// - a session under the person's quiet threshold, which does not earn a
+    ///   countdown of its own but is not nothing either.
+    ///
+    /// It also skips the six-hour countdown floor, because that floor exists to
+    /// stop a *countdown* being over before bedtime and has nothing to say about
+    /// what forty minutes of walking cost.
+    ///
+    /// Nothing that drives a countdown reads this. `producesCountdown`,
+    /// `readyAt`, `totalHours`, the snapshot, the complication and the stacking
+    /// chain are all still `hours`.
+    ///
+    /// Decodes to `hours` for records written before it existed, which is the
+    /// truthful legacy value for every estimate that had one and an honest zero
+    /// for every estimate that did not.
+    public let recoveryCostHours: Double
+
     /// How long the countdown actually runs: this session's own cost plus
     /// whatever was still outstanding, bounded by the same ceiling every other
     /// window obeys. Zero when the session started no countdown, so an
@@ -566,7 +660,8 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         tier: RecoveryTier = .standard,
         personalFactor: Double = 1,
         standardHours: Double? = nil,
-        carriedHours: Double = 0
+        carriedHours: Double = 0,
+        recoveryCostHours: Double? = nil
     ) {
         let safeHours = hours.isFinite ? max(hours, 0) : 0
         let safeLow = windowLowHours.isFinite ? max(windowLowHours, 0) : 0
@@ -595,6 +690,9 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
         self.standardHours = standardHours.flatMap { $0.isFinite ? max($0, 0) : nil }
             ?? (safeHours / safePersonalFactor)
         self.carriedHours = safeCarried
+        self.recoveryCostHours = recoveryCostHours.flatMap {
+            $0.isFinite ? min(max($0, 0), RecoveryCalculator.maximumHours) : nil
+        } ?? safeHours
     }
 
     /// Tier metadata arrived in model version 2, and `standardHours` was added
@@ -628,6 +726,10 @@ public struct RecoveryEstimate: Codable, Sendable, Equatable, Identifiable {
             ?? (hours / personalFactor)
         let decodedCarried = try container.decodeIfPresent(Double.self, forKey: .carriedHours) ?? 0
         carriedHours = decodedCarried.isFinite ? max(decodedCarried, 0) : 0
+        let decodedCost = try container.decodeIfPresent(Double.self, forKey: .recoveryCostHours)
+        recoveryCostHours = decodedCost.flatMap {
+            $0.isFinite ? min(max($0, 0), RecoveryCalculator.maximumHours) : nil
+        } ?? hours
     }
 
     /// Phase at a given instant. Derived rather than stored so a cached estimate

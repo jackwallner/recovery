@@ -117,26 +117,32 @@ public enum ScreenshotFixtures {
         )
     }
 
-    /// The rest-pattern card, derived from the same history the rest of the
-    /// capture is built from rather than hand-written, so the three columns on
-    /// the screenshot are the arithmetic the app would actually produce.
-    public static func restPattern(now: Date = .now) -> [RestPattern.Row] {
-        RestPattern.rows(
-            sessions: history(now: now)
-                .filter { $0.producesCountdown }
-                .map {
-                    RestPattern.Session(
-                        id: $0.sessionID,
-                        endDate: $0.sessionEnd,
-                        profile: $0.profile,
-                        band: $0.category,
-                        standardHours: $0.standardHours,
-                        personalizedHours: $0.hours
-                    )
-                },
-            profile: athleteProfile(),
-            now: now
-        )
+    /// The receipt the app prints back to the user, fixed so the onboarding
+    /// readout, the trial page's proof block, the Settings section and the
+    /// Recharge+ tab all render the same rows on every capture.
+    ///
+    /// Every field is filled in, which is the one way this fixture is *not*
+    /// typical: plenty of real users have no VO2 max and no weight. That is
+    /// deliberate for a capture — a screenshot of the receipt has to show what
+    /// the receipt is — and it is why the empty and partial cases are covered by
+    /// `HealthIngestSummary` building no row at all for a missing reading rather
+    /// than by a second fixture.
+    public static func healthIngest() -> HealthIngestSummary {
+        var readings = HealthIngestSummary.Readings()
+        readings.workoutCount = 96
+        readings.daysCovered = 120
+        readings.activityTypes = 5
+        readings.sessionsWithHeartRate = 88
+        readings.observedMaxHeartRate = 187
+        readings.restingHeartRate = 52
+        readings.heartRateVariability = 58
+        readings.averageSleepHours = 7.1
+        readings.respiratoryRate = 14
+        readings.heartRateRecovery = 36
+        readings.vo2Max = 51
+        readings.bodyMassKilograms = 78
+        readings.age = 34
+        return HealthIngestSummary(readings: readings, usesObservedMaxHeartRate: true)
     }
 
     /// What Health would have supplied for the screenshot user. Experience and
@@ -177,19 +183,38 @@ public enum ScreenshotFixtures {
         // Recovery time is cumulative, so a capture where nothing ever stacks
         // would show a model quietly simpler than the one that ships — the same
         // trap `standardHours` fell into when it defaulted to `hours`.
-        let pattern: [(hoursAgo: Double, hours: Double, standard: Double, carried: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
-            (leadHoursAgo, 21.7, 28.0, 0, .endurance, "run", .hard),
-            (27, 9.4, 13.0, 0, .endurance, "ride", .typical),
-            (52, 0, 0, 0, .easy, "walk", .easy),
-            (74, 31.2, 39.0, 0, .mixed, "functional session", .unusuallyHard),
-            (98, 14.8, 19.0, 5.9, .strength, "lifting session", .typical),
-            (122, 18.1, 24.0, 0, .endurance, "run", .hard),
-            (170, 7.6, 11.0, 0, .endurance, "run", .typical),
-            (196, 26.4, 34.0, 0, .mixed, "functional session", .hard)
+        // `cost` is what the session cost and `hours` is the countdown it set.
+        // They are the same figure for a qualifying session and they diverge for
+        // the two rows that used to render as the word "None" — the walk, and
+        // the short evening spin that fell under the quiet threshold. A capture
+        // without both of those in it would show a History tab that cannot
+        // happen.
+        let pattern: [(hoursAgo: Double, hours: Double, cost: Double, standard: Double, carried: Double, profile: WorkoutProfile, label: String, category: LoadCategory)] = [
+            (leadHoursAgo, 21.7, 21.7, 28.0, 0, .endurance, "run", .hard),
+            (27, 9.4, 9.4, 13.0, 0, .endurance, "ride", .typical),
+            (34, 0, 1.9, 2.4, 0, .easy, "walk", .easy),
+            (52, 0, 3.1, 4.0, 0, .endurance, "ride", .easy),
+            (74, 31.2, 31.2, 39.0, 0, .mixed, "functional session", .unusuallyHard),
+            (98, 14.8, 14.8, 19.0, 5.9, .strength, "lifting session", .typical),
+            (122, 18.1, 18.1, 24.0, 0, .endurance, "run", .hard),
+            (146, 0, 2.2, 2.8, 0, .easy, "walk", .easy),
+            (170, 7.6, 7.6, 11.0, 0, .endurance, "run", .typical),
+            (196, 26.4, 26.4, 34.0, 0, .mixed, "functional session", .hard)
         ]
         return pattern.enumerated().map { index, item in
             let end = now.addingTimeInterval(-item.hoursAgo * 3600)
             var reasons = ["\(item.category.label): \(item.label)."]
+            if item.hours == 0 {
+                reasons = item.profile == .easy
+                    ? [
+                        "38-minute \(item.label) counts as active recovery.",
+                        "Light enough to leave the countdown where it is."
+                      ]
+                    : [
+                        "Light session: a 24-minute \(item.label) below the level that starts a countdown.",
+                        "Counted toward your training load, but no countdown started."
+                      ]
+            }
             if index == 0 {
                 reasons = [
                     "\(item.category.label): 52-minute \(item.label).",
@@ -216,7 +241,8 @@ public enum ScreenshotFixtures {
                 confidence: index % 3 == 0 ? .high : .medium,
                 reasons: reasons,
                 standardHours: item.standard,
-                carriedHours: item.carried
+                carriedHours: item.carried,
+                recoveryCostHours: item.cost
             )
         }
     }

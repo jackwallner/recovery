@@ -35,11 +35,36 @@ public enum SessionLoadCalculator {
     /// From %HRR ≈ %VO2R: a 75 kg adult at a VO2 max of 45 ml/kg/min has
     /// (3.375 − 0.263) L/min of oxygen uptake available above rest, and at
     /// roughly 5 kcal per litre that is about 15.6 kcal/min of *active* energy
-    /// at full reserve. It is a reference, not a measurement: someone heavier
-    /// or fitter burns more at the same reserve fraction and this over-reads
-    /// them, which is why an energy-derived load never rates better than low
-    /// confidence on a session that can set a long window.
+    /// at full reserve.
+    ///
+    /// It is a reference for a **75 kg** adult, and that qualifier used to be
+    /// the model's largest known unfixed error. HealthKit's active energy
+    /// already accounts for body mass, so a 95 kg athlete burns about a quarter
+    /// more than a 75 kg one at the identical fraction of heart-rate reserve,
+    /// and dividing both by the same constant reads the heavier one as having
+    /// worked harder. `referenceEnergy(forBodyMass:)` is the correction, and
+    /// reading body mass from Health is what pays for it.
     public static let referenceEnergyAtFullReserve: Double = 15.6
+
+    /// The body mass `referenceEnergyAtFullReserve` describes.
+    public static let referenceBodyMassKilograms: Double = 75
+
+    /// The reference burn rate at full reserve for a given body mass.
+    ///
+    /// Linear in mass, which is what the underlying arithmetic is: VO2 max is
+    /// expressed per kilogram, so absolute oxygen uptake — and therefore the
+    /// kilocalories HealthKit reports — scales with the kilograms. The ratio is
+    /// bounded because the rest of the derivation (a fixed 45 ml/kg/min, a fixed
+    /// 5 kcal/L) is not, and one implausible weight sample should not be able to
+    /// halve or double every calorie-derived session in someone's history.
+    ///
+    /// Falls back to the reference adult when Health has no weight, which is
+    /// exactly the behaviour this path had before body mass was read at all.
+    static func referenceEnergy(forBodyMass mass: Double?) -> Double {
+        guard let mass, mass.isFinite, mass > 0 else { return referenceEnergyAtFullReserve }
+        let ratio = min(max(mass / referenceBodyMassKilograms, 0.6), 1.7)
+        return referenceEnergyAtFullReserve * ratio
+    }
 
     /// Fallback max heart rate when the user has not set one and Health has no
     /// estimate. Age-predicted values need an age we may not have, so this is a
@@ -196,8 +221,14 @@ public enum SessionLoadCalculator {
     /// than reasoning about them.
     ///
     /// Estimating the same quantity the heart-rate path measures makes the two
-    /// agree by construction for the reference adult, and leaves a residual
-    /// that scales with body mass and fitness rather than with intensity.
+    /// agree by construction for the reference adult. The residual that used to
+    /// leave — it scaled with body mass, so a heavier person's calorie-derived
+    /// sessions all read harder than they were — is now corrected directly from
+    /// Health's own weight through `referenceEnergy(forBodyMass:)`. What is left
+    /// is fitness: at the same reserve fraction a fitter person of the same mass
+    /// burns more, and nothing in Health measures that closely enough to divide
+    /// by. So this path still never rates better than low confidence on a
+    /// session that can set a long window.
     ///
     /// There is no longer a strength-specific floor here. It was redundant:
     /// `strengthLoad` already takes the maximum against `durationLoad`, which
@@ -210,7 +241,10 @@ public enum SessionLoadCalculator {
         else { return nil }
 
         let perMinute = energy / session.durationMinutes
-        let reserve = min(max(perMinute / referenceEnergyAtFullReserve, 0), 1)
+        let reserve = min(
+            max(perMinute / referenceEnergy(forBodyMass: session.bodyMassKilograms), 0),
+            1
+        )
         return SessionLoad(
             value: session.durationMinutes * trimpPerMinute(atReserve: reserve),
             source: .energy,
