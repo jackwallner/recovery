@@ -1,10 +1,6 @@
 #if DEBUG
 import Foundation
 @preconcurrency import HealthKit
-import os
-
-private let seedLogger = Logger(subsystem: "com.jackwallner.recovery", category: "HealthSeeder")
-
 /// Writes a plausible training history into the **simulator's** Health store so
 /// the app can be looked at the way a user sees it.
 ///
@@ -47,6 +43,42 @@ enum HealthSeederConfig {
 
 private let seedMarker = "RechargeSeededSample"
 
+/// Where the seeder says what it is doing.
+///
+/// `Logger.info` lives in the memory buffer and needs `log stream --level info`
+/// to be visible at all, which is why an earlier investigation concluded
+/// "nothing reaches the device log" and stopped there. A breadcrumb file in the
+/// app's own container is retrievable with `simctl get_app_container` after the
+/// run, whether or not anybody was streaming at the time, and survives the
+/// process being killed by the test harness.
+enum SeedTrace {
+    private static let url: URL? = {
+        FileManager.default
+            .urls(for: .documentDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("seed-trace.log")
+    }()
+
+    /// Truncates, so a rerun's trace is not read as the previous run's.
+    static func begin(_ message: String) {
+        if let url { try? Data().write(to: url) }
+        mark(message)
+    }
+
+    static func mark(_ message: String) {
+        let line = String(format: "%.3f %@\n", Date().timeIntervalSince1970, message)
+        NSLog("[seed] %@", message)
+        guard let url else { return }
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: Data(line.utf8))
+        } else {
+            try? Data(line.utf8).write(to: url)
+        }
+    }
+}
+
 @MainActor
 enum HealthSeeder {
     private static let store = HKHealthStore()
@@ -75,24 +107,48 @@ enum HealthSeeder {
     static func seedIfRequested() async {
         guard HealthSeederConfig.isEnabled, HKHealthStore.isHealthDataAvailable() else { return }
         assert(seedCoversTheImportWindow, "Seed window is shorter than HealthKitService.importDays")
+        SeedTrace.begin("seedIfRequested: enter, days=\(HealthSeederConfig.days)")
         do {
+            SeedTrace.mark("requestAuthorization: begin")
             try await store.requestAuthorization(toShare: shareTypes, read: HealthKitService.readTypes)
+            SeedTrace.mark("requestAuthorization: done")
             try await deleteExistingSeed()
+            SeedTrace.mark("deleteExistingSeed: done")
             try await write(days: HealthSeederConfig.days)
-            seedLogger.info("Seeded \(HealthSeederConfig.days) days of Health data")
+            SeedTrace.mark("seeded \(HealthSeederConfig.days) days")
         } catch {
-            seedLogger.error("Seeding failed: \(String(describing: error), privacy: .public)")
+            SeedTrace.mark("FAILED: \(String(describing: error))")
         }
     }
 
     // MARK: - Cleanup
 
+    /// Clears the previous seed, by **source** as well as by marker.
+    ///
+    /// The marker alone did not work and the failure was invisible until the
+    /// walkthrough finally ran: `HKWorkoutBuilder` never carried `seedMarker`,
+    /// so every workout the seeder had ever written survived every later run,
+    /// and History showed one 62-minute lift four times over, once per run,
+    /// stacking into a 72-hour countdown out of a single session. The samples
+    /// *inside* those workouts were marked and were deleted, so what
+    /// accumulated was a pile of workouts with no heart rate, which is also the
+    /// shape most likely to be read as a model bug rather than a seeding one.
+    ///
+    /// The workout carries the marker now, and the predicate additionally
+    /// matches anything this app wrote. **Recharge never writes to Health**:
+    /// the seeder is the only thing in the product that asks for share
+    /// authorization at all, so "written by this source" is exactly "seeded",
+    /// and it clears whatever an older build left behind rather than only what
+    /// this one would recognise.
     private static func deleteExistingSeed() async throws {
-        let predicate = HKQuery.predicateForObjects(
-            withMetadataKey: seedMarker,
-            operatorType: .equalTo,
-            value: 1 as NSNumber
-        )
+        let predicate = NSCompoundPredicate(orPredicateWithSubpredicates: [
+            HKQuery.predicateForObjects(
+                withMetadataKey: seedMarker,
+                operatorType: .equalTo,
+                value: 1 as NSNumber
+            ),
+            HKQuery.predicateForObjects(from: [HKSource.default()])
+        ])
         for type in shareTypes {
             // A type with nothing seeded throws `noDataAvailable`, which is not
             // an error here — it is the ordinary first run.
@@ -242,7 +298,7 @@ enum HealthSeeder {
         }
 
         try await store.save(dailySamples)
-        seedLogger.info("Wrote \(written) workouts and \(dailySamples.count) daily samples")
+        SeedTrace.mark("wrote \(written) workouts and \(dailySamples.count) daily samples")
     }
 
     /// How hard the previous two days were, 0...1. Drives the overnight signals
@@ -328,6 +384,9 @@ enum HealthSeeder {
         ))
 
         try await builder.addSamples(samples)
+        // Without this the workout is unmarked and `deleteExistingSeed` cannot
+        // find it, so every run leaves its workouts behind for the next one.
+        try await builder.addMetadata([seedMarker: 1])
         try await builder.endCollection(at: end)
         _ = try await builder.finishWorkout()
     }

@@ -11,8 +11,9 @@ import XCTest
 /// fixture that agrees with itself proves nothing — so this is what to run after
 /// changing the model or the shape of a screen.
 ///
-/// It is not an assertion suite. It asserts that each screen came up at all and
-/// otherwise exists so a person can look at the attachments.
+/// It is not an assertion suite. It asserts that each screen actually came
+/// forward, by hittability rather than existence, and otherwise exists so a
+/// person can look at the attachments.
 @MainActor
 final class SeededWalkthroughTests: XCTestCase {
 
@@ -33,60 +34,89 @@ final class SeededWalkthroughTests: XCTestCase {
         // If the sheet never appears and nothing gets seeded, that is why.
         let app = XCUIApplication()
         app.launchEnvironment["RECHARGE_SEED_HEALTH"] = "1"
-        // **Three weeks, not the seeder's 120-day default, and the limit is the
-        // simulator rather than the model.** `HKWorkoutBuilder` finishes one
-        // workout at a time and each one is a database write the simulator
-        // indexes; sixty days is about fifty of them and did not finish inside
-        // six minutes. Three weeks is roughly twenty sessions — enough to
-        // exercise everything this test exists for (classification, coverage,
-        // the quiet threshold, day grouping, same-day stacking, the observed
-        // maximum) while the thirty-day analysis is still thin, which is itself
-        // a state worth looking at because it is the one a new user is in.
+        // The seeder's own default, which is `HealthKitService.importDays`, so
+        // the seeded store covers exactly the window the app imports.
         //
-        // Raise it by hand when the question is specifically about the 42-day
-        // baseline, and expect to wait.
-        app.launchEnvironment["RECHARGE_SEED_DAYS"] = "21"
+        // This used to be capped at three weeks, on the belief that
+        // `HKWorkoutBuilder` writes were slow enough that sixty days "did not
+        // finish inside six minutes". They are not: the run that finally got
+        // past the permission sheet wrote three days of workouts in **0.16
+        // seconds**, and the six minutes were the permission helper timing out
+        // and then the tab-bar wait timing out behind it. There was never a
+        // reason to seed less than the app reads.
+        if let override = ProcessInfo.processInfo.environment["RECHARGE_SEED_DAYS"] {
+            app.launchEnvironment["RECHARGE_SEED_DAYS"] = override
+        }
         app.launch()
-        allowHealthAccess(in: app)
+        allowHealthAccess()
         return app
     }
 
-    /// The Health authorization sheet is a remote view, so it turns up as part
-    /// of the app under test on the simulator.
+    /// The Health authorization sheet belongs to **another process**, and that
+    /// is the whole reason this test never ran.
     ///
-    /// **Existence is not hittability here, and the difference is the whole
-    /// reason this loop exists.** The first version tapped "Turn On All" as soon
-    /// as it existed and then tapped "Allow"; the sheet stayed up with every
-    /// toggle off and Allow still disabled, and the test passed anyway because
-    /// `app.buttons["Today"]` behind the sheet reports `exists == true`. It is
-    /// the same trap the tab-bar frame tests document: an element that is on
-    /// screen in the accessibility tree is not an element the user can see.
+    /// It is presented into the app's own window through
+    /// `_UIRemoteViewControllerSceneHostingImpl`, so on screen it looks like
+    /// part of Recharge, and the previous version of this helper reasonably
+    /// assumed it therefore turns up in the app under test's accessibility
+    /// tree. It does not. `XCUIApplication()` reports the onboarding screen
+    /// underneath and an empty `Other` where the sheet is hosted; every element
+    /// of the sheet lives in `com.apple.HealthPrivacyService`.
     ///
-    /// So: wait for the sheet to be *hittable*, turn everything on, and keep
-    /// tapping Allow until the sheet is actually gone.
-    private func allowHealthAccess(in app: XCUIApplication) {
-        let turnOnAll = app.buttons["Turn On All"]
-        guard turnOnAll.waitForExistence(timeout: 60) else { return }
+    /// So `app.buttons["Turn On All"]` never existed, the 60-second
+    /// `waitForExistence` timed out, and the helper's `guard … else { return }`
+    /// returned **silently**, leaving the sheet up, `requestAuthorization`
+    /// never resuming, and the app parked forever inside
+    /// `HealthSeeder.seedIfRequested()`. The 364-second failure was 60 seconds
+    /// of that wait plus the 300-second wait for the tab bar, which is exactly
+    /// why it took the same time at 21, 60 and 120 days: the seeder had not
+    /// written a single sample in any of them.
+    ///
+    /// Two rules follow, and they are what keep this from happening again.
+    /// **Query the sheet's own application**, and **never return silently**.
+    /// Every step here asserts, because a permission helper that gives up
+    /// quietly hands the failure to whatever runs next, which then reports
+    /// something that has nothing to do with the cause.
+    private var healthSheet: XCUIApplication {
+        XCUIApplication(bundleIdentifier: "com.apple.HealthPrivacyService")
+    }
+
+    /// The rows are `Cell`s, not `Button`s and not `Switch`es, and only the
+    /// cell-level identifiers are trustworthy: the simulator hands the inner
+    /// title and switch of one row the identifier of a different row (Active
+    /// Energy's switch is called `UIA.Health.HeartRateVariability.SwitchCell.Switch`).
+    /// The `UIA.Health.{Read,Write}.<Type>.SwitchCell` identifier on the cell
+    /// itself is correct, and the cell carries the on/off value, so everything
+    /// below works off the cells.
+    private static let allCategoriesIdentifier = "UIA.Health.AuthSheet.AllCategoryButton"
+    private static let allowIdentifier = "UIA.Health.Allow.Button"
+    private static let switchCellPredicate = NSPredicate(
+        format: "identifier BEGINSWITH 'UIA.Health.' AND identifier ENDSWITH '.SwitchCell'"
+    )
+
+    private func allowHealthAccess() {
+        let sheet = healthSheet
+        let turnOnAll = sheet.cells[Self.allCategoriesIdentifier]
+        XCTAssertTrue(
+            turnOnAll.waitForExistence(timeout: 90),
+            "the Health permission sheet never appeared in com.apple.HealthPrivacyService"
+        )
         waitUntilHittable(turnOnAll)
         turnOnAll.tap()
 
-        // **Tapping "Turn On All" is not the same as everything being on**, and
-        // the difference is silent in both directions. The sheet dismissed
-        // cleanly with every switch still off, the test passed, and the only
-        // evidence was one line in the device log: `Seeding failed: Not
-        // authorized`. So the switches are checked, and any that did not flip
-        // are flipped by hand.
-        flipRemainingSwitchesOn(in: app)
+        turnEverythingOn(in: sheet)
 
-        let allow = app.buttons["Allow"]
-        guard allow.waitForExistence(timeout: 15) else { return }
-        // Allow stays disabled until the toggles have finished animating on.
+        let allow = sheet.buttons[Self.allowIdentifier]
+        XCTAssertTrue(allow.waitForExistence(timeout: 15), "the Allow button never appeared")
+        // Allow stays disabled until at least one category is on, and the
+        // toggles animate, so this is a real wait rather than a formality.
         waitUntilHittable(allow)
         allow.tap()
 
-        // The sheet dismisses asynchronously; nothing downstream is meaningful
-        // until it has.
-        let deadline = Date().addingTimeInterval(20)
+        // The sheet dismisses asynchronously and nothing downstream is
+        // meaningful until it has: `requestAuthorization` does not resume until
+        // the transaction ends, and the app is sitting on that continuation.
+        let deadline = Date().addingTimeInterval(30)
         while allow.exists, Date() < deadline {
             if allow.isHittable { allow.tap() }
             Thread.sleep(forTimeInterval: 0.5)
@@ -94,35 +124,92 @@ final class SeededWalkthroughTests: XCTestCase {
         XCTAssertFalse(allow.exists, "the Health permission sheet never dismissed")
     }
 
-    /// Turns on whatever "Turn On All" left off, without scrolling.
+    /// "Turn On All" is the only control that reaches the rows below the fold
+    /// (the table is about 1,860 points of content in an 812-point window, and
+    /// the read section is entirely off screen), so it does the work and this
+    /// checks it did.
     ///
-    /// The first version walked the sheet with `swipeUp()`, re-querying
-    /// `app.switches` after each swipe. Enumerating that element list is slow
-    /// enough on a permission sheet that twelve rounds of it took six minutes
-    /// and the sheet was still up when the test gave up — the fix cost more time
-    /// than the bug did. One pass over what is on screen is enough, because
-    /// "Turn On All" reaches the rows below the fold even when it fails to
-    /// visibly flip the ones above it.
-    private func flipRemainingSwitchesOn(in app: XCUIApplication) {
-        let toggles = app.switches.allElementsBoundByIndex
-        for toggle in toggles where toggle.isHittable && (toggle.value as? String) == "0" {
-            toggle.tap()
+    /// Every cell reports its own on/off value whether or not it is visible, so
+    /// the check is complete without scrolling; anything still off that is
+    /// reachable gets tapped, and anything still off that is not is a failure
+    /// rather than a shrug. **Tapping "Turn On All" is not the same as
+    /// everything being on**, and when they diverge the only symptom is one
+    /// line in the device log reading `Seeding failed: Not authorized`.
+    private func turnEverythingOn(in sheet: XCUIApplication) {
+        let deadline = Date().addingTimeInterval(20)
+        while Date() < deadline {
+            let off = sheet.cells.matching(Self.switchCellPredicate)
+                .allElementsBoundByIndex
+                .filter { isOff($0) }
+            if off.isEmpty { return }
+            for cell in off where cell.isHittable { cell.switches.firstMatch.tap() }
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        let stillOff = sheet.cells.matching(Self.switchCellPredicate)
+            .allElementsBoundByIndex
+            .filter { isOff($0) }
+            .map(\.identifier)
+        XCTAssertTrue(
+            stillOff.isEmpty,
+            "these Health categories were still off when Allow was tapped: \(stillOff)"
+        )
+    }
+
+    /// The cell's value arrives as an `NSNumber` here and as a `String` in other
+    /// places XCTest surfaces switch state, so it is compared as text.
+    private func isOff(_ cell: XCUIElement) -> Bool {
+        guard let value = cell.value else { return false }
+        return String(describing: value) == "0"
+    }
+
+    /// Everything that can interrupt at launch, cleared in one place, in a
+    /// loop, and **after** the import rather than only before it.
+    ///
+    /// The previous version ran once the moment the tab bar appeared and looked
+    /// for four labels, which on seeded data was too early to catch the one
+    /// interruption seeded data guarantees. The seeded history ends with a
+    /// countdown that has already run out, so Today raises its readiness
+    /// question ("How did that feel?") a beat after the first import lands. The
+    /// half sheet then covered the floating tab bar for the rest of the
+    /// walkthrough: every tap computed a hit point of {-1, -1}, fell back to the
+    /// element's centre, and landed on the sheet instead of the tab.
+    ///
+    /// **And the test passed anyway**, which is the part worth remembering.
+    /// `navigationBars["History"]` reported `exists` from behind the sheet, so
+    /// three of the five attachments were the same screenshot of Today. It is
+    /// the accessibility-tree trap the tab-bar frame tests are written around,
+    /// arriving from a new direction: not an off-screen element this time, but
+    /// a covered one.
+    ///
+    /// "Not now" is checked first on purpose. The trial offer carries both a
+    /// decline and a purchase button, and the purchase one is what a careless
+    /// label list taps.
+    private func dismissInterrupts(in app: XCUIApplication) {
+        // "Continue" is What's New's dismissal. It is not the trial offer's CTA,
+        // which reads "Continue with Recharge+" and does not match by label.
+        let dismissals = ["Not now", "Got it", "Continue", "Done", "Close"]
+        for _ in 0..<6 {
+            guard let button = dismissals
+                .map({ app.buttons[$0] })
+                .first(where: { $0.exists && $0.isHittable })
+            else { return }
+            button.tap()
+            Thread.sleep(forTimeInterval: 1)
         }
     }
 
-    /// The seeder marks setup complete on an install that has a
-    /// `lastWhatsNewVersionShown` from a previous build, so this run looks like
-    /// an update rather than a fresh install and the announcement fires over
-    /// Today. It is not what the test is here to look at.
-    private func dismissLaunchSheets(in app: XCUIApplication) {
-        for label in ["Got it", "Continue", "Done", "Close"] {
-            let button = app.buttons[label]
-            if button.exists, button.isHittable {
-                button.tap()
-                Thread.sleep(forTimeInterval: 1)
-                return
-            }
-        }
+    /// Switches tab and proves it. `RootView` hides an unselected tab with
+    /// `opacity(0)` and `allowsHitTesting(false)` rather than removing it, so
+    /// `exists` cannot tell a visible screen from a hidden one and only
+    /// `isHittable` can.
+    private func show(_ tab: String, in app: XCUIApplication, landmark: XCUIElement) {
+        let button = app.buttons[tab]
+        XCTAssertTrue(button.exists, "the \(tab) tab is missing")
+        waitUntilHittable(button, timeout: 30)
+        XCTAssertTrue(button.isHittable, "the \(tab) tab is on screen but covered")
+        button.tap()
+        waitUntilHittable(landmark, timeout: 30)
+        XCTAssertTrue(landmark.isHittable, "tapping \(tab) did not bring its screen forward")
     }
 
     private func waitUntilHittable(_ element: XCUIElement, timeout: TimeInterval = 20) {
@@ -145,49 +232,29 @@ final class SeededWalkthroughTests: XCTestCase {
     /// samples and re-running it per test would cost minutes for nothing, and
     /// the point is to look at the screens in the order a user meets them.
     func testWalkthroughOnSeededHealthData() throws {
-        try XCTSkipUnless(
-            ProcessInfo.processInfo.environment["RECHARGE_RUN_SEEDED_WALKTHROUGH"] == "1",
-            """
-            Skipped by default: this does not currently complete on the \
-            simulator. The app blocks in `HealthSeeder.seedIfRequested()` and \
-            the tab bar never appears, on a clean install, at every seed window \
-            tried (21, 60 and 120 days) — the failure takes the same 364 \
-            seconds each time, which is the test's own timeout rather than the \
-            seeder's, so the size of the write is not what is wrong. Nothing \
-            reaches the device log, including the seeder's own success and \
-            failure lines, so it is hung rather than erroring: the most likely \
-            candidate is `HKWorkoutBuilder` never resuming one of its \
-            continuations under the simulator's HealthKit daemon.
-
-            It is kept because the harness itself is sound and the gap it \
-            covers is real — every screenshot scene bypasses the import path \
-            entirely, so nothing else in the suite exercises classification, \
-            heart-rate coverage, the observed maximum, the quiet threshold, day \
-            grouping or stacking against data that arrived through HealthKit.
-
-            To work on it: uninstall first (HealthKit never re-asks once a \
-            sheet has been answered), then
-
-                xcrun simctl uninstall <udid> com.jackwallner.recovery
-                RECHARGE_RUN_SEEDED_WALKTHROUGH=1 xcodebuild test \
-                  -scheme RechargeUITests \
-                  -only-testing:RechargeUITests/SeededWalkthroughTests
-            """
-        )
         let app = launchSeeded()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30))
 
         // The import walks 120 days of workouts and runs a heart-rate query
-        // against each one, so the first paint is a genuine wait.
+        // against each one, so the first paint is a genuine wait. The seeding
+        // itself is not: 120 days is about 600 workouts and it finishes in
+        // roughly two seconds.
         let today = app.buttons["Today"]
         XCTAssertTrue(today.waitForExistence(timeout: 300), "the tab bar never appeared")
-        dismissLaunchSheets(in: app)
-        XCTAssertTrue(today.isHittable, "the tab bar is on screen but covered")
+        dismissInterrupts(in: app)
         sleepForImport()
+        // Again, because the readiness question follows the import rather than
+        // the launch.
+        dismissInterrupts(in: app)
+
+        // `exists` is not `isHittable`, and the gap is real twice over here: the
+        // shell cross-fades from onboarding to the tab bar over a quarter of a
+        // second, and anything still presented sits on top of it.
+        waitUntilHittable(today, timeout: 60)
+        XCTAssertTrue(today.isHittable, "the tab bar is on screen but covered")
         attach(app, named: "01-today")
 
-        app.buttons["History"].tap()
-        XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 30))
+        show("History", in: app, landmark: app.navigationBars["History"])
         attach(app, named: "02-history")
 
         // The row that used to read "None". Scroll a little so the attachment
@@ -195,16 +262,28 @@ final class SeededWalkthroughTests: XCTestCase {
         app.swipeUp()
         attach(app, named: "03-history-scrolled")
 
-        let upgrade = app.buttons["Upgrade"]
-        if upgrade.exists {
-            upgrade.tap()
-            attach(app, named: "04-upgrade")
-        }
+        // "Upgrade" before purchase, "Recharge+" after. On a seeded simulator
+        // run it is always the former, because there is no RevenueCat.
+        show("Upgrade", in: app, landmark: app.staticTexts["Recharge+"].firstMatch)
+        attach(app, named: "04-upgrade")
 
-        today.tap()
-        // The ring opens the explanation, which is where everything that used to
-        // clutter this screen now lives.
-        app.otherElements.firstMatch.tap()
+        show("Today", in: app, landmark: today)
+
+        // The ring opens the explanation, which is where everything that used
+        // to clutter Today now lives. `today.hero` is the identifier on it; the
+        // previous version tapped `app.otherElements.firstMatch`, which is
+        // whatever container happens to come first and had no reason to be the
+        // ring.
+        // Matched by identifier across every element type rather than as
+        // `otherElements`: the hero is a `Button` with
+        // `accessibilityElement(children: .combine)`, and querying the wrong
+        // collection reports a missing ring rather than a mistyped query.
+        let hero = app.descendants(matching: .any)
+            .matching(identifier: "today.hero")
+            .firstMatch
+        XCTAssertTrue(hero.waitForExistence(timeout: 15), "the countdown ring is missing")
+        waitUntilHittable(hero, timeout: 15)
+        hero.tap()
         attach(app, named: "05-detail")
     }
 
