@@ -37,14 +37,14 @@ struct ProfileChip: View {
     var activityLabel: String = ""
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: Theme.Space.xxs) {
             Image(systemName: Theme.symbol(forActivityLabel: activityLabel, profile: profile))
                 .font(.caption2)
             Text(category?.shortLabel ?? profile.label)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, Theme.Space.xs)
+        .padding(.vertical, Theme.Space.xxs)
         .background(Theme.cardSurfaceLight, in: Capsule())
         .foregroundStyle(Theme.textSecondary)
     }
@@ -74,8 +74,8 @@ struct ConfidencePips: View {
     }
 
     var body: some View {
-        HStack(spacing: 5) {
-            HStack(spacing: 2) {
+        HStack(spacing: Theme.Space.xxs) {
+            HStack(spacing: Theme.Space.hair) {
                 ForEach(0..<3, id: \.self) { index in
                     Capsule()
                         .fill(index < filled ? tint : Theme.ringTrack)
@@ -102,20 +102,20 @@ struct Card<Content: View>: View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(padding)
-            .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+            .cardShape()
     }
 }
 
 /// The lock badge on Pro-only rows.
 struct ProBadge: View {
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: Theme.Space.xxs) {
             Image(systemName: "lock.fill")
             Text("Recharge+")
         }
         .font(.system(size: 10, weight: .bold, design: .rounded))
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
+        .padding(.horizontal, Theme.Space.xs)
+        .padding(.vertical, Theme.Space.xxs)
         .background(Theme.pro.opacity(0.15), in: Capsule())
         .foregroundStyle(Theme.pro)
     }

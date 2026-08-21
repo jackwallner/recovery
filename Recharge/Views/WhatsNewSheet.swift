@@ -10,8 +10,8 @@ struct WhatsNewSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 22) {
-                    VStack(spacing: 8) {
+                VStack(spacing: Theme.Space.xl) {
+                    VStack(spacing: Theme.Space.xs) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 40))
                             .foregroundStyle(Theme.recovering)
@@ -19,16 +19,16 @@ struct WhatsNewSheet: View {
                             .font(.system(.title, design: .rounded, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
                     }
-                    .padding(.top, 20)
+                    .padding(.top, Theme.Space.lg)
 
-                    VStack(spacing: 16) {
+                    VStack(spacing: Theme.Space.md) {
                         ForEach(WhatsNew.items) { item in
-                            HStack(alignment: .top, spacing: 12) {
+                            HStack(alignment: .top, spacing: Theme.Space.sm) {
                                 Image(systemName: item.symbol)
                                     .font(.system(size: 19))
                                     .frame(width: 28)
                                     .foregroundStyle(Theme.recovering)
-                                VStack(alignment: .leading, spacing: 3) {
+                                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                                     Text(item.title)
                                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                         .foregroundStyle(Theme.textPrimary)
@@ -46,19 +46,19 @@ struct WhatsNewSheet: View {
                             Text(RechargeConversionCopy.shortCTALabel(eligibleForTrial: store.canPitchFreeTrial))
                                 .font(.system(.headline, design: .rounded))
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(Theme.pro, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .padding(.vertical, Theme.Space.md)
+                                .background(Theme.pro, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
                                 .foregroundStyle(.white)
                         }
-                        .buttonStyle(.plain)
+                        .pressable()
                     }
 
                     Button("Continue") { dismiss() }
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+                .padding(.horizontal, Theme.Space.xl)
+                .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
             .sheet(isPresented: $showPaywall) {

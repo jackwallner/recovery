@@ -154,13 +154,13 @@ struct RootView: View {
     private var tabBar: some View {
         HStack(spacing: 0) {
             TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
-                selectedTab = .today
+                select(.today)
             }
             TabButton(
                 icon: "list.bullet.rectangle",
                 label: "History",
                 isSelected: selectedTab == .history
-            ) { selectedTab = .history }
+            ) { select(.history) }
             TabButton(
                 icon: store.isPro ? "sparkles" : "lock.fill",
                 label: store.isPro ? "Recharge+" : "Upgrade",
@@ -168,14 +168,24 @@ struct RootView: View {
                 isSelected: selectedTab == .plus
             ) {
                 hasVisitedPlusTab = true
-                selectedTab = .plus
+                select(.plus)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Theme.Space.xs)
         .padding(.vertical, TabBarMetrics.verticalPadding)
         .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
         .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
         .padding(.bottom, TabBarMetrics.bottomPadding)
+    }
+
+    /// Every tab change goes through here so the tap is confirmed in the hand
+    /// as well as on the screen, and so a re-tap of the tab you are already on
+    /// stays silent: a haptic that fires when nothing changed teaches the user
+    /// to stop trusting it.
+    private func select(_ tab: Tab) {
+        guard selectedTab != tab else { return }
+        Haptics.selection()
+        selectedTab = tab
     }
 
     // MARK: - Launch surfaces
@@ -349,7 +359,7 @@ private struct TabButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            VStack(spacing: Theme.Space.xxs) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                 Text(label)
@@ -367,7 +377,7 @@ private struct TabButton: View {
             // label, which reports a target well under 44pt.
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .pressable()
         .animation(.easeInOut(duration: 0.2), value: isSelected)
         // Without this VoiceOver reads all three tabs identically and never says
         // which one you are on.

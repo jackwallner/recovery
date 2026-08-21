@@ -85,8 +85,8 @@ struct SettingsView: View {
     private var proSection: some View {
         Section {
             Button { showPaywall = true } label: {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: Theme.Space.sm) {
+                    HStack(spacing: Theme.Space.sm) {
                         Image(systemName: "bolt.badge.clock.fill")
                             .font(.title3)
                             .foregroundStyle(Theme.pro)
@@ -99,7 +99,7 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textTertiary)
                     }
 
-                    HStack(alignment: .center, spacing: 14) {
+                    HStack(alignment: .center, spacing: Theme.Space.md) {
                         settingsFigure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .bold))
@@ -119,7 +119,7 @@ struct SettingsView: View {
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, Theme.Space.xxs)
             }
         }
     }
@@ -153,8 +153,7 @@ struct SettingsView: View {
                     Text(value).foregroundStyle(tint)
                 }
             }
-            .font(Theme.bigNumber(24))
-            .monospacedDigit()
+            .countdownNumber(24)
             Text(label)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .textCase(.uppercase)
@@ -228,10 +227,10 @@ struct SettingsView: View {
     private var healthSection: some View {
         Section {
             let status = healthStatus
-            HStack(spacing: 10) {
+            HStack(spacing: Theme.Space.sm) {
                 Image(systemName: status.symbol)
                     .foregroundStyle(status.tint)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Theme.Space.hair) {
                     Text(status.label)
                         .foregroundStyle(Theme.textPrimary)
                     Text(status.detail)
@@ -289,7 +288,7 @@ struct SettingsView: View {
         if !engine.healthIngest.isEmpty {
             Section {
                 HealthIngestList(summary: engine.healthIngest)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, Theme.Space.xxs)
             } header: {
                 Text("Read from Apple Health")
             } footer: {
@@ -586,7 +585,7 @@ struct SettingsView: View {
                     }
                 }
             if notificationsDenied, settings.notifyOnReady {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
                     Text("Notifications are turned off for Recharge, so the Ready alert can't be delivered.")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.orange)

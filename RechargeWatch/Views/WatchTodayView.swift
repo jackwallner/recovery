@@ -284,7 +284,7 @@ struct WatchEffortPrompt: View {
                     dismiss()
                 }
                 .font(.system(.caption, design: .rounded))
-                .buttonStyle(.plain)
+                .pressable()
                 .foregroundStyle(Theme.textSecondary)
             }
             .padding(.horizontal, 4)

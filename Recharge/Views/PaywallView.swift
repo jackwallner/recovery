@@ -76,23 +76,23 @@ struct PaywallView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack(spacing: 22) {
+                    VStack(spacing: Theme.Space.xl) {
                         hero
                         plans
                         features
                         footer
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 12)
+                    .padding(.horizontal, Theme.Space.lg)
+                    .padding(.bottom, Theme.Space.sm)
                 }
 
                 // The hero, features, and three plan cards are taller than the
                 // sheet on every current iPhone. A separate action row keeps
                 // the decision and its terms visible without covering a plan.
                 cta
-                    .padding(.horizontal, 20)
-                    .padding(.top, 10)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, Theme.Space.lg)
+                    .padding(.top, Theme.Space.sm)
+                    .padding(.bottom, Theme.Space.xs)
                     .background(.regularMaterial)
             }
             .background(Theme.background)
@@ -124,11 +124,11 @@ struct PaywallView: View {
     // MARK: - Hero
 
     private var hero: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             Image(systemName: "bolt.badge.clock.fill")
                 .font(.system(size: 46))
                 .foregroundStyle(Theme.pro)
-                .padding(.top, 8)
+                .padding(.top, Theme.Space.xs)
             Text(RechargeConversionCopy.proName)
                 .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
@@ -140,14 +140,14 @@ struct PaywallView: View {
     }
 
     private var features: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.sm) {
             ForEach(ProFeature.allCases, id: \.self) { feature in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: Theme.Space.sm) {
                     Image(systemName: feature.symbol)
                         .font(.system(size: 17))
                         .frame(width: 26)
                         .foregroundStyle(Theme.pro)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Theme.Space.hair) {
                         Text(feature.title)
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
@@ -166,9 +166,9 @@ struct PaywallView: View {
     @ViewBuilder
     private var plans: some View {
         if store.isLoadingProducts && store.products.isEmpty {
-            ProgressView().padding(.vertical, 30)
+            ProgressView().padding(.vertical, Theme.Space.xxl)
         } else if store.products.isEmpty {
-            VStack(spacing: 8) {
+            VStack(spacing: Theme.Space.xs) {
                 Text("Couldn't load plans")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -181,9 +181,9 @@ struct PaywallView: View {
                 }
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
             }
-            .padding(.vertical, 20)
+            .padding(.vertical, Theme.Space.lg)
         } else {
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.sm) {
                 ForEach(store.products, id: \.identifier) { package in
                     planCard(package)
                 }
@@ -197,23 +197,24 @@ struct PaywallView: View {
         let isPopular = package.rechargePackageKind == .yearly
 
         return Button {
+            Haptics.selection()
             selected = package
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.Space.sm) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .font(.title3)
                     .foregroundStyle(isSelected ? Theme.pro : Theme.textTertiary)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                    HStack(spacing: Theme.Space.xs) {
                         Text(package.rechargeDisplayName)
                             .font(.system(.headline, design: .rounded))
                             .foregroundStyle(Theme.textPrimary)
                         if isPopular {
                             Text("POPULAR")
                                 .font(.system(size: 9, weight: .bold, design: .rounded))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, Theme.Space.xs)
+                                .padding(.vertical, Theme.Space.hair)
                                 .background(Theme.pro, in: Capsule())
                                 .foregroundStyle(.white)
                         }
@@ -235,17 +236,17 @@ struct PaywallView: View {
                 Spacer()
 
             }
-            .padding(14)
+            .padding(Theme.Space.md)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
                     .fill(Theme.cardSurface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
                             .stroke(isSelected ? Theme.pro : .clear, lineWidth: 2)
                     )
             )
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
@@ -253,7 +254,7 @@ struct PaywallView: View {
     // MARK: - CTA
 
     private var cta: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             Button {
                 Task { await purchase() }
             } label: {
@@ -266,11 +267,11 @@ struct PaywallView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Theme.pro, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(.vertical, Theme.Space.md)
+                .background(Theme.pro, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
                 .foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .pressable()
             .disabled(selected == nil || store.purchaseInFlight)
             .opacity(selected == nil ? 0.5 : 1)
             // "Continue with Recharge+" is also the label on the locked-card
@@ -323,10 +324,10 @@ struct PaywallView: View {
     // MARK: - Footer
 
     private var footer: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 18) { legalLinks }
-                VStack(spacing: 8) { legalLinks }
+                HStack(spacing: Theme.Space.lg) { legalLinks }
+                VStack(spacing: Theme.Space.xs) { legalLinks }
             }
             .font(.system(.footnote, design: .rounded))
             .dynamicTypeSize(...DynamicTypeSize.accessibility3)
@@ -375,6 +376,7 @@ struct PaywallView: View {
         do {
             switch try await store.purchase(package) {
             case .purchased:
+                Haptics.success()
                 didPurchase = true
                 dismiss()
             case .cancelled:
@@ -383,6 +385,7 @@ struct PaywallView: View {
                 errorMessage = "Your purchase is pending approval."
             }
         } catch {
+            Haptics.failure()
             errorMessage = store.purchaseFailedMessage(for: package)
         }
     }

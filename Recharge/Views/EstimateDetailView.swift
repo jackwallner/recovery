@@ -28,7 +28,7 @@ struct EstimateDetailView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: Theme.Space.md) {
                     header
                     reasons
                     numbers
@@ -40,8 +40,8 @@ struct EstimateDetailView: View {
                     }
                     disclaimer
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
+                .padding(.horizontal, Theme.Space.md)
+                .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
             .navigationTitle(estimate.activityLabel.asSessionTitle)
@@ -58,12 +58,12 @@ struct EstimateDetailView: View {
 
     private var header: some View {
         Card {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 // The cost, always. A session that started no countdown still
                 // cost something, and the word "None" here was the app refusing
                 // to answer the question the sheet was opened to answer.
                 Text(CountdownFormat.hours(estimate.recoveryCostHours))
-                    .font(Theme.bigNumber(38))
+                    .countdownNumber(38)
                     .foregroundStyle(Theme.textPrimary)
                 Text(costCaption)
                     .font(.system(.subheadline, design: .rounded))
@@ -82,7 +82,7 @@ struct EstimateDetailView: View {
                         .foregroundStyle(Theme.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                HStack(spacing: 8) {
+                HStack(spacing: Theme.Space.xs) {
                     ProfileChip(
                         profile: estimate.profile,
                         category: estimate.category,
@@ -108,16 +108,16 @@ struct EstimateDetailView: View {
 
     private var reasons: some View {
         Card {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 Text("Why")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 ForEach(Array(estimate.reasons.enumerated()), id: \.offset) { _, reason in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: Theme.Space.xs) {
                         Circle()
                             .fill(Theme.textTertiary)
                             .frame(width: 4, height: 4)
-                            .padding(.top, 7)
+                            .padding(.top, Theme.Space.xs)
                         Text(reason)
                             .font(.system(.footnote, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
@@ -133,7 +133,7 @@ struct EstimateDetailView: View {
 
     private var numbers: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text("Numbers")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -181,11 +181,11 @@ struct EstimateDetailView: View {
     private var loadCard: some View {
         let balance = engine.loadBalance()
         return Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text("Training load")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                HStack(spacing: 20) {
+                HStack(spacing: Theme.Space.lg) {
                     loadFigure("This week", balance.acute)
                     loadFigure("4-week average", balance.chronic)
                 }
@@ -197,10 +197,9 @@ struct EstimateDetailView: View {
     }
 
     private func loadFigure(_ label: String, _ value: Double) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Theme.Space.hair) {
             Text("\(Int(value.rounded()))")
-                .font(Theme.bigNumber(26))
-                .monospacedDigit()
+                .countdownNumber(26)
                 .foregroundStyle(Theme.textPrimary)
             Text(label)
                 .font(.system(.caption2, design: .rounded))
@@ -213,7 +212,7 @@ struct EstimateDetailView: View {
 
     private var profileOverride: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text("Session type")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -239,8 +238,8 @@ struct EstimateDetailView: View {
             NotificationCenter.default.post(name: .rechargeUpgradeRequested, object: nil)
         } label: {
             Card {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: Theme.Space.sm) {
+                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                         Text("Correct this session")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
@@ -255,7 +254,7 @@ struct EstimateDetailView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
     }
 
     private var disclaimer: some View {
@@ -263,7 +262,7 @@ struct EstimateDetailView: View {
             .font(.system(.caption2, design: .rounded))
             .foregroundStyle(Theme.textTertiary)
             .multilineTextAlignment(.center)
-            .padding(.horizontal, 8)
-            .padding(.top, 4)
+            .padding(.horizontal, Theme.Space.xs)
+            .padding(.top, Theme.Space.xxs)
     }
 }

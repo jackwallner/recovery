@@ -71,8 +71,8 @@ struct OnboardingView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
 
             progress
-                .padding(.horizontal, 28)
-                .padding(.bottom, 12)
+                .padding(.horizontal, Theme.Space.step(7))
+                .padding(.bottom, Theme.Space.sm)
         }
         .background(Theme.background)
         .animation(.easeInOut(duration: 0.25), value: index)
@@ -306,7 +306,7 @@ private struct OnboardingScroll<Content: View>: View {
                         .frame(maxHeight: Self.gapAboveActions)
                 }
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height)
-                .padding(.vertical, 12)
+                .padding(.vertical, Theme.Space.sm)
             }
             .scrollBounceBehavior(.basedOnSize)
         }
@@ -340,7 +340,7 @@ private struct OnboardingPage: View {
                     Image(systemName: symbol)
                         .font(.system(size: 64))
                         .foregroundStyle(tint)
-                        .padding(.bottom, 28)
+                        .padding(.bottom, Theme.Space.step(7))
                         .accessibilityHidden(true)
                 }
 
@@ -357,14 +357,14 @@ private struct OnboardingPage: View {
                     .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                    .padding(.bottom, 14)
+                    .padding(.bottom, Theme.Space.md)
 
                 Text(message)
                     .font(.system(.body, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, Theme.Space.xs)
 
                 // Inside the scroll view, not between it and the buttons. This
                 // was the last thing in the flow that could still move the CTA:
@@ -377,7 +377,7 @@ private struct OnboardingPage: View {
                         .foregroundStyle(Theme.textTertiary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 16)
+                        .padding(.top, Theme.Space.md)
                 }
             }
 
@@ -391,8 +391,8 @@ private struct OnboardingPage: View {
                 secondaryAction: secondaryAction
             )
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Theme.Space.step(7))
+        .padding(.bottom, Theme.Space.md)
     }
 }
 
@@ -413,27 +413,24 @@ private struct OnboardingReadoutPage: View {
                     .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, Theme.Space.lg)
 
                 HealthIngestList(summary: summary)
-                    .padding(16)
-                    .background(
-                        Theme.cardSurface,
-                        in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-                    )
+                    .padding(Theme.Space.md)
+                    .cardShape()
 
                 Text(footer)
                     .font(.system(.footnote, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 18)
+                    .padding(.top, Theme.Space.lg)
             }
 
             OnboardingActions(primaryTitle: "Continue", primaryAction: primaryAction)
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Theme.Space.step(7))
+        .padding(.bottom, Theme.Space.md)
     }
 
     private var footer: String {
@@ -464,14 +461,14 @@ private struct ProfileQuestionPage: View {
                     .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, Theme.Space.xs)
 
                 Text(question.detail)
                     .font(.system(.footnote, design: .rounded))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 22)
+                    .padding(.bottom, Theme.Space.xl)
 
                 switch question {
                 case .age: ageOptions
@@ -487,8 +484,8 @@ private struct ProfileQuestionPage: View {
                 tint: hasAnswer ? Theme.recovering : Theme.idle
             )
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Theme.Space.step(7))
+        .padding(.bottom, Theme.Space.md)
     }
 
     private var hasAnswer: Bool {
@@ -503,7 +500,7 @@ private struct ProfileQuestionPage: View {
     /// Ten-year bands rather than a wheel. The only thing age feeds is a
     /// heart-rate ceiling and a gentle ramp, and neither can tell 34 from 36.
     private var ageOptions: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             ForEach(Self.ageBands, id: \.midpoint) { band in
                 optionRow(
                     title: band.label,
@@ -528,7 +525,7 @@ private struct ProfileQuestionPage: View {
         isSelected: @escaping (T) -> Bool,
         select: @escaping (T) -> Void
     ) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             ForEach(values, id: \.self) { value in
                 optionRow(
                     title: value[keyPath: label],
@@ -541,7 +538,7 @@ private struct ProfileQuestionPage: View {
 
     private func optionRow(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.Space.sm) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
                     .foregroundStyle(isSelected ? Theme.recovering : Theme.textTertiary)
@@ -552,19 +549,19 @@ private struct ProfileQuestionPage: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, 14)
-            .padding(.horizontal, 16)
+            .padding(.vertical, Theme.Space.md)
+            .padding(.horizontal, Theme.Space.md)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
                     .fill(Theme.cardSurface)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
                             .stroke(isSelected ? Theme.recovering : .clear, lineWidth: 2)
                     )
             )
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }

@@ -5,6 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# The design system's mechanical half, before anything is bumped. Every check
+# it runs was a real regression in this app once, and all of them are invisible
+# in a diff: an off-grid padding, a fourth corner radius, a button that does not
+# react to a press. See design.md.
+echo "==> Design audit"
+./scripts/design-audit.sh
+
 CURRENT_BUILD=$(grep -E '^\s*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*CURRENT_PROJECT_VERSION:[[:space:]]*"?([0-9]+)"?.*/\1/')
 NEXT_BUILD=$((CURRENT_BUILD + 1))
 echo "==> Bump build $CURRENT_BUILD -> $NEXT_BUILD"
