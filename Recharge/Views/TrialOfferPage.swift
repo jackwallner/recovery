@@ -56,7 +56,7 @@ struct TrialOfferPage: View {
             ScrollView {
                 pitch
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, Theme.Space.xs)
             }
             .scrollBounceBehavior(.basedOnSize)
 
@@ -74,8 +74,8 @@ struct TrialOfferPage: View {
                 onRestore: { Task { await restore() } }
             )
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 16)
+        .padding(.horizontal, Theme.Space.step(7))
+        .padding(.bottom, Theme.Space.md)
         .task {
             store.trackPaywallImpression(id: showsIngestProof ? "onboarding_trial" : "passive_trial")
             if store.products.isEmpty { await store.fetchProducts() }
@@ -93,22 +93,22 @@ struct TrialOfferPage: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, 18)
+                .padding(.bottom, Theme.Space.lg)
 
             comparison
-                .padding(.bottom, 14)
+                .padding(.bottom, Theme.Space.md)
 
             Text(subheadline)
                 .font(.system(.subheadline, design: .rounded))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Theme.Space.xxs)
 
             if showsIngestProof, !engine.healthIngest.isEmpty {
-                proof.padding(.top, 20)
+                proof.padding(.top, Theme.Space.lg)
             } else if !showsIngestProof {
-                features.padding(.top, 20)
+                features.padding(.top, Theme.Space.lg)
             }
         }
     }
@@ -135,8 +135,8 @@ struct TrialOfferPage: View {
     /// all still make.
     private var comparison: some View {
         let preview = engine.personalizedPreview
-        return VStack(spacing: 10) {
-            HStack(alignment: .center, spacing: 18) {
+        return VStack(spacing: Theme.Space.sm) {
+            HStack(alignment: .center, spacing: Theme.Space.lg) {
                 numberColumn(
                     "Usual",
                     CountdownFormat.hours(preview.standardHours),
@@ -152,10 +152,10 @@ struct TrialOfferPage: View {
                     blurred: !store.isPro
                 )
             }
-            .padding(.vertical, 16)
-            .padding(.horizontal, 22)
+            .padding(.vertical, Theme.Space.md)
+            .padding(.horizontal, Theme.Space.xl)
             .frame(maxWidth: .infinity)
-            .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+            .cardShape()
 
             Text(preview.isExample
                  ? "For a hard 60-minute session. An example on the real curve until you have recorded one."
@@ -177,7 +177,7 @@ struct TrialOfferPage: View {
         _ tint: Color,
         blurred: Bool = false
     ) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: Theme.Space.hair) {
             Group {
                 if blurred {
                     Text(value)
@@ -195,8 +195,7 @@ struct TrialOfferPage: View {
                     Text(value).foregroundStyle(tint)
                 }
             }
-            .font(Theme.bigNumber(38))
-            .monospacedDigit()
+            .countdownNumber(38)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             Text(label)
@@ -211,7 +210,7 @@ struct TrialOfferPage: View {
     // MARK: - The receipt
 
     private var proof: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Theme.Space.sm) {
             Text("Measured from your own data")
                 .font(.system(.footnote, design: .rounded, weight: .semibold))
                 .foregroundStyle(Theme.textPrimary)
@@ -230,16 +229,16 @@ struct TrialOfferPage: View {
                     .foregroundStyle(Theme.textTertiary)
             }
         }
-        .padding(16)
-        .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .padding(Theme.Space.md)
+        .cardShape()
     }
 
     /// The sheet variant's substitute for the receipt: three lines, because a
     /// half sheet has room for three lines.
     private var features: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Theme.Space.sm) {
             ForEach(sheetFeatures, id: \.self) { feature in
-                HStack(alignment: .top, spacing: 10) {
+                HStack(alignment: .top, spacing: Theme.Space.sm) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 15))
                         .foregroundStyle(Theme.pro)
@@ -251,7 +250,7 @@ struct TrialOfferPage: View {
                 }
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Theme.Space.xs)
     }
 
     private var sheetFeatures: [ProFeature] {
@@ -264,7 +263,7 @@ struct TrialOfferPage: View {
     /// is allowed to sit below the button. Rendered on every state of the page,
     /// so it can grow and shrink freely without touching the CTA's frame.
     private var purchaseTerms: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: Theme.Space.sm) {
             trialCallout
             price
 
@@ -294,7 +293,7 @@ struct TrialOfferPage: View {
     @ViewBuilder
     private var trialCallout: some View {
         if let package, let trialLabel = store.eligibleIntroLabel(for: package) {
-            HStack(spacing: 6) {
+            HStack(spacing: Theme.Space.xs) {
                 Image(systemName: "gift.fill")
                     .font(.system(size: 12, weight: .semibold))
                 Text("\(trialLabel.replacingOccurrences(of: " free trial", with: " free")) · Nothing charged today")
@@ -302,8 +301,8 @@ struct TrialOfferPage: View {
                     .multilineTextAlignment(.center)
             }
             .foregroundStyle(Theme.pro)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
+            .padding(.horizontal, Theme.Space.md)
+            .padding(.vertical, Theme.Space.xs)
             .background(Theme.pro.opacity(0.15), in: Capsule())
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .accessibilityElement(children: .combine)
@@ -316,7 +315,7 @@ struct TrialOfferPage: View {
     @ViewBuilder
     private var price: some View {
         if let package {
-            VStack(spacing: 3) {
+            VStack(spacing: Theme.Space.xxs) {
                 Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -338,14 +337,14 @@ struct TrialOfferPage: View {
             // top accessibility sizes.
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         } else if store.isLoadingProducts {
-            VStack(spacing: 8) {
+            VStack(spacing: Theme.Space.xs) {
                 ProgressView()
                 Text("Loading the offer…")
                     .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
             }
         } else {
-            VStack(spacing: 6) {
+            VStack(spacing: Theme.Space.xs) {
                 Text("Couldn't load the offer")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -377,11 +376,14 @@ struct TrialOfferPage: View {
         errorMessage = nil
         do {
             switch try await store.purchase(package) {
-            case .purchased: onPurchased()
+            case .purchased:
+                Haptics.success()
+                onPurchased()
             case .cancelled: errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending: errorMessage = "Your purchase is pending approval."
             }
         } catch {
+            Haptics.failure()
             errorMessage = store.purchaseFailedMessage(for: package)
         }
     }

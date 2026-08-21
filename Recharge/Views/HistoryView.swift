@@ -91,7 +91,7 @@ struct HistoryView: View {
     }
 
     private var importing: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.sm) {
             ProgressView()
             Text("Reading your history")
                 .font(.system(.headline, design: .rounded))
@@ -101,12 +101,12 @@ struct HistoryView: View {
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(32)
+        .padding(Theme.Space.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var empty: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.sm) {
             Image(systemName: "list.bullet.rectangle")
                 .font(.system(size: 40))
                 .foregroundStyle(Theme.idle)
@@ -120,7 +120,7 @@ struct HistoryView: View {
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(32)
+        .padding(Theme.Space.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -139,7 +139,7 @@ struct HistoryView: View {
                             Button { selected = estimate } label: {
                                 HistoryRow(estimate: estimate)
                             }
-                            .buttonStyle(.plain)
+                            .pressable(.card)
                         }
                     } header: {
                         dayHeader(group)
@@ -165,8 +165,8 @@ struct HistoryView: View {
                     .monospacedDigit()
             }
         }
-        .padding(.horizontal, 4)
-        .padding(.top, 8)
+        .padding(.horizontal, Theme.Space.xxs)
+        .padding(.top, Theme.Space.xs)
         // A pinned header is drawn over the rows still scrolling behind it, so
         // its background has to cover more than the text: the negative padding
         // inflates it past the stack's 16pt side margins and over the 10pt gap
@@ -198,7 +198,7 @@ private struct HistoryRow: View {
 
     var body: some View {
         Card(padding: 14) {
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.Space.sm) {
                 Image(systemName: Theme.symbol(
                     forActivityLabel: estimate.activityLabel,
                     profile: estimate.profile
@@ -207,7 +207,7 @@ private struct HistoryRow: View {
                     .frame(width: 28)
                     .foregroundStyle(estimate.producesCountdown ? Theme.recovering : Theme.idle)
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                     Text(estimate.activityLabel.asSessionTitle)
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -223,7 +223,7 @@ private struct HistoryRow: View {
 
                 Spacer(minLength: 0)
 
-                VStack(alignment: .trailing, spacing: 3) {
+                VStack(alignment: .trailing, spacing: Theme.Space.xxs) {
                     // What the session cost, on every row without exception.
                     // Which is a different figure from the countdown it set: a
                     // walk costs a couple of hours and starts nothing, and the

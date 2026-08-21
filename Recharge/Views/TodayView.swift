@@ -108,6 +108,13 @@ struct TodayView: View {
             .onChange(of: engine.awaitingFeedback?.sessionID) { _, _ in
                 presentFeedbackIfNeeded()
             }
+            // The one moment the app exists for. `onChange` does not fire on
+            // appear, so this is the countdown crossing zero with the screen
+            // open, never a launch that happened to already be Ready.
+            .onChange(of: phase) { previous, current in
+                guard current == .ready, previous != .ready else { return }
+                Haptics.ready()
+            }
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(settings)
@@ -167,33 +174,33 @@ struct TodayView: View {
 
         return VStack(spacing: 0) {
             header
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
+                .padding(.horizontal, Theme.Space.xl)
+                .padding(.top, Theme.Space.sm)
 
             if settings.hasDeferredHealthAccess {
                 healthAccessCard
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.horizontal, Theme.Space.lg)
+                    .padding(.top, Theme.Space.md)
             }
 
-            Spacer(minLength: 20)
+            Spacer(minLength: Theme.Space.lg)
 
             hero(ringSize: ringSize)
 
-            Spacer(minLength: 20)
+            Spacer(minLength: Theme.Space.lg)
 
-            VStack(spacing: 12) {
+            VStack(spacing: Theme.Space.sm) {
                 if engine.awaitingEffort != nil { effortPrompt }
                 personalizationCard
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
+            .padding(.horizontal, Theme.Space.lg)
+            .padding(.bottom, Theme.Space.md)
         }
     }
 
     private var header: some View {
         HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
@@ -204,10 +211,11 @@ struct TodayView: View {
                 Image(systemName: "gearshape")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
-                    .padding(10)
+                    .frame(width: Theme.minimumTapTarget, height: Theme.minimumTapTarget)
                     .background(Theme.cardSurface, in: Circle())
+                    .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .pressable()
             .accessibilityLabel("Settings")
         }
     }
@@ -216,14 +224,14 @@ struct TodayView: View {
 
     private func hero(ringSize: CGFloat) -> some View {
         Button { if explained != nil { showDetail = true } } label: {
-            VStack(spacing: 16) {
+            VStack(spacing: Theme.Space.md) {
                 ZStack {
                     CountdownRing(progress: progress, phase: phase, lineWidth: ringSize * 0.085)
                         .frame(width: ringSize, height: ringSize)
                     ringLabel(ringSize: ringSize)
                 }
 
-                VStack(spacing: 6) {
+                VStack(spacing: Theme.Space.xs) {
                     Text(headline)
                         .font(.system(.headline, design: .rounded))
                         .foregroundStyle(Theme.textPrimary)
@@ -235,7 +243,7 @@ struct TodayView: View {
                     // it, an expired countdown and a session too light to start
                     // one. A number with no visible cause is an assertion.
                     if let sourceLine {
-                        HStack(spacing: 5) {
+                        HStack(spacing: Theme.Space.xxs) {
                             Text(sourceLine)
                                 .multilineTextAlignment(.center)
                             Image(systemName: "chevron.right")
@@ -245,11 +253,11 @@ struct TodayView: View {
                         .foregroundStyle(Theme.textSecondary)
                     }
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, Theme.Space.step(7))
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
         .disabled(explained == nil)
         .accessibilityIdentifier("today.hero")
         .accessibilityElement(children: .combine)
@@ -261,7 +269,7 @@ struct TodayView: View {
     private func ringLabel(ringSize: CGFloat) -> some View {
         let numberSize = typeSize.isAccessibilitySize ? ringSize * 0.16 : ringSize * 0.22
 
-        VStack(spacing: 2) {
+        VStack(spacing: Theme.Space.hair) {
             switch phase {
             case .noRecentWorkout:
                 Image(systemName: Theme.symbol(for: phase))
@@ -275,12 +283,11 @@ struct TodayView: View {
                     .font(.system(size: ringSize * 0.20))
                     .foregroundStyle(Theme.ready)
                 Text("Ready")
-                    .font(Theme.bigNumber(numberSize * 0.78))
+                    .countdownNumber(numberSize * 0.78)
                     .foregroundStyle(Theme.textPrimary)
             case .readySoon, .recovering:
                 Text(CountdownFormat.remaining(remaining))
-                    .font(Theme.bigNumber(numberSize))
-                    .monospacedDigit()
+                    .countdownNumber(numberSize)
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
                     .foregroundStyle(Theme.textPrimary)
@@ -389,12 +396,12 @@ struct TodayView: View {
             )
         } label: {
             Card {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: Theme.Space.sm) {
                     HStack(alignment: .firstTextBaseline) {
                         Text(store.isPro ? "Your recharge time" : "Your own recharge time")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
-                        Spacer(minLength: 8)
+                        Spacer(minLength: Theme.Space.xs)
                         if !store.isPro { ProBadge() }
                     }
 
@@ -408,12 +415,12 @@ struct TodayView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
     }
 
     private var comparison: some View {
         let preview = engine.personalizedPreview
-        return HStack(alignment: .center, spacing: 14) {
+        return HStack(alignment: .center, spacing: Theme.Space.md) {
             figureColumn(
                 label: "Usual",
                 text: CountdownFormat.hours(preview.standardHours),
@@ -434,7 +441,7 @@ struct TodayView: View {
     }
 
     private func figureColumn(label: String, text: String, tint: Color, blurred: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: Theme.Space.hair) {
             Group {
                 if blurred {
                     // Blurred just enough that the shape of a two-character
@@ -458,8 +465,7 @@ struct TodayView: View {
                     Text(text).foregroundStyle(tint)
                 }
             }
-            .font(Theme.bigNumber(28))
-            .monospacedDigit()
+            .countdownNumber(28)
             .lineLimit(1)
 
             Text(label)
@@ -486,11 +492,11 @@ struct TodayView: View {
     private var effortPrompt: some View {
         Button { showEffortSheet = true } label: {
             Card(padding: 14) {
-                HStack(spacing: 12) {
+                HStack(spacing: Theme.Space.sm) {
                     Image(systemName: "hand.raised.fill")
                         .font(.title3)
                         .foregroundStyle(Theme.recovering)
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Theme.Space.hair) {
                         Text("How hard was that session?")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
@@ -514,27 +520,32 @@ struct TodayView: View {
                 }
             }
         }
-        .buttonStyle(.plain)
+        .pressable(.card)
     }
 
     private var healthAccessCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Label("Connect Apple Health", systemImage: "heart.text.square.fill")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Text("Recharge needs workout access before it can start a countdown. You can connect now, or manage access later in the Health app under Sharing, then Apps.")
                     .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
-                Button("Request access") {
+                // The pill is drawn by the *label*, not by modifiers hung on
+                // the Button. Styling the button leaves its hit area at the
+                // text's own bounds, so the padded capsule around the words was
+                // decoration you could not tap, at 24pt tall in a 44pt world.
+                Button {
                     Task { await requestHealthAccess() }
+                } label: {
+                    Text("Request access")
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
+                        .frame(maxWidth: .infinity, minHeight: Theme.minimumTapTarget)
+                        .background(Theme.recovering, in: Capsule())
+                        .foregroundStyle(.white)
                 }
-                .font(.system(.footnote, design: .rounded, weight: .semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(Theme.recovering, in: Capsule())
-                .foregroundStyle(.white)
-                .buttonStyle(.plain)
+                .pressable()
             }
         }
     }

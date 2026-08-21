@@ -33,7 +33,7 @@ struct ReviewPromptSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: Theme.Space.lg) {
                 switch stage {
                 case .enjoyment: enjoyment
                 case .ratePitch: ratePitch
@@ -41,8 +41,8 @@ struct ReviewPromptSheet: View {
                 case .thanks: thanks
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 28)
+            .padding(.horizontal, Theme.Space.xl)
+            .padding(.top, Theme.Space.step(7))
             .frame(maxHeight: .infinity, alignment: .top)
             .background(Theme.background)
             .toolbar {
@@ -60,7 +60,7 @@ struct ReviewPromptSheet: View {
     // MARK: - Stage 1
 
     private var enjoyment: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: Theme.Space.lg) {
             Image(systemName: "hourglass")
                 .font(.system(size: 42))
                 .foregroundStyle(Theme.recovering)
@@ -71,18 +71,18 @@ struct ReviewPromptSheet: View {
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
 
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.sm) {
                 primaryButton("Yes, it's useful") { stage = .ratePitch }
                 secondaryButton("Not really") { stage = .feedback }
             }
-            .padding(.top, 6)
+            .padding(.top, Theme.Space.xs)
         }
     }
 
     // MARK: - Stage 2
 
     private var ratePitch: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: Theme.Space.lg) {
             Image(systemName: "star.fill")
                 .font(.system(size: 42))
                 .foregroundStyle(Theme.readySoon)
@@ -94,7 +94,7 @@ struct ReviewPromptSheet: View {
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
 
-            VStack(spacing: 10) {
+            VStack(spacing: Theme.Space.sm) {
                 primaryButton("Rate Recharge") {
                     ReviewPromptTracker.markShown()
                     finish(.requestNativeReview)
@@ -111,14 +111,14 @@ struct ReviewPromptSheet: View {
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textTertiary)
             }
-            .padding(.top, 6)
+            .padding(.top, Theme.Space.xs)
         }
     }
 
     // MARK: - Stage 3
 
     private var feedback: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Theme.Space.md) {
             Text("What's missing?")
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
@@ -129,8 +129,8 @@ struct ReviewPromptSheet: View {
 
             TextEditor(text: $feedbackText)
                 .frame(height: 110)
-                .padding(8)
-                .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(Theme.Space.xs)
+                .controlShape()
                 .font(.system(.body, design: .rounded))
 
             primaryButton("Send") {
@@ -168,7 +168,7 @@ struct ReviewPromptSheet: View {
     // MARK: - Stage 4
 
     private var thanks: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: Theme.Space.lg) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 42))
                 .foregroundStyle(Theme.ready)
@@ -176,7 +176,7 @@ struct ReviewPromptSheet: View {
                 .font(.system(.title2, design: .rounded, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
             primaryButton("Done") { dismiss() }
-                .padding(.top, 6)
+                .padding(.top, Theme.Space.xs)
         }
     }
 
@@ -187,11 +187,11 @@ struct ReviewPromptSheet: View {
             Text(title)
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(Theme.recovering, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.vertical, Theme.Space.md)
+                .background(Theme.recovering, in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous))
                 .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .pressable()
     }
 
     private func secondaryButton(_ title: String, action: @escaping () -> Void) -> some View {
@@ -199,11 +199,11 @@ struct ReviewPromptSheet: View {
             Text(title)
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
-                .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.vertical, Theme.Space.md)
+                .controlShape()
                 .foregroundStyle(Theme.textPrimary)
         }
-        .buttonStyle(.plain)
+        .pressable()
     }
 
     private func finish(_ outcome: ReviewPromptDismissOutcome) {

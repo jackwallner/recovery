@@ -574,6 +574,28 @@ disown it. "Your ride 12h ago didn't start a countdown" told the user what the
 app declined to do rather than what it found, on a first launch, about the only
 workout they had come to see.
 
+### The design system is `design.md`, and it is checked by a script
+**Read `design.md` before any UI work.** `Shared/Utilities/Theme.swift` holds the
+tokens (`Space`, a 4pt grid; `Radius`, three continuous values; `Elevation`;
+`minimumTapTarget`), `Shared/Utilities/Interaction.swift` holds
+`PressableButtonStyle` and `Haptics`, and `./scripts/design-audit.sh` fails on
+the six things that drift: a button with no pressed state, a raw corner radius, a
+`.cornerRadius()` or `style: .circular`, an off-grid padding in `Recharge/Views`,
+a `Color(red:)` outside `Theme`, and `Theme.bigNumber` used without the tabular
+digits that `.countdownNumber(_:)` carries with it.
+
+What it replaced was not a wrong system, it was no system: four corner radii,
+paddings at 3, 5, 6, 7, 10, 14, 15, 18 and 22, eighteen `.buttonStyle(.plain)`
+call sites with no pressed state on any of them, a gear button with a 37pt tap
+target, and a "Request access" pill whose background was drawn by modifiers hung
+on the `Button` rather than on its label, so the padded capsule around the words
+was decoration you could not tap. Each of those arrived as a reasonable local
+decision. The sum is what a user reads in the first fifty milliseconds, and the
+judgment it produces is applied to everything after it.
+
+Typography was already consistent (SF Rounded throughout, tabular digits on the
+countdown) and is the reason the app was one pass away rather than a redesign.
+
 ### The screens are the Vitals shape now
 Total Calories and VO2 Max are one large figure on an otherwise empty screen, and
 they are the two in the fleet that read as finished products. Recharge's Today

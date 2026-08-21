@@ -28,8 +28,8 @@ struct EffortPromptSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                VStack(spacing: 8) {
+            VStack(spacing: Theme.Space.lg) {
+                VStack(spacing: Theme.Space.xs) {
                     Image(systemName: "hand.raised.fill")
                         .font(.system(size: 40))
                         .foregroundStyle(Theme.recovering)
@@ -44,16 +44,17 @@ struct EffortPromptSheet: View {
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 24)
+                .padding(.top, Theme.Space.xl)
 
-                VStack(spacing: 10) {
+                VStack(spacing: Theme.Space.sm) {
                     ForEach(Self.options, id: \.effort) { option in
                         Button {
+                            Haptics.success()
                             onSelect(option.effort)
                             dismiss()
                         } label: {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: Theme.Space.sm) {
+                                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                                     Text(option.title)
                                         .font(.system(.headline, design: .rounded))
                                         .foregroundStyle(Theme.textPrimary)
@@ -66,20 +67,17 @@ struct EffortPromptSheet: View {
                                     .font(.caption)
                                     .foregroundStyle(Theme.textTertiary)
                             }
-                            .padding(16)
+                            .padding(Theme.Space.md)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                Theme.cardSurface,
-                                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            )
+                            .controlShape()
                         }
-                        .buttonStyle(.plain)
+                        .pressable(.card)
                     }
                 }
 
                 Spacer()
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Theme.Space.lg)
             .background(Theme.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -114,8 +112,8 @@ struct ReadinessFeedbackSheet: View {
     /// plain button in the flow rather than a toolbar item.
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                VStack(spacing: 8) {
+            VStack(spacing: Theme.Space.lg) {
+                VStack(spacing: Theme.Space.xs) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 40))
                         .foregroundStyle(Theme.ready)
@@ -129,11 +127,12 @@ struct ReadinessFeedbackSheet: View {
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.top, 28)
+                .padding(.top, Theme.Space.step(7))
 
-                VStack(spacing: 10) {
+                VStack(spacing: Theme.Space.sm) {
                     ForEach(ReadinessFeedback.allCases, id: \.self) { feedback in
                         Button {
+                            Haptics.success()
                             onAnswer(feedback)
                             dismiss()
                         } label: {
@@ -142,14 +141,11 @@ struct ReadinessFeedbackSheet: View {
                                 .multilineTextAlignment(.center)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(
-                                    Theme.cardSurface,
-                                    in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                )
+                                .padding(.vertical, Theme.Space.md)
+                                .controlShape()
                                 .foregroundStyle(Theme.textPrimary)
                         }
-                        .buttonStyle(.plain)
+                        .pressable()
                     }
                 }
 
@@ -159,15 +155,15 @@ struct ReadinessFeedbackSheet: View {
                 }
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(Theme.textSecondary)
-                .padding(.vertical, 4)
+                .padding(.vertical, Theme.Space.xxs)
 
                 Text("Stored on this device only.")
                     .font(.system(.caption2, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 28)
+            .padding(.horizontal, Theme.Space.lg)
+            .padding(.bottom, Theme.Space.step(7))
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(Theme.background)

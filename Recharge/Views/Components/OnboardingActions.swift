@@ -46,7 +46,7 @@ struct OnboardingActions: View {
     var onRestore: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.sm) {
             above
 
             // Always present, sometimes invisible, and always *above* the
@@ -60,7 +60,7 @@ struct OnboardingActions: View {
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
+                .padding(.vertical, Theme.Space.xs)
                 .opacity(secondaryTitle == nil ? 0 : 1)
                 .disabled(secondaryTitle == nil || secondaryAction == nil)
                 .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
@@ -114,14 +114,14 @@ struct OnboardingPrimaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, Theme.Space.md)
             .background(
                 tint.opacity(isDisabled ? 0.6 : 1),
-                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
             )
             .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .pressable()
         .disabled(isDisabled)
     }
 }
@@ -139,8 +139,8 @@ struct OnboardingLegalSlot: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) { links }
-            VStack(spacing: 8) { links }
+            HStack(spacing: Theme.Space.md) { links }
+            VStack(spacing: Theme.Space.xs) { links }
         }
         .font(.system(.caption, design: .rounded))
         .dynamicTypeSize(...DynamicTypeSize.accessibility3)

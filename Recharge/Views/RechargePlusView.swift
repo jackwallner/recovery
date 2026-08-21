@@ -21,7 +21,7 @@ struct RechargePlusView: View {
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
+                VStack(spacing: Theme.Space.md) {
                     header
                     comparisonCard
                     if !analysisLines.isEmpty { analysisCard }
@@ -29,9 +29,9 @@ struct RechargePlusView: View {
                     if !engine.healthIngest.isEmpty { ingestCard }
                     accountCard
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 24)
+                .padding(.horizontal, Theme.Space.lg)
+                .padding(.top, Theme.Space.sm)
+                .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
             .navigationTitle(RechargeConversionCopy.proName)
@@ -54,7 +54,7 @@ struct RechargePlusView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Theme.Space.sm) {
             ZStack {
                 Circle()
                     .fill(Theme.pro)
@@ -63,7 +63,7 @@ struct RechargePlusView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(.white)
             }
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                 Text("\(RechargeConversionCopy.proName) active")
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
@@ -74,8 +74,8 @@ struct RechargePlusView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(16)
-        .background(Theme.cardSurface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+        .padding(Theme.Space.md)
+        .cardShape()
     }
 
     // MARK: - The comparison
@@ -86,12 +86,12 @@ struct RechargePlusView: View {
     private var comparisonCard: some View {
         let preview = engine.personalizedPreview
         return Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text(preview.isExample ? "A hard 60-minute session" : preview.label)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
 
-                HStack(alignment: .center, spacing: 16) {
+                HStack(alignment: .center, spacing: Theme.Space.md) {
                     figure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                     Image(systemName: "arrow.right")
                         .font(.system(size: 14, weight: .bold))
@@ -111,10 +111,9 @@ struct RechargePlusView: View {
     }
 
     private func figure(_ label: String, _ value: String, _ tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: Theme.Space.hair) {
             Text(value)
-                .font(Theme.bigNumber(30))
-                .monospacedDigit()
+                .countdownNumber(30)
                 .foregroundStyle(tint)
             Text(label)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
@@ -129,23 +128,23 @@ struct RechargePlusView: View {
 
     private var analysisCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 HStack {
                     Text("What your last \(PersonalRecoveryModel.windowDays) days show")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                    Spacer(minLength: 8)
+                    Spacer(minLength: Theme.Space.xs)
                     Text(factorLabel)
                         .font(.system(.caption, design: .rounded, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(Theme.pro)
                 }
                 ForEach(analysisLines, id: \.self) { line in
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .top, spacing: Theme.Space.xs) {
                         Circle()
                             .fill(Theme.textTertiary)
                             .frame(width: 4, height: 4)
-                            .padding(.top, 7)
+                            .padding(.top, Theme.Space.xs)
                         Text(line)
                             .font(.system(.footnote, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
@@ -168,11 +167,11 @@ struct RechargePlusView: View {
     private var loadCard: some View {
         let balance = engine.loadBalance()
         return Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text("Training load")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                HStack(spacing: 20) {
+                HStack(spacing: Theme.Space.lg) {
                     figure("This week", "\(Int(balance.acute.rounded()))", Theme.textPrimary)
                     figure("4-week avg", "\(Int(balance.chronic.rounded()))", Theme.textSecondary)
                     Spacer(minLength: 0)
@@ -194,8 +193,8 @@ struct RechargePlusView: View {
     /// that all eleven are still being used for something.
     private var ingestCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: Theme.Space.md) {
+                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
                     Text("Read from Apple Health")
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -212,7 +211,7 @@ struct RechargePlusView: View {
 
     private var accountCard: some View {
         Card {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: Theme.Space.sm) {
                 Text("Account")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
@@ -234,7 +233,7 @@ struct RechargePlusView: View {
                         if isRestoring { ProgressView() }
                     }
                 }
-                .buttonStyle(.plain)
+                .pressable()
                 .disabled(isRestoring)
 
                 Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
@@ -265,16 +264,16 @@ struct HealthIngestList: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Theme.Space.sm) {
             ForEach(rows) { row in
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: Theme.Space.sm) {
                     Image(systemName: row.symbol)
                         .font(.system(size: 15))
                         .foregroundStyle(Theme.pro)
                         .frame(width: 22)
-                        .padding(.top, 1)
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        .padding(.top, Theme.Space.hair)
+                    VStack(alignment: .leading, spacing: Theme.Space.hair) {
+                        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.xs) {
                             Text(row.title)
                                 .font(.system(.footnote, design: .rounded, weight: .semibold))
                                 .foregroundStyle(Theme.textPrimary)
