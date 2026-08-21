@@ -25,13 +25,18 @@ final class SeededWalkthroughTests: XCTestCase {
         // **HealthKit never re-asks once a sheet has been answered**, so a run
         // that was denied write access stays denied on that simulator for every
         // later run, including the run that fixed the reason it was denied.
-        // There is no API to reset it; uninstalling the app is the only way, so
-        // this test is run as:
         //
-        //     xcrun simctl uninstall <udid> com.jackwallner.recovery
+        // Uninstalling is **not** enough: the authorization outlives the app on
+        // current runtimes, which is how this test failed with "the Health
+        // permission sheet never appeared" on a simulator that had answered the
+        // sheet an hour earlier under a previous install. Erasing the device is
+        // what actually resets it:
+        //
+        //     xcrun simctl shutdown <udid> && xcrun simctl erase <udid>
         //     xcodebuild test -scheme RechargeUITests -only-testing:…
         //
-        // If the sheet never appears and nothing gets seeded, that is why.
+        // A sheet that never appears is not automatically a failure, though.
+        // See `allowHealthAccess`.
         let app = XCUIApplication()
         app.launchEnvironment["RECHARGE_SEED_HEALTH"] = "1"
         // The seeder's own default, which is `HealthKitService.importDays`, so
@@ -94,13 +99,31 @@ final class SeededWalkthroughTests: XCTestCase {
         format: "identifier BEGINSWITH 'UIA.Health.' AND identifier ENDSWITH '.SwitchCell'"
     )
 
+    /// Returns without doing anything if the sheet does not appear, but only
+    /// once it has established that the app got past it.
+    ///
+    /// A missing sheet has two causes and they are opposites. HealthKit does
+    /// not re-present for a store that has already granted everything, which is
+    /// the ordinary state of a simulator this test has run on before and is
+    /// nothing to fail over. Or it was previously **denied**, in which case the
+    /// seeder writes nothing, `HealthSeeder.seedIfRequested` returns false, and
+    /// `hasCompletedSetup` is never set, so the app sits on onboarding forever.
+    ///
+    /// Those two are distinguishable from outside, by the tab bar. Waiting on
+    /// it here is what keeps the "never return silently" rule while still
+    /// letting a legitimately-authorized simulator through, and it names the
+    /// remedy in the failure rather than handing a bare timeout to whatever
+    /// runs next.
     private func allowHealthAccess() {
         let sheet = healthSheet
         let turnOnAll = sheet.cells[Self.allCategoriesIdentifier]
-        XCTAssertTrue(
-            turnOnAll.waitForExistence(timeout: 90),
-            "the Health permission sheet never appeared in com.apple.HealthPrivacyService"
-        )
+        guard turnOnAll.waitForExistence(timeout: 90) else {
+            XCTAssertTrue(
+                XCUIApplication().buttons["Today"].waitForExistence(timeout: 120),
+                "The Health permission sheet never appeared and the app never got past onboarding, which is what a previously denied store looks like. Erase the simulator and run again: xcrun simctl shutdown <udid> && xcrun simctl erase <udid>"
+            )
+            return
+        }
         waitUntilHittable(turnOnAll)
         turnOnAll.tap()
 

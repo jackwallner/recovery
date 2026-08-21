@@ -34,9 +34,20 @@ public final class RecoveryEngine: ObservableObject {
     /// tried. A failed query returns no workouts rather than an empty store, so
     /// without this the screen keeps the previous countdown and a user who just
     /// finished a session cannot tell an import from a silent failure.
-    @Published public private(set) var lastSuccessfulImport: Date?
+    @Published public private(set) var lastSuccessfulImport: Date? = RecoveryEngine.storedLastSuccessfulImport()
     /// True when the most recent workout read did not happen at all.
     @Published public private(set) var lastImportFailed = false
+
+    /// `lastSuccessfulImport` is in-memory, and a background wake usually runs
+    /// in a fresh process, so without this every cold launch that failed its
+    /// first read would look like an app that has never read anything.
+    private static let lastSuccessfulImportKey = "lastSuccessfulImport"
+
+    private static func storedLastSuccessfulImport() -> Date? {
+        let defaults = UserDefaults(suiteName: rechargeAppGroupID)
+        guard let stamp = defaults?.object(forKey: lastSuccessfulImportKey) as? Date else { return nil }
+        return stamp
+    }
 
     /// What Health actually gave us, ready to be printed back to the user.
     ///
@@ -185,6 +196,8 @@ public final class RecoveryEngine: ObservableObject {
 
         lastImportFailed = false
         lastSuccessfulImport = .now
+        UserDefaults(suiteName: rechargeAppGroupID)?
+            .set(lastSuccessfulImport, forKey: RecoveryEngine.lastSuccessfulImportKey)
         var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
         let ambiguousProfile = RechargeSettings.shared.ambiguousProfile
 
@@ -671,7 +684,11 @@ public final class RecoveryEngine: ObservableObject {
     /// Writes the snapshot the Watch app and both widget extensions read, then
     /// nudges every timeline.
     public func publish() {
-        let healthDataState: HealthDataState = lastImportFailed ? .stale : .current
+        // Deliberately not a bare `lastImportFailed`: see `HealthDataState.staleAfter`.
+        let healthDataState = HealthDataState.resolve(
+            lastImportFailed: lastImportFailed,
+            lastSuccessfulImport: lastSuccessfulImport
+        )
         let snapshot: RecoverySnapshot
         if let estimate = RecoveryResolver.current(in: estimates) {
             snapshot = RecoverySnapshot(

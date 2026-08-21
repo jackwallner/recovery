@@ -32,6 +32,56 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(RecoverySnapshotStore.load(defaults: defaults), snapshot)
     }
 
+    // MARK: - When Health counts as stale
+
+    /// One failed query is not a stale app. HealthKit refuses protected reads
+    /// on a locked device and background delivery fires on locked devices all
+    /// the time, so publishing every failure straight to the wrist would put a
+    /// warning on the lock screen at the moment the countdown is most correct.
+    func testASingleFailedReadDoesNotMakeTheSnapshotStale() {
+        let now = Date()
+        XCTAssertEqual(
+            HealthDataState.resolve(
+                lastImportFailed: true,
+                lastSuccessfulImport: now.addingTimeInterval(-30 * 60),
+                now: now
+            ),
+            .current
+        )
+    }
+
+    func testAPersistentFailureDoesMakeTheSnapshotStale() {
+        let now = Date()
+        XCTAssertEqual(
+            HealthDataState.resolve(
+                lastImportFailed: true,
+                lastSuccessfulImport: now.addingTimeInterval(-(HealthDataState.staleAfter + 60)),
+                now: now
+            ),
+            .stale
+        )
+    }
+
+    /// Nothing to be inside the grace period of.
+    func testAFirstEverReadThatFailsIsStaleImmediately() {
+        XCTAssertEqual(
+            HealthDataState.resolve(lastImportFailed: true, lastSuccessfulImport: nil),
+            .stale
+        )
+    }
+
+    func testASuccessfulReadIsNeverStaleHoweverOldTheLastOneWas() {
+        let now = Date()
+        XCTAssertEqual(
+            HealthDataState.resolve(
+                lastImportFailed: false,
+                lastSuccessfulImport: now.addingTimeInterval(-30 * 24 * 3600),
+                now: now
+            ),
+            .current
+        )
+    }
+
     func testAStaleHealthStateSurvivesRoundTrip() throws {
         let snapshot = RecoverySnapshot(
             estimate: estimate(hours: 20),

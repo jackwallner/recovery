@@ -205,17 +205,61 @@ final class ComplicationCopyTests: XCTestCase {
         }
     }
 
-    func testStaleHealthDataTellsTheUserToRefresh() {
+    /// A failed Health read is a statement about what might be *missing* from
+    /// the estimate, not about the estimate. `readyAt` was computed before the
+    /// read failed and is still counting down correctly, so the warning has to
+    /// go somewhere that does not cost the user the number.
+    func testStaleHealthDataAnnotatesTheCountdownRatherThanReplacingIt() {
         for style in ComplicationStyle.allCases {
-            let strings = allCopy(
-                phase: .recovering,
-                style: style,
-                remaining: 18 * 3600,
-                readyAt: now.addingTimeInterval(18 * 3600),
-                dataState: .stale
+            let remaining: TimeInterval = 18 * 3600
+            let readyAt = now.addingTimeInterval(remaining)
+            let stale = allCopy(
+                phase: .recovering, style: style,
+                remaining: remaining, readyAt: readyAt, dataState: .stale
             )
-            XCTAssertTrue(strings.contains { $0.lowercased().contains("refresh") }, "\(style): \(strings)")
-            XCTAssertFalse(strings.contains(CountdownFormat.compactRemaining(18 * 3600)))
+            let synced = allCopy(
+                phase: .recovering, style: style,
+                remaining: remaining, readyAt: readyAt, dataState: .synced
+            )
+
+            XCTAssertTrue(
+                stale.contains { $0.lowercased().contains("health") },
+                "\(style) never mentions Health: \(stale)"
+            )
+            // Everything except the one annotated slot is untouched, and the
+            // slot that carries the value is in that set for every style.
+            XCTAssertEqual(
+                ComplicationCopy.primary(
+                    phase: .recovering, style: style,
+                    remaining: remaining, readyAt: readyAt, dataState: .stale
+                ),
+                ComplicationCopy.primary(
+                    phase: .recovering, style: style,
+                    remaining: remaining, readyAt: readyAt, dataState: .synced
+                ),
+                "\(style) lost its value to the warning"
+            )
+            XCTAssertEqual(
+                zip(stale, synced).filter { $0 != $1 }.count, 1,
+                "\(style) changed more than the annotation slot: \(stale) vs \(synced)"
+            )
+        }
+    }
+
+    /// The other two states genuinely have nothing to render, so they may
+    /// replace the value; `.stale` may not, and this is what separates them.
+    func testOnlyTheStatesWithNoModelReplaceTheValue() {
+        let remaining: TimeInterval = 18 * 3600
+        let readyAt = now.addingTimeInterval(remaining)
+        for state in [ComplicationCopy.DataState.neverSynced, .unreadable] {
+            XCTAssertNotEqual(
+                ComplicationCopy.primary(
+                    phase: .recovering, style: .countdown,
+                    remaining: remaining, readyAt: readyAt, dataState: state
+                ),
+                CountdownFormat.compactRemaining(remaining),
+                "\(state) rendered a countdown it does not have"
+            )
         }
     }
 
