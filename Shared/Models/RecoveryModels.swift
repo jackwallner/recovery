@@ -56,7 +56,18 @@ import Foundation
 /// heart-rate recovery joins the thirty-day analysis as a fourth signal. And
 /// **every** session now carries a `recoveryCostHours`, easy ones included, so
 /// history has a figure for a walk without a walk ever starting a countdown.
-public let recoveryModelVersion = 10
+/// 11: the two tiers stopped being two versions of the same calculation. The
+/// free tier now **describes** what the person actually does — the median gap
+/// between sessions of comparable size, read off their own history by
+/// `ObservedRecoveryPattern` — and Recharge+ **recommends** a window against
+/// that habit. The old split scored the same session against two different
+/// denominators, one population and one personal, with nothing bounding the
+/// distance between them: a user training seven days a week in short sessions
+/// was shown 6 hours free and 36 hours paid for one workout. Both were correct
+/// arithmetic and the pair was nonsense. The personal denominator is also now
+/// bounded to 0.75-1.40x the population reference for the same reason, so the
+/// paid figure can be tuned but never relocated.
+public let recoveryModelVersion = 11
 
 // MARK: - Tier
 
@@ -65,20 +76,23 @@ public let recoveryModelVersion = 10
 /// Stored on every estimate, because the two answer subtly different questions
 /// and a history list that mixes them without saying so is lying by omission.
 public enum RecoveryTier: String, Codable, Sendable {
-    /// The standard model at the training level the person stated: session
-    /// type, duration, and intensity in, hours out, against a population
-    /// reference scaled by `AthleteProfile.fitnessScale`. No personal history,
-    /// no overnight context, no calibration, no thirty-day analysis. The line
-    /// between the tiers is *measurement*, not personalisation.
+    /// What the person actually does: the median gap between sessions of
+    /// comparable size, read off their own history by `ObservedRecoveryPattern`.
+    /// A description, not a prediction — which is what makes it a number they
+    /// can always recognise. Falls back to the modelled estimate at the training
+    /// level they stated, while their history is too thin to show a pattern.
+    ///
+    /// The raw value stays `standard` because it is persisted on every record
+    /// ever written.
     case standard
-    /// The person's own baseline, their thirty-day recovery analysis, overnight
-    /// context, and their calibration feedback.
+    /// What the model recommends for this session: their own baseline, their
+    /// thirty-day analysis, overnight context, and their calibration feedback.
     case personalized
 
     public var label: String {
         switch self {
-        case .standard: "Standard"
-        case .personalized: "Personalized"
+        case .standard: "Your usual"
+        case .personalized: "Optimal"
         }
     }
 }
@@ -276,7 +290,11 @@ public enum LoadSource: String, Codable, Sendable {
 /// and the derived version dropped the larger of the two effects.
 public struct PersonalizedPreview: Sendable, Equatable {
     public let label: String
+    /// What the free tier shows: the person's own usual gap after a session
+    /// like this one, or the standard estimate while their history is too thin
+    /// to have shown one.
     public let standardHours: Double
+    /// What Recharge+ recommends for the same session.
     public let personalizedHours: Double
     /// True when there was no qualifying session to use and the figures come
     /// from the canonical hard endurance session instead. Surfaces have to say

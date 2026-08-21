@@ -138,10 +138,11 @@ struct EstimateDetailView: View {
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 detailRow("Session load", String(format: "%.0f", estimate.load.value))
-                // The comparison a standard estimate makes is against a fixed
-                // population reference, not against the person, and labelling it
-                // "your usual" would be the one claim the free tier is not
-                // entitled to make.
+                // Relative load is measured against the population reference on
+                // the free tier and against the person's own baseline on the
+                // paid one, both of which are about the *session's size*. It is
+                // not what the free countdown is built from any more — that is
+                // the observed gap — so the row says which comparison it is.
                 detailRow(
                     estimate.tier == .standard ? "Compared to a typical session" : "Compared to your usual",
                     String(format: "%.2f×", estimate.relativeLoad)

@@ -78,6 +78,12 @@ public final class RecoveryEngine: ObservableObject {
     /// screens whose whole argument is that the number changes.
     @Published public private(set) var personalizedPreview = PersonalizedPreview.reference(factor: 1)
 
+    /// What this person actually does between sessions, read off their own
+    /// history. The free tier's countdown *is* this, and the paid tier's
+    /// recommendation is stated against it, so every surface that wants to say
+    /// "you usually go again after about 20h" reads it from here.
+    @Published public private(set) var observedPattern = ObservedRecoveryPattern.empty
+
     private var context: ModelContext { DataService.sharedModelContainer.mainContext }
 
     private init() {}
@@ -366,6 +372,7 @@ public final class RecoveryEngine: ObservableObject {
                 profile: settings.athleteProfile, sessions: [], days: [], now: now
             )
             personalizedPreview = .reference(factor: personalAnalysis.factor)
+            observedPattern = .empty
             rebuildHealthIngest(workouts: [], contexts: [], settings: settings)
             return
         }
@@ -395,16 +402,39 @@ public final class RecoveryEngine: ObservableObject {
         // The two tiers carry separate chains. A standard window and a
         // personalized window for the same session end at different times, so a
         // shared residual would splice one tier's arithmetic into the other's.
+        // What this person actually does between sessions, which is what the
+        // free tier now reports. Read once per rescore rather than per session:
+        // it is a description of a habit, not a score for a workout, and a habit
+        // does not change between two rows of the same history.
+        let sessionLoads = inputs.map { SessionLoadCalculator.profiledLoad(for: $0).value }
+        let pattern = ObservedRecoveryPattern.analyse(
+            sessions: zip(inputs, sessionLoads).map { session, load in
+                ObservedRecoveryPattern.Session(
+                    profile: session.profile,
+                    startDate: session.startDate,
+                    endDate: session.endDate,
+                    load: load
+                )
+            },
+            now: now
+        )
+        observedPattern = pattern
+
         var standardEstimates: [RecoveryEstimate] = []
         var standardReadyAt: Date?
-        for session in inputs {
+        for (index, session) in inputs.enumerated() {
+            let standardBaseline = RecoveryBaseline.standard(
+                for: session.profile,
+                fitnessScale: settings.athleteProfile.fitnessScale
+            )
             let estimate = RecoveryCalculator.estimate(
                 for: session,
-                baseline: .standard(
-                    for: session.profile,
-                    fitnessScale: settings.athleteProfile.fitnessScale
-                ),
+                baseline: standardBaseline,
                 carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardReadyAt),
+                observed: pattern.window(
+                    forLoad: sessionLoads[index],
+                    referenceLoad: standardBaseline.referenceLoad
+                ),
                 now: now
             )
             standardEstimates.append(estimate)
@@ -479,6 +509,13 @@ public final class RecoveryEngine: ObservableObject {
                 personalization: .personalized(factor: analysis.factor),
                 standardHours: standardEstimates[index].hours,
                 carriedHours: RecoveryCalculator.carriedHours(into: session, from: personalizedReadyAt),
+                observed: pattern.window(
+                    forLoad: sessionLoads[index],
+                    referenceLoad: RecoveryBaseline.standard(
+                        for: session.profile,
+                        fitnessScale: settings.athleteProfile.fitnessScale
+                    ).referenceLoad
+                ),
                 now: now
             )
             if personalized.producesCountdown { personalizedReadyAt = personalized.readyAt }

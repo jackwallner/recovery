@@ -17,11 +17,49 @@ final class RecoveryBaselineTests: XCTestCase {
     /// sample, which is the whole reason it replaced it: a week whose middle day
     /// is small does not mean the person trains small.
     func testTheGeometricMeanIsTheTypicalLoadOnceTheSampleIsBigEnough() {
-        let loads: [Double] = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+        // Inside the band the person's own figure is used exactly. A sample
+        // further from the reference than `maximumPersonalRatio` allows is the
+        // subject of `testThePersonalDenominatorCannotLeaveTheReferenceBand`.
+        let loads: [Double] = [55, 60, 62, 66, 70, 74, 78, 84, 90]
         let baseline = RecoveryBaseline(loads: loads, profile: .endurance)
         XCTAssertTrue(baseline.hasEnoughSamples)
-        XCTAssertEqual(baseline.typicalLoad, 41.4716627440, accuracy: 0.0001)
-        XCTAssertEqual(baseline.typicalLoad, RecoveryBaseline.geometricMean(of: loads), accuracy: 0.0001)
+        XCTAssertEqual(
+            baseline.typicalLoad, RecoveryBaseline.geometricMean(of: loads), accuracy: 0.0001
+        )
+    }
+
+    /// The denominator of every relative load may be tuned by the person's own
+    /// history and may not be relocated by it.
+    ///
+    /// Unbounded, it was: somebody training seven days a week in 25-minute
+    /// sessions had a typical training day of about 26 against a reference day
+    /// of 115, so the paid tier scored their ordinary session at twice normal
+    /// and their weekly long run at 36 hours while the free tier said 13. The
+    /// band is what stops the two tiers from being able to disagree by a
+    /// multiple.
+    func testThePersonalDenominatorCannotLeaveTheReferenceBand() {
+        let reference = WorkoutProfile.endurance.standardTypicalLoad
+
+        let tiny = RecoveryBaseline(loads: Array(repeating: 12.0, count: 20), profile: .endurance)
+        XCTAssertEqual(
+            tiny.typicalLoad, reference * RecoveryBaseline.minimumPersonalRatio, accuracy: 0.0001
+        )
+
+        let huge = RecoveryBaseline(loads: Array(repeating: 400.0, count: 20), profile: .endurance)
+        XCTAssertEqual(
+            huge.typicalLoad, reference * RecoveryBaseline.maximumPersonalRatio, accuracy: 0.0001
+        )
+
+        // Still monotone in the person's own training, which is what the
+        // "training more never lengthens the window" guarantee rests on.
+        var previous = 0.0
+        for load in stride(from: 10.0, through: 400.0, by: 10.0) {
+            let baseline = RecoveryBaseline(
+                loads: Array(repeating: load, count: 20), profile: .endurance
+            )
+            XCTAssertGreaterThanOrEqual(baseline.typicalLoad, previous)
+            previous = baseline.typicalLoad
+        }
     }
 
     /// On a symmetric sample the two statistics agree, which is the guarantee
@@ -54,16 +92,18 @@ final class RecoveryBaselineTests: XCTestCase {
         XCTAssertGreaterThan(thin.typicalLoad, median)
         XCTAssertLessThan(thin.typicalLoad, WorkoutProfile.strength.standardTypicalLoad)
 
-        // More evidence moves it toward the person, monotonically.
-        var previous = RecoveryBaseline(loads: [44], profile: .strength).typicalLoad
+        // More evidence moves it toward the person, monotonically. The sample
+        // sits inside the reference band, so the endpoint is the person's own
+        // figure exactly rather than the bound.
+        var previous = RecoveryBaseline(loads: [70], profile: .strength).typicalLoad
         for count in 2...RecoveryBaseline.minimumSamples {
             let baseline = RecoveryBaseline(
-                loads: Array(repeating: 44.0, count: count), profile: .strength
+                loads: Array(repeating: 70.0, count: count), profile: .strength
             )
             XCTAssertLessThanOrEqual(baseline.typicalLoad, previous)
             previous = baseline.typicalLoad
         }
-        XCTAssertEqual(previous, 44, accuracy: 0.0001, "eight sessions must be fully personal")
+        XCTAssertEqual(previous, 70, accuracy: 0.0001, "eight sessions must be fully personal")
     }
 
     func testPercentileInterpolatesRatherThanSnapping() {
@@ -73,10 +113,11 @@ final class RecoveryBaselineTests: XCTestCase {
     }
 
     func testUnsortedInputIsHandled() {
-        let baseline = RecoveryBaseline(
-            loads: [50, 10, 90, 40, 20, 80, 30, 70, 60], profile: .endurance
+        let loads: [Double] = [70, 55, 90, 66, 60, 84, 62, 78, 74]
+        let baseline = RecoveryBaseline(loads: loads, profile: .endurance)
+        XCTAssertEqual(
+            baseline.typicalLoad, RecoveryBaseline.geometricMean(of: loads), accuracy: 0.0001
         )
-        XCTAssertEqual(baseline.typicalLoad, 41.4716627440, accuracy: 0.0001)
     }
 
     func testNonPositiveLoadsAreDiscarded() {
@@ -188,9 +229,9 @@ final class RecoveryBaselineTests: XCTestCase {
             let baseline = RecoveryBaseline(
                 loads: Array(repeating: 40, count: 40),
                 profile: .endurance,
-                dailyLoads: Array(repeating: 120, count: days)
+                dailyLoads: Array(repeating: 90, count: days)
             )
-            let isPurelyPersonal = abs(baseline.typicalLoad - 120) < 0.0001
+            let isPurelyPersonal = abs(baseline.typicalLoad - 90) < 0.0001
             XCTAssertEqual(
                 baseline.hasEstablishedBaseline, isPurelyPersonal,
                 "day \(days): confidence and shrinkage disagree about the sample"

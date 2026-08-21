@@ -77,6 +77,14 @@ public enum RecoveryCalculator {
     ///     shared table read at the person's stated training level (the
     ///     `fitnessScale` on `baseline`) rather than the same number for
     ///     everyone.
+    ///   - observed: what this person **actually does** after a session this
+    ///     size, read off their own history by `ObservedRecoveryPattern`. When
+    ///     it is present it *is* the countdown: the free tier describes the
+    ///     habit rather than predicting a window, because a number taken from
+    ///     the user's own calendar can never be one they do not recognise. The
+    ///     modelled figure is still computed underneath it, because
+    ///     `recoveryCostHours` and the tier comparison both ask what the session
+    ///     cost rather than what the person usually does about it.
     ///   - now: the calculation instant. Injected so tests are deterministic.
     public static func estimate(
         for session: SessionInput,
@@ -86,6 +94,7 @@ public enum RecoveryCalculator {
         personalization: RecoveryPersonalization = .standard,
         standardHours: Double? = nil,
         carriedHours: Double = 0,
+        observed: ObservedRecoveryPattern.Window? = nil,
         now: Date = .now
     ) -> RecoveryEstimate {
         let load = SessionLoadCalculator.profiledLoad(for: session)
@@ -123,10 +132,26 @@ public enum RecoveryCalculator {
         let cost = min(max(scaled * session.profile.costMultiplier, 0), maximumHours)
 
         if qualifies {
-            hours = min(
+            let modelled = min(
                 max(scaled * session.profile.windowMultiplier, minimumCountdownHours),
                 maximumHours
             )
+            // The observed window replaces the modelled one outright rather
+            // than nudging it. Blending the two would produce a third number
+            // that is neither what the person does nor what the model says, and
+            // the one thing this tier has to be able to claim is that its figure
+            // came from the user's own training.
+            // Only the free tier is a description. On Recharge+ the observed
+            // window is still passed in, because the recommendation is only
+            // meaningful next to the habit it is recommending against, but it
+            // is a sentence there rather than the countdown.
+            let describes = personalization.tier == .standard
+            hours = describes ? observed.map {
+                min(
+                    max($0.hours, minimumCountdownHours),
+                    ObservedRecoveryPattern.maximumUsualHours
+                )
+            } ?? modelled : modelled
         }
 
         // The countdown runs for this session's cost *plus* what was left over,
@@ -168,7 +193,8 @@ public enum RecoveryCalculator {
                 adjustment: adjustment,
                 qualifies: qualifies,
                 baseline: baseline,
-                personalization: personalization
+                personalization: personalization,
+                observed: observed
             ),
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,
@@ -358,7 +384,8 @@ public enum RecoveryCalculator {
         adjustment: Double,
         qualifies: Bool,
         baseline: RecoveryBaseline,
-        personalization: RecoveryPersonalization = .standard
+        personalization: RecoveryPersonalization = .standard,
+        observed: ObservedRecoveryPattern.Window? = nil
     ) -> [String] {
         var reasons: [String] = []
         let tier = personalization.tier
@@ -383,12 +410,21 @@ public enum RecoveryCalculator {
 
         switch tier {
         case .standard:
-            // Not "the same table for everyone", which stopped being true when
-            // the standard tier started reading the shared curve at the user's
-            // stated training level. Two free users who answered differently
-            // get different numbers, and a reason line that denies it is the
-            // app arguing with itself.
-            reasons.append("Standard estimate: one shared table at your training level, from session type, length, and intensity.")
+            // The free tier reports the person's own habit, so the reason line
+            // has to name the evidence: which sessions, how many of them. It
+            // used to describe a shared table read at the user's stated
+            // training level, and the number it was describing is now what
+            // Recharge+ computes rather than what this tier shows.
+            if let observed {
+                let sessions = "\(observed.sampleCount) \(observed.sampleCount == 1 ? "time" : "times")"
+                if observed.isBandSpecific {
+                    reasons.append("From your own history: after \(observed.band.sessionPhrase) you have gone again after about \(CountdownFormat.hours(observed.hours)), \(sessions).")
+                } else {
+                    reasons.append("From your own history: you have gone again after about \(CountdownFormat.hours(observed.hours)) between sessions, \(sessions).")
+                }
+            } else {
+                reasons.append("Not enough history yet to read a pattern, so this is the standard estimate at the training level you gave.")
+            }
         case .personalized:
             if !baseline.hasEstablishedBaseline {
                 reasons.append("Still building your baseline from \(baseline.dayCount) recent training \(baseline.dayCount == 1 ? "day" : "days").")
@@ -398,6 +434,13 @@ public enum RecoveryCalculator {
                 reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern shortens this by about \(abs(percent))%.")
             } else if percent >= 3 {
                 reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern lengthens this by about \(percent)%.")
+            }
+            // The paid tier is a recommendation, and a recommendation is only
+            // useful against what the person already does. Naming the habit is
+            // also the honest way to show what was bought: the free tier's
+            // figure stays on screen next to the one that replaced it.
+            if let observed, qualifies {
+                reasons.append("You usually go again after about \(CountdownFormat.hours(observed.hours)) following \(observed.band.sessionPhrase).")
             }
         }
 
