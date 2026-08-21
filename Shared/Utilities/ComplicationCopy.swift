@@ -41,6 +41,10 @@ public enum ComplicationCopy {
     public enum DataState: Sendable, CaseIterable {
         /// A snapshot has arrived from the phone at some point.
         case synced
+        /// The phone could not complete its latest Health read. The cached
+        /// estimate is retained for recovery, but must not be presented as
+        /// current on a glance surface.
+        case stale
         /// Nothing has ever been received. Distinct from "no workout".
         case neverSynced
         /// A payload was written, but it no longer decodes with this build.
@@ -56,6 +60,7 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
+        case .stale: return "Retry"
         case .neverSynced: return "Open"
         case .unreadable: return "Retry"
         case .synced: break
@@ -90,6 +95,7 @@ public enum ComplicationCopy {
         // opened always live on the same device, whether that is the wrist or
         // the phone, so naming one would be wrong on the other.
         switch dataState {
+        case .stale: return "Open Recharge to refresh"
         case .neverSynced: return "Open Recharge to set up"
         case .unreadable: return "Open Recharge to refresh"
         case .synced: break
@@ -127,6 +133,7 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
+        case .stale: return "Refresh Recharge"
         case .neverSynced: return "Open Recharge"
         case .unreadable: return "Refresh Recharge"
         case .synced: break
@@ -153,7 +160,7 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .neverSynced, .unreadable: return "Recharge"
+        case .stale, .neverSynced, .unreadable: return "Recharge"
         case .synced: break
         }
         switch phase {

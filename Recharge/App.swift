@@ -104,9 +104,10 @@ struct RechargeApp: App {
                     // reads rather than against fixtures. Off unless
                     // `RECHARGE_SEED_HEALTH=1` is in the environment.
                     if HealthSeederConfig.isEnabled {
-                        await HealthSeeder.seedIfRequested()
-                        settings.hasCompletedSetup = true
-                        settings.hasDeferredHealthAccess = false
+                        if await HealthSeeder.seedIfRequested() {
+                            settings.hasCompletedSetup = true
+                            settings.hasDeferredHealthAccess = false
+                        }
                     }
                     #endif
                     // `PhoneWatchSession.activate()` is in `init` above, not
