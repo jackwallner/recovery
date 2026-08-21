@@ -5,6 +5,12 @@ import Foundation
 /// isolation context.
 public let rechargeAppGroupID = "group.com.jackwallner.recovery"
 
+/// Whether the cached estimate reflects the most recent Health read.
+public enum HealthDataState: String, Codable, Sendable, Equatable {
+    case current
+    case stale
+}
+
 /// The compact record the phone writes and every other surface reads.
 ///
 /// The phone owns the model: it has the full HealthKit store and the long
@@ -30,6 +36,10 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
     /// the tier is already baked into `hours`, and a complication has no room
     /// to explain the difference.
     public var isPro: Bool
+    /// A failed Health read leaves the last estimate in place so the phone can
+    /// explain the failure and let the user retry. Other surfaces need the same
+    /// fact, or they can show an old countdown as if it were current.
+    public var healthDataState: HealthDataState
 
     public static let empty = RecoverySnapshot()
 
@@ -46,7 +56,8 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         reasons: [String] = [],
         calculatedAt: Date = .distantPast,
         modelVersion: Int = recoveryModelVersion,
-        isPro: Bool = false
+        isPro: Bool = false,
+        healthDataState: HealthDataState = .current
     ) {
         self.readyAt = readyAt
         self.sessionEnd = sessionEnd
@@ -61,9 +72,14 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         self.calculatedAt = calculatedAt
         self.modelVersion = modelVersion
         self.isPro = isPro
+        self.healthDataState = healthDataState
     }
 
-    public init(estimate: RecoveryEstimate, isPro: Bool) {
+    public init(
+        estimate: RecoveryEstimate,
+        isPro: Bool,
+        healthDataState: HealthDataState = .current
+    ) {
         self.init(
             readyAt: estimate.producesCountdown ? estimate.readyAt : nil,
             sessionEnd: estimate.sessionEnd,
@@ -81,7 +97,8 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
             reasons: estimate.reasons,
             calculatedAt: estimate.calculatedAt,
             modelVersion: estimate.modelVersion,
-            isPro: isPro
+            isPro: isPro,
+            healthDataState: healthDataState
         )
     }
 
@@ -99,6 +116,7 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         case calculatedAt
         case modelVersion
         case isPro
+        case healthDataState
     }
 
     /// Newer fields must not turn an older snapshot into a never-synced state.
@@ -120,6 +138,7 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         calculatedAt = try container.decodeIfPresent(Date.self, forKey: .calculatedAt) ?? .distantPast
         modelVersion = try container.decodeIfPresent(Int.self, forKey: .modelVersion) ?? recoveryModelVersion
         isPro = try container.decodeIfPresent(Bool.self, forKey: .isPro) ?? false
+        healthDataState = try container.decodeIfPresent(HealthDataState.self, forKey: .healthDataState) ?? .current
     }
 
     /// True when there is nothing to talk about yet — no import has run, or no

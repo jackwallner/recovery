@@ -671,11 +671,16 @@ public final class RecoveryEngine: ObservableObject {
     /// Writes the snapshot the Watch app and both widget extensions read, then
     /// nudges every timeline.
     public func publish() {
+        let healthDataState: HealthDataState = lastImportFailed ? .stale : .current
         let snapshot: RecoverySnapshot
         if let estimate = RecoveryResolver.current(in: estimates) {
-            snapshot = RecoverySnapshot(estimate: estimate, isPro: StoreService.shared.isPro)
+            snapshot = RecoverySnapshot(
+                estimate: estimate,
+                isPro: StoreService.shared.isPro,
+                healthDataState: healthDataState
+            )
         } else {
-            snapshot = .empty
+            snapshot = RecoverySnapshot(healthDataState: healthDataState)
         }
         guard RecoverySnapshotStore.save(snapshot) else {
             engineLogger.error("Snapshot encoding failed; keeping the previous published state")

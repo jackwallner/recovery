@@ -7,10 +7,17 @@ struct RechargeWidgetEntry: TimelineEntry {
     let date: Date
     let snapshot: RecoverySnapshot
     let style: ComplicationStyle
+    let dataState: ComplicationCopy.DataState
 
-    var phase: RecoveryPhase { snapshot.phase(at: date) }
-    var remaining: TimeInterval { snapshot.remainingSeconds(at: date) }
-    var progress: Double { snapshot.progress(at: date) }
+    var phase: RecoveryPhase {
+        dataState == .synced ? snapshot.phase(at: date) : .noRecentWorkout
+    }
+    var remaining: TimeInterval {
+        dataState == .synced ? snapshot.remainingSeconds(at: date) : 0
+    }
+    var progress: Double {
+        dataState == .synced ? snapshot.progress(at: date) : 0
+    }
 
     static func placeholder(date: Date = .now) -> RechargeWidgetEntry {
         RechargeWidgetEntry(
@@ -28,7 +35,8 @@ struct RechargeWidgetEntry: TimelineEntry {
                 reasons: [],
                 calculatedAt: date
             ),
-            style: .countdown
+            style: .countdown,
+            dataState: .synced
         )
     }
 }
@@ -46,21 +54,35 @@ struct RechargeWidgetProvider: TimelineProvider {
         let now = Date.now
         let snapshot = RecoverySnapshotStore.load()
         let style = loadWidgetComplicationStyle()
-        let entries = CountdownTimeline.entryDates(for: snapshot, now: now).map {
-            RechargeWidgetEntry(date: $0, snapshot: snapshot, style: style)
+        let dataState = dataState(for: snapshot)
+        let dates = dataState == .synced
+            ? CountdownTimeline.entryDates(for: snapshot, now: now)
+            : []
+        let entries = dates.map {
+            RechargeWidgetEntry(date: $0, snapshot: snapshot, style: style, dataState: dataState)
         }
         completion(Timeline(
             entries: entries.isEmpty ? [current(at: now)] : entries,
-            policy: .after(CountdownTimeline.refreshDate(for: snapshot, now: now))
+            policy: .after(
+                dataState == .synced
+                    ? CountdownTimeline.refreshDate(for: snapshot, now: now)
+                    : now.addingTimeInterval(15 * 60)
+            )
         ))
     }
 
     private func current(at date: Date) -> RechargeWidgetEntry {
-        RechargeWidgetEntry(
+        let snapshot = RecoverySnapshotStore.load()
+        return RechargeWidgetEntry(
             date: date,
-            snapshot: RecoverySnapshotStore.load(),
-            style: loadWidgetComplicationStyle()
+            snapshot: snapshot,
+            style: loadWidgetComplicationStyle(),
+            dataState: dataState(for: snapshot)
         )
+    }
+
+    private func dataState(for snapshot: RecoverySnapshot) -> ComplicationCopy.DataState {
+        snapshot.healthDataState == .stale ? .stale : .synced
     }
 }
 
@@ -75,22 +97,24 @@ func loadWidgetComplicationStyle() -> ComplicationStyle {
 
 private struct WidgetCopy {
     static func headline(_ entry: RechargeWidgetEntry) -> String {
+        if entry.dataState == .stale { return "Health paused" }
         switch entry.phase {
-        case .noRecentWorkout: "No workout"
-        case .ready: "Ready"
+        case .noRecentWorkout: return "No workout"
+        case .ready: return "Ready"
         case .readySoon, .recovering:
-            entry.style == .readyClock
+            return entry.style == .readyClock
                 ? (entry.snapshot.readyAt.map(CountdownFormat.clock) ?? "Recovering")
                 : CountdownFormat.remaining(entry.remaining)
         }
     }
 
     static func caption(_ entry: RechargeWidgetEntry) -> String {
+        if entry.dataState == .stale { return "Open Recharge to retry Apple Health" }
         switch entry.phase {
-        case .noRecentWorkout: "Finish a workout to start"
-        case .ready: "Ready for another hard session"
+        case .noRecentWorkout: return "Finish a workout to start"
+        case .ready: return "Ready for another hard session"
         case .readySoon, .recovering:
-            entry.snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: entry.date))" } ?? "Recovering"
+            return entry.snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: entry.date))" } ?? "Recovering"
         }
     }
 }
@@ -101,11 +125,14 @@ struct RechargeSmallWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: Theme.symbol(for: entry.phase))
+                Image(systemName: entry.dataState == .synced
+                      ? Theme.symbol(for: entry.phase)
+                      : "arrow.triangle.2.circlepath")
                     .font(.caption)
                     .foregroundStyle(Theme.color(for: entry.phase))
                 Spacer()
-                if entry.phase == .recovering || entry.phase == .readySoon {
+                if entry.dataState == .synced,
+                   entry.phase == .recovering || entry.phase == .readySoon {
                     CircularProgress(progress: entry.progress, phase: entry.phase)
                         .frame(width: 18, height: 18)
                 }
@@ -131,26 +158,39 @@ struct RechargeMediumWidgetView: View {
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
-                CircularProgress(progress: entry.progress, phase: entry.phase, lineWidth: 8)
-                switch entry.phase {
-                case .ready:
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Theme.ready)
-                case .noRecentWorkout:
-                    // `compactRemaining(0)` is the string "Ready", so falling
-                    // through to the countdown path would print Ready inside an
-                    // empty ring for a user who has never finished a workout.
-                    Image(systemName: Theme.symbol(for: .noRecentWorkout))
+                if entry.dataState == .stale {
+                    Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.system(size: 22))
-                        .foregroundStyle(Theme.idle)
-                case .readySoon, .recovering:
-                    Text(CountdownFormat.compactRemaining(entry.remaining))
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(Theme.recovering)
+                } else {
+                    CircularProgress(progress: entry.progress, phase: entry.phase, lineWidth: 8)
+                }
+                switch entry.dataState {
+                case .stale:
+                    EmptyView()
+                case .synced:
+                    switch entry.phase {
+                    case .ready:
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(Theme.ready)
+                    case .noRecentWorkout:
+                        // `compactRemaining(0)` is the string "Ready", so falling
+                        // through to the countdown path would print Ready inside an
+                        // empty ring for a user who has never finished a workout.
+                        Image(systemName: Theme.symbol(for: .noRecentWorkout))
+                            .font(.system(size: 22))
+                            .foregroundStyle(Theme.idle)
+                    case .readySoon, .recovering:
+                        Text(CountdownFormat.compactRemaining(entry.remaining))
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                case .neverSynced, .unreadable:
+                    EmptyView()
                 }
             }
             .frame(width: 74, height: 74)

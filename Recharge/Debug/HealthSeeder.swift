@@ -83,6 +83,10 @@ enum SeedTrace {
 enum HealthSeeder {
     private static let store = HKHealthStore()
 
+    private enum SeedError: Error {
+        case noWorkoutsWritten
+    }
+
     private static var shareTypes: Set<HKSampleType> {
         [
             HKObjectType.workoutType(),
@@ -104,8 +108,12 @@ enum HealthSeeder {
         HealthSeederConfig.defaultDays >= HealthKitService.importDays
     }
 
-    static func seedIfRequested() async {
-        guard HealthSeederConfig.isEnabled, HKHealthStore.isHealthDataAvailable() else { return }
+    static func seedIfRequested() async -> Bool {
+        guard HealthSeederConfig.isEnabled else { return false }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            SeedTrace.begin("FAILED: Health data unavailable")
+            return false
+        }
         assert(seedCoversTheImportWindow, "Seed window is shorter than HealthKitService.importDays")
         SeedTrace.begin("seedIfRequested: enter, days=\(HealthSeederConfig.days)")
         do {
@@ -114,10 +122,13 @@ enum HealthSeeder {
             SeedTrace.mark("requestAuthorization: done")
             try await deleteExistingSeed()
             SeedTrace.mark("deleteExistingSeed: done")
-            try await write(days: HealthSeederConfig.days)
-            SeedTrace.mark("seeded \(HealthSeederConfig.days) days")
+            let written = try await write(days: HealthSeederConfig.days)
+            guard written > 0 else { throw SeedError.noWorkoutsWritten }
+            SeedTrace.mark("seeded \(HealthSeederConfig.days) days, workouts=\(written)")
+            return true
         } catch {
             SeedTrace.mark("FAILED: \(String(describing: error))")
+            return false
         }
     }
 
@@ -215,7 +226,7 @@ enum HealthSeeder {
 
     // MARK: - Writing
 
-    private static func write(days: Int) async throws {
+    private static func write(days: Int) async throws -> Int {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
 
@@ -299,6 +310,7 @@ enum HealthSeeder {
 
         try await store.save(dailySamples)
         SeedTrace.mark("wrote \(written) workouts and \(dailySamples.count) daily samples")
+        return written
     }
 
     /// How hard the previous two days were, 0...1. Drives the overnight signals

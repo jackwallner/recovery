@@ -32,6 +32,19 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(RecoverySnapshotStore.load(defaults: defaults), snapshot)
     }
 
+    func testAStaleHealthStateSurvivesRoundTrip() throws {
+        let snapshot = RecoverySnapshot(
+            estimate: estimate(hours: 20),
+            isPro: false,
+            healthDataState: .stale
+        )
+        let data = try JSONEncoder().encode(snapshot)
+        let decoded = try JSONDecoder().decode(RecoverySnapshot.self, from: data)
+
+        XCTAssertEqual(decoded.healthDataState, .stale)
+        XCTAssertEqual(decoded.hours, snapshot.hours)
+    }
+
     func testAnEmptyStoreLoadsTheEmptySnapshotRatherThanFailing() {
         let defaults = UserDefaults(suiteName: "RecoverySnapshotTestsEmpty")!
         defaults.removePersistentDomain(forName: "RecoverySnapshotTestsEmpty")
@@ -76,6 +89,7 @@ final class RecoverySnapshotTests: XCTestCase {
         object.removeValue(forKey: "windowHighHours")
         object.removeValue(forKey: "modelVersion")
         object.removeValue(forKey: "isPro")
+        object.removeValue(forKey: "healthDataState")
 
         let legacyData = try JSONSerialization.data(withJSONObject: object)
         let decoded = try JSONDecoder().decode(RecoverySnapshot.self, from: legacyData)
@@ -85,6 +99,7 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.windowHighHours, 0)
         XCTAssertEqual(decoded.modelVersion, recoveryModelVersion)
         XCTAssertFalse(decoded.isPro)
+        XCTAssertEqual(decoded.healthDataState, .current)
     }
 
     func testAStaleSnapshotReadsAsNoRecentWorkout() {

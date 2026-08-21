@@ -11,9 +11,15 @@ struct RecoveryEntry: TimelineEntry {
     /// because a timeline is built once and rendered many times.
     var dataState: ComplicationCopy.DataState = .synced
 
-    var phase: RecoveryPhase { snapshot.phase(at: date) }
-    var remaining: TimeInterval { snapshot.remainingSeconds(at: date) }
-    var progress: Double { snapshot.progress(at: date) }
+    var phase: RecoveryPhase {
+        dataState == .synced ? snapshot.phase(at: date) : .noRecentWorkout
+    }
+    var remaining: TimeInterval {
+        dataState == .synced ? snapshot.remainingSeconds(at: date) : 0
+    }
+    var progress: Double {
+        dataState == .synced ? snapshot.progress(at: date) : 0
+    }
 
     static func placeholder(date: Date = .now) -> RecoveryEntry {
         RecoveryEntry(
@@ -57,7 +63,10 @@ struct RecoveryTimelineProvider: TimelineProvider {
         let state = snapshotForTimeline(at: now)
         let style = loadComplicationStyle()
 
-        let entries = CountdownTimeline.entryDates(for: state.snapshot, now: now).map {
+        let dates = state.dataState == .synced
+            ? CountdownTimeline.entryDates(for: state.snapshot, now: now)
+            : []
+        let entries = dates.map {
             RecoveryEntry(
                 date: $0,
                 snapshot: state.snapshot,
@@ -67,7 +76,11 @@ struct RecoveryTimelineProvider: TimelineProvider {
         }
         completion(Timeline(
             entries: entries.isEmpty ? [currentEntry(at: now)] : entries,
-            policy: .after(CountdownTimeline.refreshDate(for: state.snapshot, now: now))
+            policy: .after(
+                state.dataState == .synced
+                    ? CountdownTimeline.refreshDate(for: state.snapshot, now: now)
+                    : now.addingTimeInterval(15 * 60)
+            )
         ))
     }
 
@@ -98,7 +111,12 @@ struct RecoveryTimelineProvider: TimelineProvider {
             return (ScreenshotFixtures.snapshot(now: date), .synced)
         }
 #endif
-        if let stored { return (stored, .synced) }
+        if let stored {
+            let dataState: ComplicationCopy.DataState = stored.healthDataState == .stale
+                ? .stale
+                : .synced
+            return (stored, dataState)
+        }
         return (
             .empty,
             RecoverySnapshotStore.hasEverSynced() ? .unreadable : .neverSynced
@@ -166,7 +184,7 @@ struct RecoveryCircularView: View {
 
     var body: some View {
         // A gauge only makes sense while something is actually running down.
-        if entry.phase == .ready || entry.phase == .noRecentWorkout {
+        if entry.dataState != .synced || entry.phase == .ready || entry.phase == .noRecentWorkout {
             ZStack {
                 AccessoryWidgetBackground()
                 VStack(spacing: 0) {
@@ -235,7 +253,7 @@ struct RecoveryCornerView: View {
     let entry: RecoveryEntry
 
     var body: some View {
-        if entry.phase == .ready || entry.phase == .noRecentWorkout {
+        if entry.dataState != .synced || entry.phase == .ready || entry.phase == .noRecentWorkout {
             Image(systemName: entry.symbolName)
                 .font(.title2)
                 .widgetLabel { Text(entry.primaryText) }

@@ -28,7 +28,9 @@ struct WatchTodayView: View {
 
     private let ticker = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
-    private var phase: RecoveryPhase { snapshot.phase(at: now) }
+    private var phase: RecoveryPhase {
+        snapshot.healthDataState == .current ? snapshot.phase(at: now) : .noRecentWorkout
+    }
 
     var body: some View {
         NavigationStack {
@@ -91,7 +93,13 @@ struct WatchTodayView: View {
             Circle()
                 .stroke(Theme.ringTrack, style: StrokeStyle(lineWidth: 9, lineCap: .round))
             Circle()
-                .trim(from: 0, to: max(snapshot.progress(at: now), phase == .noRecentWorkout ? 0 : 0.01))
+                .trim(
+                    from: 0,
+                    to: max(
+                        snapshot.healthDataState == .current ? snapshot.progress(at: now) : 0,
+                        phase == .noRecentWorkout ? 0 : 0.01
+                    )
+                )
                 .stroke(
                     Theme.gradient(for: phase),
                     style: StrokeStyle(lineWidth: 9, lineCap: .round)
@@ -101,11 +109,13 @@ struct WatchTodayView: View {
             VStack(spacing: 0) {
                 switch phase {
                 case .noRecentWorkout:
-                    Image(systemName: hasHeardFromPhone || snapshot.hasSession
+                    Image(systemName: snapshot.healthDataState == .stale
+                          ? "arrow.triangle.2.circlepath"
+                          : hasHeardFromPhone || snapshot.hasSession
                           ? "figure.run.circle"
                           : "antenna.radiowaves.left.and.right")
                         .font(.system(size: 24))
-                        .foregroundStyle(Theme.idle)
+                        .foregroundStyle(snapshot.healthDataState == .stale ? Theme.recovering : Theme.idle)
                 case .ready:
                     Image(systemName: "checkmark")
                         .font(.system(size: 26, weight: .bold))
@@ -200,6 +210,9 @@ struct WatchTodayView: View {
         #if DEBUG
         if ScreenshotConfig.isEnabled { return nil }
         #endif
+        if snapshot.healthDataState == .stale {
+            return "Open Recharge on your iPhone to refresh Apple Health."
+        }
         guard let received = connectivity.lastSnapshotReceived else {
             return "Open Recharge on your iPhone if this doesn't clear."
         }
@@ -208,6 +221,7 @@ struct WatchTodayView: View {
     }
 
     private var headline: String {
+        if snapshot.healthDataState == .stale { return "Health needs attention" }
         // Cold start: the phone's snapshot takes a moment to arrive, and until
         // it does the Watch knows nothing. Announcing "No recent workout" in
         // that window tells the user their data is gone when it is merely late.

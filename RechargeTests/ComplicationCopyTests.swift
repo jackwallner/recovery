@@ -205,6 +205,20 @@ final class ComplicationCopyTests: XCTestCase {
         }
     }
 
+    func testStaleHealthDataTellsTheUserToRefresh() {
+        for style in ComplicationStyle.allCases {
+            let strings = allCopy(
+                phase: .recovering,
+                style: style,
+                remaining: 18 * 3600,
+                readyAt: now.addingTimeInterval(18 * 3600),
+                dataState: .stale
+            )
+            XCTAssertTrue(strings.contains { $0.lowercased().contains("refresh") }, "\(style): \(strings)")
+            XCTAssertFalse(strings.contains(CountdownFormat.compactRemaining(18 * 3600)))
+        }
+    }
+
     // MARK: - The countdown actually counts down
 
     func testTheCountdownStyleRendersTheRemainingTime() {
