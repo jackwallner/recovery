@@ -64,6 +64,17 @@ struct PaywallView: View {
     /// never covered by the bar.
     var displayCloseButton = true
 
+    /// Room to leave under the action row for `RootView`'s floating tab bar.
+    ///
+    /// It has to be reserved *in here*, for the reason `tabBarClearance()`
+    /// documents: this view's root is a `NavigationStack`, which manages the
+    /// safe area of its own content, so the inset `RootView` applies around the
+    /// tab never reaches the action row within. The CTA cleared the bar anyway
+    /// because the row is tall; the auto-renew disclosure under it did not, and
+    /// the last line of an Apple 3.1.2(a) disclosure was sitting behind the
+    /// capsule on the one screen that takes money.
+    var bottomClearance: CGFloat = 0
+
     @EnvironmentObject private var store: StoreService
     @Environment(\.dismiss) private var dismiss
 
@@ -92,7 +103,7 @@ struct PaywallView: View {
                 cta
                     .padding(.horizontal, Theme.Space.lg)
                     .padding(.top, Theme.Space.sm)
-                    .padding(.bottom, Theme.Space.xs)
+                    .padding(.bottom, Theme.Space.xs + bottomClearance)
                     .background(.regularMaterial)
             }
             .background(Theme.background)
@@ -283,6 +294,7 @@ struct PaywallView: View {
 
             if let disclosure {
                 Text(disclosure)
+                    .accessibilityIdentifier("paywall-disclosure")
                     .font(.system(.footnote, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)

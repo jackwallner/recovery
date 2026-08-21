@@ -594,6 +594,33 @@ final class RechargeUITests: XCTestCase {
         )
     }
 
+    /// The CTA is not the lowest thing in that action row: the auto-renew
+    /// disclosure sits under it, and it is the element Apple 3.1.2(a) is about.
+    ///
+    /// It was covered, and the CTA assertion above could not see it, because a
+    /// tall button clears a bar that the small print underneath does not. The
+    /// inset `RootView` applied around this tab never reached inside the
+    /// paywall's own `NavigationStack`, which is the same failure
+    /// `tabBarClearance()` is documented for, arriving one view further out.
+    func testTheTabBarDoesNotCoverTheUpgradeTabsSubscriptionDisclosure() {
+        let app = launch(scene: "recovering")
+        XCTAssertTrue(app.buttons["Upgrade"].waitForExistence(timeout: 15))
+        app.buttons["Upgrade"].tap()
+
+        let disclosure = app.staticTexts["paywall-disclosure"].firstMatch
+        XCTAssertTrue(
+            disclosure.waitForExistence(timeout: 20),
+            "the paywall's subscription disclosure is missing from the Upgrade tab"
+        )
+        attach(app, named: "upgrade-tab-disclosure")
+
+        let tabBar = app.buttons["Upgrade"].firstMatch
+        XCTAssertLessThanOrEqual(
+            disclosure.frame.maxY, tabBar.frame.minY,
+            "the floating tab bar is covering the subscription disclosure"
+        )
+    }
+
     /// Same claim on Today, whose bottom-most element is now the comparison card
     /// rather than the disclaimer paragraph that used to close the page.
     ///

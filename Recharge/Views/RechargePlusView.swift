@@ -33,6 +33,7 @@ struct RechargePlusView: View {
                 .padding(.top, Theme.Space.sm)
                 .padding(.bottom, Theme.Space.xl)
             }
+            .tabBarClearance()
             .background(Theme.background)
             .navigationTitle(RechargeConversionCopy.proName)
             .navigationBarTitleDisplayMode(.inline)
