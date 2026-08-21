@@ -9,6 +9,35 @@ public let rechargeAppGroupID = "group.com.jackwallner.recovery"
 public enum HealthDataState: String, Codable, Sendable, Equatable {
     case current
     case stale
+
+    /// How long Health has to have been unreadable before the surfaces that
+    /// cannot afford a qualifier say so.
+    ///
+    /// "The last read failed" is a statement about one query, and one query
+    /// fails routinely for reasons that have nothing to do with the user:
+    /// HealthKit refuses protected reads while the device is locked, and
+    /// background delivery fires on locked devices constantly. Publishing that
+    /// single failure straight to the wrist and the lock screen would put a
+    /// warning in front of the user at the moment their countdown is most
+    /// correct. The phone has a scene, a pull-to-refresh, and room for a line
+    /// under the date, so `TodayView.freshness` still reports every failed
+    /// attempt; the glance surfaces wait for one that has actually persisted.
+    public static let staleAfter: TimeInterval = 6 * 3600
+
+    /// Pure so the suite can see it: `RecoveryEngine` is not in the test
+    /// target, and the debounce above is the whole point of the field.
+    ///
+    /// A first-ever read that fails counts immediately, because there is no
+    /// successful read for it to be inside the grace period of.
+    public static func resolve(
+        lastImportFailed: Bool,
+        lastSuccessfulImport: Date?,
+        now: Date = .now
+    ) -> HealthDataState {
+        guard lastImportFailed else { return .current }
+        guard let lastSuccessfulImport else { return .stale }
+        return now.timeIntervalSince(lastSuccessfulImport) > staleAfter ? .stale : .current
+    }
 }
 
 /// The compact record the phone writes and every other surface reads.

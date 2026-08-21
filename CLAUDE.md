@@ -955,6 +955,38 @@ StoreKit product identifiers are bundle-prefixed
   status row.
   iOS never reports read authorization, so that row reports what Health
   *returned*, never which categories were granted.
+- **Staleness reaches the glance surfaces, and it annotates rather than
+  replaces.** `RecoverySnapshot.healthDataState` carries the fact across the App
+  Group and WatchConnectivity, because a widget and a complication have no
+  `RecoveryEngine` to ask and would otherwise show an old countdown as if it
+  were current. Two rules, both of which were bugs first.
+
+  **It does not blank the number.** `readyAt` was computed before the read
+  failed and is still counting down correctly; a failed read says only that
+  something *newer* might be missing from it. The first cut replaced the
+  countdown everywhere with "Health paused" / "Retry", which threw away the one
+  thing the surface knew in order to warn about the one thing it did not, and
+  contradicted the phone, which keeps its countdown and adds
+  `TodayView.freshness` under the date. Only `ComplicationCopy.secondary` and
+  the iOS widget caption change; `primary`, `inline`, `rectangularTitle`, the
+  ring, the gauge and the phase glyph are untouched.
+  `testStaleHealthDataAnnotatesTheCountdownRatherThanReplacingIt` asserts that
+  exactly one of the four strings differs from the synced version, and
+  `testOnlyTheStatesWithNoModelReplaceTheValue` keeps `neverSynced` and
+  `unreadable` on the other side of that line, since they genuinely have
+  nothing to render.
+
+  **It is not `lastImportFailed`.** One query fails routinely for reasons that
+  have nothing to do with the user: HealthKit refuses protected reads while the
+  device is locked, and both the observer and the `BGAppRefreshTask` fire on
+  locked devices constantly. Publishing that straight through would have put a
+  warning on the lock screen at the moment the countdown was most correct.
+  `HealthDataState.resolve` debounces on `staleAfter` (6h), and
+  `lastSuccessfulImport` is mirrored into the App Group because it is otherwise
+  in-memory and a background wake usually runs in a fresh process, so every
+  cold launch that failed its first read would look like an app that had never
+  read anything. The phone still reports every failed attempt, because it has a
+  scene, a pull-to-refresh, and room for a line.
 - **Paywall verification:** it renders empty under plain `simctl launch` — no
   RevenueCat on simulator and no StoreKit catalogue. Under screenshot mode the
   plan cards come from `StoreService.screenshotPackages`, whose prices mirror

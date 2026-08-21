@@ -11,15 +11,16 @@ struct RecoveryEntry: TimelineEntry {
     /// because a timeline is built once and rendered many times.
     var dataState: ComplicationCopy.DataState = .synced
 
-    var phase: RecoveryPhase {
-        dataState == .synced ? snapshot.phase(at: date) : .noRecentWorkout
-    }
-    var remaining: TimeInterval {
-        dataState == .synced ? snapshot.remainingSeconds(at: date) : 0
-    }
-    var progress: Double {
-        dataState == .synced ? snapshot.progress(at: date) : 0
-    }
+    /// `.stale` is not in this list on purpose. A failed Health read on the
+    /// phone does not invalidate a `readyAt` that was already computed, so the
+    /// countdown keeps running and `ComplicationCopy.secondary` carries the
+    /// warning. Only a snapshot that could not be read at all has nothing to
+    /// count down.
+    var hasModel: Bool { dataState != .neverSynced && dataState != .unreadable }
+
+    var phase: RecoveryPhase { hasModel ? snapshot.phase(at: date) : .noRecentWorkout }
+    var remaining: TimeInterval { hasModel ? snapshot.remainingSeconds(at: date) : 0 }
+    var progress: Double { hasModel ? snapshot.progress(at: date) : 0 }
 
     static func placeholder(date: Date = .now) -> RecoveryEntry {
         RecoveryEntry(
@@ -63,10 +64,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
         let state = snapshotForTimeline(at: now)
         let style = loadComplicationStyle()
 
-        let dates = state.dataState == .synced
-            ? CountdownTimeline.entryDates(for: state.snapshot, now: now)
-            : []
-        let entries = dates.map {
+        let entries = CountdownTimeline.entryDates(for: state.snapshot, now: now).map {
             RecoveryEntry(
                 date: $0,
                 snapshot: state.snapshot,
@@ -76,11 +74,7 @@ struct RecoveryTimelineProvider: TimelineProvider {
         }
         completion(Timeline(
             entries: entries.isEmpty ? [currentEntry(at: now)] : entries,
-            policy: .after(
-                state.dataState == .synced
-                    ? CountdownTimeline.refreshDate(for: state.snapshot, now: now)
-                    : now.addingTimeInterval(15 * 60)
-            )
+            policy: .after(CountdownTimeline.refreshDate(for: state.snapshot, now: now))
         ))
     }
 
@@ -184,7 +178,7 @@ struct RecoveryCircularView: View {
 
     var body: some View {
         // A gauge only makes sense while something is actually running down.
-        if entry.dataState != .synced || entry.phase == .ready || entry.phase == .noRecentWorkout {
+        if entry.phase == .ready || entry.phase == .noRecentWorkout {
             ZStack {
                 AccessoryWidgetBackground()
                 VStack(spacing: 0) {
@@ -253,7 +247,7 @@ struct RecoveryCornerView: View {
     let entry: RecoveryEntry
 
     var body: some View {
-        if entry.dataState != .synced || entry.phase == .ready || entry.phase == .noRecentWorkout {
+        if entry.phase == .ready || entry.phase == .noRecentWorkout {
             Image(systemName: entry.symbolName)
                 .font(.title2)
                 .widgetLabel { Text(entry.primaryText) }
@@ -305,7 +299,10 @@ struct RecoveryComplicationView: View {
 
 private extension RecoveryEntry {
     var symbolName: String {
-        dataState == .synced ? Theme.symbol(for: phase) : "arrow.triangle.2.circlepath"
+        // `.stale` keeps the phase symbol: the label beside it already carries
+        // the warning, and swapping the glyph would hide which phase the user
+        // is in to say something the label is saying anyway.
+        hasModel ? Theme.symbol(for: phase) : "arrow.triangle.2.circlepath"
     }
 }
 

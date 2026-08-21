@@ -41,9 +41,18 @@ public enum ComplicationCopy {
     public enum DataState: Sendable, CaseIterable {
         /// A snapshot has arrived from the phone at some point.
         case synced
-        /// The phone could not complete its latest Health read. The cached
-        /// estimate is retained for recovery, but must not be presented as
-        /// current on a glance surface.
+        /// The phone has not managed a Health read for long enough that a
+        /// newer workout could be missing from the estimate on screen.
+        ///
+        /// It **annotates**, it does not replace. The countdown is a function
+        /// of a `readyAt` that was already computed and is still ticking down
+        /// correctly; a failed read says only that something newer might not be
+        /// in it. Blanking the number would throw away the one thing the
+        /// surface knows in order to warn about the one thing it does not, and
+        /// it would contradict the phone, which keeps its countdown and adds a
+        /// line under the date (`TodayView.freshness`). So only `secondary`
+        /// changes: the slot with room for a sentence carries the warning and
+        /// every slot that carries the value keeps carrying it.
         case stale
         /// Nothing has ever been received. Distinct from "no workout".
         case neverSynced
@@ -60,10 +69,10 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .stale: return "Retry"
         case .neverSynced: return "Open"
         case .unreadable: return "Retry"
-        case .synced: break
+        // `.stale` deliberately falls through: the countdown is still correct.
+        case .synced, .stale: break
         }
         switch phase {
         case .noRecentWorkout:
@@ -95,7 +104,7 @@ public enum ComplicationCopy {
         // opened always live on the same device, whether that is the wrist or
         // the phone, so naming one would be wrong on the other.
         switch dataState {
-        case .stale: return "Open Recharge to refresh"
+        case .stale: return "Apple Health unread - open Recharge"
         case .neverSynced: return "Open Recharge to set up"
         case .unreadable: return "Open Recharge to refresh"
         case .synced: break
@@ -133,10 +142,11 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .stale: return "Refresh Recharge"
         case .neverSynced: return "Open Recharge"
         case .unreadable: return "Refresh Recharge"
-        case .synced: break
+        // One line and no second slot, so the value stays: a warning here would
+        // be the only thing the inline complication said.
+        case .synced, .stale: break
         }
         switch phase {
         case .noRecentWorkout: return "No workout"
@@ -160,8 +170,8 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .stale, .neverSynced, .unreadable: return "Recharge"
-        case .synced: break
+        case .neverSynced, .unreadable: return "Recharge"
+        case .synced, .stale: break
         }
         switch phase {
         case .noRecentWorkout: return "Recharge"
