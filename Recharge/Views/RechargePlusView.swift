@@ -92,17 +92,17 @@ struct RechargePlusView: View {
                     .foregroundStyle(Theme.textPrimary)
 
                 HStack(alignment: .center, spacing: 16) {
-                    figure("Average", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                    figure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                     Image(systemName: "arrow.right")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Theme.textTertiary)
-                    figure("Yours", CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                    figure("Optimal", CountdownFormat.hours(preview.personalizedHours), Theme.pro)
                     Spacer(minLength: 0)
                 }
 
                 Text(preview.isExample
                      ? "An example on the real curve until you have recorded a qualifying session. The arithmetic is the same one your own sessions get."
-                     : "The standard estimate for your training level, beside the one measured from your own history.")
+                     : "What you usually do after a session like this, beside the window Recharge+ recommends for it.")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -159,7 +159,7 @@ struct RechargePlusView: View {
 
     private var factorLabel: String {
         let percent = analysis.percentDifference
-        if percent == 0 { return "Same as standard" }
+        if percent == 0 { return "No change from the model default" }
         return percent > 0 ? "+\(percent)%" : "\(percent)%"
     }
 

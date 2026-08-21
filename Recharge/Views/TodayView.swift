@@ -415,7 +415,7 @@ struct TodayView: View {
         let preview = engine.personalizedPreview
         return HStack(alignment: .center, spacing: 14) {
             figureColumn(
-                label: "Average",
+                label: "Usual",
                 text: CountdownFormat.hours(preview.standardHours),
                 tint: Theme.textSecondary,
                 blurred: false
@@ -424,7 +424,7 @@ struct TodayView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(Theme.textTertiary)
             figureColumn(
-                label: "Yours",
+                label: "Optimal",
                 text: CountdownFormat.hours(preview.personalizedHours),
                 tint: Theme.pro,
                 blurred: !store.isPro
@@ -473,9 +473,9 @@ struct TodayView: View {
         let preview = engine.personalizedPreview
         let subject = preview.isExample ? "A hard 60-minute session" : preview.label
         if store.isPro {
-            return "\(subject), scored against your own history rather than the standard table."
+            return "\(subject). Usual is what you have actually done after sessions this size; optimal is what Recharge+ recommends for this one."
         }
-        return "\(subject). You're seeing the standard estimate for your training level. Recharge+ measures it from what you've actually done."
+        return "\(subject). Usual is read from your own history. Recharge+ adds what the model recommends for this session, from your sleep, heart rate, and thirty-day pattern."
     }
 
     // MARK: - Transient prompts

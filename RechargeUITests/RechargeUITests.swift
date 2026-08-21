@@ -398,7 +398,7 @@ final class RechargeUITests: XCTestCase {
         )
         // `.textCase(.uppercase)` is a rendering transform: the accessibility
         // label stays as it was written.
-        for column in ["Average", "Yours"] {
+        for column in ["Usual", "Optimal"] {
             XCTAssertTrue(app.staticTexts[column].firstMatch.exists, "the \(column) column is missing")
         }
         attach(app, named: "today-comparison")
@@ -603,7 +603,7 @@ final class RechargeUITests: XCTestCase {
     func testTheTabBarDoesNotCoverTheBottomOfToday() {
         let app = launch(scene: "recovering")
         let caption = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] %@", "standard estimate for your training level")
+            NSPredicate(format: "label CONTAINS[c] %@", "Usual is read from your own history")
         ).firstMatch
         XCTAssertTrue(caption.waitForExistence(timeout: 15))
         scrollToBottom(of: app)

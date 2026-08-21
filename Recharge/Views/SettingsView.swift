@@ -100,11 +100,16 @@ struct SettingsView: View {
                     }
 
                     HStack(alignment: .center, spacing: 14) {
-                        settingsFigure("Average", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                        settingsFigure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Theme.textTertiary)
-                        settingsFigure("Yours", CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                        settingsFigure(
+                            "Optimal",
+                            CountdownFormat.hours(preview.personalizedHours),
+                            Theme.pro,
+                            blurred: true
+                        )
                         Spacer(minLength: 0)
                     }
 
@@ -123,15 +128,33 @@ struct SettingsView: View {
 
     private var proPitchDetail: String {
         let subject = preview.isExample ? "a hard 60-minute session" : preview.label.lowercased()
-        return "What the standard table says for \(subject), beside what your own sessions, sleep, and heart rate say. \(RechargeConversionCopy.proName) gives you the second one."
+        return "How long you usually leave after \(subject), beside the window the model recommends for it. \(RechargeConversionCopy.proName) gives you the second one."
     }
 
-    private func settingsFigure(_ label: String, _ value: String, _ tint: Color) -> some View {
+    /// - Parameter blurred: this row only exists for a user who has not bought
+    ///   yet, and the personalized figure is the thing being sold, so it is
+    ///   withheld here exactly as it is on Today's card. Printing it gives away
+    ///   the product on the screen that asks for the sale.
+    private func settingsFigure(
+        _ label: String,
+        _ value: String,
+        _ tint: Color,
+        blurred: Bool = false
+    ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(value)
-                .font(Theme.bigNumber(24))
-                .monospacedDigit()
-                .foregroundStyle(tint)
+            Group {
+                if blurred {
+                    Text(value)
+                        .foregroundStyle(tint)
+                        .blur(radius: 5)
+                        .opacity(0.9)
+                        .accessibilityLabel("Hidden until you upgrade")
+                } else {
+                    Text(value).foregroundStyle(tint)
+                }
+            }
+            .font(Theme.bigNumber(24))
+            .monospacedDigit()
             Text(label)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .textCase(.uppercase)
@@ -358,13 +381,13 @@ struct SettingsView: View {
         } footer: {
             Text(store.isPro
                 ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The standard estimate is the average one for your training level: session type, length, and intensity in, hours out. Recharge+ replaces the average with yours, measured from your own sessions, sleep, and heart rate.")
+                : "The free estimate is your own habit: how long you have actually left after sessions this size. Recharge+ adds what the model recommends for each one, from your sessions, sleep, and heart rate.")
         }
     }
 
     private var personalFactorLabel: String {
         let percent = engine.personalAnalysis.percentDifference
-        if percent == 0 { return "Same as standard" }
+        if percent == 0 { return "No change from the model default" }
         return percent > 0 ? "+\(percent)% longer" : "\(percent)% shorter"
     }
 

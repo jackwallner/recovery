@@ -152,8 +152,38 @@ public struct RecoveryBaseline: Sendable, Equatable {
         let personal = Self.geometricMean(of: dailyLoads)
         guard personal > 0 else { return referenceLoad }
         let weight = min(Double(dayCount) / Double(Self.minimumSamples), 1)
-        guard weight < 1 else { return personal }
-        return exp(weight * log(personal) + (1 - weight) * log(referenceLoad))
+        let blended = weight < 1
+            ? exp(weight * log(personal) + (1 - weight) * log(referenceLoad))
+            : personal
+        return bounded(blended)
+    }
+
+    /// How far the person's own figure is allowed to sit from the population
+    /// reference for their profile and stated level.
+    ///
+    /// **This is the denominator of every relative load, so an unbounded one is
+    /// an unbounded window.** The case that forced it: somebody training seven
+    /// days a week in twenty-five-minute sessions has a typical training day of
+    /// about 26 load units against a reference day of 115, so their ordinary
+    /// class read as "twice normal" and their weekly long run as 36 hours, while
+    /// the same run against the population reference was 13. Both numbers were
+    /// correct arithmetic on their own terms and the pair of them was nonsense.
+    ///
+    /// The band keeps personalisation real — a third either way is a large
+    /// effect, larger than the thirty-day multiplier and larger than any
+    /// overnight context adjustment — while making it impossible for the paid
+    /// estimate to land somewhere the user cannot recognise. It is the same
+    /// argument the `fitnessScale` bounds one section up make: a measurement can
+    /// move the number, it may not redefine the scale.
+    public static let minimumPersonalRatio = 0.75
+    public static let maximumPersonalRatio = 1.40
+
+    private func bounded(_ load: Double) -> Double {
+        guard load.isFinite, referenceLoad > 0 else { return referenceLoad }
+        return min(
+            max(load, referenceLoad * Self.minimumPersonalRatio),
+            referenceLoad * Self.maximumPersonalRatio
+        )
     }
 
     /// Geometric mean of a positive sample. Empty or non-positive input returns

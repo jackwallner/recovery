@@ -43,6 +43,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 | File | Stage |
 |---|---|
 | `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. Also `intensityFraction`, the HR-reserve quality proxy. |
+| `ObservedRecoveryPattern` | what the person actually does: median gap to the next real session, by effort band. The free tier's whole answer. |
 | `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. Below `minimumSamples` the median is shrunk toward the population reference (see below). `.standard(for:)` is the no-samples reference the free tier uses. |
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
 | `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus what Health measured — VO2 max, the observed maximum heart rate, body mass. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
@@ -56,18 +57,48 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 `RecoveryTier` is stored on every estimate, because the two answer different
 questions and a history list that mixes them silently is lying by omission.
 
-**The line between them is measurement, not personalisation.**
+**The line between them is description and recommendation.**
 
-- **Standard (free).** The standard model at the training level the user
-  *stated*: `RecoveryBaseline.standard(for:fitnessScale:)`, no context, no
-  calibration, `RecoveryPersonalization.standard`. Session type, length and
-  intensity in, hours out, against a population reference scaled by
-  `AthleteProfile.fitnessScale`. Confidence is capped at medium and never
-  reports `buildingBaseline` — there is no baseline being built. Category labels
-  drop the "for you".
-- **Personalized (Recharge+).** The person's own 42-day baseline, overnight
-  context, calibration, and the `PersonalRecoveryModel` multiplier. Everything
-  that comes from what they have actually *done*.
+- **Your usual (free).** `ObservedRecoveryPattern`: the median gap between this
+  person's own sessions of comparable size, split into three bands (light /
+  moderate / hard) by where the session sits in their own load distribution. No
+  model at all — the countdown *is* the habit. Falls back to the modelled
+  estimate at their stated training level while their history is too thin to
+  show a pattern, and says so in the reasons.
+- **Optimal (Recharge+).** What the model recommends for *this* session: the
+  person's own 42-day baseline, overnight context, calibration, and the
+  `PersonalRecoveryModel` multiplier — stated against the habit, so the free
+  figure stays on screen beside the one that replaced it.
+
+**Why the split changed.** It used to be two runs of the same calculation, one
+scored against a population reference and one against the person's own load
+distribution, and *nothing bounded the distance between them*. A user training
+seven days a week in twenty-five-minute sessions was shown **6 hours free and 36
+hours paid for the same workout**: their typical training day was about 26 load
+units against a reference day of 115, so the paid tier read their ordinary
+session as twice normal while the free tier read it as a quarter of normal. Both
+figures were correct arithmetic on their own terms and the pair of them was
+nonsense — and the direction was backwards from what anybody expects, because
+frequency never entered the denominator at all. Only load *per training day*
+did, so training often in short blocks lowered the baseline and lengthened every
+window.
+
+Two questions produce two answers legibly. One number is what you do; the other
+is what the model suggests doing. `RecoveryBaseline.minimumPersonalRatio` /
+`maximumPersonalRatio` (0.75–1.40 of the population reference) bound the paid
+side separately, so a measured baseline can tune the recommendation but never
+relocate it.
+
+**What counts as "going again"** is the whole of the free statistic and it took
+two attempts. A lighter session cannot end a gap — somebody who walks the day
+after a hard ride has a 24-hour gap because of a walk — but requiring the *same
+size again* fails worse in the other direction: a weekly long run is the biggest
+thing in that person's week, so nothing matches it until the next one and the
+habit came back as "you go again after 7 days" for somebody training five times a
+week. The bar is the lower of `comparableFraction` (0.85) of the session just
+finished and `typicalFraction` (0.70) of their median session. Gaps over
+`maximumGapHours` (7 days) are dropped, because a fortnight off is a holiday, not
+a recovery time, and `easy` sessions are excluded on both sides.
 
 `AthleteProfile.fitnessScale` is the one thing about the person that reaches the
 free tier, and it is there because Garmin's default is profile-based too:
@@ -135,7 +166,13 @@ sitting in Health.
 
 Every session is scored **both** ways on both tiers, and
 `RecoveryEngine.personalizedPreview` carries the most recent qualifying one:
-standard hours beside personalized hours, for the conversion surfaces. It is
+the usual gap beside the recommended window, for the conversion surfaces. The
+paid figure is **blurred everywhere it appears before purchase** — Today's card,
+the trial offer page, the Settings row. It used to be printed in full on the
+offer page, on the argument that hiding half an argument is not an argument, and
+that reasoning was wrong in one specific way: that page is the last thing a user
+sees before deciding, so printing the number hands over the entire thing being
+sold. It is
 computed, never derived. Multiplying the standard hours by
 `personalAnalysis.factor` was the old version and it dropped the larger of the
 two effects — personalisation changes the *baseline* a session is measured
@@ -146,9 +183,13 @@ real curve) when there is no qualifying session or the two land on the same
 rounded hour, so there is always a difference on screen and it is always
 arithmetic.
 
-`RecoveryEngine.rescore` runs two passes — the standard estimate for every
-session first, because `PersonalRecoveryModel` needs to know what window each
-session *would* have had, then the tier-appropriate one.
+`RecoveryEngine.rescore` reads `ObservedRecoveryPattern` **once** — a habit does
+not change between two rows of the same history — then runs two passes: the free
+estimate for every session first, because `PersonalRecoveryModel` needs to know
+what window each session *would* have had, then the tier-appropriate one. Both
+passes are handed the observed window; only the free one lets it become the
+countdown (`RecoveryCalculator` gates on `personalization.tier`), because on
+Recharge+ the habit is a sentence rather than the number.
 
 ### Recovery time stacks, and the residual has to be persisted
 A session done inside a running countdown starts its own from where that
@@ -206,8 +247,11 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **10**
-(the app measures more of what it was guessing: the heart-rate ceiling is the
+window disagrees with what the same session would produce today. Currently **11**
+(the tiers stopped being two runs of the same calculation: the free one describes
+the person's own gap between sessions and the paid one recommends a window
+against it, and the personal denominator is bounded to 0.75-1.40x the population
+reference; 10 measured more of what the model was guessing: the heart-rate ceiling is the
 person's own observed maximum rather than an age formula, VO2 max joins the two
 training-level questions in `fitnessScale`, body mass closes the energy path's
 mass residual, overnight respiratory rate joins the context adjustment,

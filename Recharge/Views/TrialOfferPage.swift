@@ -120,16 +120,25 @@ struct TrialOfferPage: View {
     ///
     /// Both are real. `RecoveryEngine.personalizedPreview` computes them on both
     /// tiers precisely so this screen never has to invent one, and it falls back
-    /// to a canonical hard session — a genuine point on the genuine curve —
-    /// when the user has no qualifying session yet. Neither figure is blurred
-    /// here: this is the page where the difference is the argument, and hiding
-    /// half of an argument is not an argument.
+    /// to a canonical hard session - a genuine point on the genuine curve -
+    /// when the user has no qualifying session yet.
+    ///
+    /// The personalized figure is **blurred until it is bought**, exactly as it
+    /// is on Today's card. It used to be printed in full here, on the argument
+    /// that hiding half an argument is not an argument, and that reasoning was
+    /// wrong in one specific way: this page is the last thing a user sees before
+    /// deciding, so printing the number gives away the entire thing being sold.
+    /// Somebody who reads it has already got what they came for and has no
+    /// reason to pay. The argument the page has to make is that there *is* a
+    /// difference and that it was measured from their own data - which the
+    /// standard figure, the blurred shape beside it, and the receipt underneath
+    /// all still make.
     private var comparison: some View {
         let preview = engine.personalizedPreview
         return VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 18) {
                 numberColumn(
-                    "Average",
+                    "Usual",
                     CountdownFormat.hours(preview.standardHours),
                     Theme.textSecondary
                 )
@@ -137,9 +146,10 @@ struct TrialOfferPage: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Theme.textTertiary)
                 numberColumn(
-                    "Yours",
+                    "Optimal",
                     CountdownFormat.hours(preview.personalizedHours),
-                    Theme.pro
+                    Theme.pro,
+                    blurred: !store.isPro
                 )
             }
             .padding(.vertical, 16)
@@ -157,14 +167,38 @@ struct TrialOfferPage: View {
         }
     }
 
-    private func numberColumn(_ label: String, _ value: String, _ tint: Color) -> some View {
+    /// - Parameter blurred: withholds the value while keeping its shape legible
+    ///   as a figure, the same treatment and the same radius Today's card uses.
+    ///   At a larger radius a number this size disappears completely and the
+    ///   column reads as a rendering fault rather than as a withheld value.
+    private func numberColumn(
+        _ label: String,
+        _ value: String,
+        _ tint: Color,
+        blurred: Bool = false
+    ) -> some View {
         VStack(spacing: 2) {
-            Text(value)
-                .font(Theme.bigNumber(38))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                .foregroundStyle(tint)
+            Group {
+                if blurred {
+                    Text(value)
+                        .foregroundStyle(tint)
+                        .blur(radius: 7)
+                        .opacity(0.9)
+                        .overlay(alignment: .topTrailing) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(Theme.pro)
+                                .offset(x: 12, y: 2)
+                        }
+                        .accessibilityLabel("Hidden until you upgrade")
+                } else {
+                    Text(value).foregroundStyle(tint)
+                }
+            }
+            .font(Theme.bigNumber(38))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             Text(label)
                 .font(.system(.caption2, design: .rounded, weight: .semibold))
                 .textCase(.uppercase)
@@ -334,8 +368,8 @@ struct TrialOfferPage: View {
     private var subheadline: String {
         let name = RechargeConversionCopy.proName
         return engine.personalizedPreview.isExample
-            ? "Free gives you the standard estimate for your training level. \(name) measures it from your own sessions, sleep, and heart rate."
-            : "That's what the standard table says, beside what your own data says. \(name) gives you the second one."
+            ? "Free tells you how long you usually leave between sessions. \(name) tells you how long this one is worth leaving, from your own sessions, sleep, and heart rate."
+            : "That's how long you usually leave, beside what the model recommends for this session. \(name) gives you the second one."
     }
 
     private func purchase() async {
