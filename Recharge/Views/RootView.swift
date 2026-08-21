@@ -71,15 +71,19 @@ struct RootView: View {
                     } else if store.isPro {
                         RechargePlusView()
                     } else {
-                        PaywallView(source: "plus_tab", displayCloseButton: false)
+                        PaywallView(
+                            source: "plus_tab",
+                            displayCloseButton: false,
+                            bottomClearance: TabBarMetrics.clearance
+                        )
                     }
                 }
-                // The paywall's CTA sits in its own bottom bar rather than in
-                // the scroll view, so it cannot reserve its own clearance the
-                // way a `ScrollView` can.
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: TabBarMetrics.clearance)
-                }
+                // `RechargePlusView` is a scroll view and reserves its own
+                // room inside its `NavigationStack`. The paywall's action row
+                // is not a scroll view at all, so it takes `bottomClearance`
+                // above. Neither of them can be served from out here: an inset
+                // applied around a `NavigationStack` never reaches the content
+                // inside it.
             }
 
             tabBar
