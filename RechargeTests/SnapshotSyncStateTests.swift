@@ -127,4 +127,42 @@ final class SnapshotSyncStateTests: XCTestCase {
         )
         XCTAssertNotEqual(neverSynced, noWorkout)
     }
+
+    func testMissingAndUnreadableComplicationCopyIsActionable() {
+        for state in [ComplicationCopy.DataState.neverSynced, .unreadable] {
+            let primary = ComplicationCopy.primary(
+                phase: .noRecentWorkout, style: .countdown, remaining: 0, readyAt: nil,
+                dataState: state
+            )
+            let secondary = ComplicationCopy.secondary(
+                phase: .noRecentWorkout, style: .countdown, remaining: 0, readyAt: nil,
+                activityLabel: "", dataState: state
+            )
+
+            XCTAssertNotEqual(primary, "--")
+            XCTAssertNotEqual(secondary, "No workout")
+        }
+    }
+
+    func testComplicationStateDistinguishesMissingMalformedAndPublishedSnapshots() {
+        XCTAssertEqual(
+            ComplicationCopy.dataState(for: nil, hasEverSynced: false),
+            .neverSynced
+        )
+        XCTAssertEqual(
+            ComplicationCopy.dataState(for: nil, hasEverSynced: true),
+            .unreadable
+        )
+        XCTAssertEqual(
+            ComplicationCopy.dataState(for: .empty, hasEverSynced: true),
+            .synced
+        )
+
+        var stale = RecoverySnapshot.empty
+        stale.healthDataState = .stale
+        XCTAssertEqual(
+            ComplicationCopy.dataState(for: stale, hasEverSynced: true),
+            .stale
+        )
+    }
 }

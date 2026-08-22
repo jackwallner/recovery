@@ -55,6 +55,7 @@ struct TodayView: View {
     @State private var isSettled = false
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// One-minute tick. The countdown is in hours, so anything faster is wasted
     /// work; a minute keeps the "1h 20m" tail honest.
@@ -100,6 +101,7 @@ struct TodayView: View {
                     showSettings = true
                     return
                 }
+                ScreenshotConfig.markReady()
                 #endif
                 presentFeedbackIfNeeded()
             }
@@ -201,7 +203,7 @@ struct TodayView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
+                Text(now, format: .dateTime.weekday(.wide).month(.wide).day())
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                 freshness
@@ -246,6 +248,7 @@ struct TodayView: View {
                         HStack(spacing: Theme.Space.xxs) {
                             Text(sourceLine)
                                 .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 10, weight: .semibold))
                         }
@@ -291,7 +294,7 @@ struct TodayView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
                     .foregroundStyle(Theme.textPrimary)
-                    .contentTransition(.numericText())
+                    .contentTransition(reduceMotion ? .identity : .numericText())
                 Text("left")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
@@ -416,6 +419,19 @@ struct TodayView: View {
             }
         }
         .pressable(.card)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(store.isPro ? "Your recharge time" : "Your own recharge time")
+        .accessibilityValue(personalizationAccessibilityValue)
+        .accessibilityHint("Opens the explanation and upgrade options")
+    }
+
+    private var personalizationAccessibilityValue: String {
+        let preview = engine.personalizedPreview
+        let usual = CountdownFormat.hours(preview.standardHours)
+        guard store.isPro else {
+            return "Usual \(usual). Optimal time hidden until you upgrade."
+        }
+        return "Usual \(usual). Optimal \(CountdownFormat.hours(preview.personalizedHours))."
     }
 
     private var comparison: some View {

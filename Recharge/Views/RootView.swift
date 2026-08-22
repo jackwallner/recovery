@@ -5,11 +5,14 @@ struct RootView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var selectedTab = Tab.today
     @State private var showWhatsNew = false
     @State private var showReviewPrompt = false
     @State private var showTrialOffer = false
+    @State private var trialOfferDetent: PresentationDetent = .height(TrialOfferSheet.detentHeight)
     @State private var showPaywall = false
     /// Today raises its own sheets (the readiness question, the effort question,
     /// its Settings sheet). SwiftUI will not present a second sheet over them,
@@ -38,7 +41,7 @@ struct RootView: View {
                 OnboardingView()
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: settings.hasCompletedSetup)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: settings.hasCompletedSetup)
     }
 
     /// A translucent capsule floating **over** the content, which is the shape
@@ -135,8 +138,17 @@ struct RootView: View {
                 // A half sheet, as in Vitals: an interruption that covers the
                 // whole screen reads as a wall, and the number it is arguing
                 // about is the thing still visible behind it.
-                .presentationDetents([.height(TrialOfferSheet.detentHeight)])
+                .presentationDetents(
+                    [.height(TrialOfferSheet.detentHeight), .large],
+                    selection: $trialOfferDetent
+                )
                 .presentationDragIndicator(.visible)
+                .presentationContentInteraction(.scrolls)
+                .onAppear {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        trialOfferDetent = .large
+                    }
+                }
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: "root")
@@ -361,6 +373,8 @@ private struct TabButton: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: Theme.Space.xxs) {
@@ -382,7 +396,7 @@ private struct TabButton: View {
             .contentShape(Capsule())
         }
         .pressable()
-        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isSelected)
         // Without this VoiceOver reads all three tabs identically and never says
         // which one you are on.
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)

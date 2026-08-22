@@ -180,31 +180,26 @@ public final class RecoveryEngine: ObservableObject {
     // MARK: - Import
 
     private func importWorkouts() async {
-        // `nil` is a read that did not happen; `[]` is a store that genuinely
-        // has no workouts left. Only the second one may delete anything, or a
-        // revoked permission or a flaky query erases the user's history.
-        guard let imported = await HealthKitService.shared.fetchWorkouts() else {
+        // `nil` is a read that did not happen. An anchored result may contain
+        // no additions while still carrying deletions, or no changes at all;
+        // only explicit deletion IDs may remove cached workouts.
+        guard let importResult = await HealthKitService.shared.fetchWorkouts() else {
             lastImportFailed = true
             return
         }
+        let imported = importResult.workouts
 
         let existing = (try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? []
-        let importCutoff = DateHelpers.daysAgo(HealthKitService.importDays)
-        let recentExisting = existing.filter { $0.endDate >= importCutoff }
-        // HealthKit deliberately makes a denied read look like an empty store.
-        // If recent records already exist, treating that empty result as a
-        // deletion would erase the user's history after permission is revoked.
-        guard !imported.isEmpty || recentExisting.isEmpty else {
-            lastImportFailed = true
-            engineLogger.error("Health returned no workouts while recent cached records exist; preserving the cache")
-            return
+        // Anchored HealthKit queries report deletions explicitly. Remove those
+        // records before applying additions, while leaving an ambiguous empty
+        // read alone when access was revoked or the query returned no changes.
+        var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
+        for deletedID in importResult.deletedWorkoutIDs {
+            if let record = byUUID.removeValue(forKey: deletedID) {
+                context.delete(record)
+            }
         }
 
-        lastImportFailed = false
-        lastSuccessfulImport = .now
-        UserDefaults(suiteName: rechargeAppGroupID)?
-            .set(lastSuccessfulImport, forKey: RecoveryEngine.lastSuccessfulImportKey)
-        var byUUID = Dictionary(existing.map { ($0.healthKitUUID, $0) }, uniquingKeysWith: { first, _ in first })
         let ambiguousProfile = RechargeSettings.shared.ambiguousProfile
 
         for workout in imported {
@@ -218,10 +213,15 @@ public final class RecoveryEngine: ObservableObject {
                 // Health can revise a workout after the fact (a third-party app
                 // backfilling heart rate, say), so refresh the mutable fields
                 // but never touch the user's own override or effort answer.
+                record.activityCode = Int(workout.activityCode)
+                record.startDate = workout.start
+                record.endDate = workout.end
+                record.durationMinutes = workout.durationMinutes
                 record.activeEnergy = workout.activeEnergy ?? record.activeEnergy
                 record.averageHeartRate = workout.averageHeartRate ?? record.averageHeartRate
                 record.peakHeartRate = workout.peakHeartRate ?? record.peakHeartRate
                 record.heartRateCoverage = workout.heartRateCoverage
+                record.sourceName = workout.sourceName
                 record.profileRaw = profile.rawValue
                 record.activityLabel = label
             } else {
@@ -244,17 +244,17 @@ public final class RecoveryEngine: ObservableObject {
             }
         }
 
-        // Workouts deleted in Health must disappear here too, or a countdown can
-        // outlive the session that produced it.
-        let liveUUIDs = Set(imported.map(\.uuid))
-        for record in existing where record.endDate >= importCutoff && !liveUUIDs.contains(record.healthKitUUID) {
-            context.delete(record)
-        }
-
         guard saveContext(reason: "workout import") else {
             lastImportFailed = true
+            context.rollback()
             return
         }
+
+        lastImportFailed = false
+        lastSuccessfulImport = .now
+        UserDefaults(suiteName: rechargeAppGroupID)?
+            .set(lastSuccessfulImport, forKey: RecoveryEngine.lastSuccessfulImportKey)
+        HealthKitService.shared.commitWorkoutAnchor(importResult.anchorData)
     }
 
     private func importContext() async {
@@ -328,7 +328,11 @@ public final class RecoveryEngine: ObservableObject {
                 byKey[key] = record
             }
         }
-        saveContext(reason: "context import")
+        guard saveContext(reason: "context import") else {
+            lastImportFailed = true
+            context.rollback()
+            return
+        }
     }
 
     // MARK: - Scoring
@@ -448,6 +452,7 @@ public final class RecoveryEngine: ObservableObject {
                 PersonalRecoveryModel.HistorySession(
                     id: session.id,
                     profile: session.profile,
+                    startDate: session.startDate,
                     endDate: session.endDate,
                     load: standard.load.value,
                     intensityFraction: SessionLoadCalculator.intensityFraction(for: session),

@@ -72,6 +72,7 @@ public enum PersonalRecoveryModel {
     public struct HistorySession: Sendable, Equatable {
         public let id: String
         public let profile: WorkoutProfile
+        public let startDate: Date
         public let endDate: Date
         public let load: Double
         /// Fraction of heart-rate reserve sustained, when the session had usable
@@ -86,6 +87,7 @@ public enum PersonalRecoveryModel {
         public init(
             id: String,
             profile: WorkoutProfile,
+            startDate: Date? = nil,
             endDate: Date,
             load: Double,
             intensityFraction: Double? = nil,
@@ -93,6 +95,7 @@ public enum PersonalRecoveryModel {
         ) {
             self.id = id
             self.profile = profile
+            self.startDate = startDate ?? endDate
             self.endDate = endDate
             self.load = load
             self.intensityFraction = intensityFraction
@@ -447,7 +450,7 @@ public enum PersonalRecoveryModel {
                   let usual = reference[next.profile], usual > 0
             else { continue }
 
-            let elapsedHours = next.endDate.timeIntervalSince(previous.endDate) / 3600
+            let elapsedHours = next.startDate.timeIntervalSince(previous.endDate) / 3600
             let fraction = elapsedHours / previous.standardHours
             // Only sessions started inside the window say anything about
             // tolerance. Beyond it, holding intensity is unremarkable.

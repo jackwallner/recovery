@@ -33,7 +33,7 @@
          describes: dropping it archives cleanly and then fails at upload with
          error 90683. -->
     <key>NSHealthShareUsageDescription</key>
-    <string>Recharge reads your workouts and heart data from Apple Health to show how long your recovery estimate has left. Recharge never writes Health data.</string>
+    <string>Recharge reads recovery data from Apple Health, including workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex, to show how long your recovery estimate has left. Recharge never writes Health data.</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>Recharge does not write any data to Apple Health.</string>
     <key>WKApplication</key>

@@ -37,7 +37,7 @@ enum ProFeature: CaseIterable {
     var detail: String {
         switch self {
         case .personalizedTime:
-            "Free reads your own history and tells you how long you usually leave after a session like this one. Recharge+ answers the other question: how long this session is worth leaving. It scores every session against your own \(RecoveryBaseline.historyDays)-day baseline, then reads the last \(PersonalRecoveryModel.windowDays) days (how quickly your resting heart rate and HRV settle, and whether you hold your intensity training inside the window) to set how fast your countdowns run."
+            "Your usual gap beside the model's recommended window, based on your own history."
         case .bodySignals:
             "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
         case .weeklyLoad:
@@ -124,6 +124,9 @@ struct PaywallView: View {
                 store.trackPaywallImpression(id: "paywall_\(source)")
                 if store.products.isEmpty { await store.fetchProducts() }
                 selectDefaultPackage()
+                #if DEBUG
+                ScreenshotConfig.markReady()
+                #endif
             }
             .onChange(of: store.products.count) { _, _ in selectDefaultPackage() }
             .onChange(of: store.isPro) { _, isPro in
@@ -143,7 +146,7 @@ struct PaywallView: View {
             Text(RechargeConversionCopy.proName)
                 .font(.system(.title, design: .rounded, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Add body signals, load trends, session corrections, and Ready alerts.")
+            Text("Personalized recovery from your history.")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)

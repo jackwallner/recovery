@@ -80,7 +80,10 @@ final class RedesignCaptureTests: XCTestCase {
         app.buttons["Settings"].tap()
         Thread.sleep(forTimeInterval: 2)
         attach(app, named: "settings")
-        app.swipeUp()
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.60))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0)
+        attach(app, named: "settings-short-scroll")
         app.swipeUp()
         attach(app, named: "settings-scrolled")
     }

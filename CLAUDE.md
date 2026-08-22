@@ -247,7 +247,7 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **11**
+window disagrees with what the same session would produce today. Currently **12**
 (the tiers stopped being two runs of the same calculation: the free one describes
 the person's own gap between sessions and the paid one recommends a window
 against it, and the personal denominator is bounded to 0.75-1.40x the population

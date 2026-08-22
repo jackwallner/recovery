@@ -239,11 +239,13 @@ public final class RechargeSettings: ObservableObject {
         bodyMassKilograms: Double? = nil
     ) {
         var profile = athleteProfile
-        if let age {
+        if let age,
+           profile.age == nil || profile.healthDerivedFields.contains(AthleteProfile.ageField) {
             profile.age = age
             profile.healthDerivedFields.insert(AthleteProfile.ageField)
         }
-        if let sex, sex != .unspecified {
+        if let sex, sex != .unspecified,
+           profile.sex == .unspecified || profile.healthDerivedFields.contains(AthleteProfile.sexField) {
             profile.sex = sex
             profile.healthDerivedFields.insert(AthleteProfile.sexField)
         }

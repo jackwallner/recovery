@@ -299,6 +299,27 @@ final class PersonalRecoveryModelTests: XCTestCase {
         XCTAssertNil(PersonalRecoveryModel.toleranceEvidence(sessions: sessions).factor)
     }
 
+    func testToleranceUsesTheNextSessionStartRatherThanItsEnd() {
+        let previousEnd = now.addingTimeInterval(-20 * 86_400)
+        let sessions = (0..<5).map { index in
+            let end = previousEnd.addingTimeInterval(Double(index) * 20 * 3600 + 2 * 3600)
+            let start = end.addingTimeInterval(-2 * 3600)
+            return PersonalRecoveryModel.HistorySession(
+                id: "start-\(index)",
+                profile: .endurance,
+                startDate: start,
+                endDate: end,
+                load: 80,
+                intensityFraction: 0.62,
+                standardHours: 20
+            )
+        }
+
+        let tolerance = PersonalRecoveryModel.toleranceEvidence(sessions: sessions)
+        XCTAssertEqual(tolerance.samples, 4)
+        XCTAssertLessThan(tolerance.factor ?? 99, 1.0)
+    }
+
     // MARK: - Signal 3: density
 
     func testDensityIsSymmetricOnTheLogScale() {

@@ -154,7 +154,10 @@ struct OnboardingLegalSlot: View {
     private var links: some View {
         Button(isRestoring ? "Restoring…" : "Restore") { onRestore?() }
             .disabled(isRestoring || onRestore == nil)
+            .frame(minHeight: 44)
         Link("Terms", destination: RechargeLinks.standardEULA)
+            .frame(minHeight: 44)
         Link("Privacy", destination: RechargeLinks.privacyPolicy)
+            .frame(minHeight: 44)
     }
 }

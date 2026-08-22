@@ -17,6 +17,8 @@ private let healthLogger = Logger(subsystem: "com.jackwallner.recovery", categor
 public final class HealthKitService: ObservableObject {
     public static let shared = HealthKitService()
 
+    private static let workoutAnchorKey = "healthKitWorkoutAnchor"
+
     private let store = HKHealthStore()
     @Published public private(set) var isAuthorized: Bool = false
 
@@ -210,14 +212,32 @@ public final class HealthKitService: ObservableObject {
         public let sourceName: String
     }
 
-    /// Returns `nil` when the read did not happen — Health unavailable, query
-    /// failed, screenshot mode — as opposed to `[]`, which means the store
-    /// genuinely holds no qualifying workouts.
-    ///
-    /// The distinction is load-bearing. `RecoveryEngine.importWorkouts` deletes
-    /// stored records that no longer appear in Health, and a failed query that
-    /// looked like an empty one would wipe the user's entire history.
-    public func fetchWorkouts(days: Int = HealthKitService.importDays) async -> [ImportedWorkout]? {
+    /// The incremental workout receipt. HealthKit does not expose read
+    /// authorization, so an empty result cannot safely mean "delete the
+    /// cache": it can also mean the user revoked the read. Anchored queries
+    /// give us an explicit deletion event when access is still available and
+    /// leave the cache untouched for the ambiguous empty case.
+    public struct WorkoutImport: Sendable {
+        public let workouts: [ImportedWorkout]
+        public let deletedWorkoutIDs: Set<String>
+        public let anchorData: Data
+
+        public init(
+            workouts: [ImportedWorkout],
+            deletedWorkoutIDs: Set<String>,
+            anchorData: Data
+        ) {
+            self.workouts = workouts
+            self.deletedWorkoutIDs = deletedWorkoutIDs
+            self.anchorData = anchorData
+        }
+    }
+
+    /// Returns `nil` when the read did not happen. A successful query returns
+    /// only new or changed workouts plus explicit deletion events. That makes
+    /// deletion safe without mistaking a revoked read for an empty Health
+    /// store.
+    public func fetchWorkouts(days: Int = HealthKitService.importDays) async -> WorkoutImport? {
         #if DEBUG
         if ScreenshotConfig.isEnabled { return nil }
         #endif
@@ -225,30 +245,29 @@ public final class HealthKitService: ObservableObject {
 
         let start = DateHelpers.daysAgo(days)
         let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
-
-        let workouts: [HKWorkout]? = await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(
-                sampleType: HKObjectType.workoutType(),
-                predicate: predicate,
-                limit: HKObjectQueryNoLimit,
-                sortDescriptors: [sort]
-            ) { _, samples, error in
-                if let error {
-                    healthLogger.error("Workout query failed: \(String(describing: error), privacy: .public)")
-                    continuation.resume(returning: nil)
-                    return
-                }
-                continuation.resume(returning: samples as? [HKWorkout] ?? [])
-            }
-            store.execute(query)
+        let descriptor = HKAnchoredObjectQueryDescriptor<HKWorkout>(
+            predicates: [.workout(predicate)],
+            anchor: storedWorkoutAnchor,
+            limit: nil
+        )
+        let result: HKAnchoredObjectQueryDescriptor<HKWorkout>.Result
+        do {
+            result = try await descriptor.result(for: store)
+        } catch {
+            healthLogger.error("Workout query failed: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+        guard let anchorData = try? NSKeyedArchiver.archivedData(
+            withRootObject: result.newAnchor,
+            requiringSecureCoding: true
+        ) else {
+            healthLogger.error("Workout query returned an anchor that could not be persisted")
+            return nil
         }
 
-        guard let workouts else { return nil }
-
         var results: [ImportedWorkout] = []
-        results.reserveCapacity(workouts.count)
-        for workout in workouts {
+        results.reserveCapacity(result.addedSamples.count)
+        for workout in result.addedSamples {
             // Zero-length and absurdly long entries are almost always a bad
             // import from a third-party app; scoring them produces nonsense.
             let minutes = workout.duration / 60
@@ -269,7 +288,25 @@ public final class HealthKitService: ObservableObject {
                 sourceName: workout.sourceRevision.source.name
             ))
         }
-        return results
+        return WorkoutImport(
+            workouts: results,
+            deletedWorkoutIDs: Set(result.deletedObjects.map { $0.uuid.uuidString }),
+            anchorData: anchorData
+        )
+    }
+
+    /// Advances the workout anchor only after the engine has persisted the
+    /// corresponding changes. If the save fails, the next refresh replays the
+    /// same HealthKit delta instead of losing it between processes.
+    public func commitWorkoutAnchor(_ data: Data) {
+        UserDefaults(suiteName: rechargeAppGroupID)?.set(data, forKey: Self.workoutAnchorKey)
+    }
+
+    private var storedWorkoutAnchor: HKQueryAnchor? {
+        guard let data = UserDefaults(suiteName: rechargeAppGroupID)?.data(forKey: Self.workoutAnchorKey) else {
+            return nil
+        }
+        return try? NSKeyedUnarchiver.unarchivedObject(ofClass: HKQueryAnchor.self, from: data)
     }
 
     /// Average in-workout heart rate, plus how much of the session the samples
@@ -542,10 +579,35 @@ public final class HealthKitService: ObservableObject {
             HKCategoryValueSleepAnalysis.asleepREM.rawValue
         ]
 
-        var totals: [String: Double] = [:]
+        var intervals: [DateInterval] = []
         for sample in samples where asleepValues.contains(sample.value) {
-            let key = DateHelpers.dayKey(for: sample.endDate)
-            totals[key, default: 0] += sample.endDate.timeIntervalSince(sample.startDate) / 3600
+            let interval = DateInterval(start: sample.startDate, end: sample.endDate)
+            guard interval.duration > 0 else { continue }
+            intervals.append(interval)
+        }
+
+        // Apple Watch stages and third-party sleep apps can describe the same
+        // night with overlapping intervals. Union first so a second source
+        // cannot turn eight hours into sixteen.
+        let sorted = intervals.sorted { $0.start < $1.start }
+        var merged: [DateInterval] = []
+        for interval in sorted {
+            guard let last = merged.last else {
+                merged.append(interval)
+                continue
+            }
+            if interval.start <= last.end {
+                let end = max(last.end, interval.end)
+                merged[merged.count - 1] = DateInterval(start: last.start, end: end)
+            } else {
+                merged.append(interval)
+            }
+        }
+
+        var totals: [String: Double] = [:]
+        for interval in merged {
+            let key = DateHelpers.dayKey(for: interval.end)
+            totals[key, default: 0] += interval.duration / 3600
         }
         return totals
     }
@@ -589,6 +651,8 @@ public final class HealthKitService: ObservableObject {
             (HKObjectType.workoutType(), .immediate),
             (HKQuantityType(.restingHeartRate), .daily),
             (HKQuantityType(.heartRateVariabilitySDNN), .daily),
+            (HKQuantityType(.respiratoryRate), .daily),
+            (HKQuantityType(.heartRateRecoveryOneMinute), .daily),
             (HKCategoryType(.sleepAnalysis), .daily)
         ]
 

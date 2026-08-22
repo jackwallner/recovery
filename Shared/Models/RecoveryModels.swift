@@ -67,7 +67,10 @@ import Foundation
 /// arithmetic and the pair was nonsense. The personal denominator is also now
 /// bounded to 0.75-1.40x the population reference for the same reason, so the
 /// paid figure can be tuned but never relocated.
-public let recoveryModelVersion = 11
+/// 12: tolerance evidence uses the next session's start time, rather than its
+/// end time, and overlapping sleep intervals are unioned before context is
+/// built.
+public let recoveryModelVersion = 12
 
 // MARK: - Tier
 
