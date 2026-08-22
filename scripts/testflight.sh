@@ -12,6 +12,24 @@ cd "$ROOT"
 echo "==> Design audit"
 ./scripts/design-audit.sh
 
+echo "==> Unit tests"
+TEST_UDID="${RECHARGE_TEST_UDID:-$(agent-sim udid recharge)}"
+xcodebuild test \
+  -project Recharge.xcodeproj \
+  -scheme Recharge \
+  -only-testing:RechargeTests \
+  -destination "id=$TEST_UDID" \
+  -derivedDataPath "/tmp/recharge-testflight-tests" \
+  CODE_SIGNING_ALLOWED=NO
+
+echo "==> Signed UI and HealthKit walkthrough"
+xcodebuild test \
+  -project Recharge.xcodeproj \
+  -scheme RechargeUITests \
+  -destination "id=$TEST_UDID" \
+  -derivedDataPath "/tmp/recharge-testflight-ui" \
+  -parallel-testing-enabled NO
+
 CURRENT_BUILD=$(grep -E '^\s*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*CURRENT_PROJECT_VERSION:[[:space:]]*"?([0-9]+)"?.*/\1/')
 NEXT_BUILD=$((CURRENT_BUILD + 1))
 echo "==> Bump build $CURRENT_BUILD -> $NEXT_BUILD"

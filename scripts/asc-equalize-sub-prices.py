@@ -17,8 +17,8 @@ import asc_lib
 
 BUNDLE = "com.jackwallner.recovery"
 USA_PRICES = {
-    "com.jackwallner.recovery.monthly": "1.99",
-    "com.jackwallner.recovery.yearly": "14.99",
+    "com.jackwallner.recovery.monthly": "5.99",
+    "com.jackwallner.recovery.yearly": "29.99",
 }
 
 # When True, post the equalized price point for EVERY territory (price change);
@@ -95,4 +95,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

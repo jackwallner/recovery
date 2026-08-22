@@ -28,56 +28,62 @@ struct EffortPromptSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: Theme.Space.lg) {
-                VStack(spacing: Theme.Space.xs) {
-                    Image(systemName: "hand.raised.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(Theme.recovering)
-                    Text("How hard was it?")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
-                    // Same correction as the card that opens this sheet: the
-                    // rating joins the other signals and the highest one wins,
-                    // so it can only ever lengthen the window, never shorten it.
-                    Text("Your \(Int(durationMinutes.rounded()))-minute \(activityLabel) didn't have usable heart-rate data. Your rating counts whenever it reads harder than the other signals.")
-                        .font(.system(.footnote, design: .rounded))
-                        .foregroundStyle(Theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, Theme.Space.xl)
-
-                VStack(spacing: Theme.Space.sm) {
-                    ForEach(Self.options, id: \.effort) { option in
-                        Button {
-                            Haptics.success()
-                            onSelect(option.effort)
-                            dismiss()
-                        } label: {
-                            HStack(spacing: Theme.Space.sm) {
-                                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                                    Text(option.title)
-                                        .font(.system(.headline, design: .rounded))
-                                        .foregroundStyle(Theme.textPrimary)
-                                    Text(option.detail)
-                                        .font(.system(.caption, design: .rounded))
-                                        .foregroundStyle(Theme.textSecondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(Theme.textTertiary)
-                            }
-                            .padding(Theme.Space.md)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .controlShape()
-                        }
-                        .pressable(.card)
+            ScrollView {
+                VStack(spacing: Theme.Space.lg) {
+                    VStack(spacing: Theme.Space.xs) {
+                        Image(systemName: "hand.raised.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(Theme.recovering)
+                        Text("How hard was it?")
+                            .font(.system(.title2, design: .rounded, weight: .bold))
+                            .foregroundStyle(Theme.textPrimary)
+                        // Same correction as the card that opens this sheet: the
+                        // rating joins the other signals and the highest one wins,
+                        // so it can only ever lengthen the window, never shorten it.
+                        Text("Your \(Int(durationMinutes.rounded()))-minute \(activityLabel) didn't have usable heart-rate data. Your rating counts whenever it reads harder than the other signals.")
+                            .font(.system(.footnote, design: .rounded))
+                            .foregroundStyle(Theme.textSecondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                }
+                    .padding(.top, Theme.Space.xl)
 
-                Spacer()
+                    VStack(spacing: Theme.Space.sm) {
+                        ForEach(Self.options, id: \.effort) { option in
+                            Button {
+                                Haptics.success()
+                                onSelect(option.effort)
+                                dismiss()
+                            } label: {
+                                HStack(spacing: Theme.Space.sm) {
+                                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                                        Text(option.title)
+                                            .font(.system(.headline, design: .rounded))
+                                            .foregroundStyle(Theme.textPrimary)
+                                        Text(option.detail)
+                                            .font(.system(.caption, design: .rounded))
+                                            .foregroundStyle(Theme.textSecondary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.textTertiary)
+                                }
+                                .padding(Theme.Space.md)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .controlShape()
+                            }
+                            .pressable(.card)
+                        }
+                    }
+
+                    Spacer(minLength: Theme.Space.xl)
+                }
+                .padding(.horizontal, Theme.Space.lg)
+                .padding(.bottom, Theme.Space.lg)
             }
-            .padding(.horizontal, Theme.Space.lg)
+            .scrollBounceBehavior(.basedOnSize)
             .background(Theme.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -88,7 +94,8 @@ struct EffortPromptSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

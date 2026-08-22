@@ -46,7 +46,10 @@ public struct PressableButtonStyle: ButtonStyle {
             // control still has to answer; it just answers in opacity.
             .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? weight.scale : 1))
             .opacity(configuration.isPressed ? 0.88 : 1)
-            .animation(.spring(response: 0.28, dampingFraction: 0.7), value: configuration.isPressed)
+            .animation(
+                reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.7),
+                value: configuration.isPressed
+            )
     }
 }
 
@@ -68,6 +71,7 @@ public extension View {
 /// system already taps for (a sheet's own dismiss, a `Toggle`, a picker).
 public enum Haptics {
     /// A choice was recorded. Plan card, effort answer, tab change.
+    @MainActor
     public static func selection() {
         #if os(iOS)
         UISelectionFeedbackGenerator().selectionChanged()
@@ -78,6 +82,7 @@ public enum Haptics {
 
     /// Something completed: a purchase, an import, an effort answer sent to the
     /// phone.
+    @MainActor
     public static func success() {
         #if os(iOS)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -88,6 +93,7 @@ public enum Haptics {
 
     /// Something could not be done. Never used for a validation message the user
     /// can already see.
+    @MainActor
     public static func failure() {
         #if os(iOS)
         UINotificationFeedbackGenerator().notificationOccurred(.error)
@@ -98,6 +104,7 @@ public enum Haptics {
 
     /// The payoff. A countdown reaching Ready is the one moment the app exists
     /// for, and it is the only place a heavier impact is warranted.
+    @MainActor
     public static func ready() {
         #if os(iOS)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()

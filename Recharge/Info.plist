@@ -36,7 +36,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, and sleep from Apple Health to estimate how long your next hard session is likely to be worth waiting for. It also reads your date of birth and sex, which set the heart-rate range your sessions are measured against. Recharge never writes Health data.</string>
+	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex from Apple Health. These readings help estimate how long to wait before another hard session. Recharge never writes Health data.</string>
 	<!-- Recharge never writes to Health: `requestAuthorization` passes
 	     `toShare: []`. The string stays anyway because App Store Connect
 	     rejects the upload without it (error 90683): its static analysis sees
@@ -61,9 +61,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 </dict>
 </plist>

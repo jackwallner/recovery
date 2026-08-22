@@ -7,6 +7,7 @@ struct CountdownRing: View {
     let phase: RecoveryPhase
     var lineWidth: CGFloat = 18
     var showsGlow = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -24,7 +25,7 @@ struct CountdownRing: View {
                     color: showsGlow ? Theme.color(for: phase).opacity(0.35) : .clear,
                     radius: showsGlow ? 10 : 0
                 )
-                .animation(.easeInOut(duration: 0.6), value: progress)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: progress)
         }
     }
 }

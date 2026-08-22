@@ -52,11 +52,11 @@ struct RechargeWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<RechargeWidgetEntry>) -> Void) {
         let now = Date.now
-        let snapshot = RecoverySnapshotStore.load()
+        let state = snapshotForTimeline()
         let style = loadWidgetComplicationStyle()
-        let dataState = dataState(for: snapshot)
+        let snapshot = state.snapshot
         let entries = CountdownTimeline.entryDates(for: snapshot, now: now).map {
-            RechargeWidgetEntry(date: $0, snapshot: snapshot, style: style, dataState: dataState)
+            RechargeWidgetEntry(date: $0, snapshot: snapshot, style: style, dataState: state.dataState)
         }
         completion(Timeline(
             entries: entries.isEmpty ? [current(at: now)] : entries,
@@ -65,17 +65,24 @@ struct RechargeWidgetProvider: TimelineProvider {
     }
 
     private func current(at date: Date) -> RechargeWidgetEntry {
-        let snapshot = RecoverySnapshotStore.load()
+        let state = snapshotForTimeline()
         return RechargeWidgetEntry(
             date: date,
-            snapshot: snapshot,
+            snapshot: state.snapshot,
             style: loadWidgetComplicationStyle(),
-            dataState: dataState(for: snapshot)
+            dataState: state.dataState
         )
     }
 
-    private func dataState(for snapshot: RecoverySnapshot) -> ComplicationCopy.DataState {
-        snapshot.healthDataState == .stale ? .stale : .synced
+    private func snapshotForTimeline() -> (snapshot: RecoverySnapshot, dataState: ComplicationCopy.DataState) {
+        let stored = RecoverySnapshotStore.loadIfPresent()
+        return (
+            stored ?? .empty,
+            ComplicationCopy.dataState(
+                for: stored,
+                hasEverSynced: RecoverySnapshotStore.hasEverSynced()
+            )
+        )
     }
 }
 
@@ -90,27 +97,24 @@ func loadWidgetComplicationStyle() -> ComplicationStyle {
 
 private struct WidgetCopy {
     static func headline(_ entry: RechargeWidgetEntry) -> String {
-        switch entry.phase {
-        case .noRecentWorkout: return "No workout"
-        case .ready: return "Ready"
-        case .readySoon, .recovering:
-            return entry.style == .readyClock
-                ? (entry.snapshot.readyAt.map(CountdownFormat.clock) ?? "Recovering")
-                : CountdownFormat.remaining(entry.remaining)
-        }
+        ComplicationCopy.primary(
+            phase: entry.phase,
+            style: entry.style,
+            remaining: entry.remaining,
+            readyAt: entry.snapshot.readyAt,
+            dataState: entry.dataState
+        )
     }
 
     static func caption(_ entry: RechargeWidgetEntry) -> String {
-        // The countdown above is still correct; what a stale read costs is the
-        // certainty that nothing newer is missing from it. So this annotates
-        // rather than replaces, the same way the phone's freshness line does.
-        if entry.dataState == .stale { return "Couldn't read Apple Health" }
-        switch entry.phase {
-        case .noRecentWorkout: return "Finish a workout to start"
-        case .ready: return "Ready for another hard session"
-        case .readySoon, .recovering:
-            return entry.snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: entry.date))" } ?? "Recovering"
-        }
+        ComplicationCopy.secondary(
+            phase: entry.phase,
+            style: entry.style,
+            remaining: entry.remaining,
+            readyAt: entry.snapshot.readyAt,
+            activityLabel: entry.snapshot.activityLabel,
+            dataState: entry.dataState
+        )
     }
 }
 

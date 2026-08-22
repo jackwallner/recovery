@@ -62,6 +62,9 @@ struct WatchTodayView: View {
             .onAppear {
                 now = .now
                 snapshot = WatchTodayView.currentSnapshot()
+                #if DEBUG
+                ScreenshotConfig.markReady()
+                #endif
             }
             // A snapshot arriving from the phone has to repaint immediately.
             // Waiting for the 60-second ticker means the user watches a stale
@@ -131,11 +134,25 @@ struct WatchTodayView: View {
         }
         .frame(width: ringSize, height: ringSize)
         .padding(.top, 4)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(headline)
+        .accessibilityValue(ringAccessibilityValue)
     }
 
     /// The ring shrinks while a request is pending so the button and its
     /// headline both land inside the first viewport on the smallest watch.
     private var ringSize: CGFloat { wantsEffortPrompt ? 72 : 120 }
+
+    private var ringAccessibilityValue: String {
+        switch phase {
+        case .noRecentWorkout:
+            return "No countdown"
+        case .ready:
+            return "Ready"
+        case .readySoon, .recovering:
+            return "\(CountdownFormat.compactRemaining(snapshot.remainingSeconds(at: now))) left"
+        }
+    }
 
     // MARK: - Effort
 

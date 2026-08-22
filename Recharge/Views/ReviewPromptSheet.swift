@@ -33,17 +33,21 @@ struct ReviewPromptSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: Theme.Space.lg) {
-                switch stage {
-                case .enjoyment: enjoyment
-                case .ratePitch: ratePitch
-                case .feedback: feedback
-                case .thanks: thanks
+            ScrollView {
+                VStack(spacing: Theme.Space.lg) {
+                    switch stage {
+                    case .enjoyment: enjoyment
+                    case .ratePitch: ratePitch
+                    case .feedback: feedback
+                    case .thanks: thanks
+                    }
                 }
+                .padding(.horizontal, Theme.Space.xl)
+                .padding(.top, Theme.Space.step(7))
+                .padding(.bottom, Theme.Space.xl)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
-            .padding(.horizontal, Theme.Space.xl)
-            .padding(.top, Theme.Space.step(7))
-            .frame(maxHeight: .infinity, alignment: .top)
+            .scrollBounceBehavior(.basedOnSize)
             .background(Theme.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -54,7 +58,8 @@ struct ReviewPromptSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 
     // MARK: - Stage 1
@@ -132,6 +137,8 @@ struct ReviewPromptSheet: View {
                 .padding(Theme.Space.xs)
                 .controlShape()
                 .font(.system(.body, design: .rounded))
+                .accessibilityLabel("Feedback")
+                .accessibilityHint("Describe what would make the countdown more useful.")
 
             primaryButton("Send") {
                 feedbackError = nil

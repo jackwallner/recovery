@@ -39,6 +39,7 @@ struct OnboardingView: View {
     @State private var questions: [ProfileQuestion] = []
     /// What Health handed over, captured at the moment the flow was frozen.
     @State private var ingest = HealthIngestSummary()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Step: Hashable {
         case welcome
@@ -75,8 +76,8 @@ struct OnboardingView: View {
                 .padding(.bottom, Theme.Space.sm)
         }
         .background(Theme.background)
-        .animation(.easeInOut(duration: 0.25), value: index)
-        .animation(.easeInOut(duration: 0.25), value: steps.count)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: index)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: steps.count)
     }
 
     /// A bar rather than dots, because the number of steps is not known until

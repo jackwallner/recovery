@@ -36,10 +36,33 @@ if [[ -z "$APP" ]]; then
     | xargs -0 ls -td 2>/dev/null | head -1)
 fi
 [[ -n "$APP" ]] || { echo "error: build Recharge for the simulator first" >&2; exit 1; }
+command -v axe >/dev/null || {
+  echo "error: axe is required to position the settings capture and capture the watch face" >&2
+  exit 1
+}
+wait_for_screenshot_ready() {
+  local udid="$1"
+  local process="$2"
+  local scene="$3"
+  local timeout="${4:-45}"
+  local deadline=$((SECONDS + timeout))
+  local predicate="process == \"$process\" AND eventMessage CONTAINS[c] \"screenshot-ready:$scene\""
+  while (( SECONDS < deadline )); do
+    if xcrun simctl spawn "$udid" log show --last 30s --style compact \
+      --predicate "$predicate" 2>/dev/null \
+      | rg -F "screenshot-ready:$scene" >/dev/null; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "error: scene '$scene' did not report ready on simulator $udid" >&2
+  xcrun simctl spawn "$udid" log show --last 30s --style compact \
+    --predicate "process == \"$process\"" 2>/dev/null | tail -20 >&2 || true
+  return 1
+}
 
 for entry in "${SCENES[@]}"; do
-  scene="${entry%%:*}"
-  name="${entry##*:}"
+  IFS=: read -r scene name <<< "$entry"
   # A clean install prevents SwiftUI scroll restoration from carrying the
   # previous scene's offset into the next App Store frame.
   xcrun simctl uninstall "$UDID" "$BUNDLE" 2>/dev/null || true
@@ -47,7 +70,16 @@ for entry in "${SCENES[@]}"; do
   SIMCTL_CHILD_RECHARGE_SCREENSHOT_MODE=1 \
   SIMCTL_CHILD_RECHARGE_SCREENSHOT_SCENE="$scene" \
     xcrun simctl launch "$UDID" "$BUNDLE" >/dev/null
-  sleep 5
+  wait_for_screenshot_ready "$UDID" "Recharge" "$scene"
+  if [[ "$scene" == "settings" ]]; then
+    # Settings is a real Form, so the most useful receipt is a deliberate
+    # scroll position, not the first frame with the Health card cut at the
+    # bottom. These coordinates are points on the fixed 402x874 capture device.
+    axe swipe --start-x 201 --start-y 630 --end-x 201 --end-y 525 \
+      --duration 0.25 --post-delay 0.4 --udid "$UDID" >/dev/null
+    axe swipe --start-x 201 --start-y 650 --end-x 201 --end-y 300 \
+      --duration 0.35 --post-delay 0.8 --udid "$UDID" >/dev/null
+  fi
   xcrun simctl io "$UDID" screenshot "$RAW/$name.png" >/dev/null 2>&1
   echo "captured $name ($scene)"
 done
@@ -60,16 +92,11 @@ if [[ -n "$WATCH_UDID" ]]; then
     SIMCTL_CHILD_RECHARGE_SCREENSHOT_MODE=1 \
     SIMCTL_CHILD_RECHARGE_SCREENSHOT_SCENE="watchRecovering" \
       xcrun simctl launch "$WATCH_UDID" "$WATCH_BUNDLE" >/dev/null
-    sleep 5
     # The watch app launch seeds the deterministic fixture. Return to the
     # active face so this is proof of the WidgetKit complication, not only the
     # full watch app screen.
-    command -v axe >/dev/null || {
-      echo "error: axe is required to capture the watch face" >&2
-      exit 1
-    }
+    wait_for_screenshot_ready "$WATCH_UDID" "RechargeWatch" "watchRecovering"
     axe button home --udid "$WATCH_UDID" >/dev/null
-    sleep 3
     xcrun simctl io "$WATCH_UDID" screenshot "$RAW/06-watch.png" >/dev/null 2>&1
     # App Store Connect's Series 4 slot is 368x448. The simulator face is
     # captured at 416x496, so preserve the face aspect ratio and crop the

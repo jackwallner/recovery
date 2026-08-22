@@ -74,6 +74,9 @@ struct HistoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .tabBarClearance()
             .refreshable { await engine.refresh(force: true) }
+            #if DEBUG
+            .onAppear { ScreenshotConfig.markReady() }
+            #endif
             .sheet(item: $selected) { estimate in
                 EstimateDetailView(capturedEstimate: estimate)
                     .environmentObject(store)

@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var maxHeartRateText = ""
     @State private var notificationsDenied = false
     @State private var restoreMessage: String?
+    @State private var restoreMessageIsError = false
     @State private var isRestoring = false
     @State private var pendingNativeReviewAfterDismiss = false
     @State private var isRequestingHealth = false
@@ -63,6 +64,9 @@ struct SettingsView: View {
                 maxHeartRateText = settings.maxHeartRate > 0
                     ? String(Int(settings.maxHeartRate))
                     : ""
+                #if DEBUG
+                ScreenshotConfig.markReady()
+                #endif
             }
             .task {
                 guard settings.notifyOnReady else { return }
@@ -172,7 +176,7 @@ struct SettingsView: View {
     /// observation rather than a permission state.
     private enum HealthStatus {
         case notRequested
-        case reading(Date)
+        case reading(Date?)
         case failing
         case noDataYet
 
@@ -208,7 +212,11 @@ struct SettingsView: View {
             case .notRequested:
                 "Recharge has not asked for Health access on this device yet."
             case .reading(let date):
-                "Last read \(CountdownFormat.elapsed(since: date))."
+                if let date {
+                    "Last read \(CountdownFormat.elapsed(since: date))."
+                } else {
+                    "Recharge is checking Apple Health now."
+                }
             case .failing:
                 "The last read did not complete. Open the Health app, then Sharing, then Apps, then Recharge, and check that workouts are allowed."
             case .noDataYet:
@@ -219,6 +227,7 @@ struct SettingsView: View {
 
     private var healthStatus: HealthStatus {
         if settings.hasDeferredHealthAccess { return .notRequested }
+        if engine.isRefreshing { return .reading(engine.lastSuccessfulImport) }
         if engine.lastImportFailed { return .failing }
         guard let imported = engine.lastSuccessfulImport else { return .notRequested }
         return engine.estimates.isEmpty ? .noDataYet : .reading(imported)
@@ -485,6 +494,9 @@ struct SettingsView: View {
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
                     .frame(width: 80)
+                    .accessibilityLabel("Maximum heart rate")
+                    .accessibilityValue(maxHeartRateText.isEmpty ? "Automatic" : "\(maxHeartRateText) beats per minute")
+                    .accessibilityHint("Enter a value from \(Int(Self.maxHeartRateRange.lowerBound)) to \(Int(Self.maxHeartRateRange.upperBound)) beats per minute, or leave blank for automatic.")
                     .onChange(of: maxHeartRateText) { _, value in
                         let parsed = Double(value) ?? 0
                         let accepted = Self.maxHeartRateRange.contains(parsed) ? parsed : 0
@@ -616,12 +628,17 @@ struct SettingsView: View {
                 Task {
                     isRestoring = true
                     restoreMessage = nil
+                    restoreMessageIsError = false
                     await store.restorePurchases()
                     isRestoring = false
-                    restoreMessage = store.lastError
-                        ?? (store.isPro
+                    if let error = store.lastError {
+                        restoreMessage = error
+                        restoreMessageIsError = true
+                    } else {
+                        restoreMessage = store.isPro
                             ? "\(RechargeConversionCopy.proName) restored."
-                            : "No purchase to restore for this Apple ID.")
+                            : "No purchase to restore for this Apple ID."
+                    }
                 }
             } label: {
                 HStack {
@@ -637,7 +654,7 @@ struct SettingsView: View {
             if let restoreMessage {
                 Text(restoreMessage)
                     .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(store.isPro ? Theme.textSecondary : .orange)
+                    .foregroundStyle(restoreMessageIsError ? .orange : Theme.textSecondary)
             }
 
             Link("Privacy policy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)

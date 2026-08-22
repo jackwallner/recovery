@@ -106,14 +106,15 @@ struct RecoveryTimelineProvider: TimelineProvider {
         }
 #endif
         if let stored {
-            let dataState: ComplicationCopy.DataState = stored.healthDataState == .stale
-                ? .stale
-                : .synced
+            let dataState = ComplicationCopy.dataState(for: stored, hasEverSynced: true)
             return (stored, dataState)
         }
         return (
             .empty,
-            RecoverySnapshotStore.hasEverSynced() ? .unreadable : .neverSynced
+            ComplicationCopy.dataState(
+                for: nil,
+                hasEverSynced: RecoverySnapshotStore.hasEverSynced()
+            )
         )
     }
 }

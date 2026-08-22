@@ -60,6 +60,18 @@ public enum ComplicationCopy {
         case unreadable
     }
 
+    /// Maps a cached snapshot and its presence on disk to the state every
+    /// complication surface renders. A missing payload is not the same as an
+    /// empty, successfully published snapshot, and a payload that no longer
+    /// decodes needs an actionable message rather than an empty countdown.
+    public static func dataState(
+        for snapshot: RecoverySnapshot?,
+        hasEverSynced: Bool
+    ) -> DataState {
+        guard let snapshot else { return hasEverSynced ? .unreadable : .neverSynced }
+        return snapshot.healthDataState == .stale ? .stale : .synced
+    }
+
     /// The big value in the middle of a circular or corner slot.
     public static func primary(
         phase: RecoveryPhase,

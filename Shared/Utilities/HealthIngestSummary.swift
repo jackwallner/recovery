@@ -2,7 +2,7 @@ import Foundation
 
 /// Exactly what Recharge read out of Apple Health, in the user's words.
 ///
-/// The app asks for eleven types in one permission sheet, which is a lot to
+/// The app asks for twelve types in one permission sheet, which is a lot to
 /// consent to on the strength of a sentence. This is the receipt: every row is
 /// something that was actually found, phrased as the reading rather than as the
 /// feature, and every type in `HealthKitService.readTypes` can appear here.
@@ -170,7 +170,7 @@ public struct HealthIngestSummary: Sendable, Equatable {
                 symbol: "wind",
                 value: String(format: "%.0f/min", rate),
                 title: "Overnight breathing rate",
-                detail: "Rises before you feel it when a session has not been absorbed."
+                detail: "Adds another overnight signal to the estimate alongside sleep, HRV, and resting heart rate."
             ))
         }
 
