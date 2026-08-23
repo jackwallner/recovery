@@ -19,6 +19,25 @@ python3 scripts/asc-sync-product-localizations.py   # products.json -> ASC
 python3 scripts/asc-readiness.py            # diffs ASC against the files
 ```
 
+## Final Astro coverage sweep
+
+Astro app 123 was refreshed on 2026-08-22 after the listing was assembled. The
+exact keyword candidates in the 50 ASC listing localizations are now tracked in
+39 supported Astro storefronts, 813 keyword records in total. That covers 49 of
+50 localizations directly or through their storefront mapping. The only direct
+gap is `bn-BD`: Astro rejects the `bd` storefront code. Its seven Bengali
+keyword candidates are tracked in the `in` storefront as a research proxy, but
+that is not the same as Bangladesh data.
+
+The mapping is storefront-based rather than one Astro record per ASC locale.
+Indic localizations share `in`, `ca` (Catalan) is compared in `es`, and
+`en-CA` plus `fr-CA` use `ca`. Every exact local keyword token in those mapped
+sets is present in Astro. The research app is still a pre-launch placeholder,
+so these are popularity and difficulty observations, not a ranking guarantee.
+Popularity 5 is Apple's floor. Low-popularity native sport terms remain where
+they preserve local search intent and no measured, higher-intent replacement was
+available in the same storefront.
+
 ## The finding that decides the keyword strategy
 
 `docs/positioning.md` establishes for en-US that the brand terms carry all the
@@ -109,16 +128,12 @@ does not go to waste. That floor drops to 12 for `ja`, `ko`, `zh-Hans` and
 stuffing. Total Calories ships CJK names at 12-17 characters, and Recharge now
 matches (`Recharge 运动恢复时间`, 15).
 
-## Not measured
+## Remaining research limitation
 
-Astro returned intermittent errors during the sweep and these stores were not
-sampled: `cz`, `hu`, `ro`, `hr`, `sk`, `pt`, `my`, `gb`, `au`, `ca`. Their
-fields use the European pattern (full brand block plus native sport terms),
-which every measured neighbour supports. Worth a pass on the next **go
-refine**, 7-14 days after the listing is live and rank data exists.
-
-Astro has no store for `bd`, `pk` or `si`, so `bn-BD`, `ur-PK` and `sl-SI`
-inherit the `in` and European patterns respectively.
+Astro has no store for `bd`. `bn-BD` therefore uses the India proxy described
+above. `pk` and `si` are now directly tracked, along with the previously
+unmeasured European, UK, Australian, Canadian, Portuguese and Malaysian
+storefronts.
 
 ## Backups
 
