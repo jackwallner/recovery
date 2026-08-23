@@ -1,11 +1,11 @@
-Termină un antrenament greu și Recharge pornește o numărătoare. Când ajunge la zero, primești un Gata clar.
+Termină un antrenament greu și Recharge pornește o numărătoare. Când ajunge la zero, primești un numărătoarea s-a încheiat clar.
 
-Asta e toată aplicația. Este răspunsul pe care ți-l dă un Garmin după o activitate, construit pentru Apple Watch-ul pe care îl ai deja. Fără inel, fără centură, fără un al doilea ecosistem hardware de abonat.
+Asta e toată aplicația. Fără inel, fără centură, fără un al doilea ecosistem hardware de abonat.
 
 CE VEZI
 
 • O numărătoare în ore după fiecare antrenament care contează
-• Un Gata clar când estimarea expiră
+• Notificare la final, dacă este activată
 • Motivul din spate: ce sesiune a stabilit fereastra și cât de sigură este
 • Complicații în patru familii: circulară, dreptunghiulară, în linie și colț
 
@@ -15,7 +15,7 @@ Recharge folosește o curbă separată pentru fiecare tip de sesiune: o oră sub
 
 • Rezistență: alergat, ciclism, canotaj, înot. Efort din rezerva de puls.
 • Forță: ridicat greutăți. Pulsul de la încheietură nu este fiabil aici, așa că Recharge îți pune o întrebare în loc să ghicească.
-• Mixt: HYROX, CrossFit, circuite. Ambele sisteme solicitate, deci fereastra cea mai lungă.
+• Mixt: circuite. Ambele sisteme solicitate, deci fereastra cea mai lungă.
 • Ușor: plimbări, yoga, mobilitate. Contează ca refacere activă și nu pornește și nu prelungește niciodată o numărătoare.
 
 Recharge arată o fereastră delimitată în loc de un număr fals precis, împreună cu semnalul care a produs-o.
@@ -25,7 +25,7 @@ STANDARD, GRATUIT
 Estimarea standard este o tabelă comună la nivelul tău de antrenament: tipul, durata și intensitatea, față de intervalul de puls pentru vârsta ta.
 
 • Import de antrenamente din Apple Sănătate
-• Numărătoarea și starea Gata
+• Numărătoarea și starea numărătoarea s-a încheiat
 • Aplicație pentru Apple Watch
 • Toate cele patru familii de complicații
 • Explicație pe iPhone a ultimei tale estimări
@@ -38,8 +38,8 @@ Recharge+ înlocuiește acea tabelă cu tine: fiecare sesiune este măsurată fa
 • Somn, puls în repaus și HRV incluse în fiecare estimare
 • Calibrare pornind de la cum te-ai simțit cu adevărat la final
 • Efort săptămânal față de propria ta medie pe patru săptămâni
-• Tipul antrenamentului poate fi schimbat sesiune cu sesiune
-• Notificare opțională în clipa în care ești Gata
+• Intensitate: ușoară / moderată / grea
+• Notificare la final, dacă este activată
 
 Recharge+ este disponibil ca abonament lunar sau anual, ori ca achiziție unică pe viață.
 
@@ -48,8 +48,9 @@ Recharge+ este disponibil ca abonament lunar sau anual, ori ca achiziție unică
 
 Prețurile sunt afișate în aplicație înainte de cumpărare și diferă în funcție de regiune. Plata se face din contul tău Apple la confirmarea achiziției. Abonamentele se reînnoiesc automat: contul este debitat în cele 24 de ore dinaintea încheierii perioadei, dacă reînnoirea automată nu este dezactivată cu cel puțin 24 de ore înainte. Gestionează sau anulează în Configurări › Cont Apple › Abonamente. Partea nefolosită dintr-o probă gratuită se pierde la cumpărare.
 
-Politica de confidențialitate: https://jackwallner.github.io/recovery/privacy-policy.html
-Termeni de utilizare (EULA standard Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 CONFIDENȚIALITATE
 
@@ -59,6 +60,6 @@ IMPORTANT
 
 Recharge oferă o estimare de antrenament cardiovascular pe baza efortului tău recent. Nu este sfat medical și nu îți poate spune dacă ești apt să te antrenezi. Efortul cardiovascular, febra musculară, boala și oboseala mentală nu sunt același lucru. Discută despre sănătatea ta cu un specialist calificat.
 
-Recharge nu este afiliat, aprobat sau sponsorizat de Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit sau Apple. Numele produselor sunt mărci ale deținătorilor respectivi.
+Numele produselor sunt mărci ale deținătorilor respectivi.
 
 Necesită iOS 17 sau mai nou. Se recomandă un Apple Watch care îți înregistrează antrenamentele.

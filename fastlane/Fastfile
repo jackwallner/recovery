@@ -2,44 +2,7 @@ opt_out_usage
 
 default_platform(:ios)
 
-REVIEW_NOTES = <<~NOTES
-  Recharge shows a recovery-time countdown after every qualifying workout, and a clear Ready state when it expires.
-
-  No account or login is required. The app requests read access to Workouts, Heart Rate, Resting Heart Rate, Heart Rate Variability, Active Energy, Sleep, Respiratory Rate, Heart-Rate Recovery, Cardio Fitness, Body Mass, Date of Birth, and Biological Sex, and never writes Health data. Date of Birth and Biological Sex set the heart-rate range used to measure session intensity.
-
-  IMPORTANT FOR REVIEW: every number here comes from workouts already in Apple Health. On a device with no workout history the app correctly shows an empty state ("No workout yet") rather than a countdown. Step 2 creates a workout in about a minute so the full experience can be reviewed without training.
-
-  1. GRANT HEALTH ACCESS
-  Launch Recharge. Step through onboarding and tap Connect Apple Health. On the Health permission sheet tap "Turn On All", then Allow. Onboarding then asks two or three short profile questions and ends on a Recharge+ offer; tap "Get Started" to continue on the free tier.
-
-  2. CREATE A QUALIFYING WORKOUT (no exercise needed)
-  Open Apple's built-in Health app > Browse > Activity > Workouts > Add Data (top right).
-  Set Activity Type: Traditional Strength Training
-  Set Kilocalories: 500
-  Set the start time to earlier today and the end time 60 minutes later.
-  Tap Add.
-
-  3. SEE THE COUNTDOWN
-  Return to Recharge and open the Today tab. Pull down to refresh. A countdown in hours appears within a few seconds, with the phase headline, the session that set it, and a confidence rating.
-
-  4. SEE WHY
-  Tap the countdown on Today to open its explanation: which session set the window, its load, which signal produced that load (heart rate, reported effort, active energy, or duration), and heart-rate coverage. The History tab lists every scored session with the same detail.
-
-  5. STRENGTH EFFORT PROMPT
-  The workout added in step 2 is a strength session with no heart-rate samples, so wrist heart rate cannot score it. Today therefore shows a card reading "How hard was that session?". Tap it and pick a rating from 1 to 10; the countdown recalculates immediately from the answer. The same one-tap prompt appears on the Apple Watch app when a phone-scored session is waiting for an answer, and the answer is sent from the Watch back to the phone.
-
-  6. APPLE WATCH AND COMPLICATIONS
-  Open Recharge on the paired Watch: it renders the same countdown from a snapshot the phone writes to the shared App Group (the Watch never queries Health itself). Complications come in four families (circular, rectangular, inline, corner). On iPhone, tap the gear on Today and choose the Watch complication style, then add Recharge to a watch face.
-
-  7. EMPTY AND FAILURE STATES
-  Delete the workout added in step 2 from the Health app and refresh. HealthKit's anchored change stream removes the matching cached session and Today returns to the "No workout yet" empty state. If Health access is revoked, the app preserves the cached session because iOS does not expose read authorization to apps; the Today footer and the Settings > Health status row explain that the last read failed and offer the Health app route to restore access.
-
-  DISCLAIMER AND CLAIMS
-  Recharge presents a cardiovascular training estimate only. It makes no diagnostic, treatment, or injury-prevention claim. A disclaimer saying so, and advising the user to talk with a qualified health professional before making medical decisions, is shown on the Today screen, in Settings, in onboarding, and on the paywall.
-
-  IN-APP PURCHASES
-  Recharge+ (via RevenueCat) offers monthly and yearly auto-renewable subscriptions with a 7-day free trial for eligible new subscribers, plus an optional one-time lifetime purchase. Reach the paywall from the Recharge+ row on Today or from Settings. Price, billing period, renewal behavior, Restore, Terms (Apple Standard EULA), and Privacy all appear at the purchase point. The app does not use non-exempt encryption.
-NOTES
+REVIEW_NOTES = File.read(File.expand_path("metadata/review_information/notes.txt", __dir__))
 
 platform :ios do
   desc "Download current metadata + screenshots from App Store Connect into /tmp/asc-live"

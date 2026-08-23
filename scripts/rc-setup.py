@@ -15,7 +15,7 @@ BUNDLE_ID = "com.jackwallner.recovery"
 PRODUCTS = (
     ("com.jackwallner.recovery.monthly", "Monthly", "subscription", "$rc_monthly"),
     ("com.jackwallner.recovery.yearly", "Yearly", "subscription", "$rc_annual"),
-    ("com.jackwallner.recovery.lifetime", "Lifetime", "one_time", "$rc_lifetime"),
+    ("com.jackwallner.recovery.lifetime", "Lifetime", "non_consumable", "$rc_lifetime"),
 )
 PACKAGE_NAMES = {"$rc_monthly": "Monthly", "$rc_annual": "Annual", "$rc_lifetime": "Lifetime"}
 
@@ -86,7 +86,15 @@ def main() -> None:
             )
             print(f"created product: {identifier}")
         else:
-            print(f"product exists: {identifier}")
+            if product.get("type") != product_type or product.get("display_name") != display_name:
+                product = request(
+                    "POST",
+                    f"/projects/{project_id}/products/{product['id']}",
+                    {"type": product_type, "display_name": display_name},
+                )
+                print(f"updated product: {identifier}")
+            else:
+                print(f"product exists: {identifier}")
         configured_products[identifier] = product
 
     # The entitlement that actually exists in the project is `Recovery+`, and

@@ -33,6 +33,21 @@ SHARED_URLS = {
     "marketing_url": "https://jackwallner.github.io/recovery/",
     "privacy_url": "https://jackwallner.github.io/recovery/privacy-policy.html",
 }
+TERMS_URL = "https://jackwallner.github.io/recovery/terms.html"
+EULA_URL = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+
+
+def add_legal_links(description: str) -> str:
+    """Keep both the app terms and Apple's EULA in every localized listing."""
+    lines = description.splitlines()
+    for index, line in enumerate(lines):
+        if SHARED_URLS["privacy_url"] in line:
+            lines[index] = f"Privacy: {SHARED_URLS['privacy_url']}"
+        if EULA_URL in line:
+            lines[index] = f"EULA: {EULA_URL}"
+            lines.insert(index, f"Terms: {TERMS_URL}")
+            break
+    return "\n".join(lines)
 
 
 def load() -> dict[str, dict]:
@@ -55,6 +70,7 @@ def main() -> None:
         description = fields["description"].replace(
             "{price_disclosure}", fields["price_disclosure"]
         )
+        description = add_legal_links(description)
         text_fields = {
             "name": fields["name"],
             "subtitle": fields["subtitle"],

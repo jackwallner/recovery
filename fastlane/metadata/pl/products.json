@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ Miesięcznie",
-  "monthly_desc": "Sygnały ciała, obciążenie i powiadomienia.",
+  "monthly_desc": "Powiadomienie po odliczaniu, jeśli włączone",
   "yearly_name": "Recharge+ Rocznie",
-  "yearly_desc": "Rok sygnałów, obciążenia i powiadomień Gotowy.",
+  "yearly_desc": "Powiadomienie po odliczaniu, jeśli włączone",
   "lifetime_name": "Recharge+ Dożywotnio",
   "lifetime_desc": "Recharge+ na zawsze. Jedna płatność, bez odnowień."
 }

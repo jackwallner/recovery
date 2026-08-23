@@ -182,7 +182,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
         if session.isReachable {
             session.sendMessage(payload, replyHandler: nil) { error in
-                connectivityLogger.error("sendMessage failed: \(String(describing: error), privacy: .public)")
+                connectivityLogger.error("sendMessage failed: \(String(describing: error), privacy: .private)")
                 // The immediate path failed, so fall back to the durable queue
                 // rather than dropping the user's answer.
                 Task { @MainActor in
@@ -321,7 +321,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
 
     private nonisolated static func receiveSnapshotError(_ error: Error) {
         // Not a user-facing failure: the application context still arrives.
-        connectivityLogger.info("Snapshot request failed: \(String(describing: error), privacy: .public)")
+        connectivityLogger.info("Snapshot request failed: \(String(describing: error), privacy: .private)")
         Task { @MainActor in
             PhoneWatchSession.shared.isSnapshotRequestInFlight = false
         }
@@ -361,7 +361,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         if !isAuthoritative, let sentAt, let accepted = lastAcceptedSentAt(defaults: defaults),
            sentAt < accepted {
             connectivityLogger.info(
-                "Dropped a late snapshot, sentAt=\(sentAt, privacy: .public) behind \(accepted, privacy: .public)"
+                "Dropped a late snapshot, sentAt=\(sentAt, privacy: .private) behind \(accepted, privacy: .private)"
             )
             return
         }
@@ -401,7 +401,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         }
         snapshotRevision &+= 1
         WidgetCenter.shared.reloadAllTimelines()
-        connectivityLogger.info("Applied phone snapshot, readyAt=\(String(describing: snapshot.readyAt), privacy: .public)")
+        connectivityLogger.info("Applied phone snapshot, readyAt=\(String(describing: snapshot.readyAt), privacy: .private)")
     }
 
     /// Writes whatever the system replayed into `receivedApplicationContext`,
@@ -436,10 +436,10 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         switch action {
         case Action.recordEffort:
             guard let effort else { return }
-            connectivityLogger.info("Effort \(effort, privacy: .public) received for session \(sessionID, privacy: .public)")
+            connectivityLogger.info("Effort received for session \(sessionID, privacy: .private)")
             RecoveryEngine.shared.recordEffort(effort, forSessionID: sessionID)
         case Action.declineEffort:
-            connectivityLogger.info("Effort declined for session \(sessionID, privacy: .public)")
+            connectivityLogger.info("Effort declined for session \(sessionID, privacy: .private)")
             RecoveryEngine.shared.declineEffort(forSessionID: sessionID)
         default:
             return
@@ -477,7 +477,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         do {
             try session.updateApplicationContext(payload)
         } catch {
-            connectivityLogger.error("Snapshot context failed: \(String(describing: error), privacy: .public)")
+            connectivityLogger.error("Snapshot context failed: \(String(describing: error), privacy: .private)")
             // The context slot rejected the payload, so fall back to the FIFO
             // queue rather than leaving the Watch on a stale countdown.
             session.transferUserInfo(payload)
@@ -514,7 +514,7 @@ extension PhoneWatchSession: WCSessionDelegate {
         error: Error?
     ) {
         if let error {
-            connectivityLogger.error("Activation failed: \(String(describing: error), privacy: .public)")
+            connectivityLogger.error("Activation failed: \(String(describing: error), privacy: .private)")
         }
         let reachable = session.isReachable
         Task { @MainActor [weak self] in

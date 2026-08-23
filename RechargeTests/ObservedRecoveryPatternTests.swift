@@ -91,13 +91,13 @@ final class ObservedRecoveryPatternTests: XCTestCase {
         XCTAssertNil(pattern.window(forLoad: 80, referenceLoad: 70))
     }
 
-    /// Somebody who trains twice a week has a real, long, believable gap, and
-    /// the countdown says so rather than clamping it to the model's ceiling.
+    /// Somebody who trains twice a week has a real, long gap, and the countdown
+    /// reports the shared 72-hour safety ceiling.
     func testALongHabitSurvivesUpToTheObservedCeiling() {
         let pattern = ObservedRecoveryPattern.analyse(
             sessions: regular(count: 8, everyDays: 3.5, load: 90), now: now
         )
-        XCTAssertEqual(pattern.usualGapHours(for: .moderate) ?? 0, 83, accuracy: 1)
+        XCTAssertEqual(pattern.usualGapHours(for: .moderate) ?? 0, RecoveryCalculator.maximumHours, accuracy: 1)
     }
 
     func testTheReportedGapIsBounded() {
@@ -150,7 +150,9 @@ final class ObservedRecoveryPatternTests: XCTestCase {
         XCTAssertNotNil(window)
         XCTAssertEqual(window?.band, .hard)
         XCTAssertFalse(window?.isBandSpecific ?? true)
-        XCTAssertEqual(window?.hours ?? 0, pattern.pooled.map { min(max($0.medianGapHours, 6), 96) } ?? 0, accuracy: 0.001)
+        XCTAssertEqual(window?.hours ?? 0, pattern.pooled.map {
+            min(max($0.medianGapHours, RecoveryCalculator.minimumCountdownHours), RecoveryCalculator.maximumHours)
+        } ?? 0, accuracy: 0.001)
     }
 
     // MARK: - The free tier reads it

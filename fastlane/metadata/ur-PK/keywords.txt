@@ -1,1 +1,1 @@
-garmin,whoop,oura,athlytic,hyrox,ٹرائیتھلون,میراتھن,دوڑ,فٹنس,جم,دل,نیند,recovery,training,hrv,سونا
+ٹرائیتھلون,میراتھن,دوڑ,فٹنس,جم,دل,نیند,recovery,training,hrv,سونا,fitness,workout,heart,sleep,run

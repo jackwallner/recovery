@@ -19,10 +19,13 @@ import SwiftUI
 /// because the distinction is real and the list would otherwise flatten a
 /// three-hour ride and a walk to the shops into the same row.
 struct HistoryView: View {
+    @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
 
     @State private var selected: RecoveryEstimate?
+    @State private var isRequestingHealth = false
+    @State private var healthMessage: String?
 
     private struct DayGroup: Identifiable {
         let key: String
@@ -90,7 +93,10 @@ struct HistoryView: View {
     /// Saying "no estimates yet" during it is a false statement about the user's
     /// own history at the one moment they are deciding whether the app works.
     private var isStillImporting: Bool {
-        engine.isRefreshing || (engine.lastSuccessfulImport == nil && !engine.lastImportFailed)
+        engine.isRefreshing
+            || (engine.lastSuccessfulImport == nil
+                && !engine.lastImportFailed
+                && !settings.hasDeferredHealthAccess)
     }
 
     private var importing: some View {
@@ -116,15 +122,72 @@ struct HistoryView: View {
             Text("No estimates yet")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(Theme.textPrimary)
-            Text(engine.lastImportFailed
-                 ? "Recharge couldn't read Apple Health. Grant access under Health › Sharing › Apps, then pull to refresh."
-                 : "Nothing in the last \(HealthKitService.importDays) days of Apple Health to score. Finish a workout and it will appear here.")
+            Text(emptyMessage)
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
+
+            if needsHealthConnection {
+                Button {
+                    Task { await requestHealthAccess() }
+                } label: {
+                    HStack {
+                        Text("Connect Apple Health")
+                        if isRequestingHealth {
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isRequestingHealth)
+            }
+
+            Button("Try again") {
+                Task { await engine.refresh(force: true) }
+            }
+            .disabled(isRequestingHealth)
+
+            if let healthMessage {
+                Text(healthMessage)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
         }
         .padding(Theme.Space.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var needsHealthConnection: Bool {
+        settings.hasDeferredHealthAccess || engine.lastImportFailed || engine.lastSuccessfulImport == nil
+    }
+
+    private var emptyMessage: String {
+        if settings.hasDeferredHealthAccess {
+            return "Recharge is not connected to Apple Health yet. Connect it to import workouts and start a countdown."
+        }
+        if engine.lastImportFailed {
+            return "Recharge couldn't read Apple Health. Connect again, then try another read."
+        }
+        return "Nothing in the last \(HealthKitService.importDays) days of Apple Health to score. Finish a workout and it will appear here."
+    }
+
+    private func requestHealthAccess() async {
+        isRequestingHealth = true
+        healthMessage = nil
+        defer { isRequestingHealth = false }
+        do {
+            try await HealthKitService.shared.requestAuthorization()
+            settings.hasDeferredHealthAccess = false
+            await engine.refresh(force: true)
+            healthMessage = engine.lastImportFailed
+                ? "Recharge still could not read Apple Health. Open the Health app, choose Sharing, then Apps, then Recharge."
+                : "Apple Health checked. Pull down to read it again at any time."
+        } catch {
+            settings.hasDeferredHealthAccess = true
+            healthMessage = "Recharge could not request access. Open the Health app, choose Sharing, then Apps, then Recharge."
+        }
     }
 
     /// The list's own geometry. The pinned day headers have to mask the rows

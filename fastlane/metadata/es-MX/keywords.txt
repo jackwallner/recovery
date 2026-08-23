@@ -1,1 +1,1 @@
-garmin,whoop,oura,polar,athlytic,hyrox,triatlon,resistencia,maraton,correr,pesas,fatiga,hrv,gym
+triatlon,resistencia,maraton,correr,pesas,fatiga,hrv,gym,training,fitness,workout,heart,sleep,run

@@ -243,4 +243,10 @@ public enum RecoverySnapshotStore {
         (defaults ?? .standard).set(data, forKey: key)
         return true
     }
+
+    public static func clear(
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) {
+        (defaults ?? .standard).removeObject(forKey: key)
+    }
 }

@@ -1,7 +1,7 @@
 First release.
 
-• Recovery countdown after every qualifying workout, with a clear Ready mark
+• Recovery countdown after every qualifying workout, with a clear Countdown complete state
 • Apple Watch app and four complication families: circular, rectangular, inline, and corner
-• Separate recovery curves for endurance, strength, mixed (HYROX / CrossFit), and easy sessions
-• One-tap effort rating on the wrist for sessions where wrist heart rate isn't reliable
+• Separate recovery curves for endurance, strength, mixed, and easy sessions
+• Light / Moderate / Hard intensity correction for each session
 • Full explanation of every estimate: which session set it, how hard it was for you, and how confident it is

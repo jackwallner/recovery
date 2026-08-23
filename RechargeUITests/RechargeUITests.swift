@@ -49,7 +49,7 @@ final class RechargeUITests: XCTestCase {
     func testTodayShowsReadyOnceTheCountdownExpires() {
         let app = launch(scene: "ready")
         XCTAssertTrue(
-            app.staticTexts["Ready for another hard session."].waitForExistence(timeout: 15)
+            app.staticTexts["Recovery estimate complete."].waitForExistence(timeout: 15)
         )
         attach(app, named: "today-ready")
     }
@@ -128,11 +128,13 @@ final class RechargeUITests: XCTestCase {
             "A recharge time built from your own history",
             "Sleep, HRV, and resting heart rate",
             "Weekly load against your 4-week average",
-            "Correct a session's workout type",
-            "A notification the moment you're Ready",
+            "Correct a session's intensity",
         ] {
             XCTAssertTrue(app.staticTexts[feature].exists, "\(feature) is missing")
         }
+        XCTAssertTrue(
+            app.staticTexts["Countdown-complete notifications are included on every tier when you allow notifications."].exists
+        )
         XCTAssertFalse(app.staticTexts["Bands tuned to your own history"].exists)
         XCTAssertFalse(app.staticTexts["Every estimate, and how it landed"].exists)
         XCTAssertFalse(

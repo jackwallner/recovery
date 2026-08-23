@@ -240,7 +240,7 @@ struct WatchTodayView: View {
         if !hasHeardFromPhone && !snapshot.hasSession { return "Syncing with iPhone" }
         switch phase {
         case .noRecentWorkout: return "No recent workout"
-        case .ready: return "Ready for another hard session"
+        case .ready: return "Recovery estimate complete"
         case .readySoon, .recovering:
             return snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: now))" } ?? "Recovering"
         }

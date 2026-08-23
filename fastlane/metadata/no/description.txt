@@ -1,11 +1,11 @@
-Fullfør en hard økt, og Recharge starter en nedtelling. Når den er ute, får du et tydelig Klar.
+Fullfør en hard økt, og Recharge starter en nedtelling. Når den er ute, får du et tydelig nedtellingen er ferdig.
 
-Det er hele appen. Det er svaret en Garmin gir deg etter en aktivitet, bygget for Apple Watch-klokken du allerede har. Ingen ring, ingen reim, ikke noe annet maskinvareøkosystem å abonnere på.
+Det er hele appen. Ingen ring, ingen reim, ikke noe annet maskinvareøkosystem å abonnere på.
 
 DET DU SER
 
 • En nedtelling i timer etter hver økt som teller
-• Et tydelig Klar når estimatet går ut
+• Et tydelig nedtellingen er ferdig når estimatet går ut
 • Grunnen bak: hvilken økt som satte vinduet, og hvor sikker appen er
 • Komplikasjoner i fire familier: sirkulær, rektangulær, inline og hjørne
 
@@ -15,7 +15,7 @@ Recharge bruker en egen kurve per økttype: en time under stanga og en time på 
 
 • Utholdenhet: løp, sykkel, ro, svømming. Belastning fra pulsreserven din.
 • Styrke: løft. Pulsen på håndleddet er upålitelig her, så Recharge stiller deg ett spørsmål i stedet for å gjette.
-• Blandet: HYROX, CrossFit, sirkler. Begge systemer belastet, altså det lengste vinduet.
+• Blandet: sirkler. Begge systemer belastet, altså det lengste vinduet.
 • Rolig: turer, yoga, bevegelighet. Teller som aktiv restitusjon og starter eller forlenger aldri en nedtelling.
 
 Recharge viser et avgrenset vindu i stedet for et tall med falsk presisjon, sammen med signalet som ga det.
@@ -25,10 +25,11 @@ STANDARD, GRATIS
 Standardestimatet er én felles tabell, stilt inn etter treningsnivået du oppgir, eller som Recharge ser: type økt, lengde og hardhet, målt mot pulsområdet for alderen din.
 
 • Import av økter fra Apple Helse
-• Nedtellingen og Klar-tilstanden
+• Nedtellingen og nedtellingen er ferdig-tilstanden
 • Apple Watch-app
 • Alle fire komplikasjonsfamilier
 • Forklaring på iPhone av det siste estimatet ditt
+• Varsel når nedtellingen er ferdig, hvis det er aktivert
 
 RECHARGE+
 
@@ -38,8 +39,8 @@ Recharge+ bytter ut tabellen med deg: hver økt måles mot din egen 42-dagers ba
 • Søvn, hvilepuls og HRV vektlegges i hvert estimat
 • Kalibrering ut fra hvordan du faktisk følte deg da tiden gikk ut
 • Ukebelastning mot ditt eget snitt over fire uker
-• Økttype kan overstyres økt for økt
-• Valgfritt varsel i samme øyeblikk du er Klar
+• Korriger intensiteten per økt: lett / moderat / hard
+• Varsel når nedtellingen er ferdig, hvis det er aktivert
 
 Recharge+ finnes som måneds- eller årsabonnement, eller som et engangskjøp for livstid.
 
@@ -48,8 +49,9 @@ Recharge+ finnes som måneds- eller årsabonnement, eller som et engangskjøp fo
 
 Prisene vises i appen før du kjøper, og varierer fra region til region. Betalingen trekkes fra Apple-kontoen din når kjøpet bekreftes. Abonnementer fornyes automatisk: kontoen belastes innen 24 timer før perioden er slutt, med mindre automatisk fornyelse slås av minst 24 timer før. Administrer eller si opp i Innstillinger › Apple-konto › Abonnementer. Ubrukt del av en prøveperiode går tapt ved kjøp.
 
-Personvernerklæring: https://jackwallner.github.io/recovery/privacy-policy.html
-Bruksvilkår (Apples standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PERSONVERN
 
@@ -59,6 +61,6 @@ VIKTIG
 
 Recharge gir et kardiovaskulært treningsestimat ut fra den siste belastningen din. Det er ikke medisinske råd og kan ikke si om du er i form til å trene. Kardiovaskulær belastning, støl muskulatur, sykdom og mental tretthet er ikke det samme. Snakk med kvalifisert helsepersonell om helsen din.
 
-Recharge er ikke tilknyttet, godkjent eller sponset av Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit eller Apple. Produktnavn er varemerker som tilhører sine respektive eiere.
+Produktnavn er varemerker som tilhører sine respektive eiere.
 
 Krever iOS 17 eller nyere. En Apple Watch som tar opp øktene dine, anbefales sterkt.

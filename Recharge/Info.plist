@@ -11,9 +11,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Garm</string>
+	<string>Recharge</string>
 	<key>CFBundleDisplayName</key>
-	<string>Garm</string>
+	<string>Recharge: Recovery Time</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -36,7 +36,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Garm reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex from Apple Health. These readings help estimate how long to wait before another hard session. Garm never writes Health data.</string>
+	<string>Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex from Apple Health. These readings help estimate a training-load recovery window. Recharge never writes Health data.</string>
 	<!-- Recharge never writes to Health: `requestAuthorization` passes
 	     `toShare: []`. The string stays anyway because App Store Connect
 	     rejects the upload without it (error 90683): its static analysis sees
@@ -45,7 +45,7 @@
 	     the app ever passes anything to it. Removing it archives cleanly and
 	     then fails at upload, which is a slow way to find out. -->
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Garm does not write any data to Apple Health.</string>
+	<string>Recharge does not write any data to Apple Health.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

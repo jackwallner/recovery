@@ -150,13 +150,13 @@ public enum CountdownFormat {
     public static func phaseDetail(_ phase: RecoveryPhase) -> String {
         switch phase {
         case .noRecentWorkout:
-            "Finish a workout and Recharge will estimate your next hard session."
+            "Finish a workout and Recharge will estimate a training-load window."
         case .ready:
-            "Ready for another hard session based on your recent workout load estimate."
+            "Recovery estimate complete. No countdown is active."
         case .readySoon:
             "Less than two hours left on your current estimate."
         case .recovering:
-            "Time left before another hard session is likely to be reasonable."
+            "Time left on the current training-load estimate."
         }
     }
 

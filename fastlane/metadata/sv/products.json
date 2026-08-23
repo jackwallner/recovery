@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ Månad",
-  "monthly_desc": "Kroppssignaler, belastning och Redo-aviseringar.",
+  "monthly_desc": "Avisering vid slutet, om aktiverad",
   "yearly_name": "Recharge+ År",
-  "yearly_desc": "Ett år av signaler, belastning och Redo-avisering.",
+  "yearly_desc": "Avisering vid slutet, om aktiverad",
   "lifetime_name": "Recharge+ Livstid",
   "lifetime_desc": "Recharge+ för alltid. En betalning, ingen förnyelse."
 }

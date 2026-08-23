@@ -8,6 +8,7 @@ struct SettingsView: View {
     @EnvironmentObject private var engine: RecoveryEngine
 
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.requestReview) private var requestReview
     @Environment(\.dismiss) private var dismiss
     @State private var showPaywall = false
@@ -20,6 +21,8 @@ struct SettingsView: View {
     @State private var pendingNativeReviewAfterDismiss = false
     @State private var isRequestingHealth = false
     @State private var healthMessage: String?
+    @State private var showDeleteConfirmation = false
+    @State private var localDataMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -64,6 +67,16 @@ struct SettingsView: View {
                     pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
                 }
             }
+            .alert("Delete local health data?", isPresented: $showDeleteConfirmation) {
+                Button("Delete", role: .destructive) {
+                    localDataMessage = engine.deleteLocalHealthData()
+                        ? "Recharge's local Health cache and estimates were deleted. Apple Health records and purchases were not changed."
+                        : "Recharge could not delete its local data. Try again."
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This removes Recharge's imported workouts, estimates, snapshots, and Health-derived profile values from this device. It does not delete anything from Apple Health.")
+            }
             .onAppear {
                 maxHeartRateText = settings.maxHeartRate > 0
                     ? String(Int(settings.maxHeartRate))
@@ -73,10 +86,21 @@ struct SettingsView: View {
                 #endif
             }
             .task {
-                guard settings.notifyOnReady else { return }
-                notificationsDenied = !(await NotificationService.isAuthorized())
+                await refreshNotificationStatus()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task { await refreshNotificationStatus() }
             }
         }
+    }
+
+    private func refreshNotificationStatus() async {
+        guard settings.notifyOnReady else {
+            notificationsDenied = false
+            return
+        }
+        notificationsDenied = !(await NotificationService.isAuthorized())
     }
 
     // MARK: - Pro
@@ -488,7 +512,7 @@ struct SettingsView: View {
 
     private var modelSection: some View {
         Section {
-            Picker("HYROX and CrossFit", selection: $settings.ambiguousProfile) {
+            Picker("Functional and hybrid training", selection: $settings.ambiguousProfile) {
                 ForEach([WorkoutProfile.mixed, .strength, .endurance], id: \.self) { profile in
                     Text(profile.label).tag(profile)
                 }
@@ -546,7 +570,7 @@ struct SettingsView: View {
         } header: {
             Text("Model")
         } footer: {
-            Text("Apple Health reports HYROX and CrossFit sessions the same way it reports other functional training, so Recharge needs to know which curve to use. Calibration adjusts from your answers when a countdown runs out.")
+            Text("Apple Health groups functional and hybrid training under the same activity type, so Recharge needs to know which curve to use. Calibration adjusts from your answers when a countdown runs out.")
         }
     }
 
@@ -612,7 +636,7 @@ struct SettingsView: View {
     /// works correctly read as an app that never updates on its own.
     private var notificationSection: some View {
         Section {
-            Toggle("Notify me at Ready", isOn: $settings.notifyOnReady)
+            Toggle("Notify me when countdown ends", isOn: $settings.notifyOnReady)
                 .onChange(of: settings.notifyOnReady) { _, enabled in
                     Task {
                         if enabled {
@@ -629,7 +653,7 @@ struct SettingsView: View {
                 }
             if notificationsDenied, settings.notifyOnReady {
                 VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                    Text("Notifications are turned off for Recharge, so the Ready alert can't be delivered.")
+                    Text("Notifications are turned off for Recharge, so the completion alert can't be delivered.")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.orange)
                     if let url = URL(string: UIApplication.openSettingsURLString) {
@@ -747,8 +771,23 @@ struct SettingsView: View {
                     .foregroundStyle(restoreMessageIsError ? .orange : Theme.textSecondary)
             }
 
-            Link("Privacy policy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
-            Link("Terms of use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            Link("Privacy policy", destination: RechargeLinks.privacyPolicy)
+            Link("Terms of use", destination: RechargeLinks.termsOfUse)
+            Link("Apple EULA", destination: RechargeLinks.standardEULA)
+
+            Button("Delete local health data", role: .destructive) {
+                showDeleteConfirmation = true
+            }
+
+            Text("Deletes Recharge's local Health cache and derived estimates. Apple Health records and purchases are not affected.")
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+
+            if let localDataMessage {
+                Text(localDataMessage)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+            }
 
             HStack {
                 Text("Version")

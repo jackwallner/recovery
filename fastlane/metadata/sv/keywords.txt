@@ -1,1 +1,1 @@
-garmin,whoop,oura,coros,polar,athlytic,hyrox,triathlon,kondition,maraton,löpning,styrketräning
+triathlon,kondition,maraton,löpning,styrketräning,training,fitness,workout,heart,hrv,sleep,readiness

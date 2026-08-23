@@ -1,1 +1,1 @@
-Garmin-style recovery time on the Apple Watch you already own. A countdown after every hard session, and a clear Ready the moment it runs out.
+Recovery time on Apple Watch. A training-load countdown after every qualifying workout, complete when it expires.

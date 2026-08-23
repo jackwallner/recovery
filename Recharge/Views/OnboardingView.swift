@@ -136,7 +136,7 @@ struct OnboardingView: View {
             symbol: "hourglass",
             tint: Theme.recovering,
             title: "Recovery time,\non the watch you own",
-            message: "Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready. It is the answer a Garmin gives you, from Apple Health.",
+            message: "Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete. Recharge reads Apple Health and never writes to it.",
             primaryTitle: "Continue",
             primaryAction: advance
         )
@@ -233,7 +233,7 @@ struct OnboardingView: View {
             symbol: "info.circle.fill",
             tint: Theme.idle,
             title: "What the number\nactually means",
-            message: "Recharge estimates when another hard session is likely to be reasonable, based on your recent workout load. It is a cardiovascular training estimate, not a measure of muscle repair, illness, or injury risk, and not medical advice. Talk with a qualified health professional before making medical decisions.",
+            message: "Recharge estimates a training-load recovery window from your recent workouts. It is not a measure of muscle repair, illness, injury risk, or whether you are fit to train, and it is not medical advice. Talk with a qualified health professional before making medical decisions.",
             primaryTitle: "I understand",
             primaryAction: advance
         )
@@ -245,11 +245,9 @@ struct OnboardingView: View {
         TrialOfferPage(
             onDecline: finish,
             onPurchased: finish,
-            declineTitle: "Get Started",
-            showsIngestProof: true
+            declineTitle: "Get Started"
         )
         .environmentObject(store)
-        .environmentObject(engine)
         .environmentObject(settings)
     }
 
@@ -272,8 +270,14 @@ struct OnboardingView: View {
         if settings.notifyOnReady,
            !settings.hasRequestedReadyNotifications,
            !ScreenshotConfig.isEnabled {
-            settings.hasRequestedReadyNotifications = true
-            Task { await NotificationService.requestAuthorization() }
+            Task { @MainActor in
+                _ = await NotificationService.requestAuthorization()
+                settings.hasRequestedReadyNotifications = true
+                // Re-schedule after the system sheet resolves so a live
+                // countdown is definitely queued under the user's final
+                // notification choice.
+                engine.publish()
+            }
         }
         // The answers only reach a number through a rescore, and a user who
         // upgrades on this very page would otherwise see their old windows until

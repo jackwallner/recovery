@@ -126,6 +126,8 @@ def main() -> None:
 
         if "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" not in description:
             errors.append(f"{locale}: missing Apple Standard EULA URL")
+        if "https://jackwallner.github.io/recovery/terms.html" not in description:
+            errors.append(f"{locale}: missing Recharge Terms URL")
         if "https://jackwallner.github.io/recovery/privacy-policy.html" not in description:
             errors.append(f"{locale}: missing privacy URL")
         if re.search(r"[$£€]\s?\d|\d+[.,]\d{2}\s*(?:per|/)", description):

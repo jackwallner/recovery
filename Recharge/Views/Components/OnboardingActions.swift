@@ -4,6 +4,7 @@ import SwiftUI
 /// about them: onboarding, the trial sheet, and Settings.
 enum RechargeLinks {
     static let standardEULA = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+    static let termsOfUse = URL(string: "https://jackwallner.github.io/recovery/terms.html")!
     static let privacyPolicy = URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!
 }
 
@@ -126,8 +127,8 @@ struct OnboardingPrimaryButton: View {
     }
 }
 
-/// Restore, Terms, Privacy — laid out on every onboarding page and shown on the
-/// purchase point.
+/// Restore, Terms, Apple EULA, Privacy, laid out on every onboarding page and
+/// shown on the purchase point.
 ///
 /// Hidden rather than absent: this row is the only thing below the primary
 /// button, so its height is what makes that button's position a constant. An
@@ -155,7 +156,9 @@ struct OnboardingLegalSlot: View {
         Button(isRestoring ? "Restoring…" : "Restore") { onRestore?() }
             .disabled(isRestoring || onRestore == nil)
             .frame(minHeight: 44)
-        Link("Terms", destination: RechargeLinks.standardEULA)
+        Link("Terms", destination: RechargeLinks.termsOfUse)
+            .frame(minHeight: 44)
+        Link("Apple EULA", destination: RechargeLinks.standardEULA)
             .frame(minHeight: 44)
         Link("Privacy", destination: RechargeLinks.privacyPolicy)
             .frame(minHeight: 44)

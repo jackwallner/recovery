@@ -118,8 +118,9 @@ struct RechargeApp: App {
               settings.notifyOnReady,
               !settings.hasRequestedReadyNotifications
         else { return }
+        _ = await NotificationService.requestAuthorization()
         settings.hasRequestedReadyNotifications = true
-        await NotificationService.requestAuthorization()
+        engine.publish()
     }
 
     var body: some Scene {

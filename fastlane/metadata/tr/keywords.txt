@@ -1,1 +1,1 @@
-garmin,whoop,polar,athlytic,hyrox,triatlon,dayaniklilik,maraton,kosu,antrenman,fitness,hrv,spor
+triatlon,dayaniklilik,maraton,kosu,antrenman,fitness,hrv,spor,training,workout,heart,sleep,readiness

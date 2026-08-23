@@ -1,11 +1,11 @@
-Beende eine harte Einheit und Recharge startet einen Countdown. Läuft er ab, bekommst du ein klares Bereit.
+Beende eine harte Einheit und Recharge startet einen Countdown. Läuft er ab, bekommst du ein klares Countdown beendet.
 
-Das ist die ganze App. Es ist die Antwort, die dir eine Garmin nach einer Aktivität gibt, gebaut für die Apple Watch, die du schon besitzt. Kein Ring, kein Gurt, kein zweites Hardware-Ökosystem mit Abo.
+Das ist die ganze App. Kein Ring, kein Gurt, kein zweites Hardware-Ökosystem mit Abo.
 
 WAS DU SIEHST
 
 • Ein Countdown in Stunden nach jedem zählenden Workout
-• Ein klares Bereit, wenn die Schätzung abläuft
+• Benachrichtigung am Ende, wenn aktiviert
 • Der Grund dahinter: welche Einheit das Fenster gesetzt hat und wie sicher Recharge ist
 • Komplikationen in vier Familien: rund, rechteckig, inline und Ecke
 
@@ -15,7 +15,7 @@ Recharge rechnet für jede Art von Einheit eine eigene Kurve, denn eine Stunde u
 
 • Ausdauer: Laufen, Radfahren, Rudern, Schwimmen. Belastung aus der Herzfrequenzreserve deines Workouts.
 • Kraft: Heben. Die Herzfrequenz am Handgelenk ist hier unzuverlässig, also fragt Recharge dich, statt zu raten.
-• Gemischt: HYROX, CrossFit, Zirkel. Beide Systeme belastet, also das längste Fenster.
+• Gemischt: Zirkel. Beide Systeme belastet, also das längste Fenster.
 • Leicht: Spaziergänge, Yoga, Mobility. Zählt als aktive Erholung und startet oder verlängert nie einen Countdown.
 
 Recharge zeigt ein begrenztes Fenster statt einer Zahl mit falscher Präzision, dazu das Signal dahinter und wie sicher es ist.
@@ -25,7 +25,7 @@ STANDARD, KOSTENLOS
 Die Standardschätzung ist eine gemeinsame Tabelle auf deinem Trainingsniveau: Art der Einheit, Dauer und Härte, am Herzfrequenzbereich für dein Alter.
 
 • Import von Workouts aus Apple Health
-• Der Countdown und der Bereit-Zustand
+• Der Countdown und der Countdown beendet-Zustand
 • Apple Watch App
 • Alle vier Komplikationsfamilien
 • Erklärung deiner letzten Schätzung auf dem iPhone
@@ -38,8 +38,8 @@ Recharge+ ersetzt diese Tabelle durch dich: jede Einheit wird an deiner eigenen 
 • Schlaf, Ruheherzfrequenz und HRV fließen in jede Schätzung ein
 • Kalibrierung daraus, wie du dich beim Ablauf wirklich gefühlt hast
 • Wochenbelastung gegen deinen eigenen Vier-Wochen-Schnitt
-• Überschreibung des Workout-Typs pro Einheit
-• Optionale Mitteilung in dem Moment, in dem du bereit bist
+• Intensität: leicht / moderat / hart
+• Benachrichtigung am Ende, wenn aktiviert
 
 Recharge+ gibt es als Monats- oder Jahresabo oder als einmaligen Lifetime-Kauf.
 
@@ -48,8 +48,9 @@ Recharge+ gibt es als Monats- oder Jahresabo oder als einmaligen Lifetime-Kauf.
 
 Die Preise werden in der App vor dem Kauf angezeigt und sind je nach Region unterschiedlich. Die Zahlung wird bei Kaufbestätigung über deine Apple-ID abgebucht. Abos verlängern sich automatisch; dein Konto wird innerhalb von 24 Stunden vor Ende der Periode belastet, sofern die automatische Verlängerung nicht mindestens 24 Stunden vorher deaktiviert wird. Verwalten oder kündigen unter Einstellungen › Apple-ID › Abonnements. Ein nicht genutzter Teil einer Gratisphase verfällt beim Kauf.
 
-Datenschutzrichtlinie: https://jackwallner.github.io/recovery/privacy-policy.html
-Nutzungsbedingungen (Apple Standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 DATENSCHUTZ
 
@@ -59,6 +60,6 @@ WICHTIG
 
 Recharge liefert eine kardiovaskuläre Trainingsschätzung auf Basis deiner jüngsten Belastung. Sie ist keine medizinische Beratung und kann dir nicht sagen, ob du fit zum Trainieren bist. Kardiovaskuläre Belastung, Muskelkater, Krankheit und mentale Müdigkeit sind nicht dasselbe. Sprich mit einer qualifizierten Fachperson über deine Gesundheit.
 
-Recharge ist nicht mit Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit oder Apple verbunden und wird von ihnen weder unterstützt noch gesponsert. Produktnamen sind Marken ihrer jeweiligen Inhaber.
+Produktnamen sind Marken ihrer jeweiligen Inhaber.
 
 Erfordert iOS 17 oder neuer. Eine Apple Watch, die deine Workouts aufzeichnet, wird dringend empfohlen.

@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ Bulanan",
-  "monthly_desc": "Isyarat badan, trend beban dan makluman Sedia.",
+  "monthly_desc": "Pemberitahuan apabila selesai jika diaktifkan",
   "yearly_name": "Recharge+ Tahunan",
-  "yearly_desc": "Setahun isyarat badan, trend beban, makluman.",
+  "yearly_desc": "Pemberitahuan apabila selesai jika diaktifkan",
   "lifetime_name": "Recharge+ Seumur hidup",
   "lifetime_desc": "Recharge+ selamanya. Sekali bayar, tanpa pembaharuan."
 }

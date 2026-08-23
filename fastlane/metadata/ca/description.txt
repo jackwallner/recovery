@@ -1,11 +1,11 @@
-Acaba una sessió dura i Recharge engega un compte enrere. Quan arriba a zero, tens un Llest clar.
+Acaba una sessió dura i Recharge engega un compte enrere. Quan arriba a zero, tens un compte enrere complet clar.
 
-Això és tota l'app. És la resposta que et dona un Garmin després d'una activitat, feta per a l'Apple Watch que ja tens. Sense anell, sense banda, sense un segon ecosistema de maquinari a pagar.
+Això és tota l'app. Sense anell, sense banda, sense un segon ecosistema de maquinari a pagar.
 
 QUÈ VEUS
 
 • Un compte enrere en hores després de cada entrenament que compta
-• Un Llest nítid quan l'estimació s'acaba
+• Notificació en acabar, si activa
 • El motiu al darrere: quina sessió va fixar la finestra i quanta confiança hi ha
 • Complicacions en quatre famílies: circular, rectangular, en línia i cantonada
 
@@ -15,7 +15,7 @@ Recharge fa servir una corba diferent per tipus de sessió: una hora sota la bar
 
 • Resistència: córrer, bici, rem, natació. Càrrega a partir de la reserva cardíaca.
 • Força: aixecar. La freqüència cardíaca al canell no és fiable aquí, així que Recharge et fa una pregunta en lloc d'endevinar.
-• Mixt: HYROX, CrossFit, circuits. Tots dos sistemes exigits, per tant la finestra més llarga.
+• Mixt: circuits. Tots dos sistemes exigits, per tant la finestra més llarga.
 • Suau: passejades, ioga, mobilitat. Compta com a recuperació activa i mai no engega ni allarga un compte enrere.
 
 Recharge mostra una finestra acotada en lloc d'un número de falsa precisió, amb el senyal que l'ha produïda.
@@ -25,7 +25,7 @@ ESTÀNDARD, GRATIS
 L'estimació estàndard és una taula comuna, ajustada al nivell d'entrenament que indiques o que observa Recharge: tipus de sessió, durada i duresa, mesurats sobre el rang cardíac que correspon a la teva edat.
 
 • Importació d'entrenaments des de Salut d'Apple
-• El compte enrere i l'estat Llest
+• El compte enrere i l'estat compte enrere complet
 • App per a l'Apple Watch
 • Les quatre famílies de complicacions
 • Explicació a l'iPhone de la teva última estimació
@@ -38,8 +38,8 @@ Recharge+ substitueix aquesta taula per tu: cada sessió es mesura contra la tev
 • Son, freqüència cardíaca en repòs i VFC a cada estimació
 • Calibratge a partir de com et vas sentir de debò en acabar
 • Càrrega setmanal davant la teva pròpia mitjana de quatre setmanes
-• Tipus d'entrenament ajustable sessió a sessió
-• Notificació opcional en el moment en què estàs Llest
+• Intensitat: lleugera / moderada / intensa
+• Notificació en acabar, si activa
 
 Recharge+ està disponible com a subscripció mensual o anual, o com a compra única per sempre.
 
@@ -48,8 +48,9 @@ Recharge+ està disponible com a subscripció mensual o anual, o com a compra ú
 
 Els preus es mostren a l'app abans de comprar i varien segons la regió. El pagament es carrega al teu ID d'Apple en confirmar la compra. Les subscripcions es renoven automàticament: es cobra en les 24 hores prèvies al final del període, llevat que desactivis la renovació almenys 24 hores abans. Gestiona o cancel·la a Configuració › ID d'Apple › Subscripcions. La part no utilitzada d'una prova gratuïta es perd en comprar.
 
-Política de privacitat: https://jackwallner.github.io/recovery/privacy-policy.html
-Condicions d'ús (EULA estàndard d'Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACITAT
 
@@ -59,6 +60,6 @@ IMPORTANT
 
 Recharge dona una estimació d'entrenament cardiovascular basada en la teva càrrega recent. No és consell mèdic i no et pot dir si estàs en condicions d'entrenar. Càrrega cardiovascular, agulletes, malaltia i fatiga mental no són el mateix. Parla de la teva salut amb un professional qualificat.
 
-Recharge no està afiliada, avalada ni patrocinada per Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ni Apple. Els noms de productes són marques dels seus titulars respectius.
+Els noms de productes són marques dels seus titulars respectius.
 
 Requereix iOS 17 o posterior. Es recomana un Apple Watch que registri els teus entrenaments.
