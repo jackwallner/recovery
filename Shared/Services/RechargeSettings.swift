@@ -25,14 +25,6 @@ public enum AppAppearance: Int, CaseIterable, Sendable {
     }
 }
 
-/// Keys the widget and complication extensions read directly. They cannot see
-/// this `@MainActor` class, so the names live in one place both sides agree on.
-public enum SettingsKeys {
-    public static let complicationStyle = "complicationStyle"
-    public static let ambiguousProfile = "ambiguousProfile"
-    public static let maxHeartRate = "maxHeartRate"
-}
-
 /// Every user preference, in App Group `UserDefaults` so the Watch app and both
 /// widget extensions see the same values the phone wrote.
 @MainActor
@@ -350,6 +342,25 @@ public final class RechargeSettings: ObservableObject {
 
     public func applyFeedback(_ feedback: ReadinessFeedback) {
         calibrationFactor = RecoveryCalibration.apply(feedback, to: calibrationFactor)
+    }
+
+    /// Clears values derived from Apple Health while preserving answers the user
+    /// entered directly and all purchase state.
+    public func clearHealthDerivedProfile() {
+        var profile = athleteProfile
+        if profile.healthDerivedFields.contains(AthleteProfile.ageField) { profile.age = nil }
+        if profile.healthDerivedFields.contains(AthleteProfile.sexField) { profile.sex = .unspecified }
+        if profile.healthDerivedFields.contains(AthleteProfile.weeklyVolumeField) { profile.weeklyVolume = nil }
+        if profile.healthDerivedFields.contains(AthleteProfile.primaryProfileField) { profile.primaryProfile = nil }
+        if profile.healthDerivedFields.contains(AthleteProfile.vo2MaxField) { profile.vo2Max = nil }
+        if profile.healthDerivedFields.contains(AthleteProfile.observedMaxHeartRateField) {
+            profile.observedMaxHeartRate = nil
+        }
+        if profile.healthDerivedFields.contains(AthleteProfile.bodyMassField) {
+            profile.bodyMassKilograms = nil
+        }
+        profile.healthDerivedFields.removeAll()
+        athleteProfile = profile
     }
 
     private func applyScreenshotOverridesIfNeeded() {

@@ -179,7 +179,9 @@ struct TodayView: View {
                 .padding(.horizontal, Theme.Space.xl)
                 .padding(.top, Theme.Space.sm)
 
-            if settings.hasDeferredHealthAccess {
+            if settings.hasDeferredHealthAccess
+                || engine.lastImportFailed
+                || (engine.lastSuccessfulImport == nil && engine.estimates.isEmpty) {
                 healthAccessCard
                     .padding(.horizontal, Theme.Space.lg)
                     .padding(.top, Theme.Space.md)
@@ -278,7 +280,7 @@ struct TodayView: View {
                 Image(systemName: Theme.symbol(for: phase))
                     .font(.system(size: ringSize * 0.19))
                     .foregroundStyle(Theme.idle)
-                Text("No workout yet")
+                Text("No recent workout")
                     .font(.system(.subheadline, design: .rounded, weight: .medium))
                     .foregroundStyle(Theme.textSecondary)
             case .ready:
@@ -323,9 +325,9 @@ struct TodayView: View {
     private var headline: String {
         switch phase {
         case .noRecentWorkout:
-            return "Finish a workout and your countdown starts here."
+            return "Finish a workout and Recharge will estimate a window here."
         case .ready:
-            return "Ready for another hard session."
+            return "Recovery estimate complete."
         case .readySoon, .recovering:
             guard let explained else { return CountdownFormat.phaseDetail(phase) }
             // A low-confidence estimate should not print a minute-precise clock
@@ -333,7 +335,7 @@ struct TodayView: View {
             let time = explained.confidence <= .low
                 ? CountdownFormat.readySoftly(explained.readyAt, now: now)
                 : CountdownFormat.readyAt(explained.readyAt, now: now)
-            return "Ready \(time)"
+            return "Estimate complete at \(time)"
         }
     }
 
@@ -361,7 +363,7 @@ struct TodayView: View {
         var parts: [String] = []
         switch phase {
         case .noRecentWorkout: parts.append("No recent workout.")
-        case .ready: parts.append("Ready.")
+        case .ready: parts.append("Recovery estimate complete.")
         default: parts.append("\(CountdownFormat.remaining(remaining)) left. \(headline).")
         }
         if let sourceLine { parts.append(sourceLine + ".") }

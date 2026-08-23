@@ -252,7 +252,7 @@ struct RechargeWidget: Widget {
             RechargeWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Recovery")
-        .description("Time left before another hard session, and a clear Ready mark.")
+        .description("Time left in the recovery countdown, with a clear completion state.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

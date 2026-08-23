@@ -1,11 +1,9 @@
-Finish a hard session and Recharge starts a countdown. When it runs out, you get a clear Ready.
-
-That is all of it. It is the answer a Garmin gives you after an activity, built for the Apple Watch you already own. No ring, no strap, no second hardware ecosystem to subscribe to.
+Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete.
 
 WHAT YOU SEE
 
 • A countdown in hours after every qualifying workout
-• A clear Ready mark when the estimate expires
+• A clear Countdown complete state when the estimate expires
 • The reason behind it: which session set the window, and how confident Recharge is
 • Watch complications in four families — circular, rectangular, inline, and corner — in the style you choose
 
@@ -15,7 +13,7 @@ Recharge runs a separate curve for each kind of session, because an hour under a
 
 • Endurance: run, ride, row, swim. Heart-rate-reserve load from your workout heart rate.
 • Strength: lifting. Wrist heart rate is unreliable under grip and bar contact, so Recharge asks you one question instead of guessing.
-• Mixed: HYROX, CrossFit, circuits. Both systems taxed, so the longest window.
+• Mixed: circuits. Both systems taxed, so the longest window.
 • Easy: walks, yoga, mobility. Counted as active recovery. Never starts or extends a countdown.
 
 HONEST BY DESIGN
@@ -27,7 +25,7 @@ STANDARD, FREE
 The standard estimate is one shared table, set to your training level: session type, length, and intensity, scored against the heart-rate range for your age.
 
 • Apple Health workout import
-• The countdown and the Ready state
+• The countdown and completion state, with notifications when enabled
 • Apple Watch app
 • All four complication families
 • iPhone explanation of your latest estimate
@@ -40,8 +38,8 @@ Recharge+ replaces that table with you: every session is scored against your own
 • Sleep, resting heart rate, and HRV folded into each estimate
 • Calibration from how you say you actually felt when a countdown ran out
 • Weekly load against your own four-week average
-• Per-session workout-type override
-• Optional notification the moment you are Ready
+• Light / Moderate / Hard intensity correction for each session
+• Completion notification when enabled
 
 Recharge+ is available as a monthly or yearly subscription, or a one-time lifetime purchase.
 
@@ -50,8 +48,9 @@ Recharge+ is available as a monthly or yearly subscription, or a one-time lifeti
 
 Prices are shown in the app before you buy and vary by region. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew automatically, and your account is charged within 24 hours before the end of the current period, unless auto-renew is turned off at least 24 hours before it ends. Manage or cancel your subscription in Settings › Apple ID › Subscriptions. Any unused portion of a free trial is forfeited when you purchase a subscription.
 
-Privacy Policy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms of Use (Apple Standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY
 
@@ -61,6 +60,6 @@ IMPORTANT
 
 Recharge gives a cardiovascular training estimate based on your recent workout load. It is not medical advice and does not diagnose, treat, cure, or prevent any condition, and it cannot tell you whether you are physically fit to train. Cardiovascular load, muscle soreness, connective tissue, illness, and mental fatigue are not the same thing. Always use your own judgement, and speak to a qualified professional about your health.
 
-Recharge is not affiliated with, endorsed by, or sponsored by Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit, or Apple. Product names are trademarks of their respective owners.
+Product names are trademarks of their respective owners.
 
 Requires iOS 17 or later. An Apple Watch that records your workouts is strongly recommended for the best estimate.

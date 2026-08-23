@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ شهري",
-  "monthly_desc": "إشارات الجسم واتجاهات الحمل وتنبيهات جاهز.",
+  "monthly_desc": "إشعار عند الانتهاء، إذا فُعّل",
   "yearly_name": "Recharge+ سنوي",
-  "yearly_desc": "سنة من الإشارات والحمل وتنبيهات جاهز.",
+  "yearly_desc": "إشعار عند الانتهاء، إذا فُعّل",
   "lifetime_name": "Recharge+ مدى الحياة",
   "lifetime_desc": "Recharge+ للأبد. دفعة واحدة بلا تجديد."
 }

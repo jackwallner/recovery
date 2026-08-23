@@ -20,8 +20,8 @@ RAW = os.path.join(ROOT, "Screenshots", "raw")
 BACKGROUND = os.path.join(ROOT, "Screenshots", "Artwork", "recharge-background.png")
 
 HEADLINES = {
-    "01-countdown.png": "Know when you're Ready",
-    "02-ready.png": "A clear Ready",
+    "01-countdown.png": "Know when it completes",
+    "02-ready.png": "A clear completion state",
     "03-history.png": "Every session, explained",
     "04-pro.png": "Recovery, personalized",
     "05-settings.png": "Built around your training",

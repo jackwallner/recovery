@@ -66,12 +66,20 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
 
     /// One finished workout, reduced to the four things the pattern reads.
     public struct Session: Sendable, Equatable {
+        public let id: String
         public let profile: WorkoutProfile
         public let startDate: Date
         public let endDate: Date
         public let load: Double
 
-        public init(profile: WorkoutProfile, startDate: Date, endDate: Date, load: Double) {
+        public init(
+            profile: WorkoutProfile,
+            startDate: Date,
+            endDate: Date,
+            load: Double,
+            id: String = ""
+        ) {
+            self.id = id
             self.profile = profile
             self.startDate = startDate
             self.endDate = endDate
@@ -134,9 +142,10 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
     /// one.
     public static let typicalFraction = 0.70
 
-    /// The longest observed gap the countdown will show. Garmin's own documented
-    /// ceiling, and above four days a countdown has stopped being a countdown.
-    public static let maximumUsualHours: Double = 96
+    /// The longest observed gap the countdown will show. Keep this tied to the
+    /// calculator ceiling so the free figure and its persisted ready time can
+    /// never disagree.
+    public static let maximumUsualHours: Double = RecoveryCalculator.maximumHours
 
     // MARK: - Stored
 
@@ -285,7 +294,11 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
         let cutoff = now.addingTimeInterval(-Double(windowDays) * 86_400)
         let ordered = sessions
             .filter { $0.profile != .easy && $0.load > 0 && $0.endDate >= cutoff && $0.endDate <= now }
-            .sorted { $0.endDate < $1.endDate }
+            .sorted {
+                if $0.endDate != $1.endDate { return $0.endDate < $1.endDate }
+                if $0.startDate != $1.startDate { return $0.startDate < $1.startDate }
+                return $0.id < $1.id
+            }
         guard ordered.count >= 2 else { return .empty }
 
         let loads = ordered.map(\.load).sorted()

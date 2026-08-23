@@ -157,8 +157,6 @@ public final class StoreService: NSObject, ObservableObject {
     private static let groupDefaults = UserDefaults(suiteName: rechargeAppGroupID)
     private let logger = Logger(subsystem: "com.jackwallner.recovery", category: "Store")
     private var isConfigured = false
-    private var paywallImpressionsThisSession: Set<String> = []
-
     /// False when `products` was built by asking the store for the identifiers
     /// directly rather than by reading a RevenueCat offering. Those packages are
     /// synthesised locally, so they must be purchased as products: handing an
@@ -236,7 +234,7 @@ public final class StoreService: NSObject, ObservableObject {
             lastError = nil
             await refreshIntroEligibility()
         } catch {
-            logger.error("Offerings fetch failed: \(String(describing: error), privacy: .public)")
+            logger.error("Offerings fetch failed: \(String(describing: error), privacy: .private)")
             // Offerings need RevenueCat's network; the product catalogue often
             // comes back from StoreKit's own cache even when it does not.
             await hydrateDirectlyFromStore(reason: "offerings fetch failed")
@@ -256,7 +254,7 @@ public final class StoreService: NSObject, ObservableObject {
     /// one would be. Only the *presentation* loses its offering; entitlements do
     /// not depend on it.
     private func hydrateDirectlyFromStore(reason: String) async {
-        logger.error("Falling back to a direct product fetch: \(reason, privacy: .public)")
+        logger.error("Falling back to a direct product fetch: \(reason, privacy: .private)")
         let storeProducts = await Purchases.shared.products(RechargeProduct.all)
         guard !storeProducts.isEmpty else {
             currentOffering = nil
@@ -374,22 +372,6 @@ public final class StoreService: NSObject, ObservableObject {
 
     // MARK: - Purchase
 
-    public func trackPaywallImpression(id: String, oncePerSession: Bool = false) {
-        configureIfNeeded()
-        #if DEBUG
-        if ScreenshotConfig.isEnabled { return }
-        #endif
-        #if targetEnvironment(simulator)
-        return
-        #else
-        if oncePerSession {
-            guard !paywallImpressionsThisSession.contains(id) else { return }
-            paywallImpressionsThisSession.insert(id)
-        }
-        Purchases.shared.trackCustomPaywallImpression(CustomPaywallImpressionParams(paywallId: id))
-        #endif
-    }
-
     @discardableResult
     public func purchase(_ product: Package) async throws -> PurchaseState {
         configureIfNeeded()
@@ -429,7 +411,7 @@ public final class StoreService: NSObject, ObservableObject {
             apply(customerInfo: try await Purchases.shared.customerInfo(fetchPolicy: fetchPolicy))
             lastError = nil
         } catch {
-            logger.error("Customer info refresh failed: \(String(describing: error), privacy: .public)")
+            logger.error("Customer info refresh failed: \(String(describing: error), privacy: .private)")
             lastError = "Couldn't refresh your subscription status. Check your connection and try again."
         }
         #endif
@@ -446,7 +428,7 @@ public final class StoreService: NSObject, ObservableObject {
             apply(customerInfo: try await Purchases.shared.restorePurchases())
             lastError = isPro ? nil : "No active \(RechargeConversionCopy.proName) purchase was found for this Apple ID."
         } catch {
-            logger.error("Restore failed: \(String(describing: error), privacy: .public)")
+            logger.error("Restore failed: \(String(describing: error), privacy: .private)")
             lastError = "Couldn't restore purchases. Try again."
         }
         #endif
@@ -456,7 +438,7 @@ public final class StoreService: NSObject, ObservableObject {
         let wasResolved = entitlementStatusResolved
         self.customerInfo = customerInfo
         let active = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
-        logger.info("Applied customerInfo, active: [\(active, privacy: .public)]")
+        logger.info("Applied customerInfo, active: [\(active, privacy: .private)]")
         let hasActive = customerInfo.hasRechargeProEntitlement
         if isPro != hasActive {
             isPro = hasActive
@@ -530,7 +512,7 @@ public final class StoreService: NSObject, ObservableObject {
             localizedPriceString: "$29.99",
             productIdentifier: RechargeProduct.yearly,
             productType: .autoRenewableSubscription,
-            localizedDescription: "A year of body signals, load trends, and Ready alerts.",
+            localizedDescription: "A year of body signals, intensity corrections, alerts.",
             subscriptionGroupIdentifier: "RechargePro",
             subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .year),
             introductoryDiscount: freeWeek,
@@ -543,7 +525,7 @@ public final class StoreService: NSObject, ObservableObject {
             localizedPriceString: "$5.99",
             productIdentifier: RechargeProduct.monthly,
             productType: .autoRenewableSubscription,
-            localizedDescription: "Body signals, load trends, overrides, and Ready alerts.",
+            localizedDescription: "Body signals, intensity corrections, completion alerts.",
             subscriptionGroupIdentifier: "RechargePro",
             subscriptionPeriod: SubscriptionPeriod(value: 1, unit: .month),
             introductoryDiscount: freeWeek,
@@ -599,7 +581,7 @@ public final class StoreService: NSObject, ObservableObject {
             lastError = nil
             await refreshIntroEligibility()
         } catch {
-            logger.error("StoreKit Testing product fetch failed: \(String(describing: error), privacy: .public)")
+            logger.error("StoreKit Testing product fetch failed: \(String(describing: error), privacy: .private)")
             lastError = "StoreKit Testing could not load plans. Run this from the Recharge or RechargeUITests scheme, or check the StoreKit configuration."
         }
     }

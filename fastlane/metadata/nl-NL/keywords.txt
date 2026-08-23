@@ -1,1 +1,1 @@
-garmin,whoop,oura,coros,polar,athlytic,hyrox,triatlon,uithoudingsvermogen,marathon,hardlopen,hrv
+triatlon,uithoudingsvermogen,marathon,hardlopen,hrv,training,fitness,workout,heart,sleep,readiness

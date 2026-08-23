@@ -1,11 +1,11 @@
-Dokončete tvrdý trénink a Recharge spustí odpočítávání. Až doběhne, dostanete jasné Připraven.
+Dokončete tvrdý trénink a Recharge spustí odpočítávání. Až doběhne, dostanete jasné odpočet dokončen.
 
-To je celá aplikace. Je to odpověď, kterou vám po aktivitě dá Garmin, postavená pro Apple Watch, které už máte. Žádný prsten, žádný pás, žádný druhý hardwarový ekosystém k předplacení.
+To je celá aplikace. Žádný prsten, žádný pás, žádný druhý hardwarový ekosystém k předplacení.
 
 CO UVIDÍTE
 
 • Odpočítávání v hodinách po každém započítaném tréninku
-• Jasné Připraven, když odhad vyprší
+• Upozornění po odpočtu, pokud zapnuté
 • Důvod za tím: který trénink nastavil okno a jak jistý je výsledek
 • Komplikace ve čtyřech rodinách: kruhová, obdélníková, řádková a rohová
 
@@ -15,7 +15,7 @@ Recharge používá vlastní křivku pro každý typ lekce: hodina pod činkou a
 
 • Vytrvalost: běh, kolo, veslování, plavání. Zátěž z tepové rezervy.
 • Síla: zvedání. Tep na zápěstí je tu nespolehlivý, takže se vás Recharge zeptá místo hádání.
-• Smíšené: HYROX, CrossFit, kruhový trénink. Zatíženy oba systémy, tedy nejdelší okno.
+• Smíšené: kruhový trénink. Zatíženy oba systémy, tedy nejdelší okno.
 • Lehké: procházky, jóga, mobilita. Počítá se jako aktivní regenerace a nikdy nespustí ani neprodlouží odpočítávání.
 
 Recharge ukazuje ohraničené okno místo čísla s falešnou přesností, spolu se signálem, který ho vytvořil.
@@ -25,7 +25,7 @@ STANDARD, ZDARMA
 Standardní odhad je jedna společná tabulka, nastavená podle tréninkové úrovně, kterou uvedete nebo kterou Recharge vypozoruje: typ lekce, délka a tvrdost, měřené vůči tepovému rozsahu pro váš věk.
 
 • Import tréninků z Apple Zdraví
-• Odpočítávání a stav Připraven
+• Odpočítávání a stav odpočet dokončen
 • Aplikace pro Apple Watch
 • Všechny čtyři rodiny komplikací
 • Vysvětlení posledního odhadu na iPhonu
@@ -38,8 +38,8 @@ Recharge+ nahradí tuto tabulku vámi: každá lekce se měří vůči vaší vl
 • Spánek, klidový tep a HRV v každém odhadu
 • Kalibrace podle toho, jak jste se na konci opravdu cítili
 • Týdenní zátěž proti vašemu vlastnímu čtyřtýdennímu průměru
-• Typ tréninku lze přepsat lekci po lekci
-• Volitelné oznámení ve chvíli, kdy jste Připraven
+• Intenzita: lehká / střední / vysoká
+• Upozornění po odpočtu, pokud zapnuté
 
 Recharge+ je k dispozici jako měsíční nebo roční předplatné, případně jako jednorázový nákup navždy.
 
@@ -48,8 +48,9 @@ Recharge+ je k dispozici jako měsíční nebo roční předplatné, případně
 
 Ceny se zobrazují v aplikaci před nákupem a liší se podle regionu. Platba se strhne z vašeho účtu Apple při potvrzení nákupu. Předplatné se obnovuje automaticky: účet je zatížen do 24 hodin před koncem období, pokud automatické obnovení nevypnete nejméně 24 hodin předem. Spravujte nebo zrušte v Nastavení › Účet Apple › Předplatné. Nevyužitá část zkušební verze při nákupu propadá.
 
-Zásady ochrany osobních údajů: https://jackwallner.github.io/recovery/privacy-policy.html
-Podmínky použití (standardní EULA Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 SOUKROMÍ
 
@@ -59,6 +60,6 @@ DŮLEŽITÉ
 
 Recharge poskytuje odhad kardiovaskulárního tréninku podle vaší nedávné zátěže. Není to lékařská rada a nemůže vám říct, zda jste ve stavu trénovat. Kardiovaskulární zátěž, bolest svalů, nemoc a psychická únava nejsou totéž. O svém zdraví se poraďte s kvalifikovaným odborníkem.
 
-Recharge není spojen se značkami Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ani Apple a není jimi podporován ani sponzorován. Názvy produktů jsou ochranné známky příslušných vlastníků.
+Názvy produktů jsou ochranné známky příslušných vlastníků.
 
 Vyžaduje iOS 17 nebo novější. Důrazně doporučujeme Apple Watch, které zaznamenávají vaše tréninky.

@@ -20,4 +20,14 @@ fi
 
 FL="$(dirname "$0")/fastlane-bin.sh"
 chmod +x "$FL"
-exec "$FL" upload_metadata "$@"
+
+if [[ "${SKIP_SCREENSHOTS:-true}" == "true" ]]; then
+  exec "$FL" upload_metadata "$@"
+fi
+
+# Deliver's parallel screenshot uploads can race and create duplicate assets.
+# Keep metadata upload in Deliver, then replace the two screenshot sets through
+# the API in deterministic order.
+SKIP_SCREENSHOTS=true "$FL" upload_metadata "$@"
+python3 scripts/asc-upload-iphone-screenshots.py
+python3 scripts/asc-upload-watch-screenshot.py

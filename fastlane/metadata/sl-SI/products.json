@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ Mesečno",
-  "monthly_desc": "Signali telesa, obremenitev in obvestila.",
+  "monthly_desc": "Obvestilo ob koncu, če je vklopljeno",
   "yearly_name": "Recharge+ Letno",
-  "yearly_desc": "Leto signalov, obremenitve in obvestil.",
+  "yearly_desc": "Obvestilo ob koncu, če je vklopljeno",
   "lifetime_name": "Recharge+ Doživljenjsko",
   "lifetime_desc": "Recharge+ za vedno. Eno plačilo, brez podaljšanja."
 }

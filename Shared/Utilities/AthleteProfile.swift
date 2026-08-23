@@ -248,7 +248,7 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
     /// young and underestimates the old. Gulati (206 − 0.88 × age) for women,
     /// where it is the better-validated fit.
     public var predictedMaxHeartRate: Double? {
-        guard let age, (10...100).contains(age) else { return nil }
+        guard let age, (13...100).contains(age) else { return nil }
         let value = sex == .female
             ? 206 - 0.88 * Double(age)
             : 208 - 0.7 * Double(age)
@@ -368,7 +368,7 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
     /// left to gain. A gentle linear ramp off a reference age of 30, bounded so
     /// age alone can never dominate the estimate.
     var ageFactor: Double {
-        guard let age, (10...100).contains(age) else { return 1 }
+        guard let age, (13...100).contains(age) else { return 1 }
         return min(max(1 + Double(age - 30) * 0.005, 0.95), 1.18)
     }
 

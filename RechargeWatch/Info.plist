@@ -11,9 +11,9 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Garm Watch</string>
+    <string>Recharge Watch</string>
     <key>CFBundleDisplayName</key>
-    <string>Garm</string>
+    <string>Recharge</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -22,20 +22,6 @@
     <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
-    <!-- The Watch app never calls HealthKit: the phone owns the model and the
-         wrist only reads the snapshot it sends. The entitlement and the
-         self-care background mode are gone for that reason. Both strings stay
-         because `HealthKitService` is compiled into every target out of
-         `Shared`, so the binary references the framework and App Store Connect
-         requires a purpose string for anything its static analysis can see.
-         That includes the *write* string, even though `requestAuthorization`
-         passes `toShare: []` and the app can never ask for the permission it
-         describes: dropping it archives cleanly and then fails at upload with
-         error 90683. -->
-    <key>NSHealthShareUsageDescription</key>
-    <string>Garm reads recovery data from Apple Health, including workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex, to show how long your recovery estimate has left. Garm never writes Health data.</string>
-    <key>NSHealthUpdateUsageDescription</key>
-    <string>Garm does not write any data to Apple Health.</string>
     <key>WKApplication</key>
     <true/>
     <key>WKCompanionAppBundleIdentifier</key>

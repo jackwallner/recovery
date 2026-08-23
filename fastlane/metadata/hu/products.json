@@ -1,9 +1,9 @@
 {
   "group": "Recharge+",
   "monthly_name": "Recharge+ Havi",
-  "monthly_desc": "Testjelek, terhelési trendek és Kész értesítők.",
+  "monthly_desc": "Értesítés a végén, ha bekapcsolva",
   "yearly_name": "Recharge+ Éves",
-  "yearly_desc": "Egy év testjel, terhelés és Kész értesítő.",
+  "yearly_desc": "Értesítés a végén, ha bekapcsolva",
   "lifetime_name": "Recharge+ Örökös",
   "lifetime_desc": "Recharge+ örökre. Egy fizetés, megújítás nélkül."
 }

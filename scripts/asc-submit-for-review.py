@@ -104,7 +104,7 @@ def main() -> None:
     submission_id = submission["id"]
 
     # 2) Add the appStoreVersion as an item (skip if already present).
-    items = asc_lib.list_all(client, f"/reviewSubmissions/{submission_id}/items?limit=50")
+    items = asc_lib.list_all(client, f"/reviewSubmissions/{submission_id}/items?include=appStoreVersion&limit=50")
     has_version = any(
         (it.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id") == version_id
         for it in items
@@ -139,7 +139,7 @@ def main() -> None:
     # whose products were not submitted with the binary, and the four product
     # items only exist if someone did the UI half, so submitting without them is
     # a wasted review cycle rather than a partial success.
-    items = asc_lib.list_all(client, f"/reviewSubmissions/{submission_id}/items?limit=50")
+    items = asc_lib.list_all(client, f"/reviewSubmissions/{submission_id}/items?include=appStoreVersion&limit=50")
     print(f"{len(items)} item(s) on the submission")
     if len(items) < EXPECTED_ITEMS and not args.force:
         raise SystemExit(

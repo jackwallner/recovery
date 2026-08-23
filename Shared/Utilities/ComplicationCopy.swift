@@ -125,13 +125,7 @@ public enum ComplicationCopy {
         case .noRecentWorkout:
             return "No workout"
         case .ready:
-            // Not "Ready to train": on a glance surface with no room for the
-            // qualifier, that reads as clearance to train rather than as an
-            // estimate about training load, which is the only thing the model
-            // knows. Every other surface says "hard session"; so does this one.
-            return activityLabel.isEmpty
-                ? "Ready for a hard session"
-                : "After your \(activityLabel)"
+            return "Estimate complete"
         case .readySoon, .recovering:
             switch style {
             case .countdown:

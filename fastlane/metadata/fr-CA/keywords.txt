@@ -1,1 +1,1 @@
-garmin,whoop,oura,coros,polar,athlytic,hyrox,triathlon,endurance,marathon,course,musculation,repos
+triathlon,endurance,marathon,course,musculation,repos,training,fitness,workout,heart,hrv,sleep

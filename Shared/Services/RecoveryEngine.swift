@@ -38,6 +38,8 @@ public final class RecoveryEngine: ObservableObject {
     /// True when the most recent workout read did not happen at all.
     @Published public private(set) var lastImportFailed = false
 
+    private var rescorePersistenceFailed = false
+
     /// `lastSuccessfulImport` is in-memory, and a background wake usually runs
     /// in a fresh process, so without this every cold launch that failed its
     /// first read would look like an app that has never read anything.
@@ -107,7 +109,7 @@ public final class RecoveryEngine: ObservableObject {
         await importWorkouts()
         await importContext()
         await updateAthleteProfileFromHealth()
-        rescore()
+        guard rescore() else { return }
         publish()
         lastRefresh = .now
     }
@@ -148,8 +150,13 @@ public final class RecoveryEngine: ObservableObject {
     /// heart-rate coverage. `mergeHealthDerivedProfile` then only ever lets the
     /// stored figure rise, so a quiet month cannot lower somebody's ceiling.
     private func observedMaxHeartRate() -> Double? {
+        let cutoff = DateHelpers.daysAgo(HealthKitService.importDays)
         let peaks = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
-            .filter { $0.heartRateCoverage >= SessionLoadCalculator.minimumHeartRateCoverage }
+            .filter {
+                $0.endDate >= cutoff
+                    && $0.endDate <= .now
+                    && $0.heartRateCoverage >= SessionLoadCalculator.minimumHeartRateCoverage
+            }
             .compactMap { $0.peakHeartRate > 0 ? $0.peakHeartRate : nil }
         guard peaks.count >= 4 else { return nil }
         return HealthKitService.percentile(0.90, of: peaks)
@@ -217,10 +224,14 @@ public final class RecoveryEngine: ObservableObject {
                 record.startDate = workout.start
                 record.endDate = workout.end
                 record.durationMinutes = workout.durationMinutes
-                record.activeEnergy = workout.activeEnergy ?? record.activeEnergy
-                record.averageHeartRate = workout.averageHeartRate ?? record.averageHeartRate
-                record.peakHeartRate = workout.peakHeartRate ?? record.peakHeartRate
-                record.heartRateCoverage = workout.heartRateCoverage
+                if let activeEnergy = workout.activeEnergy, activeEnergy > 0 {
+                    record.activeEnergy = activeEnergy
+                }
+                if workout.heartRateCoverage >= record.heartRateCoverage {
+                    record.averageHeartRate = workout.averageHeartRate ?? record.averageHeartRate
+                    record.peakHeartRate = workout.peakHeartRate ?? record.peakHeartRate
+                    record.heartRateCoverage = workout.heartRateCoverage
+                }
                 record.sourceName = workout.sourceName
                 record.profileRaw = profile.rawValue
                 record.activityLabel = label
@@ -244,6 +255,40 @@ public final class RecoveryEngine: ObservableObject {
             }
         }
 
+        let cutoff = DateHelpers.daysAgo(HealthKitService.importDays)
+        let staleRecords = byUUID.values.filter { $0.endDate < cutoff }
+        for record in staleRecords {
+            context.delete(record)
+            byUUID.removeValue(forKey: record.healthKitUUID)
+        }
+
+        // Heart-rate samples can be written after the workout object. Revisit
+        // cached sessions with incomplete coverage so a later sample changes
+        // the load instead of leaving an energy or duration fallback forever.
+        let heartRateRefreshCutoff = DateHelpers.daysAgo(14)
+        let windows = byUUID.values
+            .filter {
+                $0.endDate >= heartRateRefreshCutoff
+                    && $0.endDate <= .now
+                    && $0.heartRateCoverage < SessionLoadCalculator.minimumHeartRateCoverage
+            }
+            .map {
+                HealthKitService.WorkoutWindow(
+                    id: $0.healthKitUUID,
+                    start: $0.startDate,
+                    end: $0.endDate
+                )
+            }
+        let heartRateUpdates = await HealthKitService.shared.refreshHeartRate(for: windows)
+        for record in byUUID.values {
+            guard let update = heartRateUpdates[record.healthKitUUID],
+                  update.coverage > record.heartRateCoverage
+            else { continue }
+            record.averageHeartRate = update.average ?? record.averageHeartRate
+            record.peakHeartRate = update.peak ?? record.peakHeartRate
+            record.heartRateCoverage = update.coverage
+        }
+
         guard saveContext(reason: "workout import") else {
             lastImportFailed = true
             context.rollback()
@@ -264,13 +309,30 @@ public final class RecoveryEngine: ObservableObject {
         async let respiratorySeries = HealthKitService.shared.fetchRespiratoryRate()
         async let recoverySeries = HealthKitService.shared.fetchHeartRateRecovery()
 
-        let resting = await restingSeries
-        let hrv = await hrvSeries
-        let sleep = await sleepByDay
-        let respiratory = await respiratorySeries
-        let recovery = await recoverySeries
+        let restingRead = await restingSeries
+        let hrvRead = await hrvSeries
+        let sleepRead = await sleepByDay
+        let respiratoryRead = await respiratorySeries
+        let recoveryRead = await recoverySeries
+        let resting = restingRead.value
+        let hrv = hrvRead.value
+        let sleep = sleepRead.value
+        let respiratory = respiratoryRead.value
+        let recovery = recoveryRead.value
+        if ![
+            restingRead.succeeded,
+            hrvRead.succeeded,
+            sleepRead.succeeded,
+            respiratoryRead.succeeded,
+            recoveryRead.succeeded
+        ].allSatisfy({ $0 }) {
+            lastImportFailed = true
+        }
         guard !resting.isEmpty || !hrv.isEmpty || !sleep.isEmpty
-                || !respiratory.isEmpty || !recovery.isEmpty else { return }
+                || !respiratory.isEmpty || !recovery.isEmpty else {
+            if !pruneOldContextRecords() { lastImportFailed = true }
+            return
+        }
 
         typealias DayValues = (resting: Double, hrv: Double, sleep: Double, respiratory: Double, recovery: Double)
         let zero: DayValues = (0, 0, 0, 0, 0)
@@ -333,6 +395,8 @@ public final class RecoveryEngine: ObservableObject {
             context.rollback()
             return
         }
+
+        if !pruneOldContextRecords() { lastImportFailed = true }
     }
 
     // MARK: - Scoring
@@ -357,14 +421,24 @@ public final class RecoveryEngine: ObservableObject {
     /// HYROX/CrossFit curve, the maximum heart rate) passes `unfreezeAll`.
     /// Calibration is deliberately not in that list: the feedback sheet promises
     /// it tunes future bands, so it must not reach back.
+    @discardableResult
     public func rescore(
         unfreezing unfrozenSessionID: String? = nil,
         unfreezeAll: Bool = false,
         now: Date = .now
-    ) {
+    ) -> Bool {
+        rescorePersistenceFailed = false
         let settings = RechargeSettings.shared
-        let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
-            .sorted { $0.endDate < $1.endDate }
+        guard let fetchedWorkouts = try? context.fetch(FetchDescriptor<WorkoutRecord>()) else {
+            engineLogger.error("SwiftData workout fetch failed during rescore")
+            rescorePersistenceFailed = true
+            return false
+        }
+        let workouts = fetchedWorkouts.sorted {
+                if $0.endDate != $1.endDate { return $0.endDate < $1.endDate }
+                if $0.startDate != $1.startDate { return $0.startDate < $1.startDate }
+                return $0.healthKitUUID < $1.healthKitUUID
+            }
         guard !workouts.isEmpty else {
             estimates = []
             current = nil
@@ -378,18 +452,27 @@ public final class RecoveryEngine: ObservableObject {
             personalizedPreview = .reference(factor: personalAnalysis.factor)
             observedPattern = .empty
             rebuildHealthIngest(workouts: [], contexts: [], settings: settings)
-            return
+            return true
         }
 
         let contextCutoff = now.addingTimeInterval(-Double(PersonalRecoveryModel.windowDays) * 86_400)
-        let contexts = ((try? context.fetch(FetchDescriptor<DailyContextRecord>())) ?? [])
+        guard let fetchedContexts = try? context.fetch(FetchDescriptor<DailyContextRecord>()) else {
+            engineLogger.error("SwiftData context fetch failed during rescore")
+            rescorePersistenceFailed = true
+            return false
+        }
+        let contexts = fetchedContexts
             .filter { $0.date >= contextCutoff && $0.date <= now }
         let contextByKey = Dictionary(contexts.map { ($0.dateKey, $0) }, uniquingKeysWith: { first, _ in first })
         let restingBaseline = median(contexts.map(\.restingHeartRate).filter { $0 > 0 })
         let hrvBaseline = median(contexts.map(\.heartRateVariability).filter { $0 > 0 })
         let respiratoryBaseline = median(contexts.map(\.respiratoryRate).filter { $0 > 0 })
 
-        let existingStates = ((try? context.fetch(FetchDescriptor<RecoveryStateRecord>())) ?? [])
+        guard let existingStates = try? context.fetch(FetchDescriptor<RecoveryStateRecord>()) else {
+            engineLogger.error("SwiftData state fetch failed during rescore")
+            rescorePersistenceFailed = true
+            return false
+        }
         var statesByID = Dictionary(existingStates.map { ($0.sessionID, $0) }, uniquingKeysWith: { first, _ in first })
 
         // Pass one: the standard estimate for every session. It is what the free
@@ -417,7 +500,8 @@ public final class RecoveryEngine: ObservableObject {
                     profile: session.profile,
                     startDate: session.startDate,
                     endDate: session.endDate,
-                    load: load
+                    load: load,
+                    id: session.id
                 )
             },
             now: now
@@ -425,15 +509,27 @@ public final class RecoveryEngine: ObservableObject {
         observedPattern = pattern
 
         var standardEstimates: [RecoveryEstimate] = []
+        var standardModelEstimates: [RecoveryEstimate] = []
         var standardReadyAt: Date?
+        var standardModelReadyAt: Date?
         for (index, session) in inputs.enumerated() {
             let standardBaseline = RecoveryBaseline.standard(
                 for: session.profile,
                 fitnessScale: settings.athleteProfile.fitnessScale
             )
+            let modelEstimate = RecoveryCalculator.estimate(
+                for: session,
+                baseline: standardBaseline,
+                carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardModelReadyAt),
+                now: now
+            )
+            standardModelEstimates.append(modelEstimate)
+            if modelEstimate.producesCountdown { standardModelReadyAt = modelEstimate.readyAt }
+
             let estimate = RecoveryCalculator.estimate(
                 for: session,
                 baseline: standardBaseline,
+                standardHours: modelEstimate.hours,
                 carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardReadyAt),
                 observed: pattern.window(
                     forLoad: sessionLoads[index],
@@ -448,7 +544,7 @@ public final class RecoveryEngine: ObservableObject {
         let isPro = StoreService.shared.isPro
         let analysis = PersonalRecoveryModel.analyse(
             profile: settings.athleteProfile,
-            sessions: zip(inputs, standardEstimates).map { session, standard in
+            sessions: zip(inputs, standardModelEstimates).map { session, standard in
                 PersonalRecoveryModel.HistorySession(
                     id: session.id,
                     profile: session.profile,
@@ -601,7 +697,11 @@ public final class RecoveryEngine: ObservableObject {
         for state in existingStates where !liveIDs.contains(state.sessionID) {
             context.delete(state)
         }
-        saveContext(reason: "rescore")
+        guard saveContext(reason: "rescore") else {
+            context.rollback()
+            rescorePersistenceFailed = true
+            return false
+        }
 
         // No qualifying session yet is not a reason to show nothing, and neither
         // is a session where the two happen to land on the same rounded hour:
@@ -637,6 +737,7 @@ public final class RecoveryEngine: ObservableObject {
                     && !declined.contains($0.healthKitUUID)
             }
             .max { $0.endDate < $1.endDate }
+        return true
     }
 
     /// Assembles the receipt for everything Health handed over.
@@ -666,9 +767,10 @@ public final class RecoveryEngine: ObservableObject {
             readings.daysCovered = min(max(days, 1), HealthKitService.importDays)
         }
 
-        readings.observedMaxHeartRate = settings.maxHeartRate > 0
-            ? settings.maxHeartRate
-            : profile.observedMaxHeartRate
+        // This receipt is specifically what Apple Health supplied. A maximum
+        // typed in Settings changes the calculator, but it is not a Health
+        // reading and must not be presented as one here.
+        readings.observedMaxHeartRate = profile.observedMaxHeartRate
         readings.age = profile.age
         readings.vo2Max = profile.vo2Max
         readings.bodyMassKilograms = profile.bodyMassKilograms
@@ -685,7 +787,7 @@ public final class RecoveryEngine: ObservableObject {
 
         healthIngest = HealthIngestSummary(
             readings: readings,
-            usesObservedMaxHeartRate: settings.maxHeartRate > 0 || profile.usesObservedMaxHeartRate
+            usesObservedMaxHeartRate: profile.usesObservedMaxHeartRate
         )
     }
 
@@ -744,6 +846,10 @@ public final class RecoveryEngine: ObservableObject {
     /// Writes the snapshot the Watch app and both widget extensions read, then
     /// nudges every timeline.
     public func publish() {
+        guard !rescorePersistenceFailed else {
+            engineLogger.error("Skipping publish because the latest rescore was not persisted")
+            return
+        }
         // Deliberately not a bare `lastImportFailed`: see `HealthDataState.staleAfter`.
         let healthDataState = HealthDataState.resolve(
             lastImportFailed: lastImportFailed,
@@ -808,6 +914,54 @@ public final class RecoveryEngine: ObservableObject {
 
     // MARK: - User input
 
+    /// Deletes Recharge's local Health cache and derived estimates. It does not
+    /// delete records from Apple Health or Apple and RevenueCat transaction
+    /// history.
+    @discardableResult
+    public func deleteLocalHealthData() -> Bool {
+        guard let workouts = try? context.fetch(FetchDescriptor<WorkoutRecord>()),
+              let states = try? context.fetch(FetchDescriptor<RecoveryStateRecord>()),
+              let dailyContexts = try? context.fetch(FetchDescriptor<DailyContextRecord>())
+        else {
+            engineLogger.error("SwiftData fetch failed during local health data deletion")
+            return false
+        }
+        for record in workouts { context.delete(record) }
+        for record in states { context.delete(record) }
+        for record in dailyContexts { context.delete(record) }
+        guard saveContext(reason: "local health data deletion") else {
+            context.rollback()
+            return false
+        }
+
+        let settings = RechargeSettings.shared
+        settings.clearHealthDerivedProfile()
+        settings.hasDeferredHealthAccess = true
+        settings.feedbackEligibleFrom = nil
+        settings.answeredFeedbackSessions = []
+        settings.declinedEffortSessions = []
+        HealthKitService.shared.resetWorkoutAnchor()
+        DataService.deleteQuarantinedStores()
+
+        let defaults = UserDefaults(suiteName: rechargeAppGroupID)
+        defaults?.removeObject(forKey: Self.lastSuccessfulImportKey)
+        defaults?.removeObject(forKey: "pendingEffortSessionID")
+        lastSuccessfulImport = nil
+        lastImportFailed = false
+        estimates = []
+        current = nil
+        awaitingFeedback = nil
+        awaitingEffort = nil
+        personalAnalysis = .neutral
+        personalizedPreview = .reference(factor: 1)
+        observedPattern = .empty
+        healthIngest = HealthIngestSummary()
+        RecoverySnapshotStore.clear()
+        NotificationService.cancelReadyNotification()
+        WidgetCenter.shared.reloadAllTimelines()
+        return true
+    }
+
     /// Applies a session RPE the user supplied, from either device, and
     /// recalculates immediately.
     public func recordEffort(_ effort: Double, forSessionID sessionID: String) {
@@ -816,12 +970,16 @@ public final class RecoveryEngine: ObservableObject {
         )
         descriptor.fetchLimit = 1
         guard let workout = (try? context.fetch(descriptor))?.first else {
-            engineLogger.error("Effort arrived for an unknown session \(sessionID, privacy: .public)")
+            engineLogger.error("Effort arrived for an unknown session \(sessionID, privacy: .private)")
+            return
+        }
+        guard effort.isFinite else {
+            engineLogger.error("Ignoring non-finite effort")
             return
         }
         workout.reportedEffort = min(max(effort, 1), 10)
         guard saveContext(reason: "effort answer") else { return }
-        rescore(unfreezing: sessionID)
+        guard rescore(unfreezeAll: true) else { return }
         publish()
     }
 
@@ -846,13 +1004,17 @@ public final class RecoveryEngine: ObservableObject {
             predicate: #Predicate { $0.sessionID == sessionID }
         )
         descriptor.fetchLimit = 1
-        (try? context.fetch(descriptor))?.first?.userFeedback = feedback
+        guard let state = (try? context.fetch(descriptor))?.first else {
+            engineLogger.error("Feedback arrived for an unknown session (sessionID, privacy: .private)")
+            return
+        }
+        state.userFeedback = feedback
         guard saveContext(reason: "readiness feedback") else { return }
 
         RechargeSettings.shared.applyFeedback(feedback)
         RechargeSettings.shared.recordFeedbackAnswered(sessionID)
         awaitingFeedback = nil
-        rescore()
+        guard rescore() else { return }
         publish()
     }
 
@@ -914,7 +1076,7 @@ public final class RecoveryEngine: ObservableObject {
         // moves the whole chain after it. Thawing only the corrected record
         // would leave the sessions that inherited its residual describing a
         // countdown that no longer exists.
-        rescore(unfreezeAll: true)
+        guard rescore(unfreezeAll: true) else { return }
         publish()
     }
 
@@ -932,7 +1094,7 @@ public final class RecoveryEngine: ObservableObject {
         guard let workout = (try? context.fetch(descriptor))?.first else { return }
         workout.profileOverride = profile
         guard saveContext(reason: "profile override") else { return }
-        rescore(unfreezing: sessionID)
+        guard rescore(unfreezeAll: true) else { return }
         publish()
     }
 
@@ -940,7 +1102,7 @@ public final class RecoveryEngine: ObservableObject {
     /// heart rate), so every stored session was scored on a premise the user has
     /// now corrected. Thaw the lot and republish.
     public func rescoreAfterModelSettingChange() {
-        rescore(unfreezeAll: true)
+        guard rescore(unfreezeAll: true) else { return }
         publish()
     }
 
@@ -950,7 +1112,7 @@ public final class RecoveryEngine: ObservableObject {
     /// and the Ready notification agree with what the user just paid for.
     public func entitlementDidChange() {
         guard !ScreenshotConfig.isEnabled else { return }
-        rescore()
+        guard rescore(unfreezeAll: true) else { return }
         publish()
     }
 
@@ -1021,9 +1183,25 @@ public final class RecoveryEngine: ObservableObject {
             try context.save()
             return true
         } catch {
-            engineLogger.error("SwiftData save failed during \(reason, privacy: .public): \(String(describing: error), privacy: .public)")
+            engineLogger.error("SwiftData save failed during \(reason, privacy: .private): \(String(describing: error), privacy: .private)")
             return false
         }
+    }
+
+    private func pruneOldContextRecords() -> Bool {
+        let cutoff = DateHelpers.daysAgo(PersonalRecoveryModel.windowDays)
+        guard let records = try? context.fetch(FetchDescriptor<DailyContextRecord>()) else {
+            engineLogger.error("SwiftData context fetch failed during pruning")
+            return false
+        }
+        for record in records where record.date < cutoff {
+            context.delete(record)
+        }
+        guard saveContext(reason: "context pruning") else {
+            context.rollback()
+            return false
+        }
+        return true
     }
 
     private func median(_ values: [Double]) -> Double? {

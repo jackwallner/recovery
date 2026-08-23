@@ -1,11 +1,11 @@
-Avsluta ett hårt pass så startar Recharge en nedräkning. När den tar slut får du ett tydligt Redo.
+Avsluta ett hårt pass så startar Recharge en nedräkning. När den tar slut får du ett tydligt nedräkning klar.
 
-Det är hela appen. Det är svaret en Garmin ger dig efter en aktivitet, byggt för den Apple Watch du redan har. Ingen ring, inget band, inget andra hårdvaruekosystem att prenumerera på.
+Det är hela appen. Ingen ring, inget band, inget andra hårdvaruekosystem att prenumerera på.
 
 DET DU SER
 
 • En nedräkning i timmar efter varje pass som räknas
-• Ett tydligt Redo när uppskattningen löper ut
+• Ett tydligt nedräkning klar när uppskattningen löper ut
 • Skälet bakom: vilket pass som satte fönstret och hur säker appen är
 • Komplikationer i fyra familjer: cirkulär, rektangulär, inline och hörn
 
@@ -15,7 +15,7 @@ Recharge använder en egen kurva per passtyp: en timme under skivstången och en
 
 • Uthållighet: löpning, cykel, rodd, simning. Belastning ur din pulsreserv.
 • Styrka: lyft. Pulsen vid handleden är opålitlig här, så Recharge ställer en fråga i stället för att gissa.
-• Blandat: HYROX, CrossFit, cirklar. Båda systemen belastade, alltså det längsta fönstret.
+• Blandat: cirklar. Båda systemen belastade, alltså det längsta fönstret.
 • Lugnt: promenader, yoga, rörlighet. Räknas som aktiv vila och startar eller förlänger aldrig en nedräkning.
 
 Recharge visar ett avgränsat fönster i stället för en siffra med falsk precision, tillsammans med signalen som gav den.
@@ -25,10 +25,11 @@ STANDARD, GRATIS
 Standarduppskattningen är en gemensam tabell, inställd på den träningsnivå du anger eller som Recharge ser: typ av pass, längd och hårdhet, mätt mot pulsintervallet för din ålder.
 
 • Import av pass från Apple Hälsa
-• Nedräkningen och Redo-läget
+• Nedräkningen och nedräkning klar-läget
 • Apple Watch-app
 • Alla fyra komplikationsfamiljer
 • Förklaring på iPhone av din senaste uppskattning
+• Avisering när nedräkningen är klar, om den är aktiverad
 
 RECHARGE+
 
@@ -38,8 +39,8 @@ Recharge+ byter ut tabellen mot dig: varje pass mäts mot din egen 42-dagarsbasl
 • Sömn, vilopuls och HRV vägs in i varje uppskattning
 • Kalibrering utifrån hur du faktiskt kände dig när tiden gick ut
 • Veckobelastning mot ditt eget fyraveckorssnitt
-• Passtyp går att ändra pass för pass
-• Valfri avisering i samma stund som du är Redo
+• Korrigera intensiteten per pass: lugnt / måttligt / hårt
+• Avisering när nedräkningen är klar, om den är aktiverad
 
 Recharge+ finns som månads- eller årsprenumeration, eller som ett engångsköp för livstid.
 
@@ -48,8 +49,9 @@ Recharge+ finns som månads- eller årsprenumeration, eller som ett engångsköp
 
 Priser visas i appen innan du köper och varierar mellan regioner. Betalningen dras från ditt Apple-konto när köpet bekräftas. Prenumerationer förnyas automatiskt: kontot debiteras inom 24 timmar före periodens slut om inte automatisk förnyelse stängs av minst 24 timmar innan. Hantera eller säg upp i Inställningar › Apple-konto › Prenumerationer. Oanvänd del av en provperiod går förlorad vid köp.
 
-Integritetspolicy: https://jackwallner.github.io/recovery/privacy-policy.html
-Användarvillkor (Apples standard-EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 INTEGRITET
 
@@ -59,6 +61,6 @@ VIKTIGT
 
 Recharge ger en uppskattning av kardiovaskulär träning utifrån din senaste belastning. Det är inte medicinsk rådgivning och kan inte säga om du är i skick att träna. Kardiovaskulär belastning, träningsvärk, sjukdom och mental trötthet är inte samma sak. Prata om din hälsa med en kvalificerad yrkesperson.
 
-Recharge är inte kopplat till, godkänt av eller sponsrat av Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit eller Apple. Produktnamn är varumärken som tillhör respektive ägare.
+Produktnamn är varumärken som tillhör respektive ägare.
 
 Kräver iOS 17 eller senare. En Apple Watch som spelar in dina pass rekommenderas starkt.

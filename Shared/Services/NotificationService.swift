@@ -5,8 +5,8 @@ import os
 /// One local notification: the moment a recovery estimate expires.
 ///
 /// It is scheduled at the exact `readyAt`, so unlike a recap nudge it can carry
-/// real content — the app already knows what the answer will be. Pro-only, and
-/// off by default.
+/// real content, the app already knows when the estimate will end. Available on
+/// every tier when notifications are allowed.
 ///
 /// Not actor-isolated: every call goes through the thread-safe
 /// `UNUserNotificationCenter`, and the routing constants have to be readable
@@ -30,10 +30,10 @@ public enum NotificationService {
         do {
             let granted = try await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound, .badge])
-            logger.info("Notification authorization granted=\(granted, privacy: .public)")
+            logger.info("Notification authorization granted=\(granted, privacy: .private)")
             return granted
         } catch {
-            logger.error("Notification authorization failed: \(String(describing: error), privacy: .public)")
+            logger.error("Notification authorization failed: \(String(describing: error), privacy: .private)")
             return false
         }
     }
@@ -48,22 +48,19 @@ public enum NotificationService {
     /// Schedules the Ready alert for a snapshot, replacing any previous one.
     /// A snapshot with no live countdown just cancels.
     public static func scheduleReadyNotification(for snapshot: RecoverySnapshot, now: Date = .now) {
-        guard let readyAt = snapshot.readyAt, readyAt > now.addingTimeInterval(60) else {
+        guard let readyAt = snapshot.readyAt, readyAt > now else {
             cancelReadyNotification()
             return
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Ready"
-        // Compliance: an estimate about training, never a claim about the body.
-        content.body = snapshot.activityLabel.isEmpty
-            ? "Your recovery estimate has run out. Ready for another hard session."
-            : "Your estimate from that \(snapshot.activityLabel) has run out. Ready for another hard session."
+        content.title = "Recovery estimate complete"
+        content.body = "Your recovery countdown is complete. No countdown is active."
         content.sound = .default
         content.userInfo = [routeKey: readyRouteValue]
 
         let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: max(readyAt.timeIntervalSince(now), 60),
+            timeInterval: max(readyAt.timeIntervalSince(now), 1),
             repeats: false
         )
         let request = UNNotificationRequest(
@@ -74,7 +71,7 @@ public enum NotificationService {
         center.removePendingNotificationRequests(withIdentifiers: [readyNotificationID])
         center.add(request) { error in
             if let error {
-                logger.error("Ready notification not scheduled: \(String(describing: error), privacy: .public)")
+                logger.error("Ready notification not scheduled: \(String(describing: error), privacy: .private)")
             }
         }
     }

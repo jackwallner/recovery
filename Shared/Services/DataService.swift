@@ -15,8 +15,10 @@ public enum DataService {
     public static var sharedModelContainer: ModelContainer = {
         let schema = Schema([WorkoutRecord.self, RecoveryStateRecord.self, DailyContextRecord.self])
         let url = containerURL
+        markLocalOnlyStorage()
 
         if let container = makeContainer(schema: schema, url: url) {
+            markLocalOnlyStorage()
             return container
         }
 
@@ -27,6 +29,7 @@ public enum DataService {
         logger.error("ModelContainer failed to open; quarantining the store and retrying")
         quarantinePersistentStore(at: url)
         if let container = makeContainer(schema: schema, url: url) {
+            markLocalOnlyStorage()
             return container
         }
 
@@ -59,9 +62,10 @@ public enum DataService {
             let destination = URL(fileURLWithPath: file.path + suffix)
             do {
                 try FileManager.default.moveItem(at: file, to: destination)
-                logger.info("Quarantined persistent store component \(file.lastPathComponent, privacy: .public)")
+                markExcludedFromBackup(destination)
+                logger.info("Quarantined persistent store component \(file.lastPathComponent, privacy: .private)")
             } catch {
-                logger.error("Could not quarantine store component \(file.lastPathComponent, privacy: .public): \(String(describing: error), privacy: .public)")
+                logger.error("Could not quarantine store component \(file.lastPathComponent, privacy: .private): \(String(describing: error), privacy: .private)")
             }
         }
     }
@@ -71,5 +75,38 @@ public enum DataService {
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
         return base.appendingPathComponent("Recharge.store")
+    }
+
+    /// Health-derived cache files are local-only. Marking the App Group root
+    /// covers SwiftData, UserDefaults, snapshots, and quarantine copies, while
+    /// the store components are marked again after every move.
+    private static func markLocalOnlyStorage() {
+        markExcludedFromBackup(containerURL.deletingLastPathComponent())
+        markExcludedFromBackup(containerURL)
+        for suffix in ["-wal", "-shm"] {
+            markExcludedFromBackup(URL(fileURLWithPath: containerURL.path + suffix))
+        }
+    }
+
+    private static func markExcludedFromBackup(_ url: URL) {
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        var fileURL = url
+        try? fileURL.setResourceValues(values)
+    }
+
+    /// Removes quarantined copies when the user asks Recharge to delete its
+    /// local health cache. The live SwiftData store is cleared through its
+    /// context because deleting an open SQLite file is unsafe.
+    public static func deleteQuarantinedStores() {
+        let directory = containerURL.deletingLastPathComponent()
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ) else { return }
+        for file in files where file.lastPathComponent.contains("Recharge.store.corrupt-") {
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 }

@@ -1,7 +1,7 @@
 Prima versiune.
 
-• Numărătoare după fiecare antrenament care contează, cu o stare Gata clară
+• Numărătoare după fiecare antrenament care contează, cu o stare numărătoarea s-a încheiat clară
 • Aplicație pentru Apple Watch și patru familii de complicații: circulară, dreptunghiulară, în linie și colț
-• Curbe separate pentru rezistență, forță, mixt (HYROX / CrossFit) și sesiuni ușoare
-• Evaluarea efortului cu o atingere pe încheietură când pulsul nu este fiabil
+• Curbe separate pentru rezistență, forță, mixt și sesiuni ușoare
+• Intensitate: ușoară / moderată / grea
 • Explicație completă pentru fiecare estimare: ce sesiune a stabilit-o, cât de greu a fost pentru tine și cât de sigură este

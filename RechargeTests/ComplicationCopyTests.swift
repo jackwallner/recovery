@@ -324,18 +324,18 @@ final class ComplicationCopyTests: XCTestCase {
         }
     }
 
-    func testTheReadyStateNamesTheSessionWhenThereIsOneAndDoesNotWhenThereIsNot() {
+    func testTheCompletedStateUsesTheSameNeutralCopyWithOrWithoutASession() {
         XCTAssertEqual(
             ComplicationCopy.secondary(
                 phase: .ready, style: .countdown, remaining: 0, readyAt: nil, activityLabel: "run"
             ),
-            "After your run"
+            "Estimate complete"
         )
         XCTAssertEqual(
             ComplicationCopy.secondary(
                 phase: .ready, style: .countdown, remaining: 0, readyAt: nil, activityLabel: ""
             ),
-            "Ready for a hard session"
+            "Estimate complete"
         )
     }
 }

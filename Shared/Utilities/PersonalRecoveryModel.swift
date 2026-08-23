@@ -234,7 +234,11 @@ public enum PersonalRecoveryModel {
         let cutoff = now.addingTimeInterval(-Double(windowDays) * 86_400)
         let window = sessions
             .filter { $0.endDate >= cutoff && $0.endDate <= now && $0.profile != .easy }
-            .sorted { $0.endDate < $1.endDate }
+            .sorted {
+                if $0.endDate != $1.endDate { return $0.endDate < $1.endDate }
+                if $0.startDate != $1.startDate { return $0.startDate < $1.startDate }
+                return $0.id < $1.id
+            }
         let recentDays = days.filter { $0.date >= cutoff && $0.date <= now }
 
         let weeklyLoad = window.reduce(0) { $0 + $1.load } / (Double(windowDays) / 7)
@@ -377,8 +381,13 @@ public enum PersonalRecoveryModel {
 
         var ratios: [Double] = []
         for session in sessions where session.load >= loadThreshold {
-            let dayOne = byDay[DateHelpers.dayKey(for: session.endDate.addingTimeInterval(86_400))]
-            let dayTwo = byDay[DateHelpers.dayKey(for: session.endDate.addingTimeInterval(2 * 86_400))]
+            let calendar = Calendar.current
+            let dayOneDate = calendar.date(byAdding: .day, value: 1, to: session.endDate)
+                ?? session.endDate.addingTimeInterval(86_400)
+            let dayTwoDate = calendar.date(byAdding: .day, value: 2, to: session.endDate)
+                ?? session.endDate.addingTimeInterval(2 * 86_400)
+            let dayOne = byDay[DateHelpers.dayKey(for: dayOneDate, calendar: calendar)]
+            let dayTwo = byDay[DateHelpers.dayKey(for: dayTwoDate, calendar: calendar)]
             guard let dayOne, let dayTwo else { continue }
 
             var sessionRatios: [Double] = []

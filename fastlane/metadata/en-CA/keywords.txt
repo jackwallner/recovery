@@ -1,1 +1,1 @@
-garmin,connect,whoop,oura,coros,polar,athlytic,hyrox,endurance,triathlon,athlete,race,day,tsb,taper
+connect,endurance,triathlon,athlete,race,day,tsb,taper,training,fitness,heart,hrv,sleep,run,cycling

@@ -26,7 +26,7 @@ LISTING_LOCALES = {
 }
 SCREENSHOT_COUNT = len(list((ROOT / "fastlane" / "screenshots" / "en-US").glob("*.png")))
 WATCH_SCREENSHOT = ROOT / "Screenshots" / "raw" / "06-watch.png"
-WATCH_DISPLAY_TYPE = "APP_WATCH_SERIES_4"
+WATCH_DISPLAY_TYPE = "APP_WATCH_SERIES_10"
 WATCH_SCREENSHOT_CHECKSUM = hashlib.md5(WATCH_SCREENSHOT.read_bytes()).hexdigest()
 REVIEW_SCREENSHOT = ROOT / "fastlane" / "screenshots" / "en-US" / "04-pro.png"
 REVIEW_SCREENSHOT_CHECKSUM = hashlib.md5(REVIEW_SCREENSHOT.read_bytes()).hexdigest()
@@ -35,6 +35,7 @@ PRODUCTS = {
     "com.jackwallner.recovery.yearly",
     "com.jackwallner.recovery.lifetime",
 }
+SUBMITTED_PRODUCT_STATES = frozenset({"READY_TO_SUBMIT", "WAITING_FOR_REVIEW"})
 SUBSCRIPTION_PRICES = {
     "com.jackwallner.recovery.monthly": ("ONE_MONTH", "5.99"),
     "com.jackwallner.recovery.yearly": ("ONE_YEAR", "29.99"),
@@ -116,8 +117,9 @@ def main() -> None:
     version_id = version["id"]
     # PREPARE_FOR_SUBMISSION before submitting; READY_FOR_REVIEW once the
     # version has been added to a review submission. Both are healthy.
+    version_state = version["attributes"].get("appStoreState")
     check(
-        version["attributes"].get("appStoreState") in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW"),
+        version_state in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"),
         "version is editable or queued for review",
         failures,
     )
@@ -245,11 +247,11 @@ def main() -> None:
     )
     check(
         all(
-            (item.get("imageAsset") or {}).get("width") == 368
-            and (item.get("imageAsset") or {}).get("height") == 448
+            (item.get("imageAsset") or {}).get("width") == 416
+            and (item.get("imageAsset") or {}).get("height") == 496
             for item in watch_attrs
         ),
-        "Apple Watch screenshot is 368x448",
+        "Apple Watch screenshot is 416x496",
         failures,
     )
     check(
@@ -266,7 +268,8 @@ def main() -> None:
         for subscription in asc_lib.list_all(client, f"/subscriptionGroups/{group['id']}/subscriptions"):
             product_id = subscription["attributes"]["productId"]
             all_products.add(product_id)
-            check(subscription["attributes"].get("state") == "READY_TO_SUBMIT", f"{product_id} READY_TO_SUBMIT", failures)
+            product_state = subscription["attributes"].get("state")
+            check(product_state in SUBMITTED_PRODUCT_STATES, f"{product_id} {product_state}", failures)
             expected_period, expected_price = SUBSCRIPTION_PRICES[product_id]
             check(subscription["attributes"].get("subscriptionPeriod") == expected_period, f"{product_id} period is current", failures)
             check(bool(subscription["attributes"].get("reviewNote")), f"{product_id} review note present", failures)
@@ -311,7 +314,8 @@ def main() -> None:
     for iap in asc_lib.list_all(client, f"/apps/{app_id}/inAppPurchasesV2"):
         product_id = iap["attributes"]["productId"]
         all_products.add(product_id)
-        check(iap["attributes"].get("state") == "READY_TO_SUBMIT", f"{product_id} READY_TO_SUBMIT", failures)
+        product_state = iap["attributes"].get("state")
+        check(product_state in SUBMITTED_PRODUCT_STATES, f"{product_id} {product_state}", failures)
         check(iap["attributes"].get("inAppPurchaseType") == "NON_CONSUMABLE", f"{product_id} is non-consumable", failures)
         check(bool(iap["attributes"].get("reviewNote")), f"{product_id} review note present", failures)
         old_api = asc_lib.API
@@ -344,6 +348,28 @@ def main() -> None:
         )
 
     check(all_products == PRODUCTS, "expected monthly, yearly, and lifetime products only", failures)
+
+    if version_state == "WAITING_FOR_REVIEW":
+        submissions = [
+            item
+            for item in asc_lib.list_all(client, f"/reviewSubmissions?filter[app]={app_id}&limit=50")
+            if item["attributes"].get("state") == "WAITING_FOR_REVIEW"
+        ]
+        check(len(submissions) == 1, "one submitted review submission", failures)
+        if submissions:
+            submission_items = asc_lib.list_all(
+                client,
+                f"/reviewSubmissions/{submissions[0]['id']}/items?include=appStoreVersion&limit=50",
+            )
+            check(len(submission_items) == 5, "submitted review contains five items", failures)
+            check(
+                any(
+                    (item.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id") == version_id
+                    for item in submission_items
+                ),
+                "submitted review contains this app version",
+                failures,
+            )
     availability = client.get(f"/apps/{app_id}/appAvailabilityV2").get("data", {})
     check(availability.get("attributes", {}).get("availableInNewTerritories") is True, "available in new territories", failures)
     old_api = asc_lib.API

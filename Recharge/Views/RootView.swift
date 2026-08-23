@@ -381,12 +381,12 @@ private struct TabButton: View {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .medium, design: .rounded))
                 Text(label)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    .font(.caption2.weight(.semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .foregroundStyle(isSelected ? tint : Color(.tertiaryLabel))
-            .frame(width: 78, height: TabBarMetrics.buttonHeight)
+            .frame(minWidth: 78, minHeight: TabBarMetrics.buttonHeight)
             .background(
                 isSelected ? tint.opacity(0.14) : .clear,
                 in: Capsule()

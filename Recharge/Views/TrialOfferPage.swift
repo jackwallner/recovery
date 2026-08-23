@@ -4,21 +4,9 @@ import SwiftUI
 /// The single-decision trial page: the final onboarding screen, and the passive
 /// half sheet later in the app's life.
 ///
-/// **One argument, made with two numbers.** The pitch used to be a headline, a
-/// three-column rest-pattern table with a blur over one column, and a bulleted
-/// feature list — three different shapes of claim on one screen, none of which
-/// answered "what do I get" in a form anybody could hold in their head. What is
-/// sold is a recovery time, so what is shown is a recovery time: the average
-/// one, an arrow, and theirs. Both figures are real and both are computed the
-/// same way a subscriber's would be.
-///
-/// Underneath it, on the onboarding page, is one line of receipt: what Recharge
-/// just read out of Apple Health, counted. That is the evidence the number on
-/// the right came from somewhere, and it is far more persuasive than a feature
-/// list because the user recognises their own training in it. It used to be the
-/// itemised nine-row table, which is the right shape for the readout page two
-/// screens earlier and the wrong one here — on the screen that asks for money,
-/// the only thing that should be large is the pair of numbers.
+/// The purchase surface uses a static example. Health-derived readings and
+/// personalized results stay inside the product and never become marketing
+/// material before purchase.
 struct TrialOfferPage: View {
     let onDecline: () -> Void
     let onPurchased: () -> Void
@@ -26,13 +14,7 @@ struct TrialOfferPage: View {
     /// onboarding it is wrong: declining there is not postponing anything, it is
     /// choosing the free tier and starting to use the app.
     var declineTitle: String = "Not now"
-    /// Onboarding has just finished reading Health, so it shows the one-line
-    /// receipt. The passive sheet appears later in the app's life, when the user
-    /// has already seen the app work, and shows three feature lines instead.
-    var showsIngestProof: Bool = false
-
     @EnvironmentObject private var store: StoreService
-    @EnvironmentObject private var engine: RecoveryEngine
     @State private var errorMessage: String?
     @State private var isRestoring = false
 
@@ -79,7 +61,6 @@ struct TrialOfferPage: View {
         .padding(.horizontal, Theme.Space.step(7))
         .padding(.bottom, Theme.Space.md)
         .task {
-            store.trackPaywallImpression(id: showsIngestProof ? "onboarding_trial" : "passive_trial")
             if store.products.isEmpty { await store.fetchProducts() }
         }
     }
@@ -120,28 +101,14 @@ struct TrialOfferPage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Theme.Space.xxs)
 
-            if showsIngestProof, let proof = engine.healthIngest.oneLineReceipt {
-                Text(proof)
-                    .font(.system(.footnote, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Theme.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, Theme.Space.md)
-            } else if !showsIngestProof {
-                features.padding(.top, Theme.Space.lg)
-            }
+            features.padding(.top, Theme.Space.lg)
         }
     }
 
     // MARK: - The two numbers
 
-    /// The whole pitch. Left is what the standard table says for somebody at
-    /// this person's training level; right is what their own data says.
-    ///
-    /// Both are real. `RecoveryEngine.personalizedPreview` computes them on both
-    /// tiers precisely so this screen never has to invent one, and it falls back
-    /// to a canonical hard session - a genuine point on the genuine curve -
-    /// when the user has no qualifying session yet.
+    /// The whole pitch, using a canonical hard-session example rather than a
+    /// Health-derived result.
     ///
     /// The personalized figure is **blurred until it is bought**, exactly as it
     /// is on Today's card. It used to be printed in full here, on the argument
@@ -154,7 +121,7 @@ struct TrialOfferPage: View {
     /// standard figure, the blurred shape beside it, and the receipt underneath
     /// all still make.
     private var comparison: some View {
-        let preview = engine.personalizedPreview
+        let preview = PersonalizedPreview.reference(factor: 1.18)
         return VStack(spacing: Theme.Space.sm) {
             HStack(alignment: .center, spacing: Theme.Space.lg) {
                 numberColumn(
@@ -355,7 +322,7 @@ struct TrialOfferPage: View {
     }
 
     private var headline: String {
-        showsIngestProof ? "Your own\nrecharge time" : "Make it yours"
+        "Make it yours"
     }
 
     /// One line, and it has one job: say which figure is free and which is paid.
@@ -377,7 +344,8 @@ struct TrialOfferPage: View {
                 Haptics.success()
                 onPurchased()
             case .cancelled: errorMessage = store.purchaseCancelledMessage(for: package)
-            case .pending: errorMessage = "Your purchase is pending approval."
+            case .pending:
+                errorMessage = "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again."
             }
         } catch {
             Haptics.failure()
@@ -407,7 +375,6 @@ struct TrialOfferPage: View {
 /// full-screen cover hides the one piece of evidence the pitch depends on.
 struct TrialOfferSheet: View {
     @EnvironmentObject private var store: StoreService
-    @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
 
     /// Tall enough for the two numbers, three feature lines, the price block and
@@ -419,7 +386,6 @@ struct TrialOfferSheet: View {
         NavigationStack {
             TrialOfferPage(onDecline: { dismiss() }, onPurchased: { dismiss() })
                 .environmentObject(store)
-                .environmentObject(engine)
                 .background(Theme.background)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

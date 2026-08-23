@@ -14,8 +14,8 @@ BUNDLE = "com.jackwallner.recovery"
 # User-facing group and product names come from localized products.json files.
 GROUP_REFERENCE_NAME = "Recharge Pro"
 SUBS = [
-    ("com.jackwallner.recovery.monthly", "Recharge+ Monthly", "ONE_MONTH", "5.99", "Body signals, load trends, overrides, and Ready alerts."),
-    ("com.jackwallner.recovery.yearly", "Recharge+ Yearly", "ONE_YEAR", "29.99", "A year of body signals, load trends, and Ready alerts."),
+    ("com.jackwallner.recovery.monthly", "Recharge+ Monthly", "ONE_MONTH", "5.99", "Body signals, load trends, intensity corrections, and completion alerts."),
+    ("com.jackwallner.recovery.yearly", "Recharge+ Yearly", "ONE_YEAR", "29.99", "A year of body signals, load trends, intensity corrections, and completion alerts."),
 ]
 TIERS = {
     "IND": ("4.99", "0.69"), "PAK": ("4.99", "0.69"), "BGD": ("4.99", "0.69"), "IDN": ("4.99", "0.69"),

@@ -1,1 +1,1 @@
-garmin,whoop,coros,polar,athlytic,hyrox,triatlon,maraton,lari,gim,kecergasan,degupan,jantung,hrv
+triatlon,maraton,lari,gim,kecergasan,degupan,jantung,hrv,training,fitness,workout,heart,sleep,run

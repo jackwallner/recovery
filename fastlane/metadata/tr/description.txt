@@ -1,11 +1,11 @@
-Zorlu bir seansı bitir, Recharge geri sayımı başlatsın. Süre dolduğunda net bir Hazır görürsün.
+Zorlu bir seansı bitir, Recharge geri sayımı başlatsın. Süre dolduğunda net bir geri sayım tamamlandı görürsün.
 
-Uygulamanın tamamı bu. Bir Garmin'in aktiviteden sonra verdiği cevabın, zaten sahip olduğun Apple Watch için yapılmış hali. Yüzük yok, kayış yok, abone olunacak ikinci bir donanım ekosistemi yok.
+Uygulamanın tamamı bu. Yüzük yok, kayış yok, abone olunacak ikinci bir donanım ekosistemi yok.
 
 NE GÖRÜRSÜN
 
 • Sayılan her antrenmandan sonra saat cinsinden bir geri sayım
-• Tahmin sona erdiğinde net bir Hazır
+• Tahmin sona erdiğinde net bir geri sayım tamamlandı
 • Arkasındaki neden: pencereyi hangi seans belirledi ve ne kadar kesin
 • Dört ailede komplikasyonlar: dairesel, dikdörtgen, satır içi ve köşe
 
@@ -15,7 +15,7 @@ Recharge her seans türü için ayrı bir eğri kullanır: bar altında bir saat
 
 • Dayanıklılık: koşu, bisiklet, kürek, yüzme. Yük, nabız rezervinden.
 • Kuvvet: ağırlık kaldırma. Bilekten nabız burada güvenilir değil, bu yüzden Recharge tahmin etmek yerine sana bir soru sorar.
-• Karma: HYROX, CrossFit, istasyon. İki sistem de zorlanır, yani en uzun pencere.
+• Karma: istasyon. İki sistem de zorlanır, yani en uzun pencere.
 • Hafif: yürüyüş, yoga, mobilite. Aktif toparlanma sayılır, asla bir geri sayım başlatmaz veya uzatmaz.
 
 Recharge, yanlış kesinlikte bir sayı yerine sınırlı bir pencere gösterir ve onu üreten sinyali de belirtir.
@@ -25,10 +25,11 @@ STANDART, ÜCRETSİZ
 Standart tahmin ortak bir tablodur, belirttiğin ya da Recharge'ın gözlemlediği antrenman düzeyine ayarlanır: seansın türü, süresi ve zorluğu, yaşına karşılık gelen nabız aralığına göre ölçülür.
 
 • Apple Sağlık'tan antrenman aktarımı
-• Geri sayım ve Hazır durumu
+• Geri sayım ve geri sayım tamamlandı durumu
 • Apple Watch uygulaması
 • Dört komplikasyon ailesinin tamamı
 • Son tahmininin iPhone'da açıklaması
+• Geri sayım tamamlandığında bildirim, etkinleştirildiğinde
 
 RECHARGE+
 
@@ -38,8 +39,8 @@ Recharge+ bu tabloyu seninle değiştirir: her seans kendi 42 günlük referans�
 • Her tahmine katılan uyku, istirahat nabzı ve HRV
 • Süre dolduğunda gerçekte nasıl hissettiğine göre kalibrasyon
 • Haftalık yük, kendi dört haftalık ortalamana karşı
-• Antrenman türü seans bazında değiştirilebilir
-• Hazır olduğun anda isteğe bağlı bildirim
+• Seans yoğunluğunu düzeltme: hafif / orta / zor
+• Geri sayım tamamlandığında bildirim, etkinleştirildiğinde
 
 Recharge+ aylık veya yıllık abonelik olarak ya da tek seferlik ömür boyu satın alma olarak sunulur.
 
@@ -48,8 +49,9 @@ Recharge+ aylık veya yıllık abonelik olarak ya da tek seferlik ömür boyu sa
 
 Fiyatlar satın almadan önce uygulamada gösterilir ve bölgeye göre değişir. Ödeme, satın alma onaylandığında Apple hesabından tahsil edilir. Abonelikler otomatik yenilenir: dönem bitmeden önceki 24 saat içinde tahsilat yapılır, otomatik yenileme en az 24 saat önce kapatılmadıysa. Ayarlar › Apple hesabı › Abonelikler bölümünden yönet veya iptal et. Ücretsiz denemenin kullanılmayan kısmı satın alma ile kaybolur.
 
-Gizlilik Politikası: https://jackwallner.github.io/recovery/privacy-policy.html
-Kullanım Koşulları (Apple standart EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 GİZLİLİK
 
@@ -59,6 +61,6 @@ Recharge Apple Sağlık'tan okur ve oraya hiçbir şey yazmaz. Verilerin cihazla
 
 Recharge, son yüküne dayalı bir kardiyovasküler antrenman tahmini verir. Tıbbi tavsiye değildir ve antrenmana uygun olup olmadığını söyleyemez. Kardiyovasküler yük, kas ağrısı, hastalık ve zihinsel yorgunluk aynı şey değildir. Sağlığın hakkında nitelikli bir uzmanla konuş.
 
-Recharge; Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit veya Apple ile bağlantılı değildir, onlar tarafından onaylanmaz ve desteklenmez. Ürün adları ilgili sahiplerinin ticari markalarıdır.
+Ürün adları ilgili sahiplerinin ticari markalarıdır.
 
 iOS 17 veya üzeri gerekir. Antrenmanlarını kaydeden bir Apple Watch şiddetle önerilir.

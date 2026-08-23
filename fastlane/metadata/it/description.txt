@@ -1,11 +1,11 @@
-Finisci una sessione dura e Recharge avvia un conto alla rovescia. Quando arriva a zero, hai un Pronto chiaro.
+Finisci una sessione dura e Recharge avvia un conto alla rovescia. Quando arriva a zero, hai un conto completato chiaro.
 
-Questa è tutta l'app. È la risposta che un Garmin ti dà dopo un'attività, pensata per l'Apple Watch che hai già. Nessun anello, nessuna fascia, nessun secondo ecosistema hardware da pagare.
+Questa è tutta l'app. Nessun anello, nessuna fascia, nessun secondo ecosistema hardware da pagare.
 
 COSA VEDI
 
 • Un conto alla rovescia in ore dopo ogni allenamento valido
-• Un Pronto netto quando la stima scade
+• Notifica alla fine, se attivata
 • Il motivo dietro: quale sessione ha fissato la finestra e quanta fiducia c'è
 • Complicazioni in quattro famiglie: circolare, rettangolare, in linea e angolo
 
@@ -15,7 +15,7 @@ Recharge usa una curva diversa per tipo di sessione: un'ora sotto il bilanciere 
 
 • Resistenza: corsa, bici, vogatore, nuoto. Carico dalla riserva cardiaca.
 • Forza: sollevamento. La frequenza cardiaca al polso qui non è affidabile, quindi Recharge ti fa una domanda invece di indovinare.
-• Misto: HYROX, CrossFit, circuiti. Entrambi i sistemi sollecitati, quindi la finestra più lunga.
+• Misto: circuiti. Entrambi i sistemi sollecitati, quindi la finestra più lunga.
 • Leggero: camminate, yoga, mobilità. Contano come recupero attivo e non avviano né allungano mai un conto alla rovescia.
 
 Recharge mostra una finestra delimitata invece di un numero di falsa precisione, insieme al segnale che l'ha prodotta.
@@ -25,7 +25,7 @@ STANDARD, GRATIS
 La stima standard è un'unica tabella tarata sul tuo livello di allenamento: tipo, durata e intensità, sull'intervallo cardiaco della tua età.
 
 • Importazione degli allenamenti da Salute di Apple
-• Il conto alla rovescia e lo stato Pronto
+• Il conto alla rovescia e lo stato conto completato
 • App per Apple Watch
 • Tutte e quattro le famiglie di complicazioni
 • Spiegazione su iPhone della tua ultima stima
@@ -38,8 +38,8 @@ Recharge+ sostituisce quella tabella con te: ogni sessione è misurata sul tuo r
 • Sonno, frequenza cardiaca a riposo e HRV in ogni stima
 • Calibrazione da come ti sei sentito davvero alla fine
 • Carico settimanale rispetto alla tua media di quattro settimane
-• Tipo di allenamento modificabile sessione per sessione
-• Notifica facoltativa nel momento in cui sei Pronto
+• Intensità: leggera / moderata / intensa
+• Notifica alla fine, se attivata
 
 Recharge+ è disponibile come abbonamento mensile o annuale, o come acquisto singolo a vita.
 
@@ -48,8 +48,9 @@ Recharge+ è disponibile come abbonamento mensile o annuale, o come acquisto sin
 
 I prezzi sono mostrati nell'app prima dell'acquisto e variano in base alla regione. Il pagamento viene addebitato sul tuo ID Apple alla conferma dell'acquisto. Gli abbonamenti si rinnovano automaticamente: l'addebito avviene nelle 24 ore prima della fine del periodo, salvo disattivazione del rinnovo almeno 24 ore prima. Gestisci o annulla in Impostazioni › ID Apple › Abbonamenti. La parte non usata di una prova gratuita si perde con l'acquisto.
 
-Informativa sulla privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Condizioni d'uso (EULA standard Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY
 
@@ -59,6 +60,6 @@ IMPORTANTE
 
 Recharge fornisce una stima di allenamento cardiovascolare basata sul tuo carico recente. Non è un consiglio medico e non può dirti se sei nelle condizioni di allenarti. Carico cardiovascolare, indolenzimento, malattia e stanchezza mentale non sono la stessa cosa. Parla della tua salute con un professionista qualificato.
 
-Recharge non è affiliata, approvata né sponsorizzata da Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit o Apple. I nomi dei prodotti sono marchi dei rispettivi titolari.
+I nomi dei prodotti sono marchi dei rispettivi titolari.
 
 Richiede iOS 17 o successivo. Si consiglia un Apple Watch che registri i tuoi allenamenti.

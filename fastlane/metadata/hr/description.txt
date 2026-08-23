@@ -1,11 +1,11 @@
-Završi težak trening i Recharge pokreće odbrojavanje. Kad istekne, dobiješ jasno Spreman.
+Završi težak trening i Recharge pokreće odbrojavanje. Kad istekne, dobiješ jasno odbrojavanje gotovo.
 
-To je cijela aplikacija. To je odgovor koji ti Garmin daje nakon aktivnosti, napravljen za Apple Watch koji već imaš. Bez prstena, bez remena, bez drugog hardverskog ekosustava na pretplatu.
+To je cijela aplikacija. Bez prstena, bez remena, bez drugog hardverskog ekosustava na pretplatu.
 
 ŠTO VIDIŠ
 
 • Odbrojavanje u satima nakon svakog treninga koji se broji
-• Jasno Spreman kad procjena istekne
+• Obavijest na kraju, ako je uključena
 • Razlog iza toga: koji je trening postavio prozor i koliko je pouzdan
 • Komplikacije u četiri obitelji: kružna, pravokutna, u liniji i kutna
 
@@ -15,7 +15,7 @@ Recharge koristi zasebnu krivulju za svaku vrstu sesije: sat pod šipkom i sat n
 
 • Izdržljivost: trčanje, bicikl, veslanje, plivanje. Opterećenje iz pulsne rezerve.
 • Snaga: dizanje. Puls na zapešću ovdje nije pouzdan, pa ti Recharge postavi pitanje umjesto da nagađa.
-• Mješovito: HYROX, CrossFit, kružni trening. Oba sustava opterećena, dakle najdulji prozor.
+• Mješovito: kružni trening. Oba sustava opterećena, dakle najdulji prozor.
 • Lagano: šetnje, joga, mobilnost. Broji se kao aktivni oporavak i nikad ne pokreće niti produljuje odbrojavanje.
 
 Recharge prikazuje omeđen prozor umjesto broja lažne preciznosti, zajedno sa signalom koji ga je proizveo.
@@ -25,7 +25,7 @@ STANDARD, BESPLATNO
 Standardna procjena je jedna zajednička tablica, prilagođena razini treniranosti koju navedeš ili koju Recharge primijeti: vrsta sesije, trajanje i težina, mjereni prema pulsnom rasponu za tvoju dob.
 
 • Uvoz treninga iz Apple Zdravlja
-• Odbrojavanje i stanje Spreman
+• Odbrojavanje i stanje odbrojavanje gotovo
 • Aplikacija za Apple Watch
 • Sve četiri obitelji komplikacija
 • Objašnjenje posljednje procjene na iPhoneu
@@ -38,8 +38,8 @@ Recharge+ zamjenjuje tu tablicu tobom: svaka se sesija mjeri prema tvojoj vlasti
 • San, puls u mirovanju i HRV u svakoj procjeni
 • Kalibracija prema tome kako si se stvarno osjećao na kraju
 • Tjedno opterećenje prema tvom vlastitom četverotjednom prosjeku
-• Vrsta treninga se može promijeniti sesiju po sesiju
-• Neobavezna obavijest u trenutku kad si Spreman
+• Intenzitet: lagano / umjereno / teško
+• Obavijest na kraju, ako je uključena
 
 Recharge+ dostupan je kao mjesečna ili godišnja pretplata ili kao jednokratna doživotna kupnja.
 
@@ -48,8 +48,9 @@ Recharge+ dostupan je kao mjesečna ili godišnja pretplata ili kao jednokratna 
 
 Cijene se prikazuju u aplikaciji prije kupnje i razlikuju se ovisno o regiji. Plaćanje se naplaćuje s tvog Apple računa pri potvrdi kupnje. Pretplate se obnavljaju automatski: račun se tereti unutar 24 sata prije kraja razdoblja, osim ako se automatska obnova isključi najmanje 24 sata ranije. Upravljaj ili otkaži u Postavke › Apple račun › Pretplate. Neiskorišteni dio probnog razdoblja gubi se kupnjom.
 
-Pravila privatnosti: https://jackwallner.github.io/recovery/privacy-policy.html
-Uvjeti korištenja (Appleov standardni EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVATNOST
 
@@ -59,6 +60,6 @@ VAŽNO
 
 Recharge daje procjenu kardiovaskularnog treninga na temelju tvog nedavnog opterećenja. To nije medicinski savjet i ne može ti reći jesi li sposoban trenirati. Kardiovaskularno opterećenje, upala mišića, bolest i mentalni umor nisu isto. O svom zdravlju razgovaraj s kvalificiranim stručnjakom.
 
-Recharge nije povezan s tvrtkama Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit ni Apple niti ga one podupiru ili sponzoriraju. Nazivi proizvoda zaštitni su znakovi njihovih vlasnika.
+Nazivi proizvoda zaštitni su znakovi njihovih vlasnika.
 
 Zahtijeva iOS 17 ili noviji. Toplo se preporučuje Apple Watch koji bilježi tvoje treninge.

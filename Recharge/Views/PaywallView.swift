@@ -12,7 +12,6 @@ enum ProFeature: CaseIterable {
     case bodySignals
     case weeklyLoad
     case sessionOverrides
-    case readyAlerts
 
     var symbol: String {
         switch self {
@@ -20,7 +19,6 @@ enum ProFeature: CaseIterable {
         case .bodySignals: "waveform.path.ecg"
         case .weeklyLoad: "chart.bar.fill"
         case .sessionOverrides: "slider.horizontal.3"
-        case .readyAlerts: "bell.badge"
         }
     }
 
@@ -29,8 +27,7 @@ enum ProFeature: CaseIterable {
         case .personalizedTime: "A recharge time built from your own history"
         case .bodySignals: "Sleep, HRV, and resting heart rate"
         case .weeklyLoad: "Weekly load against your 4-week average"
-        case .sessionOverrides: "Correct a session's workout type"
-        case .readyAlerts: "A notification the moment you're Ready"
+        case .sessionOverrides: "Correct a session's intensity"
         }
     }
 
@@ -43,9 +40,7 @@ enum ProFeature: CaseIterable {
         case .weeklyLoad:
             "How hard this week has been compared with your own four-week average."
         case .sessionOverrides:
-            "Override a misclassified session and recalculate its estimate."
-        case .readyAlerts:
-            "Optional, and off by default."
+            "Override Light, Moderate, or Hard and recalculate its estimate."
         }
     }
 }
@@ -121,7 +116,6 @@ struct PaywallView: View {
                 }
             }
             .task {
-                store.trackPaywallImpression(id: "paywall_\(source)")
                 if store.products.isEmpty { await store.fetchProducts() }
                 selectDefaultPackage()
                 #if DEBUG
@@ -353,6 +347,12 @@ struct PaywallView: View {
                 .dynamicTypeSize(...DynamicTypeSize.accessibility3)
                 .foregroundStyle(Theme.textTertiary)
                 .multilineTextAlignment(.center)
+
+            Text("Countdown-complete notifications are included on every tier when you allow notifications.")
+                .font(.system(.footnote, design: .rounded))
+                .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                .foregroundStyle(Theme.textTertiary)
+                .multilineTextAlignment(.center)
         }
     }
 
@@ -372,8 +372,9 @@ struct PaywallView: View {
             }
         }
         .disabled(isRestoring)
-        Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
-        Link("Privacy", destination: URL(string: "https://jackwallner.github.io/recovery/privacy-policy.html")!)
+        Link("Terms", destination: RechargeLinks.termsOfUse)
+        Link("Apple EULA", destination: RechargeLinks.standardEULA)
+        Link("Privacy", destination: RechargeLinks.privacyPolicy)
     }
 
     // MARK: - Actions
@@ -397,7 +398,7 @@ struct PaywallView: View {
             case .cancelled:
                 errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending:
-                errorMessage = "Your purchase is pending approval."
+                errorMessage = "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again."
             }
         } catch {
             Haptics.failure()

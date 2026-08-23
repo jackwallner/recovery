@@ -317,7 +317,7 @@ struct RecoveryComplication: Widget {
             RecoveryComplicationView(entry: entry)
         }
         .configurationDisplayName("Recovery")
-        .description("Time left before another hard session, and a clear Ready mark.")
+        .description("Time left in the recovery countdown, with a clear completion state.")
         .supportedFamilies([.accessoryCircular, .accessoryRectangular, .accessoryInline, .accessoryCorner])
     }
 }

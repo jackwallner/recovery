@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Upload the current raw Apple Watch face capture to the draft version."""
+"""Replace the draft's iPhone 6.9-inch screenshots with the local set."""
 from __future__ import annotations
 
-import argparse
 import hashlib
 import sys
 import urllib.request
@@ -13,14 +12,12 @@ import asc_lib  # noqa: E402
 
 BUNDLE = "com.jackwallner.recovery"
 VERSION = "1.0.0"
-DISPLAY_TYPE = "APP_WATCH_SERIES_10"
+LOCALE = "en-US"
+DISPLAY_TYPE = "APP_IPHONE_67"
+SCREENSHOTS = Path(__file__).parent.parent / "fastlane/screenshots/en-US"
 
 
-def upload_asset(
-    client: asc_lib.ASCClient,
-    screenshot_set_id: str,
-    image: Path,
-) -> dict:
+def upload_asset(client: asc_lib.ASCClient, set_id: str, image: Path) -> None:
     payload = image.read_bytes()
     created = client.post(
         "/appScreenshots",
@@ -30,14 +27,14 @@ def upload_asset(
                 "attributes": {"fileSize": len(payload), "fileName": image.name},
                 "relationships": {
                     "appScreenshotSet": {
-                        "data": {"type": "appScreenshotSets", "id": screenshot_set_id}
+                        "data": {"type": "appScreenshotSets", "id": set_id}
                     }
                 },
             }
         },
     )["data"]
     for operation in created["attributes"]["uploadOperations"]:
-        chunk = payload[operation["offset"]:operation["offset"] + operation["length"]]
+        chunk = payload[operation["offset"] : operation["offset"] + operation["length"]]
         request = urllib.request.Request(
             operation["url"],
             data=chunk,
@@ -45,7 +42,7 @@ def upload_asset(
             headers={item["name"]: item["value"] for item in operation["requestHeaders"]},
         )
         urllib.request.urlopen(request, timeout=300).read()
-    return client.patch(
+    client.patch(
         f"/appScreenshots/{created['id']}",
         {
             "data": {
@@ -57,47 +54,39 @@ def upload_asset(
                 },
             }
         },
-    )["data"]
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--screenshot",
-        default="Screenshots/raw/06-watch.png",
-        help="Raw Apple Watch face PNG captured from the simulator",
-    )
-    args = parser.parse_args()
-    image = Path(args.screenshot)
-    if not image.is_file():
-        raise SystemExit(f"error: no screenshot at {image}")
+    images = sorted(SCREENSHOTS.glob("*.png"))
+    if not images:
+        raise SystemExit(f"error: no screenshots in {SCREENSHOTS}")
 
     client = asc_lib.ASCClient(asc_lib.bearer_token(*asc_lib.load_credentials()))
     app = asc_lib.find_app(client, BUNDLE)
     version = asc_lib.find_version_by_string(client, app["id"], VERSION)
     if not version:
-        raise SystemExit(f"error: no ASC version {VERSION}")
+        raise SystemExit(f"error: version {VERSION} not found")
     localizations = asc_lib.list_all(
         client, f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations"
     )
     localization = next(
-        (item for item in localizations if item["attributes"].get("locale") == "en-US"),
+        (item for item in localizations if item["attributes"].get("locale") == LOCALE),
         None,
     )
     if not localization:
-        raise SystemExit("error: no en-US version localization")
+        raise SystemExit(f"error: no {LOCALE} version localization")
 
-    sets = asc_lib.list_all(
-        client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets"
-    )
-    matching = [
+    sets = [
         item
-        for item in sets
+        for item in asc_lib.list_all(
+            client, f"/appStoreVersionLocalizations/{localization['id']}/appScreenshotSets"
+        )
         if item["attributes"].get("screenshotDisplayType") == DISPLAY_TYPE
     ]
-    if matching:
-        screenshot_set = matching[0]
-        for duplicate in matching[1:]:
+    if sets:
+        screenshot_set = sets[0]
+        for duplicate in sets[1:]:
             for screenshot in asc_lib.list_all(
                 client, f"/appScreenshotSets/{duplicate['id']}/appScreenshots"
             ):
@@ -122,30 +111,23 @@ def main() -> None:
             },
         )["data"]
 
-    expected_checksum = hashlib.md5(image.read_bytes()).hexdigest()
-    existing = asc_lib.list_all(
+    for screenshot in asc_lib.list_all(
         client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"
-    )
-    current = next(
-        (
-            item
-            for item in existing
-            if item["attributes"].get("fileName") == image.name
-            and item["attributes"].get("sourceFileChecksum") == expected_checksum
-        ),
-        None,
-    )
-    if current and current["attributes"].get("assetDeliveryState", {}).get("state") == "COMPLETE":
-        print(f"Apple Watch screenshot is current: {current['id']}")
-        return
-    for screenshot in existing:
+    ):
         client.delete(f"/appScreenshots/{screenshot['id']}")
 
-    uploaded = upload_asset(client, screenshot_set["id"], image)
-    print(
-        f"Uploaded {image} as {DISPLAY_TYPE}: "
-        f"{uploaded['id']} ({expected_checksum})"
+    for image in images:
+        upload_asset(client, screenshot_set["id"], image)
+        print(f"uploaded {image.name}")
+
+    current = asc_lib.list_all(
+        client, f"/appScreenshotSets/{screenshot_set['id']}/appScreenshots"
     )
+    names = [item["attributes"].get("fileName") for item in current]
+    expected = [image.name for image in images]
+    if names != expected:
+        raise SystemExit(f"error: live screenshot order {names!r}, expected {expected!r}")
+    print(f"iPhone screenshot set is current: {len(current)} images")
 
 
 if __name__ == "__main__":

@@ -39,8 +39,8 @@ public enum WhatsNew {
     public static let items: [Item] = [
         Item(
             symbol: "bell.badge.fill",
-            title: "Told the moment you're ready",
-            detail: "The Ready alert is on for everyone now, not just Recharge+. Recharge keeps counting down in the background, so you never have to open it to find out."
+            title: "Told when the countdown ends",
+            detail: "The completion alert is on for everyone now, not just Recharge+. Recharge keeps counting down in the background, so you never have to open it to find out."
         ),
         Item(
             symbol: "slider.horizontal.3",

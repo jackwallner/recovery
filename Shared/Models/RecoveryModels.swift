@@ -77,7 +77,7 @@ import Foundation
 /// replaces the modelled window outright. Marking a session Moderate or Hard
 /// also lifts it off the `easy` profile, because a control labelled "Hard" that
 /// leaves a walk with no countdown is a control that does nothing.
-public let recoveryModelVersion = 13
+public let recoveryModelVersion = 14
 
 // MARK: - Tier
 
@@ -989,7 +989,7 @@ public enum ComplicationStyle: Int, Codable, Sendable, CaseIterable {
 
     public var detail: String {
         switch self {
-        case .countdown: "Hours left, with a ring. Closest to Garmin."
+        case .countdown: "Hours left, with a ring."
         case .readyClock: "The clock time you are estimated to be ready."
         case .state: "Recovering / Ready soon / Ready."
         }

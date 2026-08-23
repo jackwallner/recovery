@@ -17,6 +17,50 @@ private let healthLogger = Logger(subsystem: "com.jackwallner.recovery", categor
 public final class HealthKitService: ObservableObject {
     public static let shared = HealthKitService()
 
+    public enum HealthKitError: Error {
+        case unavailable
+    }
+
+    public struct ReadResult<Value: Sendable>: Sendable {
+        public let value: Value
+        public let succeeded: Bool
+
+        public init(value: Value, succeeded: Bool) {
+            self.value = value
+            self.succeeded = succeeded
+        }
+    }
+
+    public struct WorkoutWindow: Sendable {
+        public let id: String
+        public let start: Date
+        public let end: Date
+
+        public init(id: String, start: Date, end: Date) {
+            self.id = id
+            self.start = start
+            self.end = end
+        }
+    }
+
+    public struct HeartRateUpdate: Sendable {
+        public let average: Double?
+        public let peak: Double?
+        public let coverage: Double
+
+        public init(average: Double?, peak: Double?, coverage: Double) {
+            self.average = average
+            self.peak = peak
+            self.coverage = coverage
+        }
+    }
+
+    private struct SleepSample: Sendable {
+        let start: Date
+        let end: Date
+        let value: Int
+    }
+
     private static let workoutAnchorKey = "healthKitWorkoutAnchor"
 
     private let store = HKHealthStore()
@@ -109,13 +153,13 @@ public final class HealthKitService: ObservableObject {
             isAuthorized = true
             return
         }
-        guard HKHealthStore.isHealthDataAvailable() else { return }
+        guard HKHealthStore.isHealthDataAvailable() else { throw HealthKitError.unavailable }
         do {
             try await store.requestAuthorization(toShare: [], read: Self.readTypes)
             isAuthorized = true
             enableBackgroundDelivery()
         } catch {
-            healthLogger.error("Authorization failed: \(String(describing: error), privacy: .public)")
+            healthLogger.error("Authorization failed: \(String(describing: error), privacy: .private)")
             throw error
         }
     }
@@ -126,7 +170,7 @@ public final class HealthKitService: ObservableObject {
         return await withCheckedContinuation { continuation in
             store.getRequestStatusForAuthorization(toShare: [], read: Self.readTypes) { status, error in
                 if let error {
-                    healthLogger.error("Request status failed: \(String(describing: error), privacy: .public)")
+                    healthLogger.error("Request status failed: \(String(describing: error), privacy: .private)")
                     continuation.resume(returning: nil)
                     return
                 }
@@ -182,7 +226,7 @@ public final class HealthKitService: ObservableObject {
         if let components = try? store.dateOfBirthComponents(),
            let birthDate = Calendar.current.date(from: components) {
             let years = Calendar.current.dateComponents([.year], from: birthDate, to: .now).year
-            if let years, (10...100).contains(years) { characteristics.age = years }
+            if let years, (13...100).contains(years) { characteristics.age = years }
         }
         if let biologicalSex = try? store.biologicalSex().biologicalSex {
             switch biologicalSex {
@@ -254,7 +298,7 @@ public final class HealthKitService: ObservableObject {
         do {
             result = try await descriptor.result(for: store)
         } catch {
-            healthLogger.error("Workout query failed: \(String(describing: error), privacy: .public)")
+            healthLogger.error("Workout query failed: \(String(describing: error), privacy: .private)")
             return nil
         }
         guard let anchorData = try? NSKeyedArchiver.archivedData(
@@ -295,11 +339,36 @@ public final class HealthKitService: ObservableObject {
         )
     }
 
+    /// Re-reads heart rate for cached workouts whose trace was incomplete.
+    /// HealthKit can write samples after the workout object, so the anchored
+    /// workout query alone cannot notice this improvement.
+    public func refreshHeartRate(for workouts: [WorkoutWindow]) async -> [String: HeartRateUpdate] {
+        var updates: [String: HeartRateUpdate] = [:]
+        for workout in workouts {
+            let summary = await heartRateSummary(
+                startDate: workout.start,
+                endDate: workout.end,
+                duration: workout.end.timeIntervalSince(workout.start)
+            )
+            guard summary.average != nil || summary.peak != nil else { continue }
+            updates[workout.id] = HeartRateUpdate(
+                average: summary.average,
+                peak: summary.peak,
+                coverage: summary.coverage
+            )
+        }
+        return updates
+    }
+
     /// Advances the workout anchor only after the engine has persisted the
     /// corresponding changes. If the save fails, the next refresh replays the
     /// same HealthKit delta instead of losing it between processes.
     public func commitWorkoutAnchor(_ data: Data) {
         UserDefaults(suiteName: rechargeAppGroupID)?.set(data, forKey: Self.workoutAnchorKey)
+    }
+
+    public func resetWorkoutAnchor() {
+        UserDefaults(suiteName: rechargeAppGroupID)?.removeObject(forKey: Self.workoutAnchorKey)
     }
 
     private var storedWorkoutAnchor: HKQueryAnchor? {
@@ -333,9 +402,21 @@ public final class HealthKitService: ObservableObject {
     private func heartRateSummary(
         for workout: HKWorkout
     ) async -> (average: Double?, peak: Double?, coverage: Double) {
+        await heartRateSummary(
+            startDate: workout.startDate,
+            endDate: workout.endDate,
+            duration: workout.duration
+        )
+    }
+
+    private func heartRateSummary(
+        startDate: Date,
+        endDate: Date,
+        duration: TimeInterval
+    ) async -> (average: Double?, peak: Double?, coverage: Double) {
         let bpm = HKUnit.count().unitDivided(by: .minute())
         let predicate = HKQuery.predicateForSamples(
-            withStart: workout.startDate, end: workout.endDate, options: .strictStartDate
+            withStart: startDate, end: endDate, options: .strictStartDate
         )
 
         let samples: [HKQuantitySample] = await withCheckedContinuation { continuation in
@@ -346,7 +427,7 @@ public final class HealthKitService: ObservableObject {
                 sortDescriptors: nil
             ) { _, samples, error in
                 if let error {
-                    healthLogger.error("Heart-rate query failed: \(String(describing: error), privacy: .public)")
+                    healthLogger.error("Heart-rate query failed: \(String(describing: error), privacy: .private)")
                     continuation.resume(returning: [])
                     return
                 }
@@ -355,7 +436,7 @@ public final class HealthKitService: ObservableObject {
             store.execute(query)
         }
 
-        guard !samples.isEmpty, workout.duration > 0 else { return (nil, nil, 0) }
+        guard !samples.isEmpty, duration > 0 else { return (nil, nil, 0) }
 
         let sorted = samples.sorted { $0.startDate < $1.startDate }
         let values = sorted.map { $0.quantity.doubleValue(for: bpm) }
@@ -368,7 +449,7 @@ public final class HealthKitService: ObservableObject {
         let peak = Self.percentile(0.98, of: values)
 
         let covered = Double(sorted.count) * Self.sampleInterval(of: sorted)
-        let coverage = min(covered / workout.duration, 1)
+        let coverage = min(covered / duration, 1)
 
         return (average, peak, coverage)
     }
@@ -412,7 +493,7 @@ public final class HealthKitService: ObservableObject {
 
     // MARK: - Context signals
 
-    public func fetchRestingHeartRate(days: Int = 30) async -> [(date: Date, value: Double)] {
+    public func fetchRestingHeartRate(days: Int = 30) async -> ReadResult<[(date: Date, value: Double)]> {
         await quantitySeries(
             type: HKQuantityType(.restingHeartRate),
             unit: HKUnit.count().unitDivided(by: .minute()),
@@ -420,14 +501,14 @@ public final class HealthKitService: ObservableObject {
         )
     }
 
-    public func fetchHeartRateVariability(days: Int = 30) async -> [(date: Date, value: Double)] {
+    public func fetchHeartRateVariability(days: Int = 30) async -> ReadResult<[(date: Date, value: Double)]> {
         await quantitySeries(type: HKQuantityType(.heartRateVariabilitySDNN), unit: .secondUnit(with: .milli), days: days)
     }
 
     /// Breaths per minute overnight. A fourth overnight context signal beside
     /// sleep, resting heart rate and HRV: an elevated respiratory rate is one of
     /// the earlier markers that the previous day has not been absorbed.
-    public func fetchRespiratoryRate(days: Int = 30) async -> [(date: Date, value: Double)] {
+    public func fetchRespiratoryRate(days: Int = 30) async -> ReadResult<[(date: Date, value: Double)]> {
         await quantitySeries(
             type: HKQuantityType(.respiratoryRate),
             unit: HKUnit.count().unitDivided(by: .minute()),
@@ -441,7 +522,7 @@ public final class HealthKitService: ObservableObject {
     /// parasympathetic reactivation, which is the mechanism the whole model is
     /// guessing at from load. Watch only writes it for some workout types, so it
     /// is a bonus signal, never a requirement.
-    public func fetchHeartRateRecovery(days: Int = PersonalRecoveryModel.windowDays) async -> [(date: Date, value: Double)] {
+    public func fetchHeartRateRecovery(days: Int = PersonalRecoveryModel.windowDays) async -> ReadResult<[(date: Date, value: Double)]> {
         await quantitySeries(
             type: HKQuantityType(.heartRateRecoveryOneMinute),
             unit: HKUnit.count().unitDivided(by: .minute()),
@@ -497,7 +578,7 @@ public final class HealthKitService: ObservableObject {
                 sortDescriptors: [sort]
             ) { _, samples, error in
                 if let error {
-                    healthLogger.error("Latest quantity query failed: \(String(describing: error), privacy: .public)")
+                    healthLogger.error("Latest quantity query failed: \(String(describing: error), privacy: .private)")
                     continuation.resume(returning: nil)
                     return
                 }
@@ -512,11 +593,13 @@ public final class HealthKitService: ObservableObject {
         type: HKQuantityType,
         unit: HKUnit,
         days: Int
-    ) async -> [(date: Date, value: Double)] {
+    ) async -> ReadResult<[(date: Date, value: Double)]> {
         #if DEBUG
-        if ScreenshotConfig.isEnabled { return [] }
+        if ScreenshotConfig.isEnabled { return ReadResult(value: [], succeeded: true) }
         #endif
-        guard HKHealthStore.isHealthDataAvailable() else { return [] }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            return ReadResult(value: [], succeeded: false)
+        }
         let start = DateHelpers.daysAgo(days)
         let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
@@ -532,14 +615,14 @@ public final class HealthKitService: ObservableObject {
                 // back empty, which every consumer already renders as an empty
                 // state. So failures are logged, never surfaced as a banner.
                 if let error {
-                    healthLogger.error("Quantity query failed: \(String(describing: error), privacy: .public)")
-                    continuation.resume(returning: [])
+                    healthLogger.error("Quantity query failed: \(String(describing: error), privacy: .private)")
+                    continuation.resume(returning: ReadResult(value: [], succeeded: false))
                     return
                 }
                 let points = (samples as? [HKQuantitySample] ?? []).map {
                     (date: $0.endDate, value: $0.quantity.doubleValue(for: unit))
                 }
-                continuation.resume(returning: points)
+                continuation.resume(returning: ReadResult(value: points, succeeded: true))
             }
             store.execute(query)
         }
@@ -547,15 +630,17 @@ public final class HealthKitService: ObservableObject {
 
     /// Asleep hours per night, keyed on the day the night *ended*. Only the
     /// asleep stages count; time in bed is not sleep.
-    public func fetchSleepHours(days: Int = 30) async -> [String: Double] {
+    public func fetchSleepHours(days: Int = 30) async -> ReadResult<[String: Double]> {
         #if DEBUG
-        if ScreenshotConfig.isEnabled { return [:] }
+        if ScreenshotConfig.isEnabled { return ReadResult(value: [:], succeeded: true) }
         #endif
-        guard HKHealthStore.isHealthDataAvailable() else { return [:] }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            return ReadResult(value: [:], succeeded: false)
+        }
         let start = DateHelpers.daysAgo(days)
         let predicate = HKQuery.predicateForSamples(withStart: start, end: .now, options: .strictEndDate)
 
-        let samples: [HKCategorySample] = await withCheckedContinuation { continuation in
+        let result: ReadResult<[SleepSample]> = await withCheckedContinuation { continuation in
             let query = HKSampleQuery(
                 sampleType: HKCategoryType(.sleepAnalysis),
                 predicate: predicate,
@@ -563,11 +648,16 @@ public final class HealthKitService: ObservableObject {
                 sortDescriptors: nil
             ) { _, samples, error in
                 if let error {
-                    healthLogger.error("Sleep query failed: \(String(describing: error), privacy: .public)")
-                    continuation.resume(returning: [])
+                    healthLogger.error("Sleep query failed: \(String(describing: error), privacy: .private)")
+                    continuation.resume(returning: ReadResult(value: [], succeeded: false))
                     return
                 }
-                continuation.resume(returning: samples as? [HKCategorySample] ?? [])
+                continuation.resume(returning: ReadResult(
+                    value: (samples as? [HKCategorySample] ?? []).map {
+                        SleepSample(start: $0.startDate, end: $0.endDate, value: $0.value)
+                    },
+                    succeeded: true
+                ))
             }
             store.execute(query)
         }
@@ -580,8 +670,8 @@ public final class HealthKitService: ObservableObject {
         ]
 
         var intervals: [DateInterval] = []
-        for sample in samples where asleepValues.contains(sample.value) {
-            let interval = DateInterval(start: sample.startDate, end: sample.endDate)
+        for sample in result.value where asleepValues.contains(sample.value) {
+            let interval = DateInterval(start: sample.start, end: sample.end)
             guard interval.duration > 0 else { continue }
             intervals.append(interval)
         }
@@ -609,7 +699,7 @@ public final class HealthKitService: ObservableObject {
             let key = DateHelpers.dayKey(for: interval.end)
             totals[key, default: 0] += interval.duration / 3600
         }
-        return totals
+        return ReadResult(value: totals, succeeded: result.succeeded)
     }
 
     // MARK: - Background delivery
@@ -649,6 +739,7 @@ public final class HealthKitService: ObservableObject {
 
         let deliveries: [(type: HKSampleType, frequency: HKUpdateFrequency)] = [
             (HKObjectType.workoutType(), .immediate),
+            (HKQuantityType(.heartRate), .immediate),
             (HKQuantityType(.restingHeartRate), .daily),
             (HKQuantityType(.heartRateVariabilitySDNN), .daily),
             (HKQuantityType(.respiratoryRate), .daily),
@@ -659,7 +750,7 @@ public final class HealthKitService: ObservableObject {
         for delivery in deliveries {
             store.enableBackgroundDelivery(for: delivery.type, frequency: delivery.frequency) { _, error in
                 if let error {
-                    healthLogger.error("Background delivery failed: \(String(describing: error), privacy: .public)")
+                    healthLogger.error("Background delivery failed: \(String(describing: error), privacy: .private)")
                 }
             }
         }
@@ -671,7 +762,7 @@ public final class HealthKitService: ObservableObject {
 
             let query = HKObserverQuery(sampleType: delivery.type, predicate: nil) { [weak self] _, completionHandler, error in
                 if let error {
-                    healthLogger.error("Observer error: \(String(describing: error), privacy: .public)")
+                    healthLogger.error("Observer error: \(String(describing: error), privacy: .private)")
                     completionHandler()
                     return
                 }

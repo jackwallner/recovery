@@ -1,11 +1,11 @@
-Fejezz be egy kemény edzést, és a Recharge elindít egy visszaszámlálást. Amikor lejár, világos Kész jelzést kapsz.
+Fejezz be egy kemény edzést, és a Recharge elindít egy visszaszámlálást. Amikor lejár, világos visszaszámlálás kész jelzést kapsz.
 
-Ez az egész app. Ez az a válasz, amit egy Garmin ad egy tevékenység után, az Apple Watchra építve, ami már megvan. Nincs gyűrű, nincs öv, nincs második hardveres ökoszisztéma előfizetéssel.
+Ez az egész app. Nincs gyűrű, nincs öv, nincs második hardveres ökoszisztéma előfizetéssel.
 
 AMIT LÁTSZ
 
 • Órákban megadott visszaszámlálás minden beszámított edzés után
-• Tiszta Kész, amikor a becslés lejár
+• Értesítés a végén, ha bekapcsolva
 • Az ok mögötte: melyik edzés állította be az ablakot, és mennyire biztos
 • Komplikációk négy családban: kör, téglalap, soros és sarok
 
@@ -15,7 +15,7 @@ A Recharge minden edzéstípusra saját görbét használ: egy óra a rúd alatt
 
 • Állóképesség: futás, kerékpár, evezés, úszás. Terhelés a pulzustartalékból.
 • Erő: emelés. A csuklón mért pulzus itt megbízhatatlan, ezért a Recharge inkább kérdez, mint találgat.
-• Vegyes: HYROX, CrossFit, köredzés. Mindkét rendszer terhelve, tehát a leghosszabb ablak.
+• Vegyes: köredzés. Mindkét rendszer terhelve, tehát a leghosszabb ablak.
 • Könnyű: séta, jóga, mobilitás. Aktív regenerációnak számít, és soha nem indít vagy hosszabbít visszaszámlálást.
 
 A Recharge behatárolt ablakot mutat egy hamis pontosságú szám helyett, azzal a jellel együtt, amiből származik.
@@ -25,7 +25,7 @@ ALAP, INGYENES
 Az alapbecslés egyetlen közös táblázat, a megadott vagy a Recharge által megfigyelt edzettségi szintedhez igazítva: az edzés típusa, hossza és keménysége, a korodhoz tartozó pulzustartományhoz mérve.
 
 • Edzések importja az Apple Egészségből
-• A visszaszámlálás és a Kész állapot
+• A visszaszámlálás és a visszaszámlálás kész állapot
 • Apple Watch app
 • Mind a négy komplikációcsalád
 • Magyarázat iPhone-on a legutóbbi becslésedről
@@ -38,8 +38,8 @@ A Recharge+ téged tesz a táblázat helyébe: minden edzés a saját 42 napos a
 • Alvás, nyugalmi pulzus és HRV minden becslésben
 • Kalibrálás abból, hogyan érezted magad valójában a végén
 • Heti terhelés a saját négyhetes átlagodhoz mérve
-• Edzéstípus edzésenként felülírható
-• Opcionális értesítés abban a pillanatban, amikor Kész vagy
+• Intenzitás: könnyű / közepes / kemény
+• Értesítés a végén, ha bekapcsolva
 
 A Recharge+ havi vagy éves előfizetésként, illetve egyszeri örökös vásárlásként érhető el.
 
@@ -48,8 +48,9 @@ A Recharge+ havi vagy éves előfizetésként, illetve egyszeri örökös vásá
 
 Az árak vásárlás előtt megjelennek az appban, és régiónként eltérnek. A fizetés a vásárlás megerősítésekor terheli az Apple-fiókodat. Az előfizetések automatikusan megújulnak: a terhelés az időszak vége előtti 24 órában történik, hacsak az automatikus megújítást legalább 24 órával korábban ki nem kapcsolod. Kezelés vagy lemondás: Beállítások › Apple-fiók › Előfizetések. Az ingyenes próbaidő fel nem használt része a vásárláskor elvész.
 
-Adatvédelmi irányelvek: https://jackwallner.github.io/recovery/privacy-policy.html
-Felhasználási feltételek (Apple szabványos EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
+Terms: https://jackwallner.github.io/recovery/terms.html
+EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ADATVÉDELEM
 
@@ -59,6 +60,6 @@ FONTOS
 
 A Recharge kardiovaszkuláris edzésbecslést ad a közelmúltbeli terhelésed alapján. Ez nem orvosi tanács, és nem tudja megmondani, alkalmas vagy-e az edzésre. A kardiovaszkuláris terhelés, az izomláz, a betegség és a mentális fáradtság nem ugyanaz. Az egészségedről beszélj képzett szakemberrel.
 
-A Recharge nem áll kapcsolatban a Garmin, WHOOP, Oura, Polar, Coros, HYROX, CrossFit vagy Apple vállalattal, és azok nem támogatják vagy szponzorálják. A terméknevek a megfelelő tulajdonosaik védjegyei.
+A terméknevek a megfelelő tulajdonosaik védjegyei.
 
 iOS 17 vagy újabb szükséges. Erősen ajánlott egy Apple Watch, amely rögzíti az edzéseidet.
