@@ -13,7 +13,7 @@ settings:
     DEVELOPMENT_TEAM: YXG4MP6W39
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: "36"
+    CURRENT_PROJECT_VERSION: "37"
     GENERATE_INFOPLIST_FILE: NO
 
 packages:
@@ -83,6 +83,15 @@ targets:
     sources:
       - path: RechargeWatch
       - path: Shared
+        excludes:
+          - Models/RecoveryRecords.swift
+          - Services/DataService.swift
+          - Services/HealthKitService.swift
+          - Services/NotificationService.swift
+          - Services/RecoveryEngine.swift
+          - Services/ReviewPromptTracker.swift
+          - Services/RechargeSettings.swift
+          - Services/StoreService.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.watch
@@ -91,8 +100,6 @@ targets:
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
-      - package: RevenueCat
-        product: RevenueCat
       - target: RechargeWatchWidget
 
   RechargeWidget:
@@ -101,14 +108,21 @@ targets:
     sources:
       - path: RechargeWidget
       - path: Shared
+        excludes:
+          - Models/RecoveryRecords.swift
+          - Services/DataService.swift
+          - Services/HealthKitService.swift
+          - Services/NotificationService.swift
+          - Services/PhoneWatchSession.swift
+          - Services/RechargeSettings.swift
+          - Services/RecoveryEngine.swift
+          - Services/ReviewPromptTracker.swift
+          - Services/StoreService.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.widget
         INFOPLIST_FILE: RechargeWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWidget/RechargeWidget.entitlements
-    dependencies:
-      - package: RevenueCat
-        product: RevenueCat
 
   RechargeWatchWidget:
     type: app-extension
@@ -116,15 +130,22 @@ targets:
     sources:
       - path: RechargeWatchWidget
       - path: Shared
+        excludes:
+          - Models/RecoveryRecords.swift
+          - Services/DataService.swift
+          - Services/HealthKitService.swift
+          - Services/NotificationService.swift
+          - Services/PhoneWatchSession.swift
+          - Services/RechargeSettings.swift
+          - Services/RecoveryEngine.swift
+          - Services/ReviewPromptTracker.swift
+          - Services/StoreService.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.watch.widget
         INFOPLIST_FILE: RechargeWatchWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWatchWidget/RechargeWatchWidget.entitlements
         WATCHOS_DEPLOYMENT_TARGET: "10.0"
-    dependencies:
-      - package: RevenueCat
-        product: RevenueCat
 
   # Pure-logic suite. Only the calculator and its value types are compiled in,
   # so the model can be exercised without HealthKit, SwiftData, or RevenueCat.
