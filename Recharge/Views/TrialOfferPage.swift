@@ -12,10 +12,13 @@ import SwiftUI
 /// one, an arrow, and theirs. Both figures are real and both are computed the
 /// same way a subscriber's would be.
 ///
-/// Underneath it, on the onboarding page, is the receipt: everything Recharge
-/// just read out of Apple Health. That is the evidence the number on the right
-/// came from somewhere, and it is far more persuasive than a feature list
-/// because the user recognises their own data in it.
+/// Underneath it, on the onboarding page, is one line of receipt: what Recharge
+/// just read out of Apple Health, counted. That is the evidence the number on
+/// the right came from somewhere, and it is far more persuasive than a feature
+/// list because the user recognises their own training in it. It used to be the
+/// itemised nine-row table, which is the right shape for the readout page two
+/// screens earlier and the wrong one here — on the screen that asks for money,
+/// the only thing that should be large is the pair of numbers.
 struct TrialOfferPage: View {
     let onDecline: () -> Void
     let onPurchased: () -> Void
@@ -23,10 +26,9 @@ struct TrialOfferPage: View {
     /// onboarding it is wrong: declining there is not postponing anything, it is
     /// choosing the free tier and starting to use the app.
     var declineTitle: String = "Not now"
-    /// Onboarding has a full screen and has just finished reading Health, so it
-    /// shows the receipt. The passive sheet is a half sheet over the app the
-    /// person is already using, and the list would not fit — nor does it need
-    /// to, because by then they have seen the app work.
+    /// Onboarding has just finished reading Health, so it shows the one-line
+    /// receipt. The passive sheet appears later in the app's life, when the user
+    /// has already seen the app work, and shows three feature lines instead.
     var showsIngestProof: Bool = false
 
     @EnvironmentObject private var store: StoreService
@@ -82,6 +84,19 @@ struct TrialOfferPage: View {
         }
     }
 
+    /// **One thing on this page is large, and it is the pair of numbers.**
+    ///
+    /// It used to be a headline, the numbers, a three-line paragraph, a five-row
+    /// Health receipt with an "…and 4 more" footnote under it, a trial capsule,
+    /// a price, a disclosure, a CTA, a decline, and three legal links. Every one
+    /// of those was defensible on its own and together they were a wall: the
+    /// last screen of onboarding, the one that asks for money, was the busiest
+    /// screen in the app.
+    ///
+    /// What survived is the argument and the evidence for it. The paragraph is
+    /// one line. The receipt is one line — a count, not a table — because the
+    /// itemised version was already read two pages ago on the readout, and
+    /// repeating it here buried the thing the page is about.
     private var pitch: some View {
         VStack(spacing: 0) {
             Text(headline)
@@ -105,8 +120,13 @@ struct TrialOfferPage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Theme.Space.xxs)
 
-            if showsIngestProof, !engine.healthIngest.isEmpty {
-                proof.padding(.top, Theme.Space.lg)
+            if showsIngestProof, let proof = engine.healthIngest.oneLineReceipt {
+                Text(proof)
+                    .font(.system(.footnote, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, Theme.Space.md)
             } else if !showsIngestProof {
                 features.padding(.top, Theme.Space.lg)
             }
@@ -138,7 +158,7 @@ struct TrialOfferPage: View {
         return VStack(spacing: Theme.Space.sm) {
             HStack(alignment: .center, spacing: Theme.Space.lg) {
                 numberColumn(
-                    "Usual",
+                    RechargeConversionCopy.standardColumn,
                     CountdownFormat.hours(preview.standardHours),
                     Theme.textSecondary
                 )
@@ -146,7 +166,7 @@ struct TrialOfferPage: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Theme.textTertiary)
                 numberColumn(
-                    "Optimal",
+                    RechargeConversionCopy.proColumn,
                     CountdownFormat.hours(preview.personalizedHours),
                     Theme.pro,
                     blurred: !store.isPro
@@ -205,32 +225,6 @@ struct TrialOfferPage: View {
         }
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .accessibilityElement(children: .combine)
-    }
-
-    // MARK: - The receipt
-
-    private var proof: some View {
-        VStack(alignment: .leading, spacing: Theme.Space.sm) {
-            Text("Measured from your own data")
-                .font(.system(.footnote, design: .rounded, weight: .semibold))
-                .foregroundStyle(Theme.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            // Values only, no explanations: the explanations were read two pages
-            // ago on the readout, and repeating them here would bury the two
-            // numbers this page is actually about. Capped at five rows for the
-            // same reason — the full receipt runs to nine and pushed the price
-            // block off the bottom of the scroll view, so the page that takes
-            // money was the one page in the flow whose terms needed scrolling
-            // to.
-            HealthIngestList(summary: engine.healthIngest, showsDetail: false, limit: 5)
-            if engine.healthIngest.rows.count > 5 {
-                Text("…and \(engine.healthIngest.rows.count - 5) more, all going into your estimate.")
-                    .font(.system(.caption2, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-            }
-        }
-        .padding(Theme.Space.md)
-        .cardShape()
     }
 
     /// The sheet variant's substitute for the receipt: three lines, because a
@@ -364,11 +358,14 @@ struct TrialOfferPage: View {
         showsIngestProof ? "Your own\nrecharge time" : "Make it yours"
     }
 
+    /// One line, and it has one job: say which figure is free and which is paid.
+    ///
+    /// The two headings above name the tiers, so this names the derivation. It
+    /// used to be a three-line paragraph that said the same thing twice and left
+    /// the reader no clearer about which side of the paywall either number was
+    /// on.
     private var subheadline: String {
-        let name = RechargeConversionCopy.proName
-        return engine.personalizedPreview.isExample
-            ? "Free tells you how long you usually leave between sessions. \(name) tells you how long this one is worth leaving, from your own sessions, sleep, and heart rate."
-            : "That's how long you usually leave, beside what the model recommends for this session. \(name) gives you the second one."
+        RechargeConversionCopy.comparisonCaption(hasPurchased: store.isPro)
     }
 
     private func purchase() async {

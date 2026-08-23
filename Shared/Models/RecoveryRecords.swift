@@ -28,6 +28,13 @@ public final class WorkoutRecord {
     public var profileOverrideRaw: String?
     /// Session RPE the user supplied, from the phone or the Watch.
     public var reportedEffort: Double?
+    /// The user's own light/moderate/hard correction for this one session.
+    ///
+    /// Optional, so SwiftData migrates an existing store in place. It replaces
+    /// the load ladder rather than joining it, and it can lift a session off the
+    /// `easy` profile — see `SessionIntensity.profile(promoting:)` for why a
+    /// control labelled "Hard" has to be able to do that.
+    public var intensityOverrideRaw: String?
     public var sourceName: String
     public var activityLabel: String
     public var importedAt: Date
@@ -47,6 +54,7 @@ public final class WorkoutRecord {
         profile: WorkoutProfile = .endurance,
         profileOverride: WorkoutProfile? = nil,
         reportedEffort: Double? = nil,
+        intensityOverride: SessionIntensity? = nil,
         sourceName: String = "",
         activityLabel: String = "workout"
     ) {
@@ -64,6 +72,7 @@ public final class WorkoutRecord {
         self.profileRaw = profile.rawValue
         self.profileOverrideRaw = profileOverride?.rawValue
         self.reportedEffort = reportedEffort
+        self.intensityOverrideRaw = intensityOverride?.rawValue
         self.sourceName = sourceName
         self.activityLabel = activityLabel
         self.importedAt = .now
@@ -75,9 +84,26 @@ public final class WorkoutRecord {
     }
 
     /// The override wins when present; that is the point of it.
+    ///
+    /// An **intensity** override is applied on top, because the one thing it has
+    /// to be able to do is give a session that was classified `easy` a real
+    /// countdown. `easy` is the only profile whose window multiplier is zero, so
+    /// without this, marking a walk Hard changed the load, changed the cost, and
+    /// left the countdown at nothing — a control that appears to do nothing.
     public var effectiveProfile: WorkoutProfile {
-        if let raw = profileOverrideRaw, let override = WorkoutProfile(rawValue: raw) { return override }
-        return WorkoutProfile(rawValue: profileRaw) ?? .endurance
+        let classified: WorkoutProfile
+        if let raw = profileOverrideRaw, let override = WorkoutProfile(rawValue: raw) {
+            classified = override
+        } else {
+            classified = WorkoutProfile(rawValue: profileRaw) ?? .endurance
+        }
+        guard let intensity = intensityOverride else { return classified }
+        return intensity.profile(promoting: classified)
+    }
+
+    public var intensityOverride: SessionIntensity? {
+        get { intensityOverrideRaw.flatMap(SessionIntensity.init(rawValue:)) }
+        set { intensityOverrideRaw = newValue?.rawValue }
     }
 
     public var profileOverride: WorkoutProfile? {
@@ -94,7 +120,7 @@ public final class WorkoutRecord {
     /// a strength or mixed profile whose load came from something weaker than
     /// the user's own answer.
     public var wantsEffortInput: Bool {
-        guard reportedEffort == nil, effectiveProfile.wantsEffortInput else { return false }
+        guard reportedEffort == nil, intensityOverride == nil, effectiveProfile.wantsEffortInput else { return false }
         return loadSource == .energy || loadSource == .duration
     }
 }

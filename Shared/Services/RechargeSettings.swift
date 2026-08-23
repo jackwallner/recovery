@@ -135,9 +135,55 @@ public final class RechargeSettings: ObservableObject {
         didSet { defaults.set(useContextSignals, forKey: "useContextSignals") }
     }
 
-    /// Pro: a local notification the moment an estimate expires.
+    /// A local notification the moment an estimate expires.
+    ///
+    /// **Not a Pro feature, and on by default.** The countdown reaching Ready is
+    /// the whole of what the app promises on every tier, and it happens while
+    /// the app is closed. Gating the only way to learn about it behind a paywall
+    /// is what made a correctly working background chain read as an app that
+    /// never updates unless you open it.
     @Published public var notifyOnReady: Bool {
         didSet { defaults.set(notifyOnReady, forKey: "notifyOnReady") }
+    }
+
+    /// Recharge+: hours the user pinned to each intensity band, for somebody
+    /// following a programme the model does not know about. Empty by default,
+    /// and an unset band is the model's answer rather than a zero.
+    @Published public var manualWindows: ManualRecoveryWindows {
+        didSet {
+            if let data = try? JSONEncoder().encode(manualWindows) {
+                defaults.set(data, forKey: "manualWindows")
+            }
+        }
+    }
+
+    /// The Ready alert's permission prompt has been shown once.
+    ///
+    /// Onboarding asks a new user at the end of setup, where the notification
+    /// has something to be about. Somebody who was already using Recharge never
+    /// passes through that, and the toggle they inherit is on, so the prompt has
+    /// to happen once on a foreground launch — otherwise the alert is enabled,
+    /// scheduled, and silently undeliverable forever.
+    @Published public var hasRequestedReadyNotifications: Bool {
+        didSet { defaults.set(hasRequestedReadyNotifications, forKey: "hasRequestedReadyNotifications") }
+    }
+
+    /// The earliest `readyAt` the readiness question may be asked about.
+    ///
+    /// Set when setup completes. Onboarding imports a hundred and twenty days of
+    /// history in one go, so without this the first thing a brand-new user saw
+    /// after finishing setup was "How did that feel?" about a countdown they had
+    /// never watched, from a workout they did before installing the app. There
+    /// is no honest answer to that question, and asking it on the first screen
+    /// spends the user's willingness to answer anything.
+    @Published public var feedbackEligibleFrom: Date? {
+        didSet {
+            if let date = feedbackEligibleFrom {
+                defaults.set(date, forKey: "feedbackEligibleFrom")
+            } else {
+                defaults.removeObject(forKey: "feedbackEligibleFrom")
+            }
+        }
     }
 
     // MARK: - Conversion surfaces
@@ -192,7 +238,11 @@ public final class RechargeSettings: ObservableObject {
         self.answeredFeedbackSessions = Set(defaults.stringArray(forKey: "answeredFeedbackSessions") ?? [])
         self.declinedEffortSessions = Set(defaults.stringArray(forKey: "declinedEffortSessions") ?? [])
         self.useContextSignals = defaults.object(forKey: "useContextSignals") as? Bool ?? true
-        self.notifyOnReady = defaults.object(forKey: "notifyOnReady") as? Bool ?? false
+        self.notifyOnReady = defaults.object(forKey: "notifyOnReady") as? Bool ?? true
+        self.manualWindows = defaults.data(forKey: "manualWindows")
+            .flatMap { try? JSONDecoder().decode(ManualRecoveryWindows.self, from: $0) } ?? .empty
+        self.feedbackEligibleFrom = defaults.object(forKey: "feedbackEligibleFrom") as? Date
+        self.hasRequestedReadyNotifications = defaults.bool(forKey: "hasRequestedReadyNotifications")
         self.lastTrialOfferShownDate = defaults.object(forKey: "lastTrialOfferShownDate") as? Date
 
         // Fresh installs get onboarding, not a "what changed" pitch for an app
@@ -282,6 +332,16 @@ public final class RechargeSettings: ObservableObject {
         }
         guard profile != athleteProfile else { return }
         athleteProfile = profile
+    }
+
+    /// Opens the readiness question from now on, once and only once.
+    ///
+    /// Called when setup completes and, for anybody who upgraded into this
+    /// build, on the first refresh afterwards — an existing user's history is
+    /// just as full of countdowns they never watched as a new user's is.
+    public func openFeedbackWindowIfNeeded(now: Date = .now) {
+        guard feedbackEligibleFrom == nil else { return }
+        feedbackEligibleFrom = now
     }
 
     public func recordFeedbackAnswered(_ sessionID: String) {

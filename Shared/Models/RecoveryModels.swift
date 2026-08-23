@@ -70,7 +70,14 @@ import Foundation
 /// 12: tolerance evidence uses the next session's start time, rather than its
 /// end time, and overlapping sleep intervals are unioned before context is
 /// built.
-public let recoveryModelVersion = 12
+/// 13: the user can correct a session's *intensity* rather than its profile,
+/// and a Recharge+ subscriber can pin their own hours to the three intensity
+/// bands. Both are corrections the user typed, so both outrank every sensor:
+/// an intensity override replaces the load ladder outright, and a pinned band
+/// replaces the modelled window outright. Marking a session Moderate or Hard
+/// also lifts it off the `easy` profile, because a control labelled "Hard" that
+/// leaves a walk with no countdown is a control that does nothing.
+public let recoveryModelVersion = 13
 
 // MARK: - Tier
 
@@ -92,10 +99,17 @@ public enum RecoveryTier: String, Codable, Sendable {
     /// thirty-day analysis, overnight context, and their calibration feedback.
     case personalized
 
+    /// Named for the **tier**, not for what the number means.
+    ///
+    /// "Your usual" and "Optimal" were an honest description of the two
+    /// calculations and a hopeless pair of column headings: neither one says
+    /// which side of the paywall it is on, so somebody reading "23h → 8h" could
+    /// not tell which figure they already had. The derivation is stated in the
+    /// caption beside these, where there is room for a sentence.
     public var label: String {
         switch self {
-        case .standard: "Your usual"
-        case .personalized: "Optimal"
+        case .standard: RechargeConversionCopy.standardColumn
+        case .personalized: RechargeConversionCopy.proColumn
         }
     }
 }
@@ -260,6 +274,126 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
     }
 }
 
+// MARK: - Intensity
+
+/// How hard one session was, on the only three-rung scale a person can answer
+/// after the fact — and the scale the Recharge+ pinned windows are keyed on.
+///
+/// It is deliberately **not** `WorkoutProfile`. A profile is a claim about what
+/// kind of work a session was (endurance, strength, mixed, easy) and it is
+/// something the app can classify from the activity type. Intensity is a claim
+/// about how hard it was, which is the thing the app gets wrong and the thing
+/// the user can actually correct. Offering "Endurance / Strength / Mixed / Easy"
+/// as the correction asked the user to fix the half the app was already right
+/// about.
+public enum SessionIntensity: String, Codable, Sendable, CaseIterable, Identifiable {
+    case light
+    case moderate
+    case hard
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .light: "Light"
+        case .moderate: "Moderate"
+        case .hard: "Hard"
+        }
+    }
+
+    public var detail: String {
+        switch self {
+        case .light: "Could have kept going for a long time."
+        case .moderate: "Working, but in control throughout."
+        case .hard: "Near the limit. Little left at the end."
+        }
+    }
+
+    /// Borg CR10 anchors, the same three the effort sheet already asks with, so
+    /// a session rated Hard on the Watch and a session marked Hard on the phone
+    /// cannot score differently.
+    public var assumedEffort: Double {
+        switch self {
+        case .light: 3
+        case .moderate: 6
+        case .hard: 8.5
+        }
+    }
+
+    /// What an override does to the profile.
+    ///
+    /// `easy` is the only profile whose window multiplier is zero, so a walk
+    /// marked Hard would otherwise keep returning no countdown and the control
+    /// would appear broken. Moderate and Hard lift a session off `easy` onto
+    /// `endurance`, which is what a walk taken hard actually is; Light puts it
+    /// back. Every other profile is left alone, because the override is a
+    /// statement about effort and not about what kind of work it was.
+    public func profile(promoting classified: WorkoutProfile) -> WorkoutProfile {
+        switch self {
+        case .light: return classified == .endurance || classified == .easy ? .easy : classified
+        case .moderate, .hard: return classified == .easy ? .endurance : classified
+        }
+    }
+}
+
+/// Hours the user pinned to each intensity band, for somebody following a
+/// programme the model does not know about.
+///
+/// Recharge+ only, and empty by default: an unset band is the model's answer,
+/// not a zero. A pinned band replaces the modelled window outright rather than
+/// nudging it, for the same reason the observed window does on the free tier —
+/// blending a typed number with a computed one produces a third figure that is
+/// neither what the user asked for nor what the model said.
+public struct ManualRecoveryWindows: Codable, Sendable, Equatable {
+    public var light: Double?
+    public var moderate: Double?
+    public var hard: Double?
+
+    public static let empty = ManualRecoveryWindows()
+
+    /// The same bounds every other window obeys, so a pinned figure cannot put
+    /// the app outside the range its own copy describes.
+    public static var minimumHours: Double { RecoveryCalculator.minimumCountdownHours }
+    public static var maximumHours: Double { RecoveryCalculator.maximumHours }
+
+    public init(light: Double? = nil, moderate: Double? = nil, hard: Double? = nil) {
+        self.light = ManualRecoveryWindows.sanitise(light)
+        self.moderate = ManualRecoveryWindows.sanitise(moderate)
+        self.hard = ManualRecoveryWindows.sanitise(hard)
+    }
+
+    private static func sanitise(_ hours: Double?) -> Double? {
+        guard let hours, hours.isFinite else { return nil }
+        return min(max(hours, minimumHours), maximumHours)
+    }
+
+    public func hours(for intensity: SessionIntensity) -> Double? {
+        switch intensity {
+        case .light: light
+        case .moderate: moderate
+        case .hard: hard
+        }
+    }
+
+    public mutating func set(_ hours: Double?, for intensity: SessionIntensity) {
+        let value = Self.sanitise(hours)
+        switch intensity {
+        case .light: light = value
+        case .moderate: moderate = value
+        case .hard: hard = value
+        }
+    }
+
+    public var isEmpty: Bool { light == nil && moderate == nil && hard == nil }
+
+    /// Every band the user has pinned, in ladder order.
+    public var pinned: [(intensity: SessionIntensity, hours: Double)] {
+        SessionIntensity.allCases.compactMap { intensity in
+            hours(for: intensity).map { (intensity, $0) }
+        }
+    }
+}
+
 // MARK: - Load
 
 /// Which of the three fallbacks actually produced the session load. Drives both
@@ -376,6 +510,20 @@ public enum LoadCategory: String, Codable, Sendable {
         case .unusuallyHard: "Very hard"
         }
     }
+
+    /// Four rungs collapsed onto the three the user can correct with.
+    ///
+    /// The ladder here has a fourth rung because a relative load can genuinely
+    /// be twice a normal session and the copy should say so. The override
+    /// control has three, because "Hard" and "Very hard" are not a distinction
+    /// anybody makes reliably about their own session an hour afterwards.
+    public var intensity: SessionIntensity {
+        switch self {
+        case .easy: .light
+        case .typical: .moderate
+        case .hard, .unusuallyHard: .hard
+        }
+    }
 }
 
 /// The output of stage 1: one number on a common scale, plus how we got it.
@@ -410,6 +558,14 @@ public struct SessionInput: Sendable, Equatable {
     public let activeEnergyKilocalories: Double?
     /// Session RPE on the 1-10 Borg CR10 scale, if the user supplied one.
     public let reportedEffort: Double?
+    /// The user's own correction to how hard this session was.
+    ///
+    /// When present it **replaces** the load ladder rather than joining it. Every
+    /// other input to the load is a sensor reading or an inference from one, and
+    /// the whole reason this control exists is that those were wrong about this
+    /// session; letting a heart-rate trace outbid the correction would make the
+    /// control appear to do nothing, which is the report it was added for.
+    public let intensityOverride: SessionIntensity?
     /// The person's body mass in kilograms, when Health knows it.
     ///
     /// Only the energy path reads it, and only to undo the thing that path was
@@ -433,6 +589,7 @@ public struct SessionInput: Sendable, Equatable {
         heartRateCoverage: Double = 0,
         activeEnergyKilocalories: Double? = nil,
         reportedEffort: Double? = nil,
+        intensityOverride: SessionIntensity? = nil,
         bodyMassKilograms: Double? = nil,
         activityLabel: String = "workout"
     ) {
@@ -448,6 +605,7 @@ public struct SessionInput: Sendable, Equatable {
         self.heartRateCoverage = heartRateCoverage.isFinite ? min(max(heartRateCoverage, 0), 1) : 0
         self.activeEnergyKilocalories = activeEnergyKilocalories.flatMap { $0.isFinite ? $0 : nil }
         self.reportedEffort = reportedEffort.flatMap { $0.isFinite ? min(max($0, 1), 10) : nil }
+        self.intensityOverride = intensityOverride
         // Bounded to a plausible adult range. A stray 0.2 kg sample from a
         // kitchen scale would otherwise divide the reference burn rate by
         // nothing and turn a gentle walk into a 72-hour window.

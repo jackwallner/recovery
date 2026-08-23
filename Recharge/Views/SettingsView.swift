@@ -32,7 +32,11 @@ struct SettingsView: View {
                 modelSection
                 // Directly under Model, because that is what it feeds.
                 aboutYouSection
-                if store.isPro { contextSection }
+                if store.isPro {
+                    contextSection
+                    pinnedWindowsSection
+                }
+                notificationSection
                 aboutSection
                 #if DEBUG
                 debugSection
@@ -104,12 +108,12 @@ struct SettingsView: View {
                     }
 
                     HStack(alignment: .center, spacing: Theme.Space.md) {
-                        settingsFigure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                        settingsFigure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Theme.textTertiary)
                         settingsFigure(
-                            "Optimal",
+                            RechargeConversionCopy.proColumn,
                             CountdownFormat.hours(preview.personalizedHours),
                             Theme.pro,
                             blurred: true
@@ -132,7 +136,7 @@ struct SettingsView: View {
 
     private var proPitchDetail: String {
         let subject = preview.isExample ? "a hard 60-minute session" : preview.label.lowercased()
-        return "How long you usually leave after \(subject), beside the window the model recommends for it. \(RechargeConversionCopy.proName) gives you the second one."
+        return "For \(subject). \(RechargeConversionCopy.comparisonCaption(hasPurchased: false))"
     }
 
     /// - Parameter blurred: this row only exists for a user who has not bought
@@ -368,12 +372,21 @@ struct SettingsView: View {
             }
 
             if engine.personalAnalysis.isPersonalised {
+                // **Named for what it is, on both tiers.** It used to read "Your
+                // adjustment" / "Your data suggests", which invites the figure
+                // to be read as the whole difference between the two numbers in
+                // the row above — and it is not, it is the smallest of the three
+                // terms. A user looking at 23h beside 8h and a "-6%" underneath
+                // is looking at the app contradicting itself.
                 HStack {
-                    Text(store.isPro ? "Your adjustment" : "Your data suggests")
+                    Text("\(PersonalRecoveryModel.windowDays)-day recovery rate")
                     Spacer()
                     Text(personalFactorLabel)
                         .foregroundStyle(store.isPro ? Theme.textSecondary : Theme.pro)
                 }
+                Text("How quickly your last \(PersonalRecoveryModel.windowDays) days say you come back. It is one of the things \(RechargeConversionCopy.proName) changes, not the whole difference between the two figures above.")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
                 ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).dropFirst(), id: \.self) { line in
                     Text(line)
                         .font(.system(.caption, design: .rounded))
@@ -581,6 +594,24 @@ struct SettingsView: View {
                     engine.rescore()
                     engine.publish()
                 }
+        } header: {
+            Text("Recharge+")
+        } footer: {
+            Text("Body signals fold your sleep, resting heart rate, and HRV into the estimate, within a bounded range. One reading never swings the countdown on its own.")
+        }
+    }
+
+    // MARK: - Notifications
+
+    /// **Every tier, and on by default.**
+    ///
+    /// It used to live inside the Recharge+ section, and that was the wrong side
+    /// of the paywall for the one event the whole app exists to report. The
+    /// countdown runs out while the app is closed; without an alert the user has
+    /// to open Recharge to find out, which is what made a background chain that
+    /// works correctly read as an app that never updates on its own.
+    private var notificationSection: some View {
+        Section {
             Toggle("Notify me at Ready", isOn: $settings.notifyOnReady)
                 .onChange(of: settings.notifyOnReady) { _, enabled in
                     Task {
@@ -608,10 +639,69 @@ struct SettingsView: View {
                 }
             }
         } header: {
-            Text("Recharge+")
+            Text("Notifications")
         } footer: {
-            Text("Body signals fold your sleep, resting heart rate, and HRV into the estimate, within a bounded range. One reading never swings the countdown on its own.")
+            Text("Recharge keeps counting down in the background and tells you the moment the countdown runs out, so you never have to open the app to find out.")
         }
+    }
+
+    // MARK: - Pinned windows (Pro)
+
+    /// **Your own hours, for the three intensity bands.**
+    ///
+    /// For somebody following a written programme the model does not know
+    /// about. An unset band is the model's answer, not a zero — which is why
+    /// every row is a picker with a "Recharge decides" entry rather than a text
+    /// field that has to be cleared.
+    ///
+    /// A pinned band replaces the modelled window outright rather than nudging
+    /// it, for the same reason the observed window does on the free tier:
+    /// blending a typed number with a computed one produces a third figure that
+    /// is neither what the user asked for nor what the model said.
+    private var pinnedWindowsSection: some View {
+        Section {
+            ForEach(SessionIntensity.allCases) { intensity in
+                Picker(intensity.label, selection: pinnedBinding(intensity)) {
+                    Text("Recharge decides").tag(Double?.none)
+                    ForEach(Self.pinnableHours, id: \.self) { hours in
+                        Text(CountdownFormat.hours(hours)).tag(Double?.some(hours))
+                    }
+                }
+            }
+            if !settings.manualWindows.isEmpty {
+                Button("Clear all", role: .destructive) {
+                    settings.manualWindows = .empty
+                    engine.rescoreAfterModelSettingChange()
+                }
+            }
+        } header: {
+            Text("Your own recharge times")
+        } footer: {
+            Text("Pin the hours you want after a light, moderate, or hard session and Recharge uses them instead of its own figure for sessions that size. Leave a band on \"Recharge decides\" and nothing changes. Which band a session lands in is read from your own recent sessions, not from a fixed threshold.")
+        }
+    }
+
+    /// Every value the picker offers, from the model's own floor to its ceiling.
+    /// Six-hour steps past the first day, because nobody is choosing between 51
+    /// and 54 hours and a hundred-row wheel is not a setting.
+    private static let pinnableHours: [Double] =
+        Array(stride(from: 6.0, through: 24.0, by: 3.0))
+        + Array(stride(from: 30.0, through: 72.0, by: 6.0))
+
+    private func pinnedBinding(_ intensity: SessionIntensity) -> Binding<Double?> {
+        Binding(
+            get: { settings.manualWindows.hours(for: intensity) },
+            set: { hours in
+                var windows = settings.manualWindows
+                windows.set(hours, for: intensity)
+                guard windows != settings.manualWindows else { return }
+                settings.manualWindows = windows
+                // Every stored estimate was scored on a premise the user has
+                // just changed, so the whole history is thawed and rescored —
+                // the same path the max-heart-rate and profile settings take.
+                engine.rescoreAfterModelSettingChange()
+            }
+        )
     }
 
     // MARK: - About

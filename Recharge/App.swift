@@ -45,6 +45,11 @@ struct RechargeApp: App {
         // it again costs nothing.
         if RechargeSettings.shared.hasCompletedSetup, !RechargeSettings.shared.hasDeferredHealthAccess {
             HealthKitService.shared.enableBackgroundDelivery()
+            // Anybody who was already using Recharge before the readiness
+            // question learned to stop reaching backwards. Their stored history
+            // is as full of expired countdowns they never watched as a new
+            // user's is, so the window opens here rather than only at setup.
+            RechargeSettings.shared.openFeedbackWindowIfNeeded()
         }
 
         // Same reasoning, one link further along the chain, and moving only the
@@ -86,6 +91,35 @@ struct RechargeApp: App {
             await work.value
             task.setTaskCompleted(success: !work.isCancelled)
         }
+    }
+
+    /// Asks for the Ready alert's permission exactly once, for somebody who was
+    /// already using Recharge when that alert stopped being a Recharge+ feature.
+    ///
+    /// Onboarding asks a new user at the end of setup, where the notification
+    /// has something to be about; an upgrading user never passes through that,
+    /// and the toggle they inherit is on — an enabled alert with no permission
+    /// behind it is scheduled and silently never delivered.
+    ///
+    /// **After the first refresh, and never under a capture run.** Firing a
+    /// system permission alert during launch puts a modal over whatever the app
+    /// was about to draw, which on a screenshot or UI-test launch is the screen
+    /// being measured. It is also the wrong moment in the real app: the
+    /// countdown should be on screen before anything is asked about it.
+    @MainActor
+    private func requestReadyNotificationsIfNeeded() async {
+        #if DEBUG
+        // The seeded walkthrough drives the real app end to end, so a permission
+        // modal here lands over whatever it was about to tap.
+        if HealthSeederConfig.isEnabled { return }
+        #endif
+        guard !ScreenshotConfig.isEnabled,
+              settings.hasCompletedSetup,
+              settings.notifyOnReady,
+              !settings.hasRequestedReadyNotifications
+        else { return }
+        settings.hasRequestedReadyNotifications = true
+        await NotificationService.requestAuthorization()
     }
 
     var body: some Scene {
@@ -130,6 +164,8 @@ struct RechargeApp: App {
                     } else if ScreenshotConfig.isEnabled {
                         await engine.refresh(force: true)
                     }
+
+                    await requestReadyNotificationsIfNeeded()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     guard phase == .active,

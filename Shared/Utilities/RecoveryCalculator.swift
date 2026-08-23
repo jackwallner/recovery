@@ -85,6 +85,12 @@ public enum RecoveryCalculator {
     ///     modelled figure is still computed underneath it, because
     ///     `recoveryCostHours` and the tier comparison both ask what the session
     ///     cost rather than what the person usually does about it.
+    ///   - manualHours: hours the user pinned to this session's intensity band,
+    ///     when they are following a programme the model does not know about.
+    ///     Recharge+ only, and it replaces the modelled window outright — a
+    ///     typed number blended with a computed one is a third figure that is
+    ///     neither. It never reaches the standard tier, whose whole claim is
+    ///     that the figure came from the history rather than from a preference.
     ///   - now: the calculation instant. Injected so tests are deterministic.
     public static func estimate(
         for session: SessionInput,
@@ -95,6 +101,7 @@ public enum RecoveryCalculator {
         standardHours: Double? = nil,
         carriedHours: Double = 0,
         observed: ObservedRecoveryPattern.Window? = nil,
+        manualHours: Double? = nil,
         now: Date = .now
     ) -> RecoveryEstimate {
         let load = SessionLoadCalculator.profiledLoad(for: session)
@@ -129,7 +136,7 @@ public enum RecoveryCalculator {
         // No `minimumCountdownHours` here: that floor exists so a countdown is
         // not over before bedtime, and it has nothing to say about what forty
         // minutes of walking cost.
-        let cost = min(max(scaled * session.profile.costMultiplier, 0), maximumHours)
+        var cost = min(max(scaled * session.profile.costMultiplier, 0), maximumHours)
 
         if qualifies {
             let modelled = min(
@@ -152,6 +159,25 @@ public enum RecoveryCalculator {
                     ObservedRecoveryPattern.maximumUsualHours
                 )
             } ?? modelled : modelled
+
+            // A pinned band is the last word, above the model and above the
+            // habit. Somebody following a written programme has an answer the
+            // app cannot derive, and the only useful thing to do with it is use
+            // it. Recharge+ only: the free tier's one claim is that its figure
+            // was read off the user's own training, and a typed number is not
+            // that.
+            if !describes, let manual = manualHours, manual.isFinite, manual > 0 {
+                hours = min(max(manual, minimumCountdownHours), maximumHours)
+            }
+        }
+
+        // A pinned window is a statement about what the session cost, so the
+        // description has to move with it. Leaving the computed cost in place
+        // put History's figure beside a countdown that disagreed with it, which
+        // is the same rehydration contradiction `carriedHours` was fixed for.
+        if qualifies, personalization.tier == .personalized, let manual = manualHours,
+           manual.isFinite, manual > 0 {
+            cost = hours
         }
 
         // The countdown runs for this session's cost *plus* what was left over,
@@ -194,7 +220,8 @@ public enum RecoveryCalculator {
                 qualifies: qualifies,
                 baseline: baseline,
                 personalization: personalization,
-                observed: observed
+                observed: observed,
+                manualHours: qualifies && personalization.tier == .personalized ? manualHours : nil
             ),
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,
@@ -385,7 +412,8 @@ public enum RecoveryCalculator {
         qualifies: Bool,
         baseline: RecoveryBaseline,
         personalization: RecoveryPersonalization = .standard,
-        observed: ObservedRecoveryPattern.Window? = nil
+        observed: ObservedRecoveryPattern.Window? = nil,
+        manualHours: Double? = nil
     ) -> [String] {
         var reasons: [String] = []
         let tier = personalization.tier
@@ -393,6 +421,11 @@ public enum RecoveryCalculator {
 
         let minutes = Int(session.durationMinutes.rounded())
         if session.profile == .easy {
+            if session.intensityOverride == .light {
+                reasons.append("You marked this session light, so it counts as active recovery.")
+                reasons.append("Light enough to leave the countdown where it is.")
+                return reasons
+            }
             reasons.append("\(minutes)-minute \(session.activityLabel) counts as active recovery.")
             reasons.append("Light enough to leave the countdown where it is.")
             return reasons
@@ -406,7 +439,18 @@ public enum RecoveryCalculator {
         }
 
         reasons.append("\(categoryLabel): \(minutes)-minute \(session.activityLabel).")
-        reasons.append("Load estimated from \(load.source.label).")
+        if let override = session.intensityOverride {
+            reasons.append("You marked this session \(override.label.lowercased()), so that is what it was scored as.")
+        } else {
+            reasons.append("Load estimated from \(load.source.label).")
+        }
+
+        // Stated before anything else that moved the number, because when a band
+        // is pinned nothing else did.
+        if let manualHours, manualHours.isFinite, manualHours > 0 {
+            reasons.append("You pinned \(CountdownFormat.hours(manualHours)) to this intensity, so the model's own figure is not used here.")
+            return reasons
+        }
 
         switch tier {
         case .standard:
