@@ -257,6 +257,24 @@ struct OnboardingView: View {
         settings.hasAnsweredProfileQuestions = true
         settings.hasCompletedSetup = true
         settings.lastTrialOfferShownDate = .now
+        // The readiness question may only ever ask about a countdown that ran
+        // out *after* this moment. Onboarding has just imported a hundred and
+        // twenty days at once, so without this the first thing a brand-new user
+        // saw on Today was "How did that feel?" about a session they did before
+        // installing the app.
+        settings.openFeedbackWindowIfNeeded()
+        // The countdown expires while the app is closed, so the alert is the
+        // only way the user ever learns the answer without opening something.
+        // Asked here rather than at launch, because by now they have seen what
+        // the countdown is and the notification has something to be about.
+        // Never under a capture or walkthrough run: the system alert lands over
+        // the first screen the test is about to measure.
+        if settings.notifyOnReady,
+           !settings.hasRequestedReadyNotifications,
+           !ScreenshotConfig.isEnabled {
+            settings.hasRequestedReadyNotifications = true
+            Task { await NotificationService.requestAuthorization() }
+        }
         // The answers only reach a number through a rescore, and a user who
         // upgrades on this very page would otherwise see their old windows until
         // the next refresh.

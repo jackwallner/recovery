@@ -40,6 +40,19 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
             }
         }
 
+        /// The same three rungs the user can pin hours to and correct a session
+        /// with. One scale, named once: a band the app reads off the history and
+        /// a band the user types have to mean the same thing, or the Settings
+        /// row that pins "hard" and the sentence that reports "after a hard
+        /// session" are talking about different sessions.
+        public var intensity: SessionIntensity {
+            switch self {
+            case .light: .light
+            case .moderate: .moderate
+            case .hard: .hard
+            }
+        }
+
         /// Phrased as the session, for a sentence like "after a hard session
         /// you usually go again after about 44h".
         public var sessionPhrase: String {

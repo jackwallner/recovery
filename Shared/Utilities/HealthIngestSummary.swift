@@ -47,6 +47,21 @@ public struct HealthIngestSummary: Sendable, Equatable {
         self.rows = rows
     }
 
+    /// The whole receipt as one sentence, for a surface with room for a line
+    /// rather than a table.
+    ///
+    /// The purchase page is the only caller and the reason is layout: the
+    /// itemised list is nine rows, five of them fitted only by truncating the
+    /// list and adding an "…and 4 more" footnote, and the whole block sat
+    /// between the two numbers being compared and the price. The full receipt is
+    /// two pages earlier in onboarding, on the readout, and in Settings and the
+    /// Recharge+ tab afterwards; here it only has to establish that the figure
+    /// above came from the user's own data.
+    ///
+    /// Nil when nothing was read, for the same reason a row with no value is
+    /// never drawn: a receipt for nothing argues against the thing it is on.
+    public private(set) var oneLineReceipt: String?
+
     // MARK: - Inputs
 
     /// The raw figures, before any of them have been turned into a sentence.
@@ -68,6 +83,21 @@ public struct HealthIngestSummary: Sendable, Equatable {
         public var age: Int?
 
         public init() {}
+    }
+
+    /// The receipt as one concrete sentence: what was counted, then how many
+    /// other signals were found. Concrete on purpose — "9 readings" is a claim
+    /// and "214 workouts over 120 days" is evidence.
+    static func receiptLine(readings: Readings, rowCount: Int) -> String? {
+        guard rowCount > 0 else { return nil }
+        guard readings.workoutCount > 0 else {
+            return "Read from Apple Health: \(rowCount) \(rowCount == 1 ? "reading" : "readings")."
+        }
+        let sessions = "\(readings.workoutCount) \(readings.workoutCount == 1 ? "workout" : "workouts")"
+        let span = readings.daysCovered > 0 ? " over \(readings.daysCovered) days" : ""
+        let others = rowCount - 1
+        guard others > 0 else { return "Read from Apple Health: \(sessions)\(span)." }
+        return "Read from Apple Health: \(sessions)\(span), plus \(others) other \(others == 1 ? "signal" : "signals")."
     }
 
     // MARK: - Building
@@ -185,6 +215,7 @@ public struct HealthIngestSummary: Sendable, Equatable {
         }
 
         self.rows = rows
+        self.oneLineReceipt = Self.receiptLine(readings: readings, rowCount: rows.count)
     }
 }
 

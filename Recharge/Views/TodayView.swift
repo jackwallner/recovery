@@ -429,16 +429,16 @@ struct TodayView: View {
         let preview = engine.personalizedPreview
         let usual = CountdownFormat.hours(preview.standardHours)
         guard store.isPro else {
-            return "Usual \(usual). Optimal time hidden until you upgrade."
+            return "Standard \(usual). Your \(RechargeConversionCopy.proName) time is hidden until you upgrade."
         }
-        return "Usual \(usual). Optimal \(CountdownFormat.hours(preview.personalizedHours))."
+        return "Standard \(usual). \(RechargeConversionCopy.proName) \(CountdownFormat.hours(preview.personalizedHours))."
     }
 
     private var comparison: some View {
         let preview = engine.personalizedPreview
         return HStack(alignment: .center, spacing: Theme.Space.md) {
             figureColumn(
-                label: "Usual",
+                label: RechargeConversionCopy.standardColumn,
                 text: CountdownFormat.hours(preview.standardHours),
                 tint: Theme.textSecondary,
                 blurred: false
@@ -447,7 +447,7 @@ struct TodayView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(Theme.textTertiary)
             figureColumn(
-                label: "Optimal",
+                label: RechargeConversionCopy.proColumn,
                 text: CountdownFormat.hours(preview.personalizedHours),
                 tint: Theme.pro,
                 blurred: !store.isPro
@@ -494,10 +494,7 @@ struct TodayView: View {
     private var comparisonCaption: String {
         let preview = engine.personalizedPreview
         let subject = preview.isExample ? "A hard 60-minute session" : preview.label
-        if store.isPro {
-            return "\(subject). Usual is what you have actually done after sessions this size; optimal is what Recharge+ recommends for this one."
-        }
-        return "\(subject). Usual is read from your own history. Recharge+ adds what the model recommends for this session, from your sleep, heart rate, and thirty-day pattern."
+        return "\(subject). \(RechargeConversionCopy.comparisonCaption(hasPurchased: store.isPro))"
     }
 
     // MARK: - Transient prompts

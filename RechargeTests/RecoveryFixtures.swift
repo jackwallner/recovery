@@ -22,6 +22,7 @@ enum RecoveryFixtures {
         coverage: Double = 0,
         energy: Double? = nil,
         effort: Double? = nil,
+        intensity: SessionIntensity? = nil,
         label: String = "workout"
     ) -> SessionInput {
         let end = now.addingTimeInterval(-endedMinutesAgo * 60)
@@ -37,6 +38,7 @@ enum RecoveryFixtures {
             heartRateCoverage: coverage,
             activeEnergyKilocalories: energy,
             reportedEffort: effort,
+            intensityOverride: intensity,
             activityLabel: label
         )
     }

@@ -521,6 +521,20 @@ public final class RecoveryEngine: ObservableObject {
                         fitnessScale: settings.athleteProfile.fitnessScale
                     ).referenceLoad
                 ),
+                // What the user pinned for a session this size, if anything. The
+                // band comes from the same tercile split the free tier's own
+                // sentence is cut on, so "hard" means the same thing in the
+                // Settings row that pins it and in the reason line that reports
+                // it.
+                manualHours: settings.manualWindows.hours(
+                    for: pattern.band(
+                        forLoad: sessionLoads[index],
+                        referenceLoad: RecoveryBaseline.standard(
+                            for: session.profile,
+                            fitnessScale: settings.athleteProfile.fitnessScale
+                        ).referenceLoad
+                    ).intensity
+                ),
                 now: now
             )
             if personalized.producesCountdown { personalizedReadyAt = personalized.readyAt }
@@ -610,7 +624,10 @@ public final class RecoveryEngine: ObservableObject {
         // wall clock, so the two halves of one pass could disagree.
         current = RecoveryResolver.current(in: results, now: now)
         awaitingFeedback = RecoveryResolver.awaitingFeedback(
-            in: results, answered: settings.answeredFeedbackSessions, now: now
+            in: results,
+            answered: settings.answeredFeedbackSessions,
+            eligibleFrom: feedbackEligibleFrom(settings),
+            now: now
         )
         let declined = settings.declinedEffortSessions
         awaitingEffort = workouts
@@ -685,6 +702,7 @@ public final class RecoveryEngine: ObservableObject {
             heartRateCoverage: workout.heartRateCoverage,
             activeEnergyKilocalories: workout.activeEnergy > 0 ? workout.activeEnergy : nil,
             reportedEffort: workout.reportedEffort,
+            intensityOverride: workout.intensityOverride,
             bodyMassKilograms: settings.athleteProfile.bodyMassKilograms,
             activityLabel: workout.activityLabel
         )
@@ -769,7 +787,12 @@ public final class RecoveryEngine: ObservableObject {
         )
         #endif
 
-        if RechargeSettings.shared.notifyOnReady, StoreService.shared.isPro {
+        // Every tier. The countdown reaching Ready is what the whole app is for,
+        // it happens while the app is closed, and a local notification is the
+        // only way a user learns about it without opening something. Gating that
+        // behind Recharge+ made a background chain that works correctly read as
+        // an app that only updates when you launch it.
+        if RechargeSettings.shared.notifyOnReady {
             NotificationService.scheduleReadyNotification(for: snapshot)
         } else {
             NotificationService.cancelReadyNotification()
@@ -838,7 +861,69 @@ public final class RecoveryEngine: ObservableObject {
         awaitingFeedback = nil
     }
 
+    /// When the readiness question may be asked, or `nil` when it may not be
+    /// asked at all.
+    ///
+    /// Two separate bounds, and they fail for different reasons.
+    ///
+    /// **It does nothing on the free tier.** The answer folds into
+    /// `calibrationFactor`, and `calibrationFactor` is only ever passed to the
+    /// personalized estimate — so a free user's answer was recorded, stored, and
+    /// then multiplied into nothing. Asking somebody a question whose answer the
+    /// app has no use for is the most expensive kind of prompt there is.
+    ///
+    /// **And it must not reach back past setup.** See
+    /// `RechargeSettings.feedbackEligibleFrom`.
+    private func feedbackEligibleFrom(_ settings: RechargeSettings) -> Date? {
+        guard StoreService.shared.isPro else { return .distantFuture }
+        return settings.feedbackEligibleFrom ?? .distantFuture
+    }
+
+    /// The correction the user has already made for one session, if any.
+    ///
+    /// Read from the store rather than from the estimate, because an estimate
+    /// carries what it was *scored* as and this control has to be able to show
+    /// the difference between "Recharge decided hard" and "you said hard".
+    public func intensityOverride(forSessionID sessionID: String) -> SessionIntensity? {
+        var descriptor = FetchDescriptor<WorkoutRecord>(
+            predicate: #Predicate { $0.healthKitUUID == sessionID }
+        )
+        descriptor.fetchLimit = 1
+        return (try? context.fetch(descriptor))?.first?.intensityOverride
+    }
+
+    /// The user's own light/moderate/hard correction for one session.
+    ///
+    /// The countdown has to move when this does, which is the whole report it
+    /// came from: an override that changes a label and leaves the ring where it
+    /// was reads as a broken control. The promotion in
+    /// `SessionIntensity.profile(promoting:)` is what lets a session that
+    /// produced no countdown start one, and the load short-circuit in
+    /// `SessionLoadCalculator.profiledLoad` is what stops a sensor outbidding
+    /// the answer.
+    public func overrideIntensity(_ intensity: SessionIntensity?, forSessionID sessionID: String) {
+        var descriptor = FetchDescriptor<WorkoutRecord>(
+            predicate: #Predicate { $0.healthKitUUID == sessionID }
+        )
+        descriptor.fetchLimit = 1
+        guard let workout = (try? context.fetch(descriptor))?.first else { return }
+        guard workout.intensityOverride != intensity else { return }
+        workout.intensityOverride = intensity
+        guard saveContext(reason: "intensity override") else { return }
+        // Every later session is stacked on this one's window, so one correction
+        // moves the whole chain after it. Thawing only the corrected record
+        // would leave the sessions that inherited its residual describing a
+        // countdown that no longer exists.
+        rescore(unfreezeAll: true)
+        publish()
+    }
+
     /// Per-session profile override — the HYROX/CrossFit escape hatch.
+    ///
+    /// No longer reachable from a screen: `EstimateDetailView` offers the
+    /// intensity control instead, because "was this endurance or mixed" is the
+    /// half the app already gets right. Kept because it is persisted on every
+    /// record that ever used it, and `effectiveProfile` still honours it.
     public func overrideProfile(_ profile: WorkoutProfile, forSessionID sessionID: String) {
         var descriptor = FetchDescriptor<WorkoutRecord>(
             predicate: #Predicate { $0.healthKitUUID == sessionID }
@@ -876,6 +961,7 @@ public final class RecoveryEngine: ObservableObject {
         awaitingFeedback = RecoveryResolver.awaitingFeedback(
             in: estimates,
             answered: RechargeSettings.shared.answeredFeedbackSessions,
+            eligibleFrom: feedbackEligibleFrom(RechargeSettings.shared),
             now: now
         )
         guard let estimate = RecoveryResolver.current(in: estimates, now: now),

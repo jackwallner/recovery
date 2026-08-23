@@ -145,12 +145,33 @@ public enum SessionLoadCalculator {
     /// Dispatches to the profile's load rule. Callers should use this rather
     /// than `load(for:)` directly.
     ///
+    /// An **intensity override short-circuits the whole ladder.** Every branch
+    /// below weighs sensor readings against each other, and the reason somebody
+    /// reaches for the override is that those readings were wrong about this
+    /// session. Folding the answer in as one more candidate — even as the
+    /// maximum, which is what strength does — leaves "Hard" doing nothing on a
+    /// session whose heart-rate trace already read harder, and a control that
+    /// silently does nothing is worse than no control.
     public static func profiledLoad(for session: SessionInput) -> SessionLoad {
-        switch session.profile {
-        case .strength: strengthLoad(for: session)
-        case .mixed: mixedLoad(for: session)
-        case .endurance, .easy: load(for: session)
+        if let override = session.intensityOverride {
+            return overriddenLoad(for: session, intensity: override)
         }
+        switch session.profile {
+        case .strength: return strengthLoad(for: session)
+        case .mixed: return mixedLoad(for: session)
+        case .endurance, .easy: return load(for: session)
+        }
+    }
+
+    /// The load for a session the user has rated by hand. Monotone in the three
+    /// bands by construction, which is what makes moving the control visibly
+    /// change the countdown in the direction the label promises.
+    static func overriddenLoad(for session: SessionInput, intensity: SessionIntensity) -> SessionLoad {
+        SessionLoad(
+            value: session.durationMinutes * intensity.assumedEffort * effortToTrimpScale,
+            source: .reportedEffort,
+            heartRateCoverage: session.heartRateCoverage
+        )
     }
 
     // MARK: - Sources

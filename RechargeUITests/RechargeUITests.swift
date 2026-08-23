@@ -161,8 +161,16 @@ final class RechargeUITests: XCTestCase {
 
     func testSettingsExposesTheComplicationStyleSetting() {
         let app = launch(scene: "settings")
-        XCTAssertTrue(app.staticTexts["Apple Health"].waitForExistence(timeout: 15))
+        // The sheet's own bar, not a row inside it. Every row in a SwiftUI
+        // `Form` that sits below the fold is absent from the accessibility tree
+        // rather than merely off-screen, so waiting on one is waiting on how
+        // many sections happen to precede it — which is what broke here when
+        // Settings grew a Notifications section and a line of explanation under
+        // the recovery-rate row.
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 15))
         attach(app, named: "settings")
+
+        XCTAssertTrue(scrollToFind(app.staticTexts["Apple Health"], in: app))
 
         // Scrolled to, not asserted in place. The Recharge+ pitch and the
         // recovery-model section now sit above Apple Health, so its rows start
@@ -406,7 +414,10 @@ final class RechargeUITests: XCTestCase {
         )
         // `.textCase(.uppercase)` is a rendering transform: the accessibility
         // label stays as it was written.
-        for column in ["Usual", "Optimal"] {
+        // Spelled out rather than read from `RechargeConversionCopy`: the UI
+        // test bundle does not compile `Shared`, and these are the words the
+        // user actually reads.
+        for column in ["Standard", "Recharge+"] {
             XCTAssertTrue(app.staticTexts[column].firstMatch.exists, "the \(column) column is missing")
         }
         attach(app, named: "today-comparison")
@@ -638,7 +649,7 @@ final class RechargeUITests: XCTestCase {
     func testTheTabBarDoesNotCoverTheBottomOfToday() {
         let app = launch(scene: "recovering")
         let caption = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] %@", "Usual is read from your own history")
+            NSPredicate(format: "label CONTAINS[c] %@", "Standard is how long you usually leave")
         ).firstMatch
         XCTAssertTrue(caption.waitForExistence(timeout: 15))
         scrollToBottom(of: app)

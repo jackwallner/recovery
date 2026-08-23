@@ -93,17 +93,17 @@ struct RechargePlusView: View {
                     .foregroundStyle(Theme.textPrimary)
 
                 HStack(alignment: .center, spacing: Theme.Space.md) {
-                    figure("Usual", CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                    figure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                     Image(systemName: "arrow.right")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Theme.textTertiary)
-                    figure("Optimal", CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                    figure(RechargeConversionCopy.proColumn, CountdownFormat.hours(preview.personalizedHours), Theme.pro)
                     Spacer(minLength: 0)
                 }
 
                 Text(preview.isExample
                      ? "An example on the real curve until you have recorded a qualifying session. The arithmetic is the same one your own sessions get."
-                     : "What you usually do after a session like this, beside the window Recharge+ recommends for it.")
+                     : RechargeConversionCopy.comparisonCaption(hasPurchased: true))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -254,15 +254,8 @@ struct RechargePlusView: View {
 struct HealthIngestList: View {
     let summary: HealthIngestSummary
     var showsDetail = true
-    /// How many rows to draw. The trial page has a price block under it that
-    /// must not be pushed off the screen, so it takes the first few and says how
-    /// many it left out.
-    var limit: Int?
 
-    private var rows: [HealthIngestSummary.Row] {
-        guard let limit else { return summary.rows }
-        return Array(summary.rows.prefix(limit))
-    }
+    private var rows: [HealthIngestSummary.Row] { summary.rows }
 
     var body: some View {
         VStack(spacing: Theme.Space.sm) {

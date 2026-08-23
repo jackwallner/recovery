@@ -52,15 +52,29 @@ public enum RecoveryResolver {
 
     /// Estimates whose countdown has expired since they were last acknowledged.
     /// These are the ones eligible for the one-tap readiness question.
+    ///
+    /// - Parameter eligibleFrom: the earliest `readyAt` worth asking about — in
+    ///   practice the moment setup finished. Onboarding imports a hundred and
+    ///   twenty days of history at once, so every countdown in it has already
+    ///   expired by the time the user reaches Today, and without this bound the
+    ///   first thing a new user was asked is how a session they did before
+    ///   installing the app felt when a countdown they never saw ran out. Nil
+    ///   means unbounded, which is the behaviour every test written before this
+    ///   existed assumes.
     public static func awaitingFeedback(
         in estimates: [RecoveryEstimate],
         answered: Set<String>,
+        eligibleFrom: Date? = nil,
         now: Date = .now
     ) -> RecoveryEstimate? {
         estimates
             .filter { $0.producesCountdown && $0.readyAt <= now && !answered.contains($0.sessionID) }
             // Only ask about something recent enough to remember.
             .filter { now.timeIntervalSince($0.readyAt) < 2 * 86_400 }
+            .filter { estimate in
+                guard let eligibleFrom else { return true }
+                return estimate.readyAt >= eligibleFrom
+            }
             .max { $0.readyAt < $1.readyAt }
     }
 }
