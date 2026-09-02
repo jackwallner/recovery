@@ -1,7 +1,7 @@
 {
   "ro": {
     "name": "Recharge: Timp de refacere",
-    "subtitle": "Numărătoare inversă pe Watch",
+    "subtitle": "Afli când te antrenezi iar",
     "keywords": "triatlon,rezistenta,maraton,alergare,sala,hrv,wod,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Timp de refacere pe Apple Watch-ul pe care îl ai deja. O numărătoare după fiecare antrenament greu și un numărătoarea s-a încheiat clar la final.",
     "release_notes": "Prima versiune.\n\n• Numărătoare după fiecare antrenament care contează, cu o stare numărătoarea s-a încheiat clară\n• Aplicație pentru Apple Watch și patru familii de complicații: circulară, dreptunghiulară, în linie și colț\n• Curbe separate pentru rezistență, forță, mixt și sesiuni ușoare\n• Intensitate: ușoară / moderată / grea\n• Explicație completă pentru fiecare estimare: ce sesiune a stabilit-o, cât de greu a fost pentru tine și cât de sigură este",
@@ -19,7 +19,7 @@
   },
   "hr": {
     "name": "Recharge: Vrijeme oporavka",
-    "subtitle": "Odbrojavanje na Apple Watch",
+    "subtitle": "Znaj kada opet trenirati",
     "keywords": "triatlon,izdrzljivost,maraton,trcanje,teretana,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Vrijeme oporavka na Apple Watchu koji već imaš. Odbrojavanje nakon svakog teškog treninga i jasno odbrojavanje gotovo kad istekne.",
     "release_notes": "Prva verzija.\n\n• Odbrojavanje nakon svakog treninga koji se broji, s jasnim stanjem odbrojavanje gotovo\n• Aplikacija za Apple Watch i četiri obitelji komplikacija: kružna, pravokutna, u liniji i kutna\n• Zasebne krivulje za izdržljivost, snagu, mješoviti trening i lagane sesije\n• Intenzitet: lagano / umjereno / teško\n• Potpuno objašnjenje svake procjene: koji ju je trening postavio, koliko ti je bio težak i koliko je pouzdana",
@@ -37,7 +37,7 @@
   },
   "sl-SI": {
     "name": "Recharge: Čas za regeneracijo",
-    "subtitle": "Odštevanje na Apple Watch",
+    "subtitle": "Veš, kdaj spet trenirati",
     "keywords": "triatlon,vzdrzljivost,maraton,tek,fitnes,hrv,kolo,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Čas regeneracije na Apple Watchu, ki ga že imaš. Odštevanje po vsakem težkem treningu in jasen odštevanje končano, ko se izteče.",
     "release_notes": "Prva različica.\n\n• Odštevanje po vsakem upoštevanem treningu, z jasnim stanjem odštevanje končano\n• Aplikacija za Apple Watch in štiri družine zapletov: krožna, pravokotna, v vrstici in kotna\n• Ločene krivulje za vzdržljivost, moč, mešani trening in lahke vadbe\n• Intenzivnost: lahka / zmerna / težka\n• Popolna razlaga vsake ocene: kateri trening jo je določil, kako težak je bil zate in kako zanesljiva je",

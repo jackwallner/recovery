@@ -1,7 +1,7 @@
 {
   "he": {
     "name": "Recharge: זמן התאוששות לספורט",
-    "subtitle": "ספירה לאחור ל-Apple Watch",
+    "subtitle": "לדעת מתי לחזור להתאמן שוב",
     "keywords": "טריאתלון,סיבולת,מרתון,ריצה,כושר,דופק,hrv,אימון,שינה,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "זמן התאוששות על ה-Apple Watch שכבר יש לך. ספירה לאחור אחרי כל אימון קשה, ומצב הספירה לאחור הסתיימה ברור כשהיא מסתיימת.",
     "release_notes": "גרסה ראשונה.\n\n• ספירה לאחור אחרי כל אימון שנספר, עם מצב הספירה לאחור הסתיימה ברור\n• אפליקציה ל-Apple Watch וארבע משפחות סיבוכים: עגול, מלבני, בשורה ופינה\n• עקומות נפרדות לסיבולת, לכוח, לאימון משולב ולאימונים קלים\n• תיקון עצימות לכל אימון: קל / בינוני / קשה\n• הסבר מלא לכל הערכה: איזה אימון קבע אותה, כמה הוא היה קשה עבורך ועד כמה היא בטוחה",
@@ -19,7 +19,7 @@
   },
   "ar-SA": {
     "name": "Recharge: وقت التعافي الرياضي",
-    "subtitle": "عد تنازلي على Apple Watch",
+    "subtitle": "اعرف متى تعود إلى التدريب",
     "keywords": "ترياثلون,تحمل,ماراثون,جري,لياقة,نبض,تمرين,رياضة,hrv,استشفاء,نوم,training,fitness,workout,heart",
     "promotional_text": "وقت تعافٍ على ساعة Apple Watch التي تملكها بالفعل. عدّ تنازلي بعد كل تمرين شاق، وحالة اكتمل العد التنازلي واضحة عند انتهائه.",
     "release_notes": "الإصدار الأول.\n\n• عد تنازلي بعد كل تمرين محتسب، مع حالة اكتمل العد التنازلي واضحة\n• تطبيق Apple Watch وأربع عائلات من التعقيدات: دائري ومستطيل وسطري وزاوي\n• منحنيات منفصلة للتحمل والقوة والتمارين المختلطة والجلسات الخفيفة\n• تصحيح شدة كل جلسة: خفيفة / متوسطة / عالية\n• شرح كامل لكل تقدير: أي جلسة حددته، وكم كان شاقاً عليك، ومدى الثقة به",
@@ -37,7 +37,7 @@
   },
   "th": {
     "name": "Recharge: เวลาฟื้นตัวนักกีฬา",
-    "subtitle": "นับถอยหลังบน Apple Watch",
+    "subtitle": "รู้ว่าจะกลับไปซ้อมได้เมื่อไหร่",
     "keywords": "ไตรกีฬา,วิ่ง,มาราธอน,ฟิตเนส,หัวใจ,ออกกำลังกาย,hrv,นอน,ฟื้น,training,fitness,workout,heart,sleep",
     "promotional_text": "เวลาฟื้นตัวบน Apple Watch ที่คุณมีอยู่แล้ว นับถอยหลังหลังทุกการซ้อมหนัก และสถานะนับถอยหลังเสร็จสิ้นที่ชัดเจนเมื่อหมดเวลา",
     "release_notes": "เวอร์ชันแรก\n\n• นับถอยหลังหลังทุกการออกกำลังกายที่นับ นับถอยหลังเสร็จสิ้นสถานะนับถอยหลังเสร็จสิ้นที่ชัดเจน\n• แอปสำหรับ Apple Watch และคอมพลิเคชันสี่ตระกูล: วงกลม สี่เหลี่ยม แบบบรรทัด และมุม\n• เส้นโค้งแยกสำหรับความอดทน ความแข็งแรง แบบผสม และการซ้อมเบา\n• แก้ไขความหนักของแต่ละเซสชัน: เบา / ปานกลาง / หนัก\n• คำอธิบายเต็มของทุกการประเมิน: การซ้อมใดกำหนดมัน หนักแค่ไหนสำหรับคุณ และมั่นใจเพียงใด",
@@ -55,7 +55,7 @@
   },
   "vi": {
     "name": "Recharge: Thời gian hồi phục",
-    "subtitle": "Đếm ngược trên Apple Watch",
+    "subtitle": "Biết khi nào tập lại được",
     "keywords": "triathlon,marathon,chạy,bộ,thể,lực,nhịp,tim,gym,hrv,ngủ,training,fitness,workout,heart,sleep,athlete",
     "promotional_text": "Thời gian hồi phục trên Apple Watch bạn đã có. Một lượt đếm ngược sau mỗi buổi tập nặng và trạng thái đếm ngược hoàn tất rõ ràng khi hết giờ.",
     "release_notes": "Phiên bản đầu tiên.\n\n• Đếm ngược sau mỗi buổi tập được tính, kèm trạng thái đếm ngược hoàn tất rõ ràng\n• Ứng dụng Apple Watch và bốn họ tiện ích: tròn, chữ nhật, nội tuyến và góc\n• Đường cong riêng cho sức bền, sức mạnh, hỗn hợp và buổi nhẹ\n• Điều chỉnh cường độ từng buổi: nhẹ / vừa / nặng\n• Giải thích đầy đủ cho mỗi ước tính: buổi nào đặt ra nó, nặng đến đâu với bạn và mức tin cậy",

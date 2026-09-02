@@ -1,1 +1,1 @@
-ガーミン,トライアスロン,マラソン,ランニング,筋トレ,疲労,心拍,睡眠,トレーニング,回復,アップルウォッチ,training,fitness,workout,heart,hrv,sleep
+トライアスロン,マラソン,ランニング,筋トレ,自転車,水泳,疲労,心拍,睡眠,持久力,トレーニング,回復,コンディション,training,fitness,workout,heart,hrv

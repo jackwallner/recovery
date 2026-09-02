@@ -1,7 +1,7 @@
 {
   "fr-FR": {
     "name": "Recharge : Temps de repos",
-    "subtitle": "Compte à rebours Apple Watch",
+    "subtitle": "Sachez quand vous réentraîner",
     "keywords": "triathlon,endurance,marathon,course,musculation,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Un temps de récupération sur l'Apple Watch que vous avez déjà. Un décompte après chaque séance dure, et un décompte terminé clair quand il expire.",
     "release_notes": "Première version.\n\n• Décompte après chaque entraînement pris en compte, avec un état décompte terminé clair\n• App Apple Watch et quatre familles de complications : circulaire, rectangulaire, en ligne et coin\n• Courbes distinctes pour l'endurance, la force, le mixte et les séances légères\n• Intensité : légère / modérée / intense\n• Explication complète de chaque estimation : la séance qui l'a fixée, sa dureté pour vous et le niveau de confiance",
@@ -19,7 +19,7 @@
   },
   "fr-CA": {
     "name": "Recharge : Temps de récup",
-    "subtitle": "Récupération sur Apple Watch",
+    "subtitle": "Sachez quand vous réentraîner",
     "keywords": "triathlon,endurance,marathon,course,musculation,repos,training,fitness,workout,heart,hrv,sleep",
     "promotional_text": "Un temps de récupération sur l'Apple Watch que vous avez déjà. Un décompte après chaque séance exigeante, et un décompte terminé clair à la fin.",
     "release_notes": "Première version.\n\n• Décompte après chaque entraînement admissible, avec un état décompte terminé clair\n• App Apple Watch et quatre familles de complications : circulaire, rectangulaire, en ligne et coin\n• Courbes distinctes pour l'endurance, la force, le mixte et les séances légères\n• Intensité : légère / modérée / intense\n• Explication complète de chaque estimation : la séance qui l'a fixée, sa dureté pour vous et le niveau de confiance",

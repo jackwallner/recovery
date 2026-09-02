@@ -1,7 +1,7 @@
 {
   "it": {
     "name": "Recharge: Tempo di recupero",
-    "subtitle": "Conto alla rovescia su Watch",
+    "subtitle": "Scopri quando riallenarti",
     "keywords": "triathlon,resistenza,maratona,corsa,palestra,hrv,wod,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Tempo di recupero sull'Apple Watch che hai già. Un conto alla rovescia dopo ogni sessione dura e un conto completato chiaro quando scade.",
     "release_notes": "Prima versione.\n\n• Conto alla rovescia dopo ogni allenamento valido, con uno stato conto completato chiaro\n• App per Apple Watch e quattro famiglie di complicazioni: circolare, rettangolare, in linea e angolo\n• Curve distinte per resistenza, forza, misto e sessioni leggere\n• Intensità: leggera / moderata / intensa\n• Spiegazione completa di ogni stima: quale sessione l'ha fissata, quanto è stata dura per te e con quanta fiducia",
@@ -19,7 +19,7 @@
   },
   "nl-NL": {
     "name": "Recharge: Hersteltijd sport",
-    "subtitle": "Aftellen op je Apple Watch",
+    "subtitle": "Weet wanneer je weer traint",
     "keywords": "triatlon,uithoudingsvermogen,marathon,hardlopen,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Hersteltijd op de Apple Watch die je al hebt. Een aftelling na elke zware sessie en een duidelijke aftelling klaar als die afloopt.",
     "release_notes": "Eerste versie.\n\n• Aftelling na elke meetellende workout, met een duidelijke aftelling klaar-status\n• Apple Watch-app en vier complicatiefamilies: rond, rechthoekig, inline en hoek\n• Aparte curves voor duur, kracht, gemengd en lichte sessies\n• Intensiteit: licht / gemiddeld / zwaar\n• Volledige uitleg bij elke schatting: welke sessie hem zette, hoe zwaar die voor jou was en hoe zeker de app is",
