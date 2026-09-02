@@ -1,7 +1,7 @@
 {
   "en-GB": {
     "name": "Recharge Workout Recovery Time",
-    "subtitle": "Countdown for your Apple Watch",
+    "subtitle": "Know when to train again",
     "keywords": "connect,endurance,triathlon,athlete,race,day,tsb,taper,training,fitness,heart,hrv,sleep,run,cycling",
     "promotional_text": "Recovery time on Apple Watch. A training-load countdown after every qualifying workout, complete when it expires.",
     "release_notes": "First release.\n\n• Recovery countdown after every qualifying workout, with a clear Countdown complete state\n• Apple Watch app and four complication families: circular, rectangular, inline, and corner\n• Separate recovery curves for endurance, strength, mixed, and easy sessions\n• Light / Moderate / Hard intensity correction for each session\n• Full explanation of every estimate: which session set it, how hard it was for you, and how confident it is",
@@ -19,7 +19,7 @@
   },
   "en-AU": {
     "name": "Recharge Workout Recovery Time",
-    "subtitle": "Recovery countdown on Watch",
+    "subtitle": "Know when to train again",
     "keywords": "connect,endurance,triathlon,athlete,race,day,tsb,gym,training,fitness,heart,hrv,sleep,run,cycling",
     "promotional_text": "Recovery time on Apple Watch. A training-load countdown after every qualifying workout, complete when it expires.",
     "release_notes": "First release.\n\n• Recovery countdown after every qualifying workout, with a clear Countdown complete state\n• Apple Watch app and four complication families: circular, rectangular, inline, and corner\n• Separate recovery curves for endurance, strength, mixed, and easy sessions\n• Light / Moderate / Hard intensity correction for each session\n• Full explanation of every estimate: which session set it, how hard it was for you, and how confident it is",
@@ -37,7 +37,7 @@
   },
   "en-CA": {
     "name": "Recharge Workout Recovery Time",
-    "subtitle": "Countdown for Apple Watch",
+    "subtitle": "Know when to train again",
     "keywords": "connect,endurance,triathlon,athlete,race,day,tsb,taper,training,fitness,heart,hrv,sleep,run,cycling",
     "promotional_text": "Recovery time on Apple Watch. A training-load countdown after every qualifying workout, complete when it expires.",
     "release_notes": "First release.\n\n• Recovery countdown after every qualifying workout, with a clear Countdown complete state\n• Apple Watch app and four complication families: circular, rectangular, inline, and corner\n• Separate recovery curves for endurance, strength, mixed, and easy sessions\n• Light / Moderate / Hard intensity correction for each session\n• Full explanation of every estimate: which session set it, how hard it was for you, and how confident it is",

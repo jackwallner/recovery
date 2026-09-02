@@ -1,7 +1,7 @@
 {
   "es-ES": {
     "name": "Recharge: Tiempo de descanso",
-    "subtitle": "Cuenta atrás para Apple Watch",
+    "subtitle": "Sabe cuándo volver a entrenar",
     "keywords": "triatlon,resistencia,maraton,correr,pesas,hrv,fatiga,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Tiempo de recuperación en el Apple Watch que ya tienes. Una cuenta atrás tras cada sesión dura y un cuenta completada claro cuando termina.",
     "release_notes": "Primera versión.\n\n• Cuenta atrás tras cada entrenamiento que cuenta, con un estado cuenta completada claro\n• App para Apple Watch y cuatro familias de complicaciones: circular, rectangular, en línea y esquina\n• Curvas propias para resistencia, fuerza, mixto y sesiones suaves\n• Intensidad: ligera / moderada / intensa\n• Explicación completa de cada estimación: qué sesión la fijó, cuánto te costó y con qué confianza",
@@ -19,7 +19,7 @@
   },
   "es-MX": {
     "name": "Recharge: Descanso deportivo",
-    "subtitle": "Cuenta regresiva Apple Watch",
+    "subtitle": "Sabe cuándo volver a entrenar",
     "keywords": "triatlon,resistencia,maraton,correr,pesas,fatiga,hrv,gym,training,fitness,workout,heart,sleep,run",
     "promotional_text": "Tiempo de recuperación en el Apple Watch que ya traes. Una cuenta regresiva tras cada sesión dura y un cuenta regresiva completada claro cuando termina.",
     "release_notes": "Primera versión.\n\n• Cuenta regresiva tras cada entrenamiento que cuenta, con un estado cuenta regresiva completada claro\n• App para Apple Watch y cuatro familias de complicaciones: circular, rectangular, en línea y esquina\n• Curvas propias para resistencia, fuerza, mixto y sesiones suaves\n• Intensidad: ligera / moderada / intensa\n• Explicación completa de cada estimación: qué sesión la fijó, cuánto te costó y con qué confianza",
@@ -37,7 +37,7 @@
   },
   "ca": {
     "name": "Recharge: Temps de descans",
-    "subtitle": "Compte enrere per Apple Watch",
+    "subtitle": "Sap quan tornar a entrenar",
     "keywords": "triatlo,resistencia,marato,correr,peses,fatiga,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Temps de recuperació a l'Apple Watch que ja tens. Un compte enrere després de cada sessió dura i un compte enrere complet clar quan s'acaba.",
     "release_notes": "Primera versió.\n\n• Compte enrere després de cada entrenament que compta, amb un estat compte enrere complet clar\n• App per a l'Apple Watch i quatre famílies de complicacions: circular, rectangular, en línia i cantonada\n• Corbes pròpies per a resistència, força, mixt i sessions suaus\n• Intensitat: lleugera / moderada / intensa\n• Explicació completa de cada estimació: quina sessió la va fixar, què et va costar i amb quina confiança",

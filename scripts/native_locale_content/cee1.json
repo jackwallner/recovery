@@ -1,7 +1,7 @@
 {
   "pl": {
     "name": "Recharge: Czas regeneracji",
-    "subtitle": "Odliczanie na Apple Watch",
+    "subtitle": "Wiesz, kiedy znów trenować",
     "keywords": "triathlon,wytrzymalosc,maraton,bieganie,silownia,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Czas regeneracji na Apple Watchu, który już masz. Odliczanie po każdym ciężkim treningu i wyraźne odliczanie zakończone, gdy dobiegnie końca.",
     "release_notes": "Pierwsza wersja.\n\n• Odliczanie po każdym liczącym się treningu, z wyraźnym stanem odliczanie zakończone\n• Aplikacja na Apple Watch i cztery rodziny komplikacji: okrągła, prostokątna, liniowa i narożna\n• Osobne krzywe dla wytrzymałości, siły, treningu mieszanego i lekkich sesji\n• Intensywność: lekka / umiarkowana / trudna\n• Pełne wyjaśnienie każdego szacunku: który trening go ustawił, jak ciężki był dla Ciebie i jak pewny jest wynik",
@@ -19,7 +19,7 @@
   },
   "cs": {
     "name": "Recharge: Doba regenerace",
-    "subtitle": "Odpočítávání na Apple Watch",
+    "subtitle": "Zjistěte, kdy zase trénovat",
     "keywords": "triatlon,vytrvalost,maraton,beh,posilovna,hrv,kolo,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Doba regenerace na Apple Watch, které už máte. Odpočítávání po každém tvrdém tréninku a jasné odpočet dokončen, když doběhne.",
     "release_notes": "První verze.\n\n• Odpočítávání po každém započítaném tréninku, s jasným stavem odpočet dokončen\n• Aplikace pro Apple Watch a čtyři rodiny komplikací: kruhová, obdélníková, řádková a rohová\n• Vlastní křivky pro vytrvalost, sílu, smíšený trénink a lehké lekce\n• Intenzita: lehká / střední / vysoká\n• Úplné vysvětlení každého odhadu: který trénink ho nastavil, jak těžký pro vás byl a jak jistý je výsledek",
@@ -37,7 +37,7 @@
   },
   "sk": {
     "name": "Recharge: Čas regenerácie",
-    "subtitle": "Odpočítavanie na Apple Watch",
+    "subtitle": "Viete, kedy znova trénovať",
     "keywords": "triatlon,vytrvalost,maraton,beh,posilnovna,hrv,wod,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Čas regenerácie na Apple Watch, ktoré už máte. Odpočítavanie po každom tvrdom tréningu a jasné odpočítavanie dokončené, keď dobehne.",
     "release_notes": "Prvá verzia.\n\n• Odpočítavanie po každom započítanom tréningu, s jasným stavom odpočítavanie dokončené\n• Aplikácia pre Apple Watch a štyri rodiny komplikácií: kruhová, obdĺžniková, riadková a rohová\n• Vlastné krivky pre vytrvalosť, silu, zmiešaný tréning a ľahké lekcie\n• Intenzita: ľahká / stredná / vysoká\n• Úplné vysvetlenie každého odhadu: ktorý tréning ho nastavil, aký ťažký pre vás bol a aký istý je výsledok",
@@ -55,7 +55,7 @@
   },
   "hu": {
     "name": "Recharge: Regenerációs idő",
-    "subtitle": "Visszaszámlálás Apple Watch",
+    "subtitle": "Tudd, mikor edzhetsz újra",
     "keywords": "triatlon,allokepesseg,maraton,futas,edzoterem,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Regenerációs idő az Apple Watchon, ami már megvan. Visszaszámlálás minden kemény edzés után, és világos visszaszámlálás kész, amikor lejár.",
     "release_notes": "Első verzió.\n\n• Visszaszámlálás minden beszámított edzés után, világos visszaszámlálás kész állapottal\n• Apple Watch app és négy komplikációcsalád: kör, téglalap, soros és sarok\n• Külön görbék állóképességhez, erőhöz, vegyes edzéshez és könnyű mozgáshoz\n• Intenzitás: könnyű / közepes / kemény\n• Minden becslés teljes magyarázata: melyik edzés állította be, mennyire volt kemény neked, és mennyire biztos",

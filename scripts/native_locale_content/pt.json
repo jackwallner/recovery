@@ -1,7 +1,7 @@
 {
   "pt-BR": {
     "name": "Recharge: Tempo de descanso",
-    "subtitle": "Contagem regressiva no Watch",
+    "subtitle": "Saiba quando treinar de novo",
     "keywords": "triatlo,resistencia,maratona,corrida,musculacao,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Tempo de recuperação no Apple Watch que você já tem. Uma contagem regressiva depois de cada treino puxado e um contagem concluída claro no fim.",
     "release_notes": "Primeira versão.\n\n• Contagem regressiva depois de cada treino que conta, com um estado contagem concluída claro\n• App para Apple Watch e quatro famílias de complicações: circular, retangular, em linha e canto\n• Curvas próprias para resistência, força, misto e treinos leves\n• Correção da intensidade por treino: leve / moderada / intensa\n• Explicação completa de cada estimativa: qual treino a definiu, o quanto pesou para você e com que confiança",
@@ -19,7 +19,7 @@
   },
   "pt-PT": {
     "name": "Recharge: Tempo de repouso",
-    "subtitle": "Contagem decrescente Watch",
+    "subtitle": "Saiba quando treinar de novo",
     "keywords": "triatlo,resistencia,maratona,corrida,ginasio,hrv,wod,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Tempo de recuperação no Apple Watch que já tem. Uma contagem decrescente após cada sessão dura e um contagem concluída claro quando termina.",
     "release_notes": "Primeira versão.\n\n• Contagem decrescente após cada treino elegível, com um estado contagem concluída claro\n• App para Apple Watch e quatro famílias de complicações: circular, retangular, em linha e canto\n• Curvas próprias para resistência, força, misto e sessões leves\n• Correção da intensidade por sessão: leve / moderada / intensa\n• Explicação completa de cada estimativa: que sessão a definiu, quanto lhe custou e com que confiança",

@@ -1,7 +1,7 @@
 {
   "el": {
     "name": "Recharge: Χρόνος αποκατάστασης",
-    "subtitle": "Αντίστροφη μέτρηση Apple Watch",
+    "subtitle": "Μάθε πότε ξαναπροπονείσαι",
     "keywords": "triathlon,αντοχη,μαραθωνιος,τρεξιμο,γυμναστηριο,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Χρόνος αποκατάστασης στο Apple Watch που ήδη έχεις. Μια αντίστροφη μέτρηση μετά από κάθε σκληρή προπόνηση και ένα καθαρό αντίστροφη μέτρηση τέλος.",
     "release_notes": "Πρώτη έκδοση.\n\n• Αντίστροφη μέτρηση μετά από κάθε προπόνηση που μετράει, με καθαρή κατάσταση αντίστροφη μέτρηση τέλος\n• Εφαρμογή για Apple Watch και τέσσερις οικογένειες επιπλοκών: κυκλική, ορθογώνια, σε γραμμή και γωνία\n• Ξεχωριστές καμπύλες για αντοχή, δύναμη, μεικτή προπόνηση και ελαφριές συνεδρίες\n• Ένταση: ελαφριά / μέτρια / σκληρή\n• Πλήρης εξήγηση κάθε εκτίμησης: ποια προπόνηση την όρισε, πόσο σκληρή ήταν για σένα και πόσο σίγουρη είναι",
@@ -19,7 +19,7 @@
   },
   "tr": {
     "name": "Recharge: Toparlanma süresi",
-    "subtitle": "Apple Watch için geri sayım",
+    "subtitle": "Yeniden ne zaman çalışacağın",
     "keywords": "triatlon,dayaniklilik,maraton,kosu,antrenman,fitness,hrv,spor,training,workout,heart,sleep,readiness",
     "promotional_text": "Zaten sahip olduğun Apple Watch'ta toparlanma süresi. Her zorlu antrenmanın ardından bir geri sayım ve bittiğinde net bir geri sayım tamamlandı.",
     "release_notes": "İlk sürüm.\n\n• Sayılan her antrenmanın ardından geri sayım ve net bir geri sayım tamamlandı durumu\n• Apple Watch uygulaması ve dört komplikasyon ailesi: dairesel, dikdörtgen, satır içi ve köşe\n• Dayanıklılık, kuvvet, karma ve hafif seanslar için ayrı eğriler\n• Seans yoğunluğunu düzeltme: hafif / orta / zor\n• Her tahminin tam açıklaması: hangi seans belirledi, senin için ne kadar zordu ve ne kadar kesin",
@@ -37,7 +37,7 @@
   },
   "ru": {
     "name": "Recharge: Время восстановления",
-    "subtitle": "Обратный отсчёт Apple Watch",
+    "subtitle": "Когда снова идти тренироваться",
     "keywords": "триатлон,выносливость,марафон,бег,спортзал,пульс,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Время восстановления на Apple Watch, который у вас уже есть. Отсчёт после каждой тяжёлой тренировки и понятное отсчёт завершён в конце.",
     "release_notes": "Первая версия.\n\n• Отсчёт после каждой засчитанной тренировки и понятное состояние отсчёт завершён\n• Приложение для Apple Watch и четыре семейства расширений: круглое, прямоугольное, строчное и угловое\n• Отдельные кривые для выносливости, силы, смешанных нагрузок и лёгких занятий\n• Коррекция интенсивности занятия: лёгкая / умеренная / высокая\n• Полное объяснение каждой оценки: какая тренировка её задала, насколько тяжёлой она была для вас и насколько оценка надёжна",
@@ -55,7 +55,7 @@
   },
   "uk": {
     "name": "Recharge: Час відновлення",
-    "subtitle": "Зворотний відлік Apple Watch",
+    "subtitle": "Коли знову йти на тренування",
     "keywords": "тріатлон,витривалість,марафон,біг,спортзал,пульс,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Час відновлення на Apple Watch, який у вас уже є. Відлік після кожного важкого тренування і зрозуміле відлік завершено наприкінці.",
     "release_notes": "Перша версія.\n\n• Відлік після кожного зарахованого тренування і зрозумілий стан відлік завершено\n• Застосунок для Apple Watch і чотири родини ускладнень: кругле, прямокутне, рядкове та кутове\n• Окремі криві для витривалості, сили, змішаних навантажень і легких занять\n• Коригування інтенсивності заняття: легка / помірна / висока\n• Повне пояснення кожної оцінки: яке тренування її задало, наскільки важким воно було для вас і наскільки оцінка надійна",

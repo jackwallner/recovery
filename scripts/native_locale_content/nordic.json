@@ -1,7 +1,7 @@
 {
   "sv": {
     "name": "Recharge: Återhämtningstid",
-    "subtitle": "Nedräkning på Apple Watch",
+    "subtitle": "Vet när du kan träna igen",
     "keywords": "triathlon,kondition,maraton,löpning,styrketräning,training,fitness,workout,heart,hrv,sleep,readiness",
     "promotional_text": "Återhämtningstid på den Apple Watch du redan har. En nedräkning efter varje hårt pass och ett tydligt nedräkning klar när den tar slut.",
     "release_notes": "Första versionen.\n\n• Nedräkning efter varje pass som räknas, med ett tydligt nedräkning klar-läge\n• Apple Watch-app och fyra komplikationsfamiljer: cirkulär, rektangulär, inline och hörn\n• Egna kurvor för uthållighet, styrka, blandat och lugna pass\n• Korrigera intensiteten per pass: lugnt / måttligt / hårt\n• Full förklaring av varje uppskattning: vilket pass som satte den, hur hårt det var för dig och hur säker appen är",
@@ -19,7 +19,7 @@
   },
   "da": {
     "name": "Recharge: Restitutionstid",
-    "subtitle": "Nedtælling på Apple Watch",
+    "subtitle": "Se hvornår du kan træne igen",
     "keywords": "triatlon,udholdenhed,maraton,løb,styrketræning,hrv,training,fitness,workout,heart,sleep,readiness",
     "promotional_text": "Restitutionstid på det Apple Watch, du allerede har. En nedtælling efter hver hård træning og et tydeligt nedtælling færdig, når den løber ud.",
     "release_notes": "Første version.\n\n• Nedtælling efter hver træning, der tæller, med en tydelig nedtælling færdig-tilstand\n• Apple Watch-app og fire komplikationsfamilier: cirkulær, rektangulær, inline og hjørne\n• Egne kurver til udholdenhed, styrke, blandet og lette træninger\n• Ret intensiteten for hver træning: let / moderat / hård\n• Fuld forklaring på hvert estimat: hvilken træning der satte det, hvor hårdt det var for dig, og hvor sikker appen er",
@@ -37,7 +37,7 @@
   },
   "no": {
     "name": "Recharge: Restitusjonstid",
-    "subtitle": "Nedtelling på Apple Watch",
+    "subtitle": "Vet når du kan trene igjen",
     "keywords": "triatlon,utholdenhet,maraton,løping,styrketrening,training,fitness,workout,heart,hrv,sleep,readiness",
     "promotional_text": "Restitusjonstid på Apple Watch-klokken du allerede har. En nedtelling etter hver hard økt og et tydelig nedtellingen er ferdig når den er ute.",
     "release_notes": "Første versjon.\n\n• Nedtelling etter hver økt som teller, med en tydelig nedtellingen er ferdig-tilstand\n• Apple Watch-app og fire komplikasjonsfamilier: sirkulær, rektangulær, inline og hjørne\n• Egne kurver for utholdenhet, styrke, blandet og rolige økter\n• Korriger intensiteten per økt: lett / moderat / hard\n• Full forklaring på hvert estimat: hvilken økt som satte det, hvor hardt det var for deg, og hvor sikker appen er",
@@ -55,7 +55,7 @@
   },
   "fi": {
     "name": "Recharge: Palautumisaika",
-    "subtitle": "Laskuri Apple Watch -kelloon",
+    "subtitle": "Tiedät, milloin voit treenata",
     "keywords": "triathlon,kestavyys,maraton,juoksu,kuntosali,syke,training,fitness,workout,heart,hrv,sleep,readiness",
     "promotional_text": "Palautumisaika Apple Watchiin, joka sinulla jo on. Laskuri jokaisen kovan treenin jälkeen ja selkeä laskuri valmis, kun se päättyy.",
     "release_notes": "Ensimmäinen versio.\n\n• Laskuri jokaisen laskettavan treenin jälkeen, ja selkeä laskuri valmis-tila\n• Apple Watch -sovellus ja neljä komplikaatioperhettä: pyöreä, suorakulmainen, inline ja kulma\n• Omat käyrät kestävyydelle, voimalle, sekatreenille ja kevyille treeneille\n• Korjaa treenin intensiteettiä: kevyt / kohtalainen / kova\n• Täysi selitys jokaiselle arviolle: mikä treeni sen asetti, kuinka kova se oli sinulle ja kuinka varma sovellus on",

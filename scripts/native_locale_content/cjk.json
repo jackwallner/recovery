@@ -1,8 +1,8 @@
 {
   "ja": {
     "name": "Recharge ワークアウト回復時間",
-    "subtitle": "Apple Watchのカウントダウン",
-    "keywords": "ガーミン,トライアスロン,マラソン,ランニング,筋トレ,疲労,心拍,睡眠,トレーニング,回復,アップルウォッチ,training,fitness,workout,heart,hrv,sleep",
+    "subtitle": "次に鍛えるタイミングがわかる",
+    "keywords": "トライアスロン,マラソン,ランニング,筋トレ,自転車,水泳,疲労,心拍,睡眠,持久力,トレーニング,回復,コンディション,training,fitness,workout,heart,hrv",
     "promotional_text": "Apple Watchで使える回復時間。ハードなセッションのたびにカウントダウンが始まり、終われば明確な「カウントダウン完了」。",
     "release_notes": "最初のバージョンです。\n\n• 対象となるワークアウトごとにカウントダウン、そして明確な「カウントダウン完了」\n• Apple Watchアプリと4種類のコンプリケーション（円形・長方形・インライン・コーナー）\n• 持久系・筋力系・混合（ / ）・軽い運動でそれぞれ別のカーブ\n• 強度を修正：軽い／普通／きつい\n• すべての推定に完全な説明：どのセッションが決めたか、どれだけきつかったか、どれだけ確かか",
     "price_disclosure": "価格は購入前にアプリ内に表示され、地域によって異なります",
@@ -19,8 +19,8 @@
   },
   "ko": {
     "name": "Recharge 운동 회복 시간",
-    "subtitle": "Apple Watch 회복 카운트다운",
-    "keywords": "가민,철인3종,마라톤,러닝,헬스,심박,수면,트레이닝,근력,체력,지구력,사이클,크로스핏,컨디션,회복시간,운동부하,training,fitness,workout,heart,hrv",
+    "subtitle": "다시 운동할 시점을 알려줍니다",
+    "keywords": "철인3종,마라톤,러닝,헬스,심박,수면,트레이닝,근력,체력,지구력,사이클,크로스핏,컨디션,회복시간,운동부하,인터벌,training,fitness,workout,heart,hrv",
     "promotional_text": "이미 가지고 있는 Apple Watch에서 회복 시간을 확인하세요. 힘든 운동 뒤마다 카운트다운, 끝나면 분명한 카운트다운 완료.",
     "release_notes": "첫 번째 버전입니다.\n\n• 집계되는 운동마다 카운트다운, 그리고 분명한 카운트다운 완료 상태\n• Apple Watch 앱과 네 가지 컴플리케이션 계열: 원형, 직사각형, 인라인, 모서리\n• 지구력, 근력, 혼합, 가벼운 운동에 각각 다른 곡선\n• 강도 수정: 가벼움 / 보통 / 어려움\n• 모든 추정에 대한 완전한 설명: 어떤 운동이 정했는지, 얼마나 힘들었는지, 얼마나 확실한지",
     "price_disclosure": "가격은 구매 전 앱에 표시되며 지역에 따라 다릅니다",
@@ -37,7 +37,7 @@
   },
   "zh-Hans": {
     "name": "Recharge 运动恢复时间",
-    "subtitle": "Apple Watch 恢复倒计时",
+    "subtitle": "知道什么时候可以再次训练",
     "keywords": "铁人三项,马拉松,跑步,力量训练,心率,睡眠,训练负荷,疲劳,骑行,游泳,健身,运动手表,恢复时间,越野跑,training,fitness,workout,heart,hrv,sleep",
     "promotional_text": "在你已有的 Apple Watch 上，获取恢复时间。每次大强度训练后开始倒计时，结束时给出明确的「倒计时结束」。",
     "release_notes": "首个版本。\n\n• 每次计入的训练后开始倒计时，并给出明确的「倒计时结束」\n• Apple Watch App 与四类复杂功能：圆形、矩形、内联和边角\n• 耐力、力量、混合（ / ）和轻度训练各用一条曲线\n• 修正强度：轻度 / 中等 / 高强度\n• 每个估算都有完整解释：由哪次训练决定、对你有多难、把握有多大",
@@ -55,7 +55,7 @@
   },
   "zh-Hant": {
     "name": "Recharge 運動恢復時間",
-    "subtitle": "Apple Watch 恢復倒數計時",
+    "subtitle": "知道什麼時候可以再次訓練",
     "keywords": "鐵人三項,馬拉松,跑步,重訓,心率,睡眠,訓練負荷,疲勞,健身,騎車,游泳,恢復時間,越野,心率變異,運動手錶,training,fitness,workout,heart,hrv,sleep",
     "promotional_text": "在你已經擁有的 Apple Watch 上，取得恢復時間。每次高強度訓練後開始倒數，結束時給你明確的「倒數結束」。",
     "release_notes": "第一個版本。\n\n• 每次計入的訓練後開始倒數，並給出明確的「倒數結束」\n• Apple Watch App 與四種複雜功能：圓形、矩形、行內與角落\n• 耐力、肌力、混合（ / ）與輕度訓練各有一條曲線\n• 修正強度：輕度／中等／高強度\n• 每個估算都有完整說明：由哪次訓練決定、對你有多辛苦、把握有多大",
@@ -73,7 +73,7 @@
   },
   "id": {
     "name": "Recharge: Waktu pemulihan",
-    "subtitle": "Hitung mundur Apple Watch",
+    "subtitle": "Ketahui kapan latihan lagi",
     "keywords": "triatlon,maraton,lari,gym,kebugaran,detak,jantung,hrv,tidur,training,fitness,workout,heart,sleep",
     "promotional_text": "Waktu pemulihan di Apple Watch yang sudah kamu punya. Hitung mundur setelah setiap sesi berat, dan status hitung mundur selesai yang jelas saat habis.",
     "release_notes": "Versi pertama.\n\n• Hitung mundur setelah setiap latihan yang dihitung, dengan status hitung mundur selesai yang jelas\n• Aplikasi Apple Watch dan empat keluarga komplikasi: bundar, persegi panjang, sebaris, dan sudut\n• Kurva terpisah untuk daya tahan, kekuatan, campuran, dan sesi ringan\n• Intensitas: ringan / sedang / berat\n• Penjelasan lengkap untuk setiap perkiraan: sesi mana yang menetapkannya, seberat apa untukmu, dan seberapa yakin",
@@ -91,7 +91,7 @@
   },
   "ms": {
     "name": "Recharge: Masa pemulihan",
-    "subtitle": "Kira detik pada Apple Watch",
+    "subtitle": "Tahu bila boleh berlatih lagi",
     "keywords": "triatlon,maraton,lari,gim,kecergasan,degupan,jantung,hrv,training,fitness,workout,heart,sleep,run",
     "promotional_text": "Masa pemulihan pada Apple Watch yang anda sedia ada. Kiraan detik selepas setiap sesi berat, dan status kiraan selesai yang jelas apabila tamat.",
     "release_notes": "Versi pertama.\n\n• Kiraan detik selepas setiap latihan yang dikira, dengan status kiraan selesai yang jelas\n• Aplikasi Apple Watch dan empat keluarga komplikasi: bulat, segi empat tepat, sebaris dan sudut\n• Lengkung berasingan untuk daya tahan, kekuatan, campuran dan sesi ringan\n• Intensiti: ringan / sederhana / berat\n• Penjelasan penuh bagi setiap anggaran: sesi mana yang menetapkannya, betapa beratnya untuk anda, dan sejauh mana yakin",
