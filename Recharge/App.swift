@@ -23,6 +23,14 @@ struct RechargeApp: App {
     init() {
         UNUserNotificationCenter.current().delegate = RechargeNotificationDelegate.shared
         ReviewPromptTracker.recordAppLaunch()
+        ConversionDiagnostics.recordAppOpen()
+        #if DEBUG
+        if RevenueCatProbe.isEnabled {
+            // Same entry point the paywall calls, so what this proves is the
+            // actual path and not a parallel one.
+            StoreService.shared.trackPaywallImpression(id: RevenueCatProbe.impressionID)
+        }
+        #endif
 
         BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.refreshTaskID, using: DispatchQueue.main) { task in
             guard let task = task as? BGAppRefreshTask else { return }
