@@ -157,6 +157,7 @@ public final class StoreService: NSObject, ObservableObject {
     private static let groupDefaults = UserDefaults(suiteName: rechargeAppGroupID)
     private let logger = Logger(subsystem: "com.jackwallner.recovery", category: "Store")
     private var isConfigured = false
+    private var paywallImpressionsThisSession: Set<String> = []
     /// False when `products` was built by asking the store for the identifiers
     /// directly rather than by reading a RevenueCat offering. Those packages are
     /// synthesised locally, so they must be purchased as products: handing an
@@ -377,6 +378,7 @@ public final class StoreService: NSObject, ObservableObject {
         configureIfNeeded()
         purchaseInFlight = true
         defer { purchaseInFlight = false }
+        let startedTrial = isEligibleForIntroOffer(product)
         #if targetEnvironment(simulator)
         // No RevenueCat on simulator. Flip the local override so the post-purchase
         // UI can be exercised; no customer is created anywhere.
@@ -388,7 +390,16 @@ public final class StoreService: NSObject, ObservableObject {
             : try await Purchases.shared.purchase(product: product.storeProduct)
         apply(customerInfo: result.customerInfo)
         if result.userCancelled { return .cancelled }
-        return result.customerInfo.hasRechargeProEntitlement ? .purchased : .pending
+        if result.customerInfo.hasRechargeProEntitlement {
+            ConversionDiagnostics.recordConversion(
+                plan: product.storeProduct.productIdentifier,
+                startedTrial: startedTrial,
+                offeringID: product.presentedOfferingContext.offeringIdentifier
+            )
+            syncConversionAttributes()
+            return .purchased
+        }
+        return .pending
         #endif
     }
 
@@ -453,11 +464,63 @@ public final class StoreService: NSObject, ObservableObject {
 
     // MARK: - Private
 
+    /// Reports a custom-paywall impression to RevenueCat and records the
+    /// on-device funnel tally.
+    ///
+    /// This app previously reported no impressions at all, so everything between
+    /// "installed" and "subscribed" was invisible for it.
+    ///
+    /// Attributes rather than extra impressions for the funnel steps: RevenueCat
+    /// treats every impression id as a paywall encounter, so pushing steps
+    /// through that channel would drive the encounter rate to 100% and destroy
+    /// the one server-side number that works.
+    ///
+    /// `isConfigured` is the load-bearing guard: `Purchases.shared` traps when
+    /// RevenueCat was never configured, which is every simulator run.
+    public func trackPaywallImpression(id: String, oncePerSession: Bool = false) {
+        configureIfNeeded()
+        guard isConfigured else { return }
+        if oncePerSession {
+            guard !paywallImpressionsThisSession.contains(id) else { return }
+            paywallImpressionsThisSession.insert(id)
+        }
+        ConversionDiagnostics.recordPitchView(impressionID: id)
+        syncConversionAttributes()
+        Purchases.shared.trackCustomPaywallImpression(
+            CustomPaywallImpressionParams(paywallId: id)
+        )
+    }
+
+    /// `setAttributes` only queues. RevenueCat uploads when the app backgrounds
+    /// or folds the queue into the POST that creates a customer, so a probe run
+    /// has to background the app before reading anything back.
+    public func syncConversionAttributes() {
+        guard isConfigured else { return }
+        let attributes = ConversionDiagnostics.subscriberAttributes
+        guard !attributes.isEmpty else { return }
+        Purchases.shared.attribution.setAttributes(attributes)
+    }
+
     private func configureIfNeeded() {
         guard !isConfigured else { return }
         #if targetEnvironment(simulator)
         // Agent and simulator runs must never create customers in the production
         // RevenueCat project. Use StoreKit Testing and the local Pro override.
+        #if DEBUG
+        // The one exception, behind a launch argument: the Test Store key is a
+        // separate RevenueCat app inside the same project, so a probe run cannot
+        // touch App Store customers, revenue or charts. See RevenueCatProbe.
+        if RevenueCatProbe.isEnabled {
+            Purchases.logLevel = .debug
+            Purchases.configure(
+                with: Configuration.Builder(withAPIKey: RevenueCatProbe.testStoreKey)
+                    .with(appUserID: RevenueCatProbe.appUserID)
+                    .build()
+            )
+            Purchases.shared.delegate = self
+            isConfigured = true
+        }
+        #endif
         return
         #else
         #if DEBUG
@@ -605,3 +668,31 @@ extension StoreService: PurchasesDelegate {
         }
     }
 }
+
+#if DEBUG
+/// Simulator-only proof path for the fleet-wide funnel attributes.
+///
+/// Under the normal rules the attributes cannot be verified on a simulator: the
+/// production key must never be configured there, so RevenueCat is never
+/// configured, so nothing is ever sent, so a physical device is the only
+/// witness. The Test Store key is a different RevenueCat app inside the same
+/// project, so a probe run cannot touch App Store customers, revenue or charts.
+///
+/// DEBUG only, and only with the launch argument, so it cannot reach a Release
+/// build or an ordinary simulator run.
+enum RevenueCatProbe {
+    static var isEnabled: Bool {
+        ProcessInfo.processInfo.arguments.contains("-rcfunnelprobe")
+    }
+
+    static let testStoreKey = "test_jpefLMKGXcPewapPKRvQTGaDaCz"
+
+    static var appUserID: String {
+        ProcessInfo.processInfo.environment["RC_PROBE_USER"] ?? "funnel-probe-recharge"
+    }
+
+    static var impressionID: String {
+        ProcessInfo.processInfo.environment["RC_PROBE_SURFACE"] ?? "recharge_paywall"
+    }
+}
+#endif

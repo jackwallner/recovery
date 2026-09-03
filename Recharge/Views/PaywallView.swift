@@ -116,6 +116,10 @@ struct PaywallView: View {
                 }
             }
             .task {
+                // This app reported no paywall impressions at all until now, so
+                // everything between "installed" and "subscribed" was invisible
+                // for it in RevenueCat.
+                store.trackPaywallImpression(id: "recharge_paywall", oncePerSession: true)
                 if store.products.isEmpty { await store.fetchProducts() }
                 selectDefaultPackage()
                 #if DEBUG
