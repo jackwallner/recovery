@@ -209,9 +209,23 @@ public final class StoreService: NSObject, ObservableObject {
         // so ask StoreKit Testing directly. Under `xcodebuild test` the scheme's
         // .storekit file is active and this renders the real paywall without
         // creating a customer in the production project.
-        await hydrateFromStoreKitTesting()
-        return
+        //
+        // The probe is the one exception, and it has to be checked here rather
+        // than only in `configureIfNeeded`: that method now does configure the
+        // SDK against the Test Store, so the comment above stopped being true
+        // for a probe run. Without this the SDK loads the offering, the app
+        // model never reads it, `currentOffering` stays nil, and a purchase
+        // probe silently does nothing at all.
+        #if DEBUG
+        let probing = RevenueCatProbe.isEnabled
         #else
+        let probing = false
+        #endif
+        if !probing {
+            await hydrateFromStoreKitTesting()
+            return
+        }
+        #endif
         do {
             let offerings = try await Purchases.shared.offerings()
             let offering = offerings.rechargePaywallOffering
@@ -243,10 +257,8 @@ public final class StoreService: NSObject, ObservableObject {
                 lastError = "Couldn't load subscription options. Check your connection and try again."
             }
         }
-        #endif
     }
 
-    #if !targetEnvironment(simulator)
     /// Last resort when the offering is unusable: ask for the three known
     /// identifiers by hand.
     ///
@@ -280,7 +292,6 @@ public final class StoreService: NSObject, ObservableObject {
         lastError = nil
         await refreshIntroEligibility()
     }
-    #endif
 
     public func refreshIntroEligibility() async {
         #if DEBUG
@@ -382,9 +393,21 @@ public final class StoreService: NSObject, ObservableObject {
         #if targetEnvironment(simulator)
         // No RevenueCat on simulator. Flip the local override so the post-purchase
         // UI can be exercised; no customer is created anywhere.
-        setLocalOverride(isPro: true)
-        return .purchased
+        //
+        // A probe run is the exception: it configures against the Test Store, so
+        // the purchase below is a real (simulated) RevenueCat purchase and the
+        // conversion it records is the thing being verified. Short-circuiting
+        // here would return `.purchased` for a sale that never happened.
+        #if DEBUG
+        let probing = RevenueCatProbe.isEnabled
         #else
+        let probing = false
+        #endif
+        if !probing {
+            setLocalOverride(isPro: true)
+            return .purchased
+        }
+        #endif
         let result = usesOfferingPackages
             ? try await Purchases.shared.purchase(package: product)
             : try await Purchases.shared.purchase(product: product.storeProduct)
@@ -400,7 +423,6 @@ public final class StoreService: NSObject, ObservableObject {
             return .purchased
         }
         return .pending
-        #endif
     }
 
     public func updateCustomerProductStatus(fetchPolicy: CacheFetchPolicy = .default) async {
@@ -416,8 +438,13 @@ public final class StoreService: NSObject, ObservableObject {
             return
         }
         #if targetEnvironment(simulator)
-        return
+        #if DEBUG
+        let probing = RevenueCatProbe.isEnabled
         #else
+        let probing = false
+        #endif
+        if !probing { return }
+        #endif
         do {
             apply(customerInfo: try await Purchases.shared.customerInfo(fetchPolicy: fetchPolicy))
             lastError = nil
@@ -425,7 +452,6 @@ public final class StoreService: NSObject, ObservableObject {
             logger.error("Customer info refresh failed: \(String(describing: error), privacy: .private)")
             lastError = "Couldn't refresh your subscription status. Check your connection and try again."
         }
-        #endif
     }
 
     public func restorePurchases() async {
@@ -689,6 +715,16 @@ enum RevenueCatProbe {
 
     static var appUserID: String {
         ProcessInfo.processInfo.environment["RC_PROBE_USER"] ?? "funnel-probe-recharge"
+    }
+
+    /// Also run a purchase against the Test Store, so the `converted_*` half of
+    /// the record is exercised and not just the impression half.
+    ///
+    /// Test Store purchases are simulated by RevenueCat: no StoreKit, no App
+    /// Store, no revenue, no real transaction. RevenueCat puts up its own
+    /// confirmation sheet, so this needs a UI test to tap it.
+    static var wantsPurchase: Bool {
+        ProcessInfo.processInfo.arguments.contains("-rcfunnelprobepurchase")
     }
 
     static var impressionID: String {
