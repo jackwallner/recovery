@@ -22,6 +22,8 @@ struct RechargeApp: App {
 
     init() {
         UNUserNotificationCenter.current().delegate = RechargeNotificationDelegate.shared
+        // The delegate itself knows nothing about the engine; see its comment.
+        RechargeNotificationDelegate.onTap.value = { RecoveryEngine.shared.publish() }
         ReviewPromptTracker.recordAppLaunch()
         ConversionDiagnostics.recordAppOpen()
         #if DEBUG

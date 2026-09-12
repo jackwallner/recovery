@@ -157,6 +157,10 @@ targets:
       # The paywall funnel record, so its counts and conversion freeze are
       # testable in this app's own build rather than only in the template.
       - path: Shared/Services/ConversionDiagnostics.swift
+      # The Ready alert: its copy, and which thread it answers a tap on. Build
+      # 39 aborted on every tap because the `async` delegate method's generated
+      # thunk called UIKit's completion handler off the main thread.
+      - path: Shared/Services/NotificationService.swift
       - path: Shared/Models/RecoveryModels.swift
       - path: Shared/Models/RecoverySnapshot.swift
       # The SwiftData schema, so the persistence round-trip is testable. It was
