@@ -228,12 +228,22 @@ final class SeededWalkthroughTests: XCTestCase {
     private func show(_ tab: String, in app: XCUIApplication, landmark: XCUIElement) {
         let button = app.buttons[tab]
         XCTAssertTrue(button.exists, "the \(tab) tab is missing")
-        waitUntilHittable(button, timeout: 30)
+        waitUntilHittable(button, timeout: Self.screenTransition)
         XCTAssertTrue(button.isHittable, "the \(tab) tab is on screen but covered")
         button.tap()
-        waitUntilHittable(landmark, timeout: 30)
+        waitUntilHittable(landmark, timeout: Self.screenTransition)
         XCTAssertTrue(landmark.isHittable, "tapping \(tab) did not bring its screen forward")
     }
+
+    /// How long a tab switch may take before it counts as broken rather than
+    /// slow. It was 30 seconds, which is generous on an idle Mac and not enough
+    /// on this one: the simulator pool is shared, so a release run regularly
+    /// coincides with another app's UI suite, and the whole of this walkthrough
+    /// goes from 34 seconds to over 120 when it does. History timed out at 30
+    /// during a `testflight.sh` run and failed the release, having found nothing
+    /// wrong with the app. The tab-bar wait below is already 300 seconds for the
+    /// same reason.
+    private static let screenTransition: TimeInterval = 120
 
     private func waitUntilHittable(_ element: XCUIElement, timeout: TimeInterval = 20) {
         let deadline = Date().addingTimeInterval(timeout)
@@ -273,7 +283,7 @@ final class SeededWalkthroughTests: XCTestCase {
         // `exists` is not `isHittable`, and the gap is real twice over here: the
         // shell cross-fades from onboarding to the tab bar over a quarter of a
         // second, and anything still presented sits on top of it.
-        waitUntilHittable(today, timeout: 60)
+        waitUntilHittable(today, timeout: Self.screenTransition)
         XCTAssertTrue(today.isHittable, "the tab bar is on screen but covered")
         attach(app, named: "01-today")
 
