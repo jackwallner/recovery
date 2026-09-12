@@ -31,6 +31,9 @@ struct RechargeApp: App {
             // Same entry point the paywall calls, so what this proves is the
             // actual path and not a parallel one.
             StoreService.shared.trackPaywallImpression(id: RevenueCatProbe.impressionID)
+            if RevenueCatProbe.wantsPurchase {
+                Task { await Self.runPurchaseProbe() }
+            }
         }
         #endif
 
@@ -72,6 +75,41 @@ struct RechargeApp: App {
         // life cycle, not when a view appears.
         PhoneWatchSession.shared.activate()
     }
+
+    #if DEBUG
+    /// Drives one Test Store purchase so `PaywallFunnelUITests` has a sheet to
+    /// tap and the `converted_*` half of the funnel record is exercised.
+    ///
+    /// **It retries, and it never gives up quietly.** One `fetchProducts()` and
+    /// a `guard … else { return }` was the whole of this, so a slow or dropped
+    /// offerings call left `currentOffering` nil, the probe returned having done
+    /// nothing, and the test waited its full 60 seconds before reporting
+    /// "RevenueCat's Test Store sheet never appeared", which describes the
+    /// symptom and not one thing about the cause. Offerings are a network call
+    /// on a machine that may be running several simulators, so treat a first
+    /// miss as slow rather than broken, and say so in the log when it really is
+    /// broken.
+    @MainActor
+    private static func runPurchaseProbe() async {
+        for attempt in 1...probeOfferingAttempts {
+            await StoreService.shared.fetchProducts()
+            if let package = StoreService.shared.currentOffering?.rechargeSortedPackages.first {
+                do {
+                    _ = try await StoreService.shared.purchase(package)
+                } catch {
+                    NSLog("[rc-funnel-probe] purchase failed: \(error)")
+                }
+                return
+            }
+            NSLog("[rc-funnel-probe] no offering yet (attempt \(attempt)/\(probeOfferingAttempts))")
+            try? await Task.sleep(for: .seconds(probeOfferingRetryDelay))
+        }
+        NSLog("[rc-funnel-probe] gave up: offerings never arrived with a package attached")
+    }
+
+    private static let probeOfferingAttempts = 8
+    private static let probeOfferingRetryDelay = 3
+    #endif
 
     /// The backstop wake. HealthKit background delivery is the primary path and
     /// is event-driven; this only covers a delivery that was missed entirely,
