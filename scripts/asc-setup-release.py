@@ -2,6 +2,8 @@
 """Idempotently prepare Recharge 1.0.0 metadata, rating, IAP, and review info."""
 from __future__ import annotations
 
+import os
+
 import json
 import re
 import sys
@@ -248,7 +250,7 @@ def main() -> None:
     attrs = {
         "contactFirstName": "Jack",
         "contactLastName": "Wallner",
-        "contactPhone": "[redacted]",
+        "contactPhone": os.environ.get("ASC_REVIEW_PHONE", ""),
         "contactEmail": "jackwallner@gmail.com",
         "demoAccountRequired": False,
         "notes": review_notes(),

@@ -58,7 +58,7 @@ platform :ios do
       app_review_information: {
         first_name: "Jack",
         last_name: "Wallner",
-        phone_number: "[redacted]",
+        phone_number: ENV.fetch("ASC_REVIEW_PHONE", ""),
         email_address: "jackwallner@gmail.com",
         demo_user: "N/A, no login, no account system",
         demo_password: "",
