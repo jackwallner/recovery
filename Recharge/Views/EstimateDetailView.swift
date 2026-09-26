@@ -142,8 +142,10 @@ struct EstimateDetailView: View {
                 : "Counted toward your training load. Not enough on its own to start a countdown."
         }
         let window = CountdownFormat.window(low: estimate.windowLowHours, high: estimate.windowHighHours)
-        let verb = hasExpired ? "ran" : "runs"
-        return "Countdown \(verb) \(window), ready \(CountdownFormat.readyAt(estimate.readyAt, now: estimate.sessionEnd))."
+        // "Tomorrow" is read against today, not against the day of the session,
+        // or an old session in History claims to be ready tomorrow.
+        guard !hasExpired else { return "Countdown ran \(window)." }
+        return "Countdown runs \(window), ready \(CountdownFormat.readyAt(estimate.readyAt, now: .now))."
     }
 
     // MARK: - Why

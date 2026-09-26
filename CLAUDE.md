@@ -48,6 +48,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
 | `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus what Health measured — VO2 max, the observed maximum heart rate, body mass. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
 | `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
+| `DuplicateWorkouts` | the same session written to Health by two apps → scored once, keeping the better-measured copy. |
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
 | `WorkoutClassifier` | `HKWorkoutActivityType` raw value → one of four profiles. All 84 raw values are pinned and tested against the SDK's own numbering; the table was silently off by one from `badminton` (4) through `crossTraining` (11) for the app's whole life, because it omitted `australianFootball` (3). |
 | `CountdownTimeline` | the entry schedule a decaying countdown needs. |
@@ -55,7 +56,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 
 ## Rules that hold everywhere
 Condensed from the deep notes below; the reasoning and the bugs behind each one live there.
-- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **13**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
+- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **15**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
 - Complication and widget views render from `entry.date`, never from `Date.now`.
 - The phone owns the model and the Watch app deliberately cannot read Health. Do not add HealthKit to the Watch to fix a delivery bug.
 - Every link in the background chain (HealthKit observer, `WCSession` activation, application context, Watch background task, App Group write, timeline reload) is guarded by a silent `return`. Observer queries and `WCSession` activation run from `RechargeApp.init` (`Recharge/App.swift`), not from a scene callback.

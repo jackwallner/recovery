@@ -77,7 +77,14 @@ import Foundation
 /// replaces the modelled window outright. Marking a session Moderate or Hard
 /// also lifts it off the `easy` profile, because a control labelled "Hard" that
 /// leaves a walk with no countdown is a control that does nothing.
-public let recoveryModelVersion = 14
+/// 14: release hardening, no documented change to the numbers.
+/// 15: the same session recorded by two apps is scored once
+/// (`DuplicateWorkouts`). An Apple Watch run that Strava or Garmin Connect also
+/// wrote to Health used to stack on itself into a double-length countdown.
+/// And a free-tier countdown read off the user's habit no longer stacks on the
+/// residual of the one before, which kept a daily trainer at 34 to 50 hours
+/// indefinitely and never let the countdown reach Ready.
+public let recoveryModelVersion = 15
 
 // MARK: - Tier
 

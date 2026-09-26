@@ -205,8 +205,8 @@ struct RechargeApp: App {
                             await HealthKitService.shared.synchronizeAuthorization()
                             await engine.refresh(force: true)
                         } else {
-                            // Respect "Not now" while still restoring any cached
-                            // history that existed before access was deferred.
+                            // Access failed or was never granted. Still restore any cached
+                            // history rather than blanking the screen.
                             engine.rescore()
                             engine.publish()
                         }

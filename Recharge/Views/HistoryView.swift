@@ -22,6 +22,7 @@ struct HistoryView: View {
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
+    @Environment(\.openURL) private var openURL
 
     @State private var selected: RecoveryEstimate?
     @State private var isRequestingHealth = false
@@ -177,6 +178,18 @@ struct HistoryView: View {
         isRequestingHealth = true
         healthMessage = nil
         defer { isRequestingHealth = false }
+        // iOS shows the permission sheet once; a second request returns with
+        // nothing on screen. Read again, and send the user to the Health app
+        // if that still fails, since that is where the choices live now.
+        if await HealthKitService.shared.authorizationRequestStatus() == .unnecessary {
+            settings.hasDeferredHealthAccess = false
+            await engine.refresh(force: true)
+            if engine.lastImportFailed || engine.lastSuccessfulImport == nil,
+               let url = URL(string: "x-apple-health://") {
+                openURL(url)
+            }
+            return
+        }
         do {
             try await HealthKitService.shared.requestAuthorization()
             settings.hasDeferredHealthAccess = false

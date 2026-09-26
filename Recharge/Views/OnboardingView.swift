@@ -31,7 +31,6 @@ struct OnboardingView: View {
 
     @State private var index = 0
     @State private var isRequestingHealth = false
-    @State private var healthError: String?
     /// Set when the user leaves the Health page, in either direction. Until then
     /// the flow past it is unknown, because Health is what decides which
     /// questions are left to ask.
@@ -150,15 +149,13 @@ struct OnboardingView: View {
             tint: Theme.recoveringSecondary,
             title: "Recharge reads\nApple Health",
             message: "Your workouts and heart rate build the estimate. Your own highest heart rate sets the range intensity is measured against. Sleep, resting heart rate, HRV, breathing rate, cardio fitness, and weight sharpen it. Nothing is written back, and your Health data never leaves your devices.",
-            primaryTitle: isRequestingHealth ? "Requesting…" : "Connect Apple Health",
+            // One way forward, and it is the system sheet. App Review rejected
+            // a "Not now" here under 5.1.1(iv): an explanation before a
+            // permission request may not offer a way to skip the request. The
+            // choice belongs to the system sheet, where Turn Off All declines.
+            primaryTitle: isRequestingHealth ? "Requesting…" : "Continue",
             primaryAction: requestHealthAccess,
             primaryDisabled: isRequestingHealth,
-            secondaryTitle: "Not now",
-            // Disabled while the sheet is in flight. Otherwise the user taps
-            // Not now, the app advances, and the delayed system sheet lands on
-            // top of a page that never asked for it.
-            secondaryAction: isRequestingHealth ? nil : { deferHealthAccess() },
-            footnote: healthError,
             isBusy: isRequestingHealth
         )
     }
@@ -166,7 +163,6 @@ struct OnboardingView: View {
     private func requestHealthAccess() {
         guard !isRequestingHealth else { return }
         isRequestingHealth = true
-        healthError = nil
         Task {
             do {
                 try await HealthKitService.shared.requestAuthorization()
@@ -175,18 +171,14 @@ struct OnboardingView: View {
                 isRequestingHealth = false
                 resolveHealth()
             } catch {
-                // A refusal is a legitimate choice, not an error state to shout
-                // about — but the explanation has to be readable, so stay on the
-                // page that shows it rather than advancing out from under it.
-                healthError = "Recharge couldn't read Health. You can grant access in the Health app under Sharing › Apps, then pull to refresh."
+                // With no skip on this page, staying put would strand the user.
+                // Today's Health card explains the failure and offers the
+                // request again.
+                settings.hasDeferredHealthAccess = true
                 isRequestingHealth = false
+                resolveHealth()
             }
         }
-    }
-
-    private func deferHealthAccess() {
-        settings.hasDeferredHealthAccess = true
-        resolveHealth()
     }
 
     /// Freezes the rest of the flow: what Health managed to answer, and what is

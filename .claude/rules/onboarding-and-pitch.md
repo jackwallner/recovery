@@ -73,6 +73,15 @@ first (the third is in "The onboarding copy is centred" above):
   could not see. It measures the offer CTA now, and
   `testThePurchaseCTALandsWhereTheContinueButtonWas` states the same claim where
   it actually broke.
+- **The Health page has no way around the permission request.** It used to
+  carry "Not now", and App Review rejected the submission for it under 5.1.1(iv)
+  (2026-09-23): a message shown before a permission request must always lead
+  into that request. The page's only control is "Continue", which raises the
+  system sheet, where the user declines if they want to. A failed request
+  advances with `hasDeferredHealthAccess` set rather than stranding the user,
+  and Today's Health card offers the request again.
+  `testTheHealthPageCannotSkipThePermissionRequest` guards it. The same rule
+  applies to any future primer for notifications or anything else.
 - **The step list is frozen once**, when the user leaves the Health page.
   Answering a question removes it from `AthleteProfile.gaps`, so a continuously
   derived array would delete the page the user is standing on. The progress bar

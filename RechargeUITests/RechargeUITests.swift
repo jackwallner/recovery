@@ -225,13 +225,11 @@ final class RechargeUITests: XCTestCase {
     /// stays true, and it is also what the user does.
     /// Every primary title onboarding can show, and *only* the primaries.
     ///
-    /// "Not now" is deliberately absent. It is the Health page's secondary, and
-    /// including it made the frame check measure a different element on that one
-    /// page — which looked exactly like the layout bug the check exists to
-    /// catch. Under screenshot mode the Health request resolves instantly, so
-    /// pressing the real primary is both possible and the path a user takes.
+    /// The Health page's primary is a plain "Continue" that goes straight to the
+    /// system sheet. Under screenshot mode the Health request resolves
+    /// instantly, so pressing it is both possible and the path a user takes.
     private static let onboardingPrimaries = [
-        "Continue", "Connect Apple Health", "Skip this one", "I understand"
+        "Continue", "Skip this one", "I understand"
     ]
 
     /// The offer page's own primary. Named separately because it is the one the
@@ -282,6 +280,29 @@ final class RechargeUITests: XCTestCase {
             primaryFrames.append(offer.frame)
         }
         return primaryFrames
+    }
+
+    /// App Review 5.1.1(iv): the message before a permission request may not
+    /// offer a way to skip the request. The Health page used to carry "Not now",
+    /// and the submission was rejected for it. Its only control is the one that
+    /// raises the system sheet.
+    func testTheHealthPageCannotSkipThePermissionRequest() {
+        let app = launch(scene: "onboarding")
+        XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
+        app.buttons["Continue"].firstMatch.tap()
+
+        let title = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'reads'")).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        // Let the page slide settle so the check reads the Health page's
+        // buttons, not the outgoing welcome page's.
+        Thread.sleep(forTimeInterval: 0.6)
+        attach(app, named: "onboarding-health-primer")
+
+        let screen = app.windows.firstMatch.frame
+        let visible = app.buttons.allElementsBoundByIndex
+            .filter { $0.isHittable && screen.intersects($0.frame) }
+            .map(\.label)
+        XCTAssertEqual(visible, ["Continue"], "the Health primer offers more than the permission request")
     }
 
     /// The regression guard for the reported bug: the primary button moved

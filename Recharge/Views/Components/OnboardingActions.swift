@@ -57,15 +57,11 @@ struct OnboardingActions: View {
             // thing on every page — including the offer, where the way out is
             // "Get Started" and the CTA underneath it has to land in the same
             // slot the thumb has been using all flow.
-            Button(secondaryTitle ?? "Not now") { secondaryAction?() }
+            secondaryRow
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Theme.Space.xs)
-                .opacity(secondaryTitle == nil ? 0 : 1)
-                .disabled(secondaryTitle == nil || secondaryAction == nil)
-                .allowsHitTesting(secondaryTitle != nil && secondaryAction != nil)
-                .accessibilityHidden(secondaryTitle == nil)
 
             OnboardingPrimaryButton(
                 title: primaryTitle,
@@ -80,6 +76,23 @@ struct OnboardingActions: View {
                 isRestoring: isRestoring,
                 onRestore: onRestore
             )
+        }
+    }
+
+    /// A page with no secondary action gets a hidden text of the same size, not
+    /// a hidden button. An invisible button is still a button to XCUITest and
+    /// to anyone inspecting the page, and on the Health page an invisible
+    /// "Not now" reads as a way to skip the permission request, which App
+    /// Review rejects under 5.1.1(iv).
+    @ViewBuilder
+    private var secondaryRow: some View {
+        if let secondaryTitle {
+            Button(secondaryTitle) { secondaryAction?() }
+                .disabled(secondaryAction == nil)
+        } else {
+            Text(verbatim: "Not now")
+                .hidden()
+                .accessibilityHidden(true)
         }
     }
 }
@@ -140,15 +153,29 @@ struct OnboardingLegalSlot: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: Theme.Space.md) { links }
-            VStack(spacing: Theme.Space.xs) { links }
+            HStack(spacing: Theme.Space.md) { row }
+            VStack(spacing: Theme.Space.xs) { row }
         }
         .font(.system(.caption, design: .rounded))
         .dynamicTypeSize(...DynamicTypeSize.accessibility3)
         .foregroundStyle(Theme.textSecondary)
-        .opacity(isVisible ? 1 : 0)
-        .allowsHitTesting(isVisible)
-        .accessibilityHidden(!isVisible)
+    }
+
+    /// Hidden text of the same size off the purchase point, for the same reason
+    /// as the secondary row: invisible links are still links to anything that
+    /// reads the page.
+    @ViewBuilder
+    private var row: some View {
+        if isVisible {
+            links
+        } else {
+            ForEach(["Restore", "Terms", "Apple EULA", "Privacy"], id: \.self) { title in
+                Text(verbatim: title)
+                    .frame(minHeight: 44)
+                    .hidden()
+            }
+            .accessibilityHidden(true)
+        }
     }
 
     @ViewBuilder

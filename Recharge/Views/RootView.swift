@@ -90,6 +90,7 @@ struct RootView: View {
             }
 
             tabBar
+                .zIndex(2)
         }
         .ignoresSafeArea(edges: .bottom)
         .tint(Theme.recovering)
@@ -302,6 +303,12 @@ struct RootView: View {
             .opacity(selectedTab == tab ? 1 : 0)
             .allowsHitTesting(selectedTab == tab)
             .accessibilityHidden(selectedTab != tab)
+            // The selected tab is also the frontmost one. `accessibilityHidden`
+            // does not reach into the UIKit navigation stack each tab hosts, so
+            // a History that had been scrolled still answered the accessibility
+            // hit test over Today: VoiceOver touch exploration found invisible
+            // History rows, and the ring could not be tapped from a UI test.
+            .zIndex(selectedTab == tab ? 1 : 0)
     }
 
     private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {

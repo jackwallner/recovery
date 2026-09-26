@@ -97,7 +97,7 @@ final class RedesignCaptureTests: XCTestCase {
         Thread.sleep(forTimeInterval: 1)
         attach(app, named: "onboarding-2-health")
 
-        app.buttons["Connect Apple Health"].firstMatch.tap()
+        app.buttons["Continue"].firstMatch.tap()
         Thread.sleep(forTimeInterval: 2)
         attach(app, named: "onboarding-3-readout")
 

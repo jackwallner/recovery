@@ -115,5 +115,6 @@ Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it her
   Worth knowing separately: the app stacked those four duplicates into one
   72-hour window without complaint. Duplicate workouts are a real thing in a
   real store (a phone syncing a Garmin alongside an Apple Watch writes both),
-  and nothing in `RecoveryEngine` currently notices. Not changed here, because
-  it is a model decision rather than a test one.
+  and nothing in `RecoveryEngine` noticed. It does now (model version 15):
+  `DuplicateWorkouts` drops any workout whose overlap covers half the longer
+  one, keeping the copy with more heart-rate coverage.

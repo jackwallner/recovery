@@ -81,10 +81,10 @@ public enum RecoveryCalculator {
     ///     size, read off their own history by `ObservedRecoveryPattern`. When
     ///     it is present it *is* the countdown: the free tier describes the
     ///     habit rather than predicting a window, because a number taken from
-    ///     the user's own calendar can never be one they do not recognise. The
-    ///     modelled figure is still computed underneath it, because
-    ///     `recoveryCostHours` and the tier comparison both ask what the session
-    ///     cost rather than what the person usually does about it.
+    ///     the user's own calendar can never be one they do not recognise. A
+    ///     habit countdown carries no residual from the session before and
+    ///     reports itself as the session's cost, so every surface narrating it
+    ///     adds up.
     ///   - manualHours: hours the user pinned to this session's intensity band,
     ///     when they are following a programme the model does not know about.
     ///     Recharge+ only, and it replaces the modelled window outright — a
@@ -114,11 +114,21 @@ public enum RecoveryCalculator {
         let qualifies = session.profile != .easy && load.value >= baseline.quietThreshold
 
         var hours = 0.0
+        // Only the free tier is a description, and only when there is a habit
+        // to describe.
+        let describesHabit = qualifies && personalization.tier == .standard && observed != nil
         // Recovery still outstanding when this session ended. Only a session
         // that earns a countdown of its own may inherit it: an easy walk taken
         // mid-window neither starts a countdown nor lengthens the one already
         // running, which is the same guarantee `RecoveryResolver` gives.
-        let carried = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
+        //
+        // A countdown read off the user's habit inherits nothing. The habit is
+        // the gap they leave before going again, so the next session lands at
+        // the end of it by definition, and whatever residual it carries is
+        // noise that never decays: a daily trainer's habit window stacked on
+        // yesterday's leftover ran at 34 to 50 hours for weeks on seeded data
+        // and never once reached Ready before the next session.
+        let carried = qualifies && !describesHabit && carriedHours.isFinite ? max(carriedHours, 0) : 0
 
         // Computed for **every** session, qualifying or not, because "what did
         // this session cost" is a different question from "how long should the
@@ -152,7 +162,7 @@ public enum RecoveryCalculator {
             // window is still passed in, because the recommendation is only
             // meaningful next to the habit it is recommending against, but it
             // is a sentence there rather than the countdown.
-            let describes = personalization.tier == .standard
+            let describes = describesHabit
             hours = describes ? observed.map {
                 min(
                     max($0.hours, minimumCountdownHours),
@@ -166,7 +176,7 @@ public enum RecoveryCalculator {
             // it. Recharge+ only: the free tier's one claim is that its figure
             // was read off the user's own training, and a typed number is not
             // that.
-            if !describes, let manual = manualHours, manual.isFinite, manual > 0 {
+            if personalization.tier == .personalized, let manual = manualHours, manual.isFinite, manual > 0 {
                 hours = min(max(manual, minimumCountdownHours), maximumHours)
             }
         }
@@ -177,6 +187,12 @@ public enum RecoveryCalculator {
         // is the same rehydration contradiction `carriedHours` was fixed for.
         if qualifies, personalization.tier == .personalized, let manual = manualHours,
            manual.isFinite, manual > 0 {
+            cost = hours
+        }
+        // The same goes for the habit. Today narrates the cost beside the ring,
+        // so "10h from your run" beside a 24-hour countdown read as arithmetic
+        // the app had got wrong.
+        if describesHabit {
             cost = hours
         }
 

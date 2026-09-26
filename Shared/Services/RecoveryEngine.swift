@@ -171,8 +171,14 @@ public final class RecoveryEngine: ObservableObject {
     private func derivedTrainingProfile() -> (volume: WeeklyVolume?, primaryProfile: WorkoutProfile?) {
         let windowDays = 28.0
         let cutoff = DateHelpers.daysAgo(Int(windowDays))
-        let recent = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
-            .filter { $0.endDate >= cutoff && $0.effectiveProfile != .easy }
+        let fetched = (try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? []
+        let duplicateIDs = Self.duplicateIDs(in: fetched)
+        let recent = fetched
+            .filter {
+                $0.endDate >= cutoff
+                    && $0.effectiveProfile != .easy
+                    && !duplicateIDs.contains($0.healthKitUUID)
+            }
         guard recent.count >= 6 else { return (nil, nil) }
 
         let perWeek = Double(recent.count) / (windowDays / 7)
@@ -434,7 +440,15 @@ public final class RecoveryEngine: ObservableObject {
             rescorePersistenceFailed = true
             return false
         }
-        let workouts = fetchedWorkouts.sorted {
+        // One session recorded by two apps is scored once. The copy that is
+        // dropped keeps no load, so the weekly figures do not count it either.
+        let duplicateIDs = Self.duplicateIDs(in: fetchedWorkouts)
+        for workout in fetchedWorkouts where duplicateIDs.contains(workout.healthKitUUID) {
+            workout.sessionLoad = 0
+        }
+        let workouts = fetchedWorkouts
+            .filter { !duplicateIDs.contains($0.healthKitUUID) }
+            .sorted {
                 if $0.endDate != $1.endDate { return $0.endDate < $1.endDate }
                 if $0.startDate != $1.startDate { return $0.startDate < $1.startDate }
                 return $0.healthKitUUID < $1.healthKitUUID
@@ -1176,6 +1190,17 @@ public final class RecoveryEngine: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    private static func duplicateIDs(in workouts: [WorkoutRecord]) -> Set<String> {
+        DuplicateWorkouts.duplicateIDs(in: workouts.map {
+            DuplicateWorkouts.Candidate(
+                id: $0.healthKitUUID,
+                start: $0.startDate,
+                end: $0.endDate,
+                heartRateCoverage: $0.heartRateCoverage
+            )
+        })
+    }
 
     @discardableResult
     private func saveContext(reason: String) -> Bool {

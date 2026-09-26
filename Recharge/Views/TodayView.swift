@@ -30,6 +30,7 @@ struct TodayView: View {
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
+    @Environment(\.openURL) private var openURL
 
     @State private var now = Date.now
     @State private var showSettings = false
@@ -335,7 +336,9 @@ struct TodayView: View {
             let time = explained.confidence <= .low
                 ? CountdownFormat.readySoftly(explained.readyAt, now: now)
                 : CountdownFormat.readyAt(explained.readyAt, now: now)
-            return "Estimate complete at \(time)"
+            // `time` already carries its own preposition ("today at 1:32 PM",
+            // "tomorrow morning"), so "complete at" read "complete at tomorrow at".
+            return "Estimate complete \(time)"
         }
     }
 
@@ -566,6 +569,17 @@ struct TodayView: View {
     }
 
     private func requestHealthAccess() async {
+        // iOS shows the permission sheet once. After that, asking again returns
+        // at once with nothing on screen, so a second tap has to read Health
+        // again and, if that still fails, go where the choices now live.
+        if await HealthKitService.shared.authorizationRequestStatus() == .unnecessary {
+            settings.hasDeferredHealthAccess = false
+            await engine.refresh(force: true)
+            if engine.lastImportFailed || engine.lastSuccessfulImport == nil {
+                openHealthApp()
+            }
+            return
+        }
         do {
             try await HealthKitService.shared.requestAuthorization()
             settings.hasDeferredHealthAccess = false
@@ -573,6 +587,10 @@ struct TodayView: View {
         } catch {
             settings.hasDeferredHealthAccess = true
         }
+    }
+
+    private func openHealthApp() {
+        if let url = URL(string: "x-apple-health://") { openURL(url) }
     }
 
     // MARK: - Freshness
