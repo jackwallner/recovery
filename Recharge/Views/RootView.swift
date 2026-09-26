@@ -212,6 +212,12 @@ struct RootView: View {
     /// never stack.
     private func evaluateLaunchSurfaces() async {
         guard !ScreenshotConfig.isEnabled else { return }
+        #if DEBUG
+        // The RevenueCat funnel probe launches a simulated purchase from app
+        // startup. A launch sheet can cover its confirmation alert, so probe
+        // runs must stay on the plain app surface.
+        guard !RevenueCatProbe.isEnabled else { return }
+        #endif
 
         if WhatsNew.shouldShow(lastShown: settings.lastWhatsNewVersionShown) {
             showWhatsNew = true
@@ -255,6 +261,11 @@ struct RootView: View {
     /// loaded, because an interruption that says "couldn't load the offer" is
     /// worse than no interruption at all.
     private func evaluateTrialOffer() {
+        #if DEBUG
+        // This method also runs directly from RevenueCat state changes, after
+        // `evaluateLaunchSurfaces` has returned during a probe launch.
+        guard !RevenueCatProbe.isEnabled else { return }
+        #endif
         guard !ScreenshotConfig.isEnabled,
               settings.hasCompletedSetup,
               !isPresentingSomething,
