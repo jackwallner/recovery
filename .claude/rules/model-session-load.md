@@ -14,7 +14,7 @@ paths:
 
 # Recharge: scoring a single session
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The load ladder is an order of trust, and for strength it was wrong
 Heart rate, then reported effort, then energy, then duration. For endurance that

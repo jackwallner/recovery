@@ -9,7 +9,7 @@ paths:
 
 # Recharge: open tuning questions
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ## Open tuning questions
 1. Relative load is measured against the **median** of the person's sessions,

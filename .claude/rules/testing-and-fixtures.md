@@ -9,7 +9,7 @@ paths:
 
 # Recharge: paywall verification, fixtures, and the seeded walkthrough
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 - **Paywall verification:** it renders empty under plain `simctl launch` — no
   RevenueCat on simulator and no StoreKit catalogue. Under screenshot mode the

@@ -10,7 +10,7 @@ paths:
 
 # Recharge: building, signing, and the App Store record
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### Generating the project
 `./scripts/xcgen.sh` (a thin `xcodegen generate`; `testflight.sh` calls it).

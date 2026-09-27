@@ -1,4 +1,4 @@
-# Recharge — Project Guide
+# Recharge Project Guide
 
 Garmin-style recovery time for Apple Watch: a countdown after every qualifying
 workout and a clear Ready when it expires. XcodeGen project/scheme: `Recharge`,
@@ -12,11 +12,11 @@ differs from the app name (cf. `~/health` = VO2 Max, `~/vitals` = Total Calories
 - RevenueCat; gate on **any** active entitlement, never a hardcoded string
 
 ## Targets / bundle IDs
-- `Recharge` — `com.jackwallner.recovery`
-- `RechargeWatch` — `.watch`
-- `RechargeWidget` — `.widget`
-- `RechargeWatchWidget` — `.watch.widget`
-- `RechargeTests` — `.tests`, `RechargeUITests` — `.uitests`
+- `Recharge`: `com.jackwallner.recovery`
+- `RechargeWatch`: `.watch`
+- `RechargeWidget`: `.widget`
+- `RechargeWatchWidget`: `.watch.widget`
+- `RechargeTests`: `.tests`, `RechargeUITests` — `.uitests`
 - App Group: `group.com.jackwallner.recovery`
 
 ## Architecture
@@ -67,7 +67,7 @@ Condensed from the deep notes below; the reasoning and the bugs behind each one 
 - App Store ID `6797089337`. Premium branding is **Recharge+** anywhere a customer can read it. The 49 non-English locales are generated from `scripts/native_locale_content/*.json`; en-US is hand-maintained.
 
 ## Deep notes (load on demand)
-These files load automatically when you read a file matching their `paths:`. Agents that do not auto-load rules (AGENTS.md readers) should open the file for the area they are touching. Section names cited elsewhere ("see X") are headings in these files. Record new area-specific learnings in the matching file, not here.
+These files load automatically when you read a file matching their `paths:`. Agents that do not auto-load rules (Codex, Cursor) should open the file for the area they are touching. Section names cited elsewhere ("see X") are headings in these files. Record new area-specific learnings in the matching file, not here.
 
 | File | Sections | Read when |
 |---|---|---|
@@ -130,4 +130,4 @@ These files load automatically when you read a file matching their `paths:`. Age
 
 ---
 Shared iOS conventions (build, simulator, release/TestFlight, ASC key, signing,
-review funnel, gotchas): always-loaded global CLAUDE.md + the `ios-dev` skill.
+review funnel, gotchas): the global agent rules + the `ios-dev` skill.

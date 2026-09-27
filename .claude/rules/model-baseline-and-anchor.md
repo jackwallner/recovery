@@ -11,7 +11,7 @@ paths:
 
 # Recharge: the baseline, the audit matrix, and the Garmin anchor
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The audit is in the repo, and it is what found the last two bugs
 `RechargeTests/AthleteMatrix.swift` is the population: every activity type

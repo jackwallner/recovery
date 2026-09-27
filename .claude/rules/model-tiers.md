@@ -18,7 +18,7 @@ paths:
 
 # Recharge: the two tiers and what the user can change
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The two tiers
 `RecoveryTier` is stored on every estimate, because the two answer different

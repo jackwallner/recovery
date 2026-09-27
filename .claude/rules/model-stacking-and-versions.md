@@ -12,7 +12,7 @@ paths:
 
 # Recharge: stacking, the 30-day analysis, and model versions
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### Recovery time stacks, and the residual has to be persisted
 A session done inside a running countdown starts its own from where that

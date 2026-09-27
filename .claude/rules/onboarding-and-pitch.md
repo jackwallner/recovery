@@ -12,7 +12,7 @@ paths:
 
 # Recharge: onboarding and the pitch
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The onboarding copy is centred, and it was not before
 `OnboardingScroll` is the container every page uses. The previous version wrapped

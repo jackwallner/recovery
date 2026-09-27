@@ -10,7 +10,7 @@ paths:
 
 # Recharge: design system and app shell
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The design system is `design.md`, and it is checked by a script
 **Read `design.md` before any UI work.** `Shared/Utilities/Theme.swift` holds the

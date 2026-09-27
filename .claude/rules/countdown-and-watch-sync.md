@@ -21,7 +21,7 @@ paths:
 
 # Recharge: the countdown, the Watch, and background sync
 
-Moved verbatim from CLAUDE.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the CLAUDE.md index.
+Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
 ### The countdown timeline
 The one piece with no precedent in the fleet. Every other complication here
