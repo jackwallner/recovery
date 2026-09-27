@@ -16,7 +16,7 @@ differs from the app name (cf. `~/health` = VO2 Max, `~/vitals` = Total Calories
 - `RechargeWatch`: `.watch`
 - `RechargeWidget`: `.widget`
 - `RechargeWatchWidget`: `.watch.widget`
-- `RechargeTests`: `.tests`, `RechargeUITests` — `.uitests`
+- `RechargeTests`: `.tests`; `RechargeUITests`: `.uitests`
 - App Group: `group.com.jackwallner.recovery`
 
 ## Architecture
@@ -37,7 +37,7 @@ The extensions read `RecoverySnapshot`, not SwiftData, so they never have to
 mirror the schema.
 
 ### The model (`Shared/Utilities/`)
-Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
+Pure, `Sendable`, with no HealthKit or SwiftData imports. That makes the
 269-test suite in `RechargeTests` possible without a Health store.
 
 | File | Stage |
@@ -46,7 +46,7 @@ Pure, `Sendable`, no HealthKit or SwiftData imports — which is what makes the
 | `ObservedRecoveryPattern` | what the person actually does: median gap to the next real session, by effort band. The free tier's whole answer. |
 | `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. Below `minimumSamples` the median is shrunk toward the population reference (see below). `.standard(for:)` is the no-samples reference the free tier uses. |
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
-| `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus what Health measured — VO2 max, the observed maximum heart rate, body mass. Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
+| `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus Health measurements (VO2 max, observed maximum heart rate, body mass). Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
 | `PersonalRecoveryModel` | the 30-day analysis → one bounded personal multiplier. |
 | `DuplicateWorkouts` | the same session written to Health by two apps → scored once, keeping the better-measured copy. |
 | `RecoveryResolver` | several overlapping windows → the one to show (latest `readyAt`). |
