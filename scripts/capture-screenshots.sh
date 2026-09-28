@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Capture the App Store screenshot set from a leased pool simulator.
 #
-# Must run on the default checkout (iPhone 17 Pro) so the raw geometry is
-# deterministic: 1206x2622. `normalize-screenshots.py` then produces the
-# 1320x2868 APP_IPHONE_67 assets ASC expects, keeping the raw capture beside it
-# for design review.
+# Must run on slot 1 (iPhone 17 Pro, iOS 26.5) so raw geometry stays fixed at
+# 1206x2622. Bare checkout is now iPhone 18 Pro on iOS 27. The normalizer then
+# produces 1320x2868 APP_IPHONE_67 assets ASC expects, keeping the raw capture
+# beside them for design review.
 #
-#   agent-sim checkout recharge
+#   agent-sim checkout recharge --slot 1
 #   ./scripts/capture-screenshots.sh "$(agent-sim udid recharge)"
 set -euo pipefail
 
