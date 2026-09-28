@@ -60,7 +60,7 @@ Condensed from the deep notes below; the reasoning and the bugs behind each one 
 - Complication and widget views render from `entry.date`, never from `Date.now`.
 - The phone owns the model and the Watch app deliberately cannot read Health. Do not add HealthKit to the Watch to fix a delivery bug.
 - Every link in the background chain (HealthKit observer, `WCSession` activation, application context, Watch background task, App Group write, timeline reload) is guarded by a silent `return`. Observer queries and `WCSession` activation run from `RechargeApp.init` (`Recharge/App.swift`), not from a scene callback.
-- Read `design.md` before any UI work; `./scripts/design-audit.sh` enforces the tokens.
+- Read `project-docs/design/design.md` before any UI work; `./scripts/design-audit.sh` enforces the tokens.
 - A green Debug test suite does not mean the archive builds: anything touching `ScreenshotConfig` or `ScreenshotFixtures` needs a `-configuration Release -destination generic/platform=iOS` build first.
 - Never set `CODE_SIGN_IDENTITY: ""` in `project.yml`. It silently strips HealthKit and the App Group from the archive.
 - StoreKit Testing does not activate under `xcodebuild test` (only the scheme's Launch action), and product IDs are bundle-prefixed (`com.jackwallner.recovery.yearly`).
@@ -76,7 +76,7 @@ These files load automatically when you read a file matching their `paths:`. Age
 | `.claude/rules/model-session-load.md` | The load ladder is an order of trust; Every source estimates the same quantity; The six-hour floor is Garmin's; Things worth knowing before changing the model; Every session carries a cost | Scoring one session: heart rate, effort, energy, duration, classification, floors, cost vs countdown |
 | `.claude/rules/model-baseline-and-anchor.md` | The audit is in the repo; "Typical" is a training day; The standard tier is anchored to Garmin's default; A thin baseline is shrunk | The baseline denominator, `standardTypicalLoad`, the athlete matrix and Garmin anchor tests |
 | `.claude/rules/model-open-questions.md` | Open tuning questions | Before retuning any model constant |
-| `.claude/rules/ui-shell.md` | The design system is `design.md`; The screens are the Vitals shape now; Clearance for the floating tab bar is the shell's job; A pinned header has to mask what scrolls behind it | Any view, the tab bar, History, UI tests that assert frames |
+| `.claude/rules/ui-shell.md` | The design system is `project-docs/design/design.md`; The screens are the Vitals shape now; Clearance for the floating tab bar is the shell's job; A pinned header has to mask what scrolls behind it | Any view, the tab bar, History, UI tests that assert frames |
 | `.claude/rules/onboarding-and-pitch.md` | The onboarding copy is centred; The pitch is two numbers; Onboarding reads Health before it asks anything | Onboarding, the trial offer, the paywall pitch, HealthKit read types |
 | `.claude/rules/countdown-and-watch-sync.md` | The countdown timeline; The RPE path is the only Watch → phone write; Staleness on the glance surfaces | Complications, widgets, the Watch app, WatchConnectivity, background delivery |
 | `.claude/rules/build-and-release.md` | Generating the project; App Store record, metadata and products | `project.yml`, `testflight.sh`, signing, StoreKit config, ASC metadata, IAP copy |

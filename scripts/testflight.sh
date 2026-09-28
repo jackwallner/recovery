@@ -8,7 +8,7 @@ cd "$ROOT"
 # The design system's mechanical half, before anything is bumped. Every check
 # it runs was a real regression in this app once, and all of them are invisible
 # in a diff: an off-grid padding, a fourth corner radius, a button that does not
-# react to a press. See design.md.
+# react to a press. See project-docs/design/design.md.
 echo "==> Design audit"
 ./scripts/design-audit.sh
 

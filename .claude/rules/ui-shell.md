@@ -1,6 +1,6 @@
 ---
 paths:
-  - "design.md"
+  - "project-docs/design/design.md"
   - "Shared/Utilities/Theme.swift"
   - "Shared/Utilities/Interaction.swift"
   - "scripts/design-audit.sh"
@@ -12,8 +12,8 @@ paths:
 
 Moved verbatim from AGENTS.md. Loads when a matching file is read; update it here. Section names cited from other files are listed in the AGENTS.md index.
 
-### The design system is `design.md`, and it is checked by a script
-**Read `design.md` before any UI work.** `Shared/Utilities/Theme.swift` holds the
+### The design system is `project-docs/design/design.md`, and it is checked by a script
+**Read `project-docs/design/design.md` before any UI work.** `Shared/Utilities/Theme.swift` holds the
 tokens (`Space`, a 4pt grid; `Radius`, three continuous values; `Elevation`;
 `minimumTapTarget`), `Shared/Utilities/Interaction.swift` holds
 `PressableButtonStyle` and `Haptics`, and `./scripts/design-audit.sh` fails on

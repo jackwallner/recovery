@@ -50,6 +50,6 @@ echo
 if [[ $fail -eq 0 ]]; then
     echo "Design system: clean."
 else
-    echo "Design system: see above. design.md has the rule each check enforces."
+    echo "Design system: see above. project-docs/design/design.md has the rule each check enforces."
 fi
 exit $fail
