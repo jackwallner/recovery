@@ -117,7 +117,7 @@ These files load automatically when you read a file matching their `paths:`. Age
   `RECHARGE_SCREENSHOT_SCENE=<recovering|ready|history|settings|paywall|premiumActive|onboarding|watchRecovering|watchReady>`.
   Bypasses HealthKit entirely and seeds `ScreenshotFixtures`. The `settings`
   scene raises the Settings **sheet** from Today, because Settings stopped being
-  a tab; `RedesignCaptureTests` walks every screen this way in about a minute.
+  a tab.
 - `RevenueCatConfig.apiKey` is a placeholder in the repo. `scripts/testflight.sh`
   substitutes `RC_PUBLIC_KEY` from `~/.recovery_credentials` for the archive and
   restores the placeholder on exit, so the key never lands in a commit. Never
