@@ -21,7 +21,6 @@ xcuserdata/
 fastlane/report.xml
 fastlane/README.md
 fastlane/Preview.html
-fastlane/screenshots/**/*.png
 fastlane/test_output
 fastlane/metadata.bak.*
 # `deliver download_metadata` pulls the App Review contact's name, email, and
