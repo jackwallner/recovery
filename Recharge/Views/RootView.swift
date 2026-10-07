@@ -10,7 +10,6 @@ struct RootView: View {
 
     @State private var selectedTab = Tab.today
     @State private var showWhatsNew = false
-    @State private var showReviewPrompt = false
     @State private var showTrialOffer = false
     @State private var trialOfferDetent: PresentationDetent = .height(TrialOfferSheet.detentHeight)
     @State private var showPaywall = false
@@ -20,7 +19,6 @@ struct RootView: View {
     /// chance the funnel gets, so this file has to know when the tab below is
     /// busy.
     @State private var todayIsPresentingSheet = false
-    @State private var pendingNativeReviewAfterDismiss = false
     /// The third tab is built on first visit rather than at launch. See
     /// `tabContent(.plus)`.
     @State private var hasVisitedPlusTab = false
@@ -128,9 +126,6 @@ struct RootView: View {
             WhatsNewSheet()
                 .environmentObject(store)
         }
-        .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
-            ReviewPromptSheet(onFinish: handleReviewPromptFinish)
-        }
         .sheet(isPresented: $showTrialOffer) {
             TrialOfferSheet()
                 .environmentObject(store)
@@ -224,8 +219,7 @@ struct RootView: View {
             settings.lastWhatsNewVersionShown = WhatsNew.currentVersion
             return
         }
-        await evaluateReviewPrompt(afterReadyMoment: false)
-        if !showReviewPrompt { evaluateTrialOffer() }
+        if await !requestReviewIfEligible(afterReadyMoment: false) { evaluateTrialOffer() }
     }
 
     /// A countdown reaching Ready is the app's one genuine win, and the only
@@ -233,23 +227,26 @@ struct RootView: View {
     /// readiness question owns it first, so they run in priority order and stop
     /// at the first one that fires.
     private func evaluateReadyMomentSurfaces() async {
-        await evaluateReviewPrompt(afterReadyMoment: true)
-        if !showReviewPrompt { evaluateTrialOffer() }
+        if await !requestReviewIfEligible(afterReadyMoment: true) { evaluateTrialOffer() }
     }
 
-    private func evaluateReviewPrompt(afterReadyMoment: Bool) async {
-        guard !isPresentingSomething else { return }
+    /// Apple's own prompt, asked of everyone who qualifies, with no question
+    /// first (guideline 5.6.1). Returns whether it asked, so the trial offer
+    /// does not land in the same moment.
+    private func requestReviewIfEligible(afterReadyMoment: Bool) async -> Bool {
+        guard !isPresentingSomething else { return false }
         let eligible = afterReadyMoment
             ? ReviewPromptTracker.shouldShowAfterReadyMoment(hasCompletedSetup: settings.hasCompletedSetup)
             : ReviewPromptTracker.shouldShowForEngagedUse(hasCompletedSetup: settings.hasCompletedSetup)
-        guard eligible else { return }
+        guard eligible else { return false }
         // A beat after the Ready state lands, so the win registers first.
         try? await Task.sleep(for: .seconds(afterReadyMoment ? 1.2 : 0.6))
         // The sleep is long enough for the readiness sheet to have appeared in
         // the meantime, so the guard has to be re-checked, not just entered.
-        guard !isPresentingSomething else { return }
+        guard !isPresentingSomething else { return false }
         ReviewPromptTracker.markShown()
-        showReviewPrompt = true
+        requestReview()
+        return true
     }
 
     /// The passive trial offer: the same single decision from onboarding, shown
@@ -298,7 +295,7 @@ struct RootView: View {
     /// to `TodayView`, but it is the one surface that has to win the moment a
     /// countdown expires, so nothing here may talk over it.
     private var isPresentingSomething: Bool {
-        showWhatsNew || showReviewPrompt || showTrialOffer || showPaywall || todayIsPresentingSheet
+        showWhatsNew || showTrialOffer || showPaywall || todayIsPresentingSheet
     }
 
     /// Every tab stays alive and keeps its scroll position and navigation stack,
@@ -322,15 +319,6 @@ struct RootView: View {
             .zIndex(selectedTab == tab ? 1 : 0)
     }
 
-    private func handleReviewPromptFinish(_ outcome: ReviewPromptDismissOutcome) {
-        pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
-    }
-
-    private func requestPendingNativeReview() {
-        guard pendingNativeReviewAfterDismiss else { return }
-        pendingNativeReviewAfterDismiss = false
-        requestReview()
-    }
 }
 
 /// Raised by any locked surface that wants the upgrade pitch. `RootView` owns

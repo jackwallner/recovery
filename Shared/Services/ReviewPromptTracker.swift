@@ -2,7 +2,7 @@ import Foundation
 
 public extension Notification.Name {
     /// Posted when a countdown reaches Ready — the app's one genuinely good
-    /// moment. The host may open the enjoyment funnel shortly afterwards.
+    /// moment. The host may call Apple's review prompt shortly afterwards.
     static let rechargePositiveMomentForReview =
         Notification.Name("com.jackwallner.recovery.positiveMomentForReview")
 }
@@ -13,7 +13,7 @@ public enum ReviewPromptOutcome: String, Sendable {
     case submittedFeedback
 }
 
-/// Pure eligibility rules for the enjoyment funnel, kept free of `UserDefaults`
+/// Pure eligibility rules for Apple's review prompt, kept free of `UserDefaults`
 /// so the thresholds can be unit-tested directly.
 public struct ReviewPromptEligibility: Sendable {
     /// Countdowns the user has watched run out. The moment the app exists for.
@@ -55,8 +55,8 @@ public struct ReviewPromptEligibility: Sendable {
            daysSinceFirstOpen >= Self.minimumDaysSinceFirstOpen {
             return .readyMoment
         }
-        // No point asking someone who has never seen a countdown whether they
-        // are enjoying an app whose whole job is showing one.
+        // No point asking someone who has never seen a countdown to rate an
+        // app whose whole job is showing one.
         if hasSeenEstimate,
            appLaunchCount >= Self.engagedLaunchCount,
            daysSinceFirstOpen >= Self.engagedDaysSinceFirstOpen {
@@ -182,7 +182,7 @@ public enum ReviewPromptTracker {
         ).trigger
     }
 
-    public static func canPresentEnjoymentPrompt(hasCompletedSetup: Bool, now: Date = .now) -> Bool {
+    public static func canRequestReview(hasCompletedSetup: Bool, now: Date = .now) -> Bool {
         eligibilityTrigger(hasCompletedSetup: hasCompletedSetup, now: now) != nil
     }
 

@@ -9,16 +9,14 @@ struct SettingsView: View {
 
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.requestReview) private var requestReview
     @Environment(\.dismiss) private var dismiss
     @State private var showPaywall = false
-    @State private var showReviewPrompt = false
+    @State private var showFeedback = false
     @State private var maxHeartRateText = ""
     @State private var notificationsDenied = false
     @State private var restoreMessage: String?
     @State private var restoreMessageIsError = false
     @State private var isRestoring = false
-    @State private var pendingNativeReviewAfterDismiss = false
     @State private var isRequestingHealth = false
     @State private var healthMessage: String?
     @State private var showDeleteConfirmation = false
@@ -62,10 +60,8 @@ struct SettingsView: View {
                 PaywallView(source: "settings")
                     .environmentObject(store)
             }
-            .sheet(isPresented: $showReviewPrompt, onDismiss: requestPendingNativeReview) {
-                ReviewPromptSheet { outcome in
-                    pendingNativeReviewAfterDismiss = outcome == .requestNativeReview
-                }
+            .sheet(isPresented: $showFeedback) {
+                ReviewPromptSheet()
             }
             .alert("Delete local health data?", isPresented: $showDeleteConfirmation) {
                 Button("Delete", role: .destructive) {
@@ -732,7 +728,8 @@ struct SettingsView: View {
 
     private var aboutSection: some View {
         Section {
-            Button("Rate or send feedback") { showReviewPrompt = true }
+            Link("Write a review on the App Store", destination: AppStoreReviewLinks.writeReviewURL)
+            Button("Send feedback") { showFeedback = true }
 
             // Restore used to be a button that produced no visible change at
             // all: `StoreService` recorded the outcome in `lastError` and only
@@ -803,12 +800,6 @@ struct SettingsView: View {
             // thing here rather than making the careful reader go and find it.
             Text("Recharge gives a cardiovascular training estimate from your Apple Health data. It is not medical advice and does not diagnose, treat, or prevent any condition. Talk with a qualified health professional before making medical decisions. Your Health data stays on your devices; only purchase information is handled by Apple and RevenueCat.")
         }
-    }
-
-    private func requestPendingNativeReview() {
-        guard pendingNativeReviewAfterDismiss else { return }
-        pendingNativeReviewAfterDismiss = false
-        requestReview()
     }
 
     private var versionString: String {
