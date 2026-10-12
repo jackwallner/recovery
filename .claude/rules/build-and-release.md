@@ -35,8 +35,9 @@ shows up under Health > Sharing > Apps, which is also why restarting the phone
 does nothing. Neither Vitals nor VO2 Max sets it, which is the whole reason
 their Health access "just works".
 
-The archive is the only place this is visible, so `testflight.sh` now checks the
-signed product before uploading: HealthKit and the App Group on the iPhone app,
+The archive is the only place this is visible, so `scripts/verify-archive.sh`
+(run by the shared fleet `testflight.sh` between archive and upload) checks the
+signed product first: HealthKit and the App Group on the iPhone app,
 the App Group on the Watch app and both widget extensions. `codesign -d
 --entitlements - --xml` on `$ARCHIVE/Products/Applications/Recharge.app` is the
 one-line manual version.
@@ -85,13 +86,13 @@ StoreKit product identifiers are bundle-prefixed
   **Products attached to a review submission are locked** — a copy PATCH returns
   409 `ENTITY_ERROR.ATTRIBUTE.INVALID.UNMODIFIABLE`, and a never-submitted
   submission cannot be cancelled, so deleting its items is the only way through.
-  That teardown is not free: the four product items can only be put back in the
-  ASC web UI (Add for Review on the subscription group page, on each subscription
-  page, and on `/distribution/iaps/<id>`), because the first subscription and
-  first non-consumable an app ships cannot be attached over the public API.
-  `asc-submit-for-review.py --prepare-only` does the half that is scriptable, and
-  the plain run now refuses to submit with fewer than 5 items rather than burning
-  a review cycle on a 2.1(b) rejection. Adding the version item flips the version
+  Putting the four product items back is scriptable since App Store Connect API
+  4.4.1: `~/ios/release/asc-attach-products.py --app 6797089337 --apply` adds
+  the group, subscription and IAP versions to the draft (the web UI's Add for
+  Review is no longer needed, even for a first subscription).
+  `asc-submit-for-review.py --prepare-only` does the version half, and the
+  plain run refuses to submit with fewer than 5 items rather than burning a
+  review cycle on a 2.1(b) rejection. Adding the version item flips the version
   from PREPARE_FOR_SUBMISSION to READY_FOR_REVIEW, which is why both states are
   accepted.
   ASO reasoning and the measured popularity/difficulty tables live in
