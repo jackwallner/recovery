@@ -115,6 +115,21 @@ public enum CountdownFormat {
         timeFormatter.string(from: date)
     }
 
+    /// Ready time with the weekday once it is not today: `7:30 AM`, then
+    /// `Thu 7:30 AM`.
+    ///
+    /// A countdown can run four days, and a bare clock reading on Monday
+    /// evening that means Thursday morning reads as tomorrow morning. Used on
+    /// the complication surfaces wide enough to carry the day; the circular
+    /// slot keeps the bare clock and leaves the day to the countdown beside it.
+    ///
+    /// - Parameter now: the instant being rendered, which on a complication is
+    ///   the timeline entry's date, never the wall clock.
+    public static func clockWithDay(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
+        if calendar.isDate(date, inSameDayAs: now) { return clock(date) }
+        return "\(weekdayFormatter.string(from: date)) \(clock(date))"
+    }
+
     /// Coarse ready time for low-confidence estimates, where a minute-precise
     /// clock reading would overstate what the model knows.
     public static func readySoftly(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {

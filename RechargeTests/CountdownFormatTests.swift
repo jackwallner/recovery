@@ -25,7 +25,7 @@ final class CountdownFormatTests: XCTestCase {
     }
 
     func testEveryCompactStringIsShortEnoughForAnInlineSlot() {
-        for seconds in stride(from: 0.0, through: 72 * 3600, by: 137) {
+        for seconds in stride(from: 0.0, through: RecoveryCalculator.maximumHours * 3600, by: 137) {
             let text = CountdownFormat.compactRemaining(seconds)
             XCTAssertLessThanOrEqual(text.count, 6, "\"\(text)\" is too wide for a corner slot")
         }
