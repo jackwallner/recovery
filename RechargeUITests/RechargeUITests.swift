@@ -672,7 +672,7 @@ final class RechargeUITests: XCTestCase {
     func testTheTabBarDoesNotCoverTheBottomOfToday() {
         let app = launch(scene: "recovering")
         let caption = app.staticTexts.containing(
-            NSPredicate(format: "label CONTAINS[c] %@", "Standard is how long you usually leave")
+            NSPredicate(format: "label CONTAINS[c] %@", "Standard is the model at your training level")
         ).firstMatch
         XCTAssertTrue(caption.waitForExistence(timeout: 15))
         scrollToBottom(of: app)
