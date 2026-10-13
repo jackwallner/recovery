@@ -30,9 +30,17 @@ public enum RecoveryCalculator {
     /// non-decreasing in load.
     public static let minimumCountdownHours: Double = 6
 
-    /// Hard ceiling on any single estimate. Garmin caps around four days; we are
-    /// more conservative because we have less signal.
-    public static let maximumHours: Double = 72
+    /// Hard ceiling on any single estimate, and on a stacked countdown: four
+    /// days, which is Garmin's documented maximum.
+    ///
+    /// It was 72 hours, on the argument that less signal should mean a more
+    /// conservative ceiling. A ceiling is the opposite of conservative here: it
+    /// is the one place the app tells somebody to wait *less* than the model
+    /// says, and it bit on exactly the sessions that need it most. A half
+    /// marathon raced hard and a marathon both read 72 hours, the same figure as
+    /// an ordinary long run for a beginner, where Garmin puts races at 48-96h
+    /// and a marathon at or near its four-day maximum.
+    public static let maximumHours: Double = 96
 
     /// How far the displayed window spreads either side of the point estimate.
     static let windowSpread = 0.15
@@ -47,12 +55,18 @@ public enum RecoveryCalculator {
     /// continuous monotone function rather than discrete category buckets so
     /// "harder never returns a shorter window" holds by construction instead of
     /// by test.
+    ///
+    /// The last segment, 72h to 96h between 3.5x and 6x a typical day, is the
+    /// race segment. Everything below it is unchanged from the 72-hour model, so
+    /// the training sessions `GarminAnchorTests` pins did not move; only sessions
+    /// that used to pin the old ceiling now spread out above it.
     static let curve: [(relativeLoad: Double, hours: Double)] = [
         (0.00, 0),
         (0.60, 8),
         (1.25, 18),
         (2.00, 36),
-        (3.50, 72)
+        (3.50, 72),
+        (6.00, 96)
     ]
 
     /// Category boundaries on relative load. Same breakpoints as the curve, so
@@ -78,13 +92,16 @@ public enum RecoveryCalculator {
     ///     `fitnessScale` on `baseline`) rather than the same number for
     ///     everyone.
     ///   - observed: what this person **actually does** after a session this
-    ///     size, read off their own history by `ObservedRecoveryPattern`. When
-    ///     it is present it *is* the countdown: the free tier describes the
-    ///     habit rather than predicting a window, because a number taken from
-    ///     the user's own calendar can never be one they do not recognise. A
-    ///     habit countdown carries no residual from the session before and
-    ///     reports itself as the session's cost, so every surface narrating it
-    ///     adds up.
+    ///     size, read off their own history by `ObservedRecoveryPattern`. A
+    ///     sentence in the reasons, on both tiers, and never the countdown.
+    ///
+    ///     It was the free countdown from model version 11 to 15, and that
+    ///     measured training frequency rather than recovery: somebody who runs
+    ///     three times a week was shown 47 hours after a 30-minute jog and 72
+    ///     after everything harder, and a daily trainer 23 hours after a
+    ///     marathon. A recovery time has to depend on the session, so the free
+    ///     tier is the model at the person's training level again, which is
+    ///     what the App Store description always said it was.
     ///   - manualHours: hours the user pinned to this session's intensity band,
     ///     when they are following a programme the model does not know about.
     ///     Recharge+ only, and it replaces the modelled window outright — a
@@ -113,93 +130,63 @@ public enum RecoveryCalculator {
         // guarantees they cannot shorten one that is already running.
         let qualifies = session.profile != .easy && load.value >= baseline.quietThreshold
 
-        var hours = 0.0
-        // Only the free tier is a description, and only when there is a habit
-        // to describe.
-        let describesHabit = qualifies && personalization.tier == .standard && observed != nil
         // Recovery still outstanding when this session ended. Only a session
         // that earns a countdown of its own may inherit it: an easy walk taken
         // mid-window neither starts a countdown nor lengthens the one already
         // running, which is the same guarantee `RecoveryResolver` gives.
-        //
-        // A countdown read off the user's habit inherits nothing. The habit is
-        // the gap they leave before going again, so the next session lands at
-        // the end of it by definition, and whatever residual it carries is
-        // noise that never decays: a daily trainer's habit window stacked on
-        // yesterday's leftover ran at 34 to 50 hours for weeks on seeded data
-        // and never once reached Ready before the next session.
-        let carried = qualifies && !describesHabit && carriedHours.isFinite ? max(carriedHours, 0) : 0
+        let carried = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
+
+        let personal = personalization.factor.isFinite
+            ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
+            : 1
+        let unadjusted = baseHours(forRelativeLoad: relative) * clampCalibration(calibration) * personal
+
+        // The nights after the session only count while the countdown they
+        // would adjust was still running. The window as it stood from the night
+        // before is what decides that, so a night that landed after Ready can
+        // never reopen a finished countdown, and the rule needs no clock.
+        let preAdjustment = contextAdjustment(context, nightsBefore: .distantPast)
+        let provisionalHours = min(
+            max(unadjusted * (1 + preAdjustment) * session.profile.windowMultiplier, minimumCountdownHours),
+            maximumHours
+        )
+        let provisionalEnd = session.endDate.addingTimeInterval(min(provisionalHours + carried, maximumHours) * 3600)
+        let adjustment = contextAdjustment(context, nightsBefore: provisionalEnd)
+        let scaled = unadjusted * (1 + adjustment)
 
         // Computed for **every** session, qualifying or not, because "what did
         // this session cost" is a different question from "how long should the
         // countdown run", and only the second one has a reason to be zero for a
         // walk. History asks the first; the ring, `readyAt` and the snapshot ask
-        // the second.
-        let adjustment = contextAdjustment(context)
-        let personal = personalization.factor.isFinite
-            ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
-            : 1
-        let scaled = baseHours(forRelativeLoad: relative)
-            * (1 + adjustment)
-            * clampCalibration(calibration)
-            * personal
-        // No `minimumCountdownHours` here: that floor exists so a countdown is
-        // not over before bedtime, and it has nothing to say about what forty
-        // minutes of walking cost.
+        // the second. No `minimumCountdownHours` here: that floor exists so a
+        // countdown is not over before bedtime, and it has nothing to say about
+        // what forty minutes of walking cost.
         var cost = min(max(scaled * session.profile.costMultiplier, 0), maximumHours)
 
+        var hours = 0.0
         if qualifies {
-            let modelled = min(
+            hours = min(
                 max(scaled * session.profile.windowMultiplier, minimumCountdownHours),
                 maximumHours
             )
-            // The observed window replaces the modelled one outright rather
-            // than nudging it. Blending the two would produce a third number
-            // that is neither what the person does nor what the model says, and
-            // the one thing this tier has to be able to claim is that its figure
-            // came from the user's own training.
-            // Only the free tier is a description. On Recharge+ the observed
-            // window is still passed in, because the recommendation is only
-            // meaningful next to the habit it is recommending against, but it
-            // is a sentence there rather than the countdown.
-            let describes = describesHabit
-            hours = describes ? observed.map {
-                min(
-                    max($0.hours, minimumCountdownHours),
-                    ObservedRecoveryPattern.maximumUsualHours
-                )
-            } ?? modelled : modelled
-
-            // A pinned band is the last word, above the model and above the
-            // habit. Somebody following a written programme has an answer the
-            // app cannot derive, and the only useful thing to do with it is use
-            // it. Recharge+ only: the free tier's one claim is that its figure
-            // was read off the user's own training, and a typed number is not
-            // that.
+            // A pinned band is the last word. Somebody following a written
+            // programme has an answer the app cannot derive, and the only useful
+            // thing to do with it is use it. Recharge+ only: the standard tier
+            // is the model at the user's training level, and a typed number is
+            // not that.
             if personalization.tier == .personalized, let manual = manualHours, manual.isFinite, manual > 0 {
                 hours = min(max(manual, minimumCountdownHours), maximumHours)
+                // A pinned window is a statement about what the session cost, so
+                // the description moves with it, or History prints a figure the
+                // countdown contradicts.
+                cost = hours
             }
-        }
-
-        // A pinned window is a statement about what the session cost, so the
-        // description has to move with it. Leaving the computed cost in place
-        // put History's figure beside a countdown that disagreed with it, which
-        // is the same rehydration contradiction `carriedHours` was fixed for.
-        if qualifies, personalization.tier == .personalized, let manual = manualHours,
-           manual.isFinite, manual > 0 {
-            cost = hours
-        }
-        // The same goes for the habit. Today narrates the cost beside the ring,
-        // so "10h from your run" beside a 24-hour countdown read as arithmetic
-        // the app had got wrong.
-        if describesHabit {
-            cost = hours
         }
 
         // The countdown runs for this session's cost *plus* what was left over,
         // bounded by the same ceiling a single session obeys. `hours` stays the
-        // session's own cost: it is what the tier comparison, the rest-pattern
-        // bands and the history rows are asking about.
+        // session's own cost: it is what the tier comparison and the history
+        // rows are asking about.
         let total = qualifies ? min(hours + carried, maximumHours) : 0
 
         let confidence = confidence(
@@ -237,7 +224,8 @@ public enum RecoveryCalculator {
                 baseline: baseline,
                 personalization: personalization,
                 observed: observed,
-                manualHours: qualifies && personalization.tier == .personalized ? manualHours : nil
+                manualHours: qualifies && personalization.tier == .personalized ? manualHours : nil,
+                nightsBefore: provisionalEnd
             ),
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,
@@ -314,13 +302,45 @@ public enum RecoveryCalculator {
 
     // MARK: - Stage 4: context
 
-    /// Total fractional adjustment from sleep, HRV, and resting heart rate,
-    /// clamped so the estimate moves modestly within a bounded range rather than
-    /// swinging on one reading.
-    static func contextAdjustment(_ context: RecoveryContext) -> Double {
+    /// Total fractional adjustment from sleep, HRV, resting heart rate and
+    /// breathing rate, clamped so the estimate moves modestly within a bounded
+    /// range rather than swinging on one reading.
+    ///
+    /// The night before the session and every night after it that landed
+    /// before `nightsBefore` are each scored on their own, then averaged with
+    /// the nights after weighted double. How the session was absorbed matters
+    /// more than how the person went into it, and it is what Garmin keeps
+    /// adjusting the countdown with. With no nights after, this is exactly the
+    /// night-before adjustment it always was.
+    ///
+    /// - Parameter nightsBefore: only nights that started before this instant
+    ///   count. Nil admits every night the context carries.
+    static func contextAdjustment(_ context: RecoveryContext, nightsBefore end: Date? = nil) -> Double {
+        var readings: [(adjustment: Double, weight: Double)] = []
+        let before = context.nightBefore
+        if before.hasSignal { readings.append((nightAdjustment(before, context), 1)) }
+        for night in includedNights(context, before: end) {
+            readings.append((nightAdjustment(night, context), followingNightWeight))
+        }
+        let weight = readings.reduce(0) { $0 + $1.weight }
+        guard weight > 0 else { return 0 }
+        let mean = readings.reduce(0) { $0 + $1.adjustment * $1.weight } / weight
+        return min(max(mean, minimumContextAdjustment), maximumContextAdjustment)
+    }
+
+    /// How much more a night after the session counts than the night before it.
+    static let followingNightWeight = 2.0
+
+    static func includedNights(_ context: RecoveryContext, before end: Date?) -> [RecoveryContext.Night] {
+        guard let end else { return context.followingNights }
+        return context.followingNights.filter { $0.date < end }
+    }
+
+    /// One night against the person's own baselines.
+    static func nightAdjustment(_ night: RecoveryContext.Night, _ context: RecoveryContext) -> Double {
         var delta = 0.0
 
-        if let sleep = context.sleepHours {
+        if let sleep = night.sleepHours {
             if sleep < 5 {
                 delta += 0.12
             } else if sleep < 6 {
@@ -330,7 +350,7 @@ public enum RecoveryCalculator {
             }
         }
 
-        if let hrv = context.heartRateVariability,
+        if let hrv = night.heartRateVariability,
            let baseline = context.heartRateVariabilityBaseline,
            baseline > 0 {
             let ratio = hrv / baseline
@@ -341,7 +361,7 @@ public enum RecoveryCalculator {
             }
         }
 
-        if let rhr = context.restingHeartRate,
+        if let rhr = night.restingHeartRate,
            let baseline = context.restingHeartRateBaseline,
            baseline > 0 {
             if rhr >= baseline + 5 {
@@ -356,7 +376,7 @@ public enum RecoveryCalculator {
         // absorbed, and it is also the noisiest of the four; four signals each
         // pulling as hard as one another would between them swamp the session
         // the estimate is supposed to be about.
-        if let rate = context.respiratoryRate,
+        if let rate = night.respiratoryRate,
            let baseline = context.respiratoryRateBaseline,
            baseline > 0 {
             if rate >= baseline + 1.5 {
@@ -429,7 +449,8 @@ public enum RecoveryCalculator {
         baseline: RecoveryBaseline,
         personalization: RecoveryPersonalization = .standard,
         observed: ObservedRecoveryPattern.Window? = nil,
-        manualHours: Double? = nil
+        manualHours: Double? = nil,
+        nightsBefore: Date? = nil
     ) -> [String] {
         var reasons: [String] = []
         let tier = personalization.tier
@@ -470,21 +491,7 @@ public enum RecoveryCalculator {
 
         switch tier {
         case .standard:
-            // The free tier reports the person's own habit, so the reason line
-            // has to name the evidence: which sessions, how many of them. It
-            // used to describe a shared table read at the user's stated
-            // training level, and the number it was describing is now what
-            // Recharge+ computes rather than what this tier shows.
-            if let observed {
-                let sessions = "\(observed.sampleCount) \(observed.sampleCount == 1 ? "time" : "times")"
-                if observed.isBandSpecific {
-                    reasons.append("From your own history: after \(observed.band.sessionPhrase) you have gone again after about \(CountdownFormat.hours(observed.hours)), \(sessions).")
-                } else {
-                    reasons.append("From your own history: you have gone again after about \(CountdownFormat.hours(observed.hours)) between sessions, \(sessions).")
-                }
-            } else {
-                reasons.append("Not enough history yet to read a pattern, so this is the standard estimate at the training level you gave.")
-            }
+            reasons.append("Standard estimate at your training level, scored against your heart-rate range.")
         case .personalized:
             if !baseline.hasEstablishedBaseline {
                 reasons.append("Still building your baseline from \(baseline.dayCount) recent training \(baseline.dayCount == 1 ? "day" : "days").")
@@ -495,34 +502,48 @@ public enum RecoveryCalculator {
             } else if percent >= 3 {
                 reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern lengthens this by about \(percent)%.")
             }
-            // The paid tier is a recommendation, and a recommendation is only
-            // useful against what the person already does. Naming the habit is
-            // also the honest way to show what was bought: the free tier's
-            // figure stays on screen next to the one that replaced it.
-            if let observed, qualifies {
-                reasons.append("You usually go again after about \(CountdownFormat.hours(observed.hours)) following \(observed.band.sessionPhrase).")
+        }
+
+        // What the person actually does after a session this size, on both
+        // tiers. A recommendation is easiest to read against a habit, and the
+        // habit is the one figure here the user can check against their own
+        // calendar.
+        if let observed {
+            let times = "\(observed.sampleCount) \(observed.sampleCount == 1 ? "time" : "times")"
+            if observed.isBandSpecific {
+                reasons.append("After \(observed.band.sessionPhrase) you have usually gone again after about \(CountdownFormat.hours(observed.hours)) (\(times)).")
+            } else {
+                reasons.append("You have usually gone again after about \(CountdownFormat.hours(observed.hours)) between sessions (\(times)).")
             }
         }
 
+        let nights = includedNights(context, before: nightsBefore)
+        let night = nights.last ?? context.nightBefore
+        let prefix = nights.isEmpty ? nil : (nights.count == 1 ? "since the session" : "over the \(nights.count) nights since")
         if adjustment > 0.02 {
-            reasons.append(contextSummary(context, lengthened: true))
+            reasons.append(contextSummary(night, context, lengthened: true, prefix: prefix))
         } else if adjustment < -0.02 {
-            reasons.append(contextSummary(context, lengthened: false))
+            reasons.append(contextSummary(night, context, lengthened: false, prefix: prefix))
         }
 
         return reasons.filter { !$0.isEmpty }
     }
 
-    private static func contextSummary(_ context: RecoveryContext, lengthened: Bool) -> String {
+    private static func contextSummary(
+        _ night: RecoveryContext.Night,
+        _ context: RecoveryContext,
+        lengthened: Bool,
+        prefix: String?
+    ) -> String {
         var signals: [String] = []
-        if let sleep = context.sleepHours {
+        if let sleep = night.sleepHours {
             if lengthened, sleep < 6 {
                 signals.append("short sleep (\(String(format: "%.1f", sleep))h)")
             } else if !lengthened, sleep >= 7.5 {
                 signals.append("good sleep (\(String(format: "%.1f", sleep))h)")
             }
         }
-        if let hrv = context.heartRateVariability,
+        if let hrv = night.heartRateVariability,
            let base = context.heartRateVariabilityBaseline, base > 0 {
             let ratio = hrv / base
             if lengthened, ratio < 0.85 {
@@ -531,7 +552,7 @@ public enum RecoveryCalculator {
                 signals.append("HRV above your usual range")
             }
         }
-        if let rhr = context.restingHeartRate,
+        if let rhr = night.restingHeartRate,
            let base = context.restingHeartRateBaseline, base > 0 {
             if lengthened, rhr >= base + 5 {
                 signals.append("resting heart rate up \(Int((rhr - base).rounded())) bpm")
@@ -539,7 +560,7 @@ public enum RecoveryCalculator {
                 signals.append("resting heart rate below your usual range")
             }
         }
-        if let rate = context.respiratoryRate,
+        if let rate = night.respiratoryRate,
            let base = context.respiratoryRateBaseline, base > 0 {
             if lengthened, rate >= base + 1.5 {
                 signals.append("breathing rate up overnight")
@@ -547,9 +568,14 @@ public enum RecoveryCalculator {
                 signals.append("breathing rate below your usual range")
             }
         }
-        guard !signals.isEmpty else { return "" }
-        let joined = ListFormatterShim.join(signals)
-        return lengthened ? "Extended slightly: \(joined)." : "Shortened slightly: \(joined)."
+        let verb = lengthened ? "Extended slightly" : "Shortened slightly"
+        let lead = prefix.map { "\(verb) \($0)" } ?? verb
+        guard !signals.isEmpty else {
+            // Several nights can move the window between them without the last
+            // one crossing a threshold on its own. Say so rather than nothing.
+            return prefix == nil ? "" : "\(lead): overnight readings against your usual range."
+        }
+        return "\(lead): \(ListFormatterShim.join(signals))."
     }
 }
 

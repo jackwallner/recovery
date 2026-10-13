@@ -422,7 +422,7 @@ struct SettingsView: View {
         } footer: {
             Text(store.isPro
                 ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The free estimate is your own habit: how long you have actually left after sessions this size. Recharge+ adds what the model recommends for each one, from your sessions, sleep, and heart rate.")
+                : "The free estimate scores each session at your training level, the way a Garmin does before it knows you. Recharge+ scores it against your own sessions, sleep, and heart rate.")
         }
     }
 
@@ -706,7 +706,7 @@ struct SettingsView: View {
     /// and 54 hours and a hundred-row wheel is not a setting.
     private static let pinnableHours: [Double] =
         Array(stride(from: 6.0, through: 24.0, by: 3.0))
-        + Array(stride(from: 30.0, through: 72.0, by: 6.0))
+        + Array(stride(from: 30.0, through: 96.0, by: 6.0))
 
     private func pinnedBinding(_ intensity: SessionIntensity) -> Binding<Double?> {
         Binding(

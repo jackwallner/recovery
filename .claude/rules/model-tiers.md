@@ -24,20 +24,40 @@ Moved verbatim from AGENTS.md. Loads when a matching file is read; update it her
 `RecoveryTier` is stored on every estimate, because the two answer different
 questions and a history list that mixes them silently is lying by omission.
 
-**The line between them is description and recommendation.**
+**The line between them is the model at your level versus the model on you.**
+(Model version 16. From 11 to 15 it was "description versus recommendation";
+see "The habit was the free countdown, and it was not a recovery time" below.)
 
-- **Your usual (free).** `ObservedRecoveryPattern`: the median gap between this
-  person's own sessions of comparable size, split into three bands (light /
-  moderate / hard) by where the session sits in their own load distribution. No
-  model at all — the countdown *is* the habit. Falls back to the modelled
-  estimate at their stated training level while their history is too thin to
-  show a pattern, and says so in the reasons.
-- **Optimal (Recharge+).** What the model recommends for *this* session: the
-  person's own 42-day baseline, overnight context, calibration, and the
-  `PersonalRecoveryModel` multiplier — stated against the habit, so the free
-  figure stays on screen beside the one that replaced it.
+- **Standard (free).** The model at the person's training level:
+  `RecoveryBaseline.standard` scaled by `AthleteProfile.fitnessScale`, no
+  personal baseline, no overnight context, no calibration. This is what Garmin
+  shows before it has learned anything, and it is what the App Store
+  description has always said the free tier is ("one shared table, set to your
+  training level").
+- **Recharge+.** The same session scored against the person's own 42-day
+  baseline, the nights before *and after* it, calibration, and the
+  `PersonalRecoveryModel` multiplier.
+- **The habit is a sentence on both tiers.** `ObservedRecoveryPattern` (the
+  median gap to the person's next real session, banded light / moderate / hard)
+  is printed in the reasons, "After a hard session you have usually gone again
+  after about 41h", and never moves a countdown.
 
-**Why the split changed.** It used to be two runs of the same calculation, one
+### The habit was the free countdown, and it was not a recovery time
+Model versions 11 to 15 made the free countdown the person's own habitual gap.
+`GarminScenarioTests` (a matrix of athletes and sessions) showed what that
+measured: training **frequency**, not the session. A recreational runner
+training three times a week was shown **47 hours after a 30-minute jog** and 72
+after everything harder, a beginner 71 hours after everything, and a masters
+cyclist riding daily **23 hours after a marathon**. A recovery time that does
+not depend on the session is not one, and no Garmin user would recognise it.
+
+The problem the habit was introduced for (6h free against 36h paid for the same
+session) was the *unbounded* personal denominator, and the second half of that
+fix, `minimumPersonalRatio`/`maximumPersonalRatio`, is what actually solved it;
+it stays. `GarminScenarioTests.testRechargePlusStaysWithinReachOfTheStandardFigure`
+pins the distance between the tiers at 0.6-1.7x across the athlete matrix.
+
+**Why the split changed in version 11.** It used to be two runs of the same calculation, one
 scored against a population reference and one against the person's own load
 distribution, and *nothing bounded the distance between them*. A user training
 seven days a week in twenty-five-minute sessions was shown **6 hours free and 36
@@ -50,13 +70,12 @@ frequency never entered the denominator at all. Only load *per training day*
 did, so training often in short blocks lowered the baseline and lengthened every
 window.
 
-Two questions produce two answers legibly. One number is what you do; the other
-is what the model suggests doing. `RecoveryBaseline.minimumPersonalRatio` /
+`RecoveryBaseline.minimumPersonalRatio` /
 `maximumPersonalRatio` (0.75–1.40 of the population reference) bound the paid
 side separately, so a measured baseline can tune the recommendation but never
 relocate it.
 
-**What counts as "going again"** is the whole of the free statistic and it took
+**What counts as "going again"** is the whole of the habit sentence and it took
 two attempts. A lighter session cannot end a gap — somebody who walks the day
 after a hard ride has a 24-hour gap because of a walk — but requiring the *same
 size again* fails worse in the other direction: a weekly long run is the biggest
@@ -133,7 +152,7 @@ sitting in Health.
 
 Every session is scored **both** ways on both tiers, and
 `RecoveryEngine.personalizedPreview` carries the most recent qualifying one:
-the usual gap beside the recommended window, for the conversion surfaces. The
+the standard window beside the Recharge+ one, for the conversion surfaces. The
 paid figure is **blurred everywhere it appears before purchase** — Today's card,
 the trial offer page, the Settings row. It used to be printed in full on the
 offer page, on the argument that hiding half an argument is not an argument, and
@@ -150,13 +169,11 @@ real curve) when there is no qualifying session or the two land on the same
 rounded hour, so there is always a difference on screen and it is always
 arithmetic.
 
-`RecoveryEngine.rescore` reads `ObservedRecoveryPattern` **once** — a habit does
-not change between two rows of the same history — then runs two passes: the free
-estimate for every session first, because `PersonalRecoveryModel` needs to know
-what window each session *would* have had, then the tier-appropriate one. Both
-passes are handed the observed window; only the free one lets it become the
-countdown (`RecoveryCalculator` gates on `personalization.tier`), because on
-Recharge+ the habit is a sentence rather than the number.
+`RecoveryEngine.rescore` reads `ObservedRecoveryPattern` **once** (a habit does
+not change between two rows of the same history), then runs two passes: the
+standard estimate for every session first, because `PersonalRecoveryModel` needs
+to know what window each session *would* have had, then the Recharge+ one. Both
+passes are handed the observed window, and on both it is only a sentence.
 
 ### What the user is allowed to tell the model
 Two corrections, both Recharge+, and both added because a control that appears to

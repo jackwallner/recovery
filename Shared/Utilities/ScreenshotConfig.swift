@@ -114,7 +114,6 @@ public enum ScreenshotFixtures {
             reboundSamples: 6,
             toleranceFactor: 0.91,
             toleranceSamples: 4,
-            densityFactor: 0.95,
             weeklyLoad: 268,
             sessionsPerWeek: 4.7,
             qualifyingSessions: 20,

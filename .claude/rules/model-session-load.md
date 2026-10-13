@@ -86,14 +86,46 @@ having quietly ignored the workout. It is applied after every other adjustment,
 and monotonicity survives because a maximum against a constant is still
 non-decreasing.
 
-The **maximum** deliberately stays at 72h against Garmin's documented 96h. We
-have less signal and the conservative end is the safer one for a health app.
+The **maximum** is Garmin's documented 96h (version 16). It was 72h on the
+argument that less signal should mean a more conservative ceiling, which has
+the direction backwards: a ceiling is the one place the app tells somebody to
+wait *less* than the model says. At 72h a raced half marathon, a marathon and a
+beginner's long run all read the same. The curve gained a race segment
+(3.5x -> 72h, 6x -> 96h) above the old last anchor, so no training session moved.
 
 Firstbeat publishes **no** strength-training method at all — the EPOC/Training
 Effect white papers are entirely HR-driven cardio, and the recovery-time
 hours-mapping itself was never published. So the strength handling above is a
 design decision defended by internal consistency, not a number copied from a
 reference. Say so rather than implying otherwise.
+
+### Duration, intensity and shape: where TRIMP and EPOC disagree
+Garmin's recovery time comes from EPOC; Recharge's load is Banister TRIMP. The
+two agree in the middle and part company at three edges, and version 16 closes
+all three (`GarminScenarioTests` is the evidence).
+
+- **Long and easy.** TRIMP is linear in duration, EPOC plateaus below
+  threshold. A three-hour zone-two ride scored 59h against 38h for a threshold
+  hour. `SessionLoadCalculator.effectiveMinutes` counts the first
+  `steadyStateMinutes` (60) in full and later minutes at `continuationWeight`,
+  1.0 at 80% of reserve falling linearly to a 0.4 floor. Applied to every source
+  (heart rate, energy, effort, blind fallback, override) through
+  `costedMinutes`, so the sensors stay on one curve, and **not to strength**:
+  resistance work is sets, session-RPE is linear in duration by construction,
+  and damping it widened the strength sensor spread from 2.3x to 3.5x.
+- **Short and maximal.** Banister's curve was fitted to lactate and is too
+  gentle at the top: a parkrun at 92% of reserve scored 15h. `trimpPerMinute`
+  multiplies minutes above `supraThresholdReserve` (0.85) by
+  `1 + 8 x (r - 0.85)`, so nothing at or below the threshold hour or the
+  interval anchors moved and a 5k race now reads 29h.
+- **Shape.** The average heart rate cannot tell intervals from a steady run.
+  `HeartRateDistribution` (2 bpm buckets, seconds each, stored as absolute bpm
+  so a changed max or resting rate rescores correctly) is built at import from
+  the same samples and per-sample interval the coverage figure uses, persisted
+  as `WorkoutRecord.heartRateDistributionData`, and costed bucket by bucket by
+  `distributionLoad`. An interval session at the same average as a steady one
+  now costs about 40% more. Sessions imported before version 16 inside the
+  42-day baseline window are re-read once for it.
 
 ### Things worth knowing before changing the model
 - **Monotonicity is structural, not incidental.** `RecoveryCalculator.curve` is a

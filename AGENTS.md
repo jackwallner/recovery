@@ -38,12 +38,12 @@ mirror the schema.
 
 ### The model (`Shared/Utilities/`)
 Pure, `Sendable`, with no HealthKit or SwiftData imports. That makes the
-269-test suite in `RechargeTests` possible without a Health store.
+349-test suite in `RechargeTests` possible without a Health store.
 
 | File | Stage |
 |---|---|
-| `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP, then reported effort, then energy, then duration. Also `intensityFraction`, the HR-reserve quality proxy. |
-| `ObservedRecoveryPattern` | what the person actually does: median gap to the next real session, by effort band. The free tier's whole answer. |
+| `SessionLoadCalculator` | one workout → one load. HR-reserve TRIMP (time-in-zone where imported), then reported effort, then energy, then duration, all on one duration/intensity curve. Also `intensityFraction`, the HR-reserve quality proxy. |
+| `ObservedRecoveryPattern` | what the person actually does: median gap to the next real session, by effort band. A sentence beside the countdown on both tiers, never the countdown. |
 | `RecoveryBaseline` | the person's own recent loads; median, 25th percentile, sample count. Below `minimumSamples` the median is shrunk toward the population reference (see below). `.standard(for:)` is the no-samples reference the free tier uses. |
 | `RecoveryCalculator` | relative load → bounded hours, context adjustment, calibration, personalization, clamp. |
 | `AthleteProfile` | who the person is: age, sex, experience, volume, bounce-back, plus Health measurements (VO2 max, observed maximum heart rate, body mass). Every field carries its own multiplier, and `gaps` is what onboarding still has to ask. |
@@ -56,10 +56,11 @@ Pure, `Sendable`, with no HealthKit or SwiftData imports. That makes the
 
 ## Rules that hold everywhere
 Condensed from the deep notes below; the reasoning and the bugs behind each one live there.
-- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **15**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
+- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **16**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
 - Complication and widget views render from `entry.date`, never from `Date.now`.
 - The phone owns the model and the Watch app deliberately cannot read Health. Do not add HealthKit to the Watch to fix a delivery bug.
 - Every link in the background chain (HealthKit observer, `WCSession` activation, application context, Watch background task, App Group write, timeline reload) is guarded by a silent `return`. Observer queries and `WCSession` activation run from `RechargeApp.init` (`Recharge/App.swift`), not from a scene callback.
+- Tune levels against Garmin and pin them in a test: `GarminAnchorTests` (one reference athlete) and `GarminScenarioTests` (four athletes, both tiers, races, intervals, nights after). Free = the model at the stated training level; Recharge+ = the model on the person.
 - Read `project-docs/design/design.md` before any UI work; `./scripts/design-audit.sh` enforces the tokens.
 - A green Debug test suite does not mean the archive builds: anything touching `ScreenshotConfig` or `ScreenshotFixtures` needs a `-configuration Release -destination generic/platform=iOS` build first.
 - Never set `CODE_SIGN_IDENTITY: ""` in `project.yml`. It silently strips HealthKit and the App Group from the archive.
@@ -71,9 +72,9 @@ These files load automatically when you read a file matching their `paths:`. Age
 
 | File | Sections | Read when |
 |---|---|---|
-| `.claude/rules/model-tiers.md` | The two tiers; What the user is allowed to tell the model; The two figures had to stop contradicting each other; The readiness question only asks about countdowns the user watched; The Ready alert is not a Recharge+ feature | Free vs Recharge+ figures, user corrections, reconciliation copy, readiness feedback, the Ready notification |
-| `.claude/rules/model-stacking-and-versions.md` | Recovery time stacks, and the residual has to be persisted; What the 30-day analysis actually measures (with the model version history) | Overlapping windows, persisted residuals, the personal multiplier, bumping the model version |
-| `.claude/rules/model-session-load.md` | The load ladder is an order of trust; Every source estimates the same quantity; The six-hour floor is Garmin's; Things worth knowing before changing the model; Every session carries a cost | Scoring one session: heart rate, effort, energy, duration, classification, floors, cost vs countdown |
+| `.claude/rules/model-tiers.md` | The two tiers; The habit was the free countdown, and it was not a recovery time; What the user is allowed to tell the model; The two figures had to stop contradicting each other; The readiness question only asks about countdowns the user watched; The Ready alert is not a Recharge+ feature | Free vs Recharge+ figures, user corrections, reconciliation copy, readiness feedback, the Ready notification |
+| `.claude/rules/model-stacking-and-versions.md` | Recovery time stacks, and the residual has to be persisted; The nights after the session move a running countdown; What the 30-day analysis actually measures (with the model version history) | Overlapping windows, persisted residuals, the personal multiplier, bumping the model version |
+| `.claude/rules/model-session-load.md` | The load ladder is an order of trust; Every source estimates the same quantity; The six-hour floor is Garmin's; Duration, intensity and shape; Things worth knowing before changing the model; Every session carries a cost | Scoring one session: heart rate, effort, energy, duration, classification, floors, cost vs countdown |
 | `.claude/rules/model-baseline-and-anchor.md` | The audit is in the repo; "Typical" is a training day; The standard tier is anchored to Garmin's default; A thin baseline is shrunk | The baseline denominator, `standardTypicalLoad`, the athlete matrix and Garmin anchor tests |
 | `.claude/rules/model-open-questions.md` | Open tuning questions | Before retuning any model constant |
 | `.claude/rules/ui-shell.md` | The design system is `project-docs/design/design.md`; The screens are the Vitals shape now; Clearance for the floating tab bar is the shell's job; A pinned header has to mask what scrolls behind it | Any view, the tab bar, History, UI tests that assert frames |

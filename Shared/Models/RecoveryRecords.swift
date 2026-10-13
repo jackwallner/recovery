@@ -20,6 +20,10 @@ public final class WorkoutRecord {
     /// an existing store in place; zero means "no usable heart rate here".
     public var peakHeartRate: Double = 0
     public var heartRateCoverage: Double
+    /// The session's time-in-zone distribution, JSON-encoded
+    /// `HeartRateDistribution`. Optional so SwiftData migrates an existing store
+    /// in place; nil falls back to the average heart rate.
+    public var heartRateDistributionData: Data?
     public var sessionLoad: Double
     public var loadSourceRaw: String
     public var profileRaw: String
@@ -49,6 +53,7 @@ public final class WorkoutRecord {
         averageHeartRate: Double = 0,
         peakHeartRate: Double = 0,
         heartRateCoverage: Double = 0,
+        heartRateDistributionData: Data? = nil,
         sessionLoad: Double = 0,
         loadSource: LoadSource = .duration,
         profile: WorkoutProfile = .endurance,
@@ -67,6 +72,7 @@ public final class WorkoutRecord {
         self.averageHeartRate = averageHeartRate
         self.peakHeartRate = peakHeartRate
         self.heartRateCoverage = heartRateCoverage
+        self.heartRateDistributionData = heartRateDistributionData
         self.sessionLoad = sessionLoad
         self.loadSourceRaw = loadSource.rawValue
         self.profileRaw = profile.rawValue

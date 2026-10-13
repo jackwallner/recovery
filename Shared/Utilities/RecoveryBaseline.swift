@@ -203,10 +203,25 @@ public struct RecoveryBaseline: Sendable, Equatable {
     /// question about their training. Running both off the daily totals would
     /// mean somebody who trains three times a day needs a single session as big
     /// as an average person's whole day before the app acknowledges it.
+    ///
+    /// Capped at `maximumQuietThreshold`. Uncapped, the percentile let a
+    /// high-volume athlete's own training define real sessions away: for a
+    /// cyclist riding five times a week, an hour on the bike sat under their
+    /// 25th percentile and started no countdown at all, where Garmin gives any
+    /// recorded hour a recovery time.
     public var quietThreshold: Double {
         guard hasEnoughSamples else { return RecoveryCalculator.absoluteCountdownFloor }
-        return max(percentile(0.25), RecoveryCalculator.absoluteCountdownFloor)
+        return min(
+            max(percentile(0.25), RecoveryCalculator.absoluteCountdownFloor),
+            Self.maximumQuietThreshold
+        )
     }
+
+    /// About thirty minutes at an easy 55% of heart-rate reserve. A session at
+    /// least this big always starts a countdown, whatever the person's own
+    /// distribution says, which matches the free tier: an easy half hour is the
+    /// smallest thing Garmin's six-hour minimum is routinely given for.
+    public static let maximumQuietThreshold: Double = 30
 
     /// Linear-interpolated percentile over the sorted per-session sample.
     public func percentile(_ fraction: Double) -> Double {

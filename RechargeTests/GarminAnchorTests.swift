@@ -42,11 +42,18 @@ final class GarminAnchorTests: XCTestCase {
         let high: Double
     }
 
-    /// Easy 0-12h, moderate 12-24h, hard 24-48h, very hard 48-72h. The bands are
-    /// widened by a couple of hours at the edges where a session genuinely sits
-    /// on a boundary (a 60-minute easy run is the top of "easy" or the bottom of
-    /// "moderate" depending on who you ask), and never widened enough to make an
-    /// assertion vacuous.
+    /// Easy 6-12h, moderate 12-24h, long run 24-48h, tempo and threshold
+    /// 24-36h, intervals 24-48h, race 48-96h, marathon 72-96h: the ranges
+    /// Garmin-watching sources report (wiki.garminrumors.com/Recovery_Time,
+    /// the5krunner's Recovery Time page), inside the 6-hour-to-4-day range the
+    /// owner's manuals document. The bands are widened by a couple of hours at
+    /// the edges where a session genuinely sits on a boundary, and never
+    /// widened enough to make an assertion vacuous.
+    ///
+    /// The long steady sessions used to carry 36-66h and 44-72h bands, which
+    /// put a two-and-a-half-hour ride above a threshold hour. Garmin reports
+    /// long easy sessions in its long-run band and races above it, and the
+    /// model now does the same (`SessionLoadCalculator.continuationWeight`).
     private let anchors: [Anchor] = [
         // Low bound 0, not 6: this one sits under `absoluteCountdownFloor` and
         // starts no countdown at all, which is the bottom of Garmin's easy band
@@ -62,9 +69,19 @@ final class GarminAnchorTests: XCTestCase {
         Anchor(name: "60m threshold",       minutes: 60,  reserve: 0.78, low: 24, high: 48),
         Anchor(name: "60m hard intervals",  minutes: 60,  reserve: 0.85, low: 30, high: 48),
         Anchor(name: "75m hard intervals",  minutes: 75,  reserve: 0.85, low: 40, high: 62),
-        Anchor(name: "90m long steady",     minutes: 90,  reserve: 0.62, low: 24, high: 44),
-        Anchor(name: "120m long run",       minutes: 120, reserve: 0.62, low: 36, high: 66),
-        Anchor(name: "150m very long ride", minutes: 150, reserve: 0.60, low: 44, high: 72)
+        Anchor(name: "90m long steady",     minutes: 90,  reserve: 0.62, low: 12, high: 30),
+        Anchor(name: "120m long run",       minutes: 120, reserve: 0.62, low: 24, high: 48),
+        Anchor(name: "150m very long ride", minutes: 150, reserve: 0.60, low: 24, high: 48),
+        Anchor(name: "180m easy ride",      minutes: 180, reserve: 0.58, low: 24, high: 48)
+    ]
+
+    /// Races, which are allowed to reach the four-day ceiling and so are kept
+    /// out of `testAnOrdinaryHardSessionDoesNotPinTheCeiling`.
+    private let races: [Anchor] = [
+        Anchor(name: "5k race",             minutes: 22,  reserve: 0.92, low: 24, high: 48),
+        Anchor(name: "10k race",            minutes: 45,  reserve: 0.90, low: 36, high: 66),
+        Anchor(name: "half marathon race",  minutes: 105, reserve: 0.87, low: 48, high: 96),
+        Anchor(name: "marathon race",       minutes: 225, reserve: 0.80, low: 72, high: 96)
     ]
 
     private func session(_ anchor: Anchor) -> SessionInput {
@@ -99,7 +116,7 @@ final class GarminAnchorTests: XCTestCase {
 
     /// Every canonical session lands in the band Garmin puts it in.
     func testTheStandardTierLandsInGarminsBands() {
-        for anchor in anchors {
+        for anchor in anchors + races {
             let hours = standardHours(anchor)
             XCTAssertGreaterThanOrEqual(
                 hours, anchor.low,
@@ -208,12 +225,22 @@ final class GarminAnchorTests: XCTestCase {
 
     // MARK: - The table, for reading
 
+    /// Races are ordered the way Garmin orders them: a longer race at a
+    /// sustainable pace costs more than a short one at a higher one, and a
+    /// marathon is at or near the four-day maximum.
+    func testRacesClimbWithDistanceAndAMarathonNearlyPinsTheCeiling() {
+        let hours = races.map(standardHours)
+        XCTAssertEqual(hours, hours.sorted(), "\(hours)")
+        XCTAssertGreaterThanOrEqual(hours.last ?? 0, 72)
+        XCTAssertLessThanOrEqual(hours.last ?? 0, RecoveryCalculator.maximumHours)
+    }
+
     /// Prints the standard tier beside the bands it is fitted to. Not an
     /// assertion; run it when the model is next opened.
     func testPrintTheGarminAnchorTable() {
         var lines = ["", "standard tier vs observed Garmin bands (endurance, model v\(recoveryModelVersion))", ""]
         lines.append("  session                   load    Recharge    Garmin")
-        for anchor in anchors {
+        for anchor in anchors + races {
             let load = SessionLoadCalculator.profiledLoad(for: session(anchor)).value
             let hours = standardHours(anchor)
             let fits = hours >= anchor.low && hours <= anchor.high

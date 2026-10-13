@@ -5,6 +5,7 @@ paths:
   - "RechargeTests/AthleteMatrix.swift"
   - "RechargeTests/RecoveryMatrixTests.swift"
   - "RechargeTests/GarminAnchorTests.swift"
+  - "RechargeTests/GarminScenarioTests.swift"
   - "RechargeTests/HighVolumeAthleteTests.swift"
   - "RechargeTests/RecoveryBaselineTests.swift"
 ---
@@ -128,10 +129,10 @@ it was lowered for. On the free tier an ordinary 60-minute threshold run returne
 **50 hours** and a 75-minute interval session pinned the 72-hour ceiling — for a
 session Garmin calls 24-48h.
 
-`GarminAnchorTests` is the guard. Thirteen canonical endurance sessions against
-the bands Garmin is observed to produce (easy 0-12h, moderate 12-24h, hard
-24-48h, very hard 48-72h); 70 is the value that puts all thirteen inside their
-band, and `testAnOrdinaryHardSessionDoesNotPinTheCeiling` states separately that
+`GarminAnchorTests` is the guard. Fourteen canonical endurance sessions and four
+races against the bands Garmin is reported to produce (easy 6-12h, moderate
+12-24h, long run 24-48h, threshold 24-48h, intervals 24-48h, races 48-96h,
+marathon 72-96h); 70 is the value that puts all of them inside their band, and `testAnOrdinaryHardSessionDoesNotPinTheCeiling` states separately that
 the 72-hour cap is a bound rather than a working value. The endurance reference
 is documented as ~45 minutes at 65% of heart-rate reserve and
 `testTheStandardReferenceDescribesSomeoneWhoAlreadyTrains` checks the constant
@@ -145,6 +146,12 @@ apart.
 | 60m threshold | 25.8h | 49.8h | 33.9h | 24-48h |
 | 75m intervals | 46.9h | **72.0h** | 59.5h | 40-62h |
 | 2h long run | 32.2h | 60.2h | 41.7h | 36-66h |
+
+Version 16 re-banded the long steady sessions (90m 12-30h, 120m and 150m
+24-48h, previously 24-44h, 36-66h and 44-72h), because those bands put a long
+easy ride above a threshold hour, which Garmin does not. `GarminScenarioTests`
+extends the anchor from one reference athlete to four (beginner, recreational,
+marathoner, masters cyclist) on both tiers.
 
 A model-version bump also **thaws frozen records** in `RecoveryEngine.rescore`:
 an estimate scored by an older model is not what the app would say today, and
@@ -175,6 +182,10 @@ and above it returns the person's own geometric mean exactly. The two figures ab
 became 27 and 34 hours. It is the same shrinkage shape `PersonalRecoveryModel`
 uses to fold evidence into the questionnaire prior, and it says the same thing:
 personalisation earns its way in.
+
+`quietThreshold` is capped at `maximumQuietThreshold` (30, about half an hour
+easy) since version 16: a high-volume cyclist's own 25th percentile used to sit
+above an hour on the bike, which then started no countdown on Recharge+.
 
 `quietThreshold` already had this property — it stays at the absolute floor until
 the sample is big enough — so the two halves of the baseline now agree about when

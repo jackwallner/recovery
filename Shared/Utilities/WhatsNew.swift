@@ -23,7 +23,12 @@ public enum WhatsNew {
     /// the Ready alert is on for everyone now and it needs permission, the two
     /// comparison columns are named differently everywhere they appear, and a
     /// session's countdown can be changed by hand for the first time.
-    public static let currentVersion = "1.3"
+    /// 1.4: Garmin parity (model version 16). The standard countdown is the
+    /// model again rather than the user's usual gap, races reach four days,
+    /// intervals and long easy sessions are costed the way Garmin costs them,
+    /// and Recharge+ moves a running countdown with the nights after the
+    /// session. Almost every figure an existing user has seen moves, so it fires.
+    public static let currentVersion = "1.4"
 
     public static func shouldShow(lastShown: String?) -> Bool {
         lastShown != currentVersion
@@ -38,24 +43,24 @@ public enum WhatsNew {
 
     public static let items: [Item] = [
         Item(
-            symbol: "bell.badge.fill",
-            title: "Told when the countdown ends",
-            detail: "The completion alert is on for everyone now, not just Recharge+. Recharge keeps counting down in the background, so you never have to open it to find out."
+            symbol: "gauge.with.needle",
+            title: "Standard is a recovery time again",
+            detail: "The free countdown scores each session at your training level, like a Garmin does, instead of repeating your usual gap between sessions. That gap is still shown beside it."
         ),
         Item(
-            symbol: "slider.horizontal.3",
-            title: "Tell it how hard it really was",
-            detail: "Open any session and mark it light, moderate, or hard. The countdown is recalculated from your answer, including for a walk the sensors read as nothing."
+            symbol: "flag.checkered",
+            title: "Up to four days after a race",
+            detail: "Countdowns now reach four days, so a half marathon or a marathon reads longer than a long run."
         ),
         Item(
-            symbol: "pin.fill",
-            title: "Or pin your own hours",
-            detail: "Recharge+ can hold a fixed recharge time for light, moderate, and hard sessions, for anyone following a programme of their own."
+            symbol: "waveform.path.ecg",
+            title: "Intervals count for what they were",
+            detail: "Recharge reads the time you spent at each heart rate, so hard repeats cost more than a steady run at the same average, and a long easy ride no longer outweighs a hard hour."
         ),
         Item(
-            symbol: "arrow.left.arrow.right",
-            title: "Standard and Recharge+, named",
-            detail: "The two figures Recharge compares now say which is which, and tapping a session explains exactly what separates them."
+            symbol: "moon.zzz.fill",
+            title: "Updated by the nights after",
+            detail: "Recharge+ adjusts a running countdown after each night's sleep, HRV, and resting heart rate, not only the night before the session."
         )
     ]
 }

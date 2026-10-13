@@ -23,15 +23,11 @@ public enum RechargeConversionCopy {
     /// headings name the tiers and something still has to name the derivation.
     ///
     /// Both halves are literally true, which matters more here than anywhere
-    /// else in the app: the standard figure genuinely is read off the user's own
-    /// gaps between sessions (falling back to the model while their history is
-    /// thin), and the Recharge+ figure genuinely is a recommendation scored
-    /// against their baseline, their thirty-day pattern, and last night.
+    /// else in the app: the standard figure is the model scored at the user's
+    /// training level, and the Recharge+ figure is the same session scored
+    /// against their own baseline, their thirty-day pattern, and their sleep.
     public static func comparisonCaption(hasPurchased: Bool) -> String {
-        let standard = "Standard is how long you usually leave between sessions this size."
-        return hasPurchased
-            ? "\(standard) \(proName) is the window the model recommends for this one, from your own baseline, sleep, and heart rate."
-            : "\(standard) \(proName) adds the window the model recommends for this one, from your own baseline, sleep, and heart rate."
+        "Standard is the model at your training level. \(proName) scores this session against your own baseline, sleep, and heart rate."
     }
 
     /// Primary button. Carries no pricing words at all: not the trial, not the

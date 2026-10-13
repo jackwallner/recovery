@@ -34,9 +34,9 @@ enum ProFeature: CaseIterable {
     var detail: String {
         switch self {
         case .personalizedTime:
-            "Your usual gap beside the model's recommended window, based on your own history."
+            "Every session scored against your own 42-day baseline and 30-day recovery pattern."
         case .bodySignals:
-            "Short sleep, a depressed HRV, or an elevated resting heart rate nudge the estimate within a bounded range."
+            "The nights before and after a session move the countdown within a bounded range, as they do on Garmin."
         case .weeklyLoad:
             "How hard this week has been compared with your own four-week average."
         case .sessionOverrides:

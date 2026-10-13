@@ -237,6 +237,8 @@ public final class RecoveryEngine: ObservableObject {
                     record.averageHeartRate = workout.averageHeartRate ?? record.averageHeartRate
                     record.peakHeartRate = workout.peakHeartRate ?? record.peakHeartRate
                     record.heartRateCoverage = workout.heartRateCoverage
+                    record.heartRateDistributionData = workout.heartRateDistribution?.encoded
+                        ?? record.heartRateDistributionData
                 }
                 record.sourceName = workout.sourceName
                 record.profileRaw = profile.rawValue
@@ -252,6 +254,7 @@ public final class RecoveryEngine: ObservableObject {
                     averageHeartRate: workout.averageHeartRate ?? 0,
                     peakHeartRate: workout.peakHeartRate ?? 0,
                     heartRateCoverage: workout.heartRateCoverage,
+                    heartRateDistributionData: workout.heartRateDistribution?.encoded,
                     profile: profile,
                     sourceName: workout.sourceName,
                     activityLabel: label
@@ -271,12 +274,22 @@ public final class RecoveryEngine: ObservableObject {
         // Heart-rate samples can be written after the workout object. Revisit
         // cached sessions with incomplete coverage so a later sample changes
         // the load instead of leaving an energy or duration fallback forever.
+        //
+        // Sessions imported before the time-in-zone distribution existed are
+        // read once more for it, across the whole baseline window, so an
+        // update rescores the history a countdown is measured against and not
+        // only the sessions that arrive afterwards.
         let heartRateRefreshCutoff = DateHelpers.daysAgo(14)
+        let distributionBackfillCutoff = DateHelpers.daysAgo(RecoveryBaseline.historyDays)
         let windows = byUUID.values
             .filter {
-                $0.endDate >= heartRateRefreshCutoff
-                    && $0.endDate <= .now
+                guard $0.endDate <= .now else { return false }
+                let incomplete = $0.endDate >= heartRateRefreshCutoff
                     && $0.heartRateCoverage < SessionLoadCalculator.minimumHeartRateCoverage
+                let missingDistribution = $0.endDate >= distributionBackfillCutoff
+                    && $0.heartRateCoverage >= SessionLoadCalculator.minimumHeartRateCoverage
+                    && $0.heartRateDistributionData == nil
+                return incomplete || missingDistribution
             }
             .map {
                 HealthKitService.WorkoutWindow(
@@ -287,12 +300,15 @@ public final class RecoveryEngine: ObservableObject {
             }
         let heartRateUpdates = await HealthKitService.shared.refreshHeartRate(for: windows)
         for record in byUUID.values {
-            guard let update = heartRateUpdates[record.healthKitUUID],
-                  update.coverage > record.heartRateCoverage
-            else { continue }
-            record.averageHeartRate = update.average ?? record.averageHeartRate
-            record.peakHeartRate = update.peak ?? record.peakHeartRate
-            record.heartRateCoverage = update.coverage
+            guard let update = heartRateUpdates[record.healthKitUUID] else { continue }
+            if update.coverage > record.heartRateCoverage {
+                record.averageHeartRate = update.average ?? record.averageHeartRate
+                record.peakHeartRate = update.peak ?? record.peakHeartRate
+                record.heartRateCoverage = update.coverage
+                record.heartRateDistributionData = update.distribution?.encoded ?? record.heartRateDistributionData
+            } else if record.heartRateDistributionData == nil {
+                record.heartRateDistributionData = update.distribution?.encoded
+            }
         }
 
         guard saveContext(reason: "workout import") else {
@@ -347,20 +363,18 @@ public final class RecoveryEngine: ObservableObject {
             let key = DateHelpers.dayKey(for: point.date)
             byDay[key, default: zero].resting = point.value
         }
-        for point in hrv {
-            let key = DateHelpers.dayKey(for: point.date)
-            byDay[key, default: zero].hrv = point.value
+        // HRV and breathing rate are written several times a day, and the last
+        // sample of the day is often the one taken after an evening session,
+        // when HRV is at its most depressed. The median of the day is the
+        // reading that describes the day rather than its last hour.
+        for (key, values) in Dictionary(grouping: hrv, by: { DateHelpers.dayKey(for: $0.date) }) {
+            byDay[key, default: zero].hrv = median(values.map(\.value).filter { $0 > 0 }) ?? 0
         }
         for (key, hours) in sleep {
             byDay[key, default: zero].sleep = hours
         }
-        // Health writes several respiratory-rate samples a night; the median of
-        // the night would be better and the last one is what every other series
-        // here uses, so keep the shapes the same and let the day-to-day
-        // comparison absorb it.
-        for point in respiratory {
-            let key = DateHelpers.dayKey(for: point.date)
-            byDay[key, default: zero].respiratory = point.value
+        for (key, values) in Dictionary(grouping: respiratory, by: { DateHelpers.dayKey(for: $0.date) }) {
+            byDay[key, default: zero].respiratory = median(values.map(\.value).filter { $0 > 0 }) ?? 0
         }
         // The *best* of the day, not the last. Heart-rate recovery is only
         // meaningful after a session hard enough to have somewhere to fall from,
@@ -503,10 +517,11 @@ public final class RecoveryEngine: ObservableObject {
         // The two tiers carry separate chains. A standard window and a
         // personalized window for the same session end at different times, so a
         // shared residual would splice one tier's arithmetic into the other's.
-        // What this person actually does between sessions, which is what the
-        // free tier now reports. Read once per rescore rather than per session:
-        // it is a description of a habit, not a score for a workout, and a habit
-        // does not change between two rows of the same history.
+        //
+        // What this person actually does between sessions, which both tiers
+        // state beside their window. Read once per rescore rather than per
+        // session: it is a description of a habit, not a score for a workout,
+        // and a habit does not change between two rows of the same history.
         let sessionLoads = inputs.map { SessionLoadCalculator.profiledLoad(for: $0).value }
         let pattern = ObservedRecoveryPattern.analyse(
             sessions: zip(inputs, sessionLoads).map { session, load in
@@ -522,28 +537,19 @@ public final class RecoveryEngine: ObservableObject {
         )
         observedPattern = pattern
 
+        // The free tier is the model at the person's stated training level, so
+        // the estimate the analysis needs and the estimate a free user is shown
+        // are the same calculation. The habit rides along as a sentence.
         var standardEstimates: [RecoveryEstimate] = []
-        var standardModelEstimates: [RecoveryEstimate] = []
         var standardReadyAt: Date?
-        var standardModelReadyAt: Date?
         for (index, session) in inputs.enumerated() {
             let standardBaseline = RecoveryBaseline.standard(
                 for: session.profile,
                 fitnessScale: settings.athleteProfile.fitnessScale
             )
-            let modelEstimate = RecoveryCalculator.estimate(
-                for: session,
-                baseline: standardBaseline,
-                carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardModelReadyAt),
-                now: now
-            )
-            standardModelEstimates.append(modelEstimate)
-            if modelEstimate.producesCountdown { standardModelReadyAt = modelEstimate.readyAt }
-
             let estimate = RecoveryCalculator.estimate(
                 for: session,
                 baseline: standardBaseline,
-                standardHours: modelEstimate.hours,
                 carriedHours: RecoveryCalculator.carriedHours(into: session, from: standardReadyAt),
                 observed: pattern.window(
                     forLoad: sessionLoads[index],
@@ -558,7 +564,7 @@ public final class RecoveryEngine: ObservableObject {
         let isPro = StoreService.shared.isPro
         let analysis = PersonalRecoveryModel.analyse(
             profile: settings.athleteProfile,
-            sessions: zip(inputs, standardModelEstimates).map { session, standard in
+            sessions: zip(inputs, standardEstimates).map { session, standard in
                 PersonalRecoveryModel.HistorySession(
                     id: session.id,
                     profile: session.profile,
@@ -816,6 +822,7 @@ public final class RecoveryEngine: ObservableObject {
             restingHeartRate: latestRestingHeartRate(before: workout.endDate),
             maxHeartRate: settings.effectiveMaxHeartRate,
             heartRateCoverage: workout.heartRateCoverage,
+            heartRateDistribution: HeartRateDistribution.decode(workout.heartRateDistributionData),
             activeEnergyKilocalories: workout.activeEnergy > 0 ? workout.activeEnergy : nil,
             reportedEffort: workout.reportedEffort,
             intensityOverride: workout.intensityOverride,
@@ -832,6 +839,24 @@ public final class RecoveryEngine: ObservableObject {
         respiratoryBaseline: Double?
     ) -> RecoveryContext {
         let record = contextByKey[DateHelpers.dayKey(for: workout.endDate)]
+        // The nights after the session, up to the longest window there is. The
+        // calculator drops any that landed after the countdown would have
+        // ended, so passing all of them is safe.
+        let calendar = Calendar.current
+        let sessionDay = calendar.startOfDay(for: workout.endDate)
+        let maximumNights = Int((RecoveryCalculator.maximumHours / 24).rounded(.up))
+        let following: [RecoveryContext.Night] = (1...maximumNights).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: sessionDay),
+                  let night = contextByKey[DateHelpers.dayKey(for: day)]
+            else { return nil }
+            return RecoveryContext.Night(
+                date: day,
+                sleepHours: night.sleepHours > 0 ? night.sleepHours : nil,
+                heartRateVariability: night.heartRateVariability > 0 ? night.heartRateVariability : nil,
+                restingHeartRate: night.restingHeartRate > 0 ? night.restingHeartRate : nil,
+                respiratoryRate: night.respiratoryRate > 0 ? night.respiratoryRate : nil
+            )
+        }
         return RecoveryContext(
             sleepHours: (record?.sleepHours).flatMap { $0 > 0 ? $0 : nil },
             heartRateVariability: (record?.heartRateVariability).flatMap { $0 > 0 ? $0 : nil },
@@ -839,7 +864,8 @@ public final class RecoveryEngine: ObservableObject {
             restingHeartRate: (record?.restingHeartRate).flatMap { $0 > 0 ? $0 : nil },
             restingHeartRateBaseline: restingBaseline,
             respiratoryRate: (record?.respiratoryRate).flatMap { $0 > 0 ? $0 : nil },
-            respiratoryRateBaseline: respiratoryBaseline
+            respiratoryRateBaseline: respiratoryBaseline,
+            followingNights: following
         )
     }
 

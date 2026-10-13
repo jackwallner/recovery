@@ -112,15 +112,6 @@ public enum WeeklyVolume: Int, Codable, Sendable, CaseIterable {
         }
     }
 
-    var recoveryFactor: Double {
-        switch self {
-        case .oneOrTwo: 1.07
-        case .threeOrFour: 1.00
-        case .fiveOrSix: 0.96
-        case .sevenPlus: 0.92
-        }
-    }
-
     /// Contribution to `AthleteProfile.fitnessScale`. The closest thing Recharge
     /// asks to Firstbeat's activity class, and the larger of the two terms:
     /// how often someone trains says more about the size of their ordinary
@@ -382,7 +373,10 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
         if age != nil { factors.append(ageFactor) }
         if let experience { factors.append(experience.recoveryFactor) }
         if let bounceBack { factors.append(bounceBack.recoveryFactor) }
-        if let weeklyVolume { factors.append(weeklyVolume.recoveryFactor) }
+        // Weekly volume is deliberately absent. It already reaches every
+        // estimate through `fitnessScale`, and on Recharge+ the personal
+        // baseline measures it directly; a third term counted one fact three
+        // times and discounted a daily trainer's window by all of them.
         guard !factors.isEmpty else { return nil }
         // Geometric mean rather than a product: four mild multipliers should
         // combine into one mild multiplier, not compound into a large one.

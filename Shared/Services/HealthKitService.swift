@@ -47,13 +47,19 @@ public final class HealthKitService: ObservableObject {
         public let average: Double?
         public let peak: Double?
         public let coverage: Double
+        public let distribution: HeartRateDistribution?
 
-        public init(average: Double?, peak: Double?, coverage: Double) {
+        public init(average: Double?, peak: Double?, coverage: Double, distribution: HeartRateDistribution? = nil) {
             self.average = average
             self.peak = peak
             self.coverage = coverage
+            self.distribution = distribution
         }
     }
+
+    private typealias HeartRateSummary = (
+        average: Double?, peak: Double?, coverage: Double, distribution: HeartRateDistribution?
+    )
 
     private struct SleepSample: Sendable {
         let start: Date
@@ -253,6 +259,9 @@ public final class HealthKitService: ObservableObject {
         /// for an *observed* maximum, which beats an age-predicted one.
         public let peakHeartRate: Double?
         public let heartRateCoverage: Double
+        /// Time in each heart-rate bucket, which is what lets an interval
+        /// session cost more than a steady one at the same average.
+        public let heartRateDistribution: HeartRateDistribution?
         public let sourceName: String
     }
 
@@ -329,6 +338,7 @@ public final class HealthKitService: ObservableObject {
                 averageHeartRate: heartRate.average,
                 peakHeartRate: heartRate.peak,
                 heartRateCoverage: heartRate.coverage,
+                heartRateDistribution: heartRate.distribution,
                 sourceName: workout.sourceRevision.source.name
             ))
         }
@@ -354,7 +364,8 @@ public final class HealthKitService: ObservableObject {
             updates[workout.id] = HeartRateUpdate(
                 average: summary.average,
                 peak: summary.peak,
-                coverage: summary.coverage
+                coverage: summary.coverage,
+                distribution: summary.distribution
             )
         }
         return updates
@@ -401,7 +412,7 @@ public final class HealthKitService: ObservableObject {
     /// session with the coverage it actually lost.
     private func heartRateSummary(
         for workout: HKWorkout
-    ) async -> (average: Double?, peak: Double?, coverage: Double) {
+    ) async -> HeartRateSummary {
         await heartRateSummary(
             startDate: workout.startDate,
             endDate: workout.endDate,
@@ -413,7 +424,7 @@ public final class HealthKitService: ObservableObject {
         startDate: Date,
         endDate: Date,
         duration: TimeInterval
-    ) async -> (average: Double?, peak: Double?, coverage: Double) {
+    ) async -> HeartRateSummary {
         let bpm = HKUnit.count().unitDivided(by: .minute())
         let predicate = HKQuery.predicateForSamples(
             withStart: startDate, end: endDate, options: .strictStartDate
@@ -436,7 +447,7 @@ public final class HealthKitService: ObservableObject {
             store.execute(query)
         }
 
-        guard !samples.isEmpty, duration > 0 else { return (nil, nil, 0) }
+        guard !samples.isEmpty, duration > 0 else { return (nil, nil, 0, nil) }
 
         let sorted = samples.sorted { $0.startDate < $1.startDate }
         let values = sorted.map { $0.quantity.doubleValue(for: bpm) }
@@ -448,10 +459,16 @@ public final class HealthKitService: ObservableObject {
         // quietly flatten every intensity reading they ever get.
         let peak = Self.percentile(0.98, of: values)
 
-        let covered = Double(sorted.count) * Self.sampleInterval(of: sorted)
+        let interval = Self.sampleInterval(of: sorted)
+        let covered = Double(sorted.count) * interval
         let coverage = min(covered / duration, 1)
 
-        return (average, peak, coverage)
+        // Each sample stands for the same slice of clock the coverage figure
+        // credits it with, so the distribution and the coverage agree about
+        // how much of the session was seen.
+        let distribution = HeartRateDistribution(samples: values, secondsEach: interval)
+
+        return (average, peak, coverage, distribution)
     }
 
     /// How much of the clock one heart-rate sample stands for, from the median

@@ -136,10 +136,21 @@ final class RecoveryBaselineTests: XCTestCase {
 
     func testQuietThresholdUsesTheUsersOwn25thPercentileOnceItIsMeaningful() {
         let baseline = RecoveryBaseline(
-            loads: [40, 45, 50, 60, 70, 80, 90, 100, 120, 150], profile: .endurance
+            loads: [15, 18, 22, 25, 28, 32, 40, 50, 60, 70], profile: .endurance
         )
         XCTAssertGreaterThan(baseline.quietThreshold, RecoveryCalculator.absoluteCountdownFloor)
         XCTAssertEqual(baseline.quietThreshold, baseline.percentile(0.25), accuracy: 0.0001)
+    }
+
+    /// A high-volume athlete's own percentile cannot define a real half hour
+    /// away. Uncapped, an hour on the bike sat under a five-a-week cyclist's
+    /// 25th percentile and started no countdown at all.
+    func testQuietThresholdIsCappedSoARealSessionAlwaysCounts() {
+        let baseline = RecoveryBaseline(
+            loads: [40, 45, 50, 60, 70, 80, 90, 100, 120, 150], profile: .endurance
+        )
+        XCTAssertGreaterThan(baseline.percentile(0.25), RecoveryBaseline.maximumQuietThreshold)
+        XCTAssertEqual(baseline.quietThreshold, RecoveryBaseline.maximumQuietThreshold)
     }
 
     // MARK: - Building from history

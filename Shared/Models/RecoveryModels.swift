@@ -84,7 +84,21 @@ import Foundation
 /// And a free-tier countdown read off the user's habit no longer stacks on the
 /// residual of the one before, which kept a daily trainer at 34 to 50 hours
 /// indefinitely and never let the countdown reach Ready.
-public let recoveryModelVersion = 15
+/// 16: Garmin parity, checked against a matrix of athletes and situations
+/// (`GarminScenarioTests`). The free countdown is the model at the person's
+/// training level again rather than their habitual gap between sessions, which
+/// had turned a 30-minute jog into 47 hours for anyone training three times a
+/// week and a marathon into 23 hours for a daily trainer; the habit is a
+/// sentence on both tiers now. The ceiling is Garmin's four days rather than
+/// 72 hours, so races stop sharing a figure with long runs. Steady work below
+/// threshold accumulates at a reduced rate past the first hour, as EPOC does,
+/// so a long easy ride no longer outscores a threshold hour. Heart rate is
+/// costed from the time-in-zone distribution where one was imported, so
+/// intervals cost more than a steady session at the same average. Recharge+
+/// adjusts a running countdown from the nights after the session, not only the
+/// night before it. And the personal quiet threshold can no longer swallow a
+/// real half hour of training.
+public let recoveryModelVersion = 16
 
 // MARK: - Tier
 
@@ -549,6 +563,58 @@ public struct SessionLoad: Codable, Sendable, Equatable {
 
 // MARK: - Inputs
 
+/// Time spent at each heart rate during one session, in 2 bpm buckets.
+///
+/// The average heart rate throws away the shape of a session, and the shape is
+/// what separates intervals from a steady run at the same average. Stored as
+/// absolute beats per minute rather than as zones, so a later change to the
+/// person's resting or maximum heart rate rescores the session correctly
+/// instead of freezing the zones it was imported with.
+public struct HeartRateDistribution: Codable, Sendable, Equatable {
+    public static let bucketWidth: Double = 2
+    /// Beats per minute at the bottom of `seconds[0]`.
+    public let lowestBPM: Double
+    /// Seconds spent in each bucket, from `lowestBPM` upward.
+    public let seconds: [Double]
+
+    public init(lowestBPM: Double, seconds: [Double]) {
+        self.lowestBPM = lowestBPM.isFinite ? lowestBPM : 0
+        self.seconds = seconds.map { $0.isFinite ? max($0, 0) : 0 }
+    }
+
+    /// Builds the distribution from samples, each standing for `secondsEach`
+    /// seconds of the session. Implausible readings are dropped.
+    public init?(samples bpm: [Double], secondsEach: Double) {
+        let usable = bpm.filter { $0.isFinite && (30...240).contains($0) }
+        guard !usable.isEmpty, secondsEach.isFinite, secondsEach > 0,
+              let low = usable.min(), let high = usable.max()
+        else { return nil }
+        let lowest = (low / Self.bucketWidth).rounded(.down) * Self.bucketWidth
+        var buckets = [Double](repeating: 0, count: Int((high - lowest) / Self.bucketWidth) + 1)
+        for value in usable {
+            let index = min(Int((value - lowest) / Self.bucketWidth), buckets.count - 1)
+            buckets[index] += secondsEach
+        }
+        self.init(lowestBPM: lowest, seconds: buckets)
+    }
+
+    public var totalSeconds: Double { seconds.reduce(0, +) }
+
+    /// Each non-empty bucket as its midpoint heart rate and the seconds spent there.
+    public var buckets: [(bpm: Double, seconds: Double)] {
+        seconds.enumerated().compactMap { index, value in
+            value > 0 ? (lowestBPM + (Double(index) + 0.5) * Self.bucketWidth, value) : nil
+        }
+    }
+
+    public var encoded: Data? { try? JSONEncoder().encode(self) }
+
+    public static func decode(_ data: Data?) -> HeartRateDistribution? {
+        guard let data else { return nil }
+        return try? JSONDecoder().decode(HeartRateDistribution.self, from: data)
+    }
+}
+
 /// Everything the calculator needs to know about one finished workout. No
 /// HealthKit types: the calculator stays pure and unit-testable.
 public struct SessionInput: Sendable, Equatable {
@@ -562,6 +628,10 @@ public struct SessionInput: Sendable, Equatable {
     public let restingHeartRate: Double?
     public let maxHeartRate: Double?
     public let heartRateCoverage: Double
+    /// Time in each heart-rate bucket, when the import kept it. Preferred over
+    /// the average by the heart-rate path, which still applies the same
+    /// coverage gate.
+    public let heartRateDistribution: HeartRateDistribution?
     public let activeEnergyKilocalories: Double?
     /// Session RPE on the 1-10 Borg CR10 scale, if the user supplied one.
     public let reportedEffort: Double?
@@ -594,6 +664,7 @@ public struct SessionInput: Sendable, Equatable {
         restingHeartRate: Double? = nil,
         maxHeartRate: Double? = nil,
         heartRateCoverage: Double = 0,
+        heartRateDistribution: HeartRateDistribution? = nil,
         activeEnergyKilocalories: Double? = nil,
         reportedEffort: Double? = nil,
         intensityOverride: SessionIntensity? = nil,
@@ -610,6 +681,7 @@ public struct SessionInput: Sendable, Equatable {
         self.restingHeartRate = restingHeartRate.flatMap { $0.isFinite ? $0 : nil }
         self.maxHeartRate = maxHeartRate.flatMap { $0.isFinite ? $0 : nil }
         self.heartRateCoverage = heartRateCoverage.isFinite ? min(max(heartRateCoverage, 0), 1) : 0
+        self.heartRateDistribution = heartRateDistribution
         self.activeEnergyKilocalories = activeEnergyKilocalories.flatMap { $0.isFinite ? $0 : nil }
         self.reportedEffort = reportedEffort.flatMap { $0.isFinite ? min(max($0, 1), 10) : nil }
         self.intensityOverride = intensityOverride
@@ -643,6 +715,47 @@ public struct RecoveryContext: Sendable, Equatable {
     public let respiratoryRate: Double?
     public let respiratoryRateBaseline: Double?
 
+    /// The nights *after* the session, oldest first.
+    ///
+    /// The four fields above describe the night before, which is how the
+    /// person went into the session. Garmin also keeps adjusting the countdown
+    /// afterwards, from the sleep and stress that follow it, and that is the
+    /// half that decides how the window actually closes: a hard session followed
+    /// by a short, restless night is not the same window as the same session
+    /// followed by eight good hours. `RecoveryCalculator` only lets a night in
+    /// when it landed before the countdown would have ended, so a night that
+    /// came after Ready can never reopen a finished window.
+    public let followingNights: [Night]
+
+    /// One overnight reading, compared against the same baselines as the night
+    /// before the session.
+    public struct Night: Sendable, Equatable {
+        /// The start of the day the night ended on.
+        public let date: Date
+        public let sleepHours: Double?
+        public let heartRateVariability: Double?
+        public let restingHeartRate: Double?
+        public let respiratoryRate: Double?
+
+        public init(
+            date: Date,
+            sleepHours: Double? = nil,
+            heartRateVariability: Double? = nil,
+            restingHeartRate: Double? = nil,
+            respiratoryRate: Double? = nil
+        ) {
+            self.date = date
+            self.sleepHours = sleepHours
+            self.heartRateVariability = heartRateVariability
+            self.restingHeartRate = restingHeartRate
+            self.respiratoryRate = respiratoryRate
+        }
+
+        var hasSignal: Bool {
+            sleepHours != nil || heartRateVariability != nil || restingHeartRate != nil || respiratoryRate != nil
+        }
+    }
+
     public static let empty = RecoveryContext()
 
     public init(
@@ -652,7 +765,8 @@ public struct RecoveryContext: Sendable, Equatable {
         restingHeartRate: Double? = nil,
         restingHeartRateBaseline: Double? = nil,
         respiratoryRate: Double? = nil,
-        respiratoryRateBaseline: Double? = nil
+        respiratoryRateBaseline: Double? = nil,
+        followingNights: [Night] = []
     ) {
         self.sleepHours = sleepHours
         self.heartRateVariability = heartRateVariability
@@ -661,6 +775,18 @@ public struct RecoveryContext: Sendable, Equatable {
         self.restingHeartRateBaseline = restingHeartRateBaseline
         self.respiratoryRate = respiratoryRate
         self.respiratoryRateBaseline = respiratoryRateBaseline
+        self.followingNights = followingNights.filter(\.hasSignal).sorted { $0.date < $1.date }
+    }
+
+    /// The night before the session, in the same shape as the ones after it.
+    var nightBefore: Night {
+        Night(
+            date: .distantPast,
+            sleepHours: sleepHours,
+            heartRateVariability: heartRateVariability,
+            restingHeartRate: restingHeartRate,
+            respiratoryRate: respiratoryRate
+        )
     }
 
     /// True when nothing at all is known. Used to distinguish "no context" from
@@ -670,6 +796,7 @@ public struct RecoveryContext: Sendable, Equatable {
             && heartRateVariability == nil
             && restingHeartRate == nil
             && respiratoryRate == nil
+            && followingNights.isEmpty
     }
 }
 

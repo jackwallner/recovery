@@ -320,23 +320,6 @@ final class PersonalRecoveryModelTests: XCTestCase {
         XCTAssertLessThan(tolerance.factor ?? 99, 1.0)
     }
 
-    // MARK: - Signal 3: density
-
-    func testDensityIsSymmetricOnTheLogScale() {
-        let reference = PersonalRecoveryModel.referenceWeeklyLoad
-        let double = try? XCTUnwrap(PersonalRecoveryModel.densityFactor(weeklyLoad: reference * 2))
-        let half = try? XCTUnwrap(PersonalRecoveryModel.densityFactor(weeklyLoad: reference / 2))
-        let same = try? XCTUnwrap(PersonalRecoveryModel.densityFactor(weeklyLoad: reference))
-        XCTAssertEqual(same ?? 0, 1.0, accuracy: 0.001)
-        XCTAssertEqual(double ?? 0, 0.90, accuracy: 0.001)
-        XCTAssertEqual(half ?? 0, 1.10, accuracy: 0.001)
-    }
-
-    func testDensityIsBoundedForExtremeVolumes() {
-        XCTAssertEqual(PersonalRecoveryModel.densityFactor(weeklyLoad: 20_000), 0.90)
-        XCTAssertEqual(PersonalRecoveryModel.densityFactor(weeklyLoad: 1), 1.10)
-        XCTAssertNil(PersonalRecoveryModel.densityFactor(weeklyLoad: 0))
-    }
 
     // MARK: - The blend
 

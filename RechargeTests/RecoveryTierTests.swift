@@ -143,6 +143,7 @@ final class RecoveryTierTests: XCTestCase {
         for reason in estimate.reasons {
             XCTAssertFalse(reason.lowercased().contains("for you"), reason)
             XCTAssertFalse(reason.lowercased().contains("your usual"), reason)
+            XCTAssertFalse(reason.lowercased().contains("your own"), reason)
             XCTAssertFalse(reason.lowercased().contains("your baseline"), reason)
         }
     }

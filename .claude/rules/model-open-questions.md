@@ -45,3 +45,15 @@ Moved verbatim from AGENTS.md. Loads when a matching file is read; update it her
    lower it) and the choice between the 90th and, say, the 95th is a guess about
    how often somebody's hardest sessions are genuinely maximal. Worth revisiting
    the first time a user reports an intensity reading that looks wrong.
+6. **The version 16 shape constants are fitted to reported bands, not to data.**
+   `steadyStateMinutes` (60), the `continuationWeight` ramp (0.35-0.80 reserve,
+   0.4 floor), `supraThresholdReserve`/`Slope` (0.85, 8) and
+   `followingNightWeight` (2) were chosen so `GarminAnchorTests` and
+   `GarminScenarioTests` land in the ranges Garmin is reported to give. The first
+   real store with a Garmin running beside the Watch is worth more than any of
+   them: log both figures for a few weeks and refit.
+7. **`maximumQuietThreshold` (30) makes the personal 25th percentile nearly
+   inert.** With an absolute floor of 18 and a cap of 30 the percentile only
+   decides the 18-30 band. That is deliberate (Garmin gives any recorded half
+   hour a recovery time) but it means the percentile could be deleted outright
+   if nobody misses it.

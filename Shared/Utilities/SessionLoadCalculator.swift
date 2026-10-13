@@ -168,7 +168,8 @@ public enum SessionLoadCalculator {
     /// change the countdown in the direction the label promises.
     static func overriddenLoad(for session: SessionInput, intensity: SessionIntensity) -> SessionLoad {
         SessionLoad(
-            value: session.durationMinutes * intensity.assumedEffort * effortToTrimpScale,
+            value: costedMinutes(for: session, atReserve: intensity.assumedEffort / 10)
+                * intensity.assumedEffort * effortToTrimpScale,
             source: .reportedEffort,
             heartRateCoverage: session.heartRateCoverage
         )
@@ -200,29 +201,124 @@ public enum SessionLoadCalculator {
     /// heart-rate reserve. The single definition of what a minute of work
     /// costs: both the measured path and the inferred one go through it, so
     /// they cannot drift into different shapes.
+    ///
+    /// Above `supraThresholdReserve` each minute carries an extra weight on top
+    /// of Banister's. His curve was fitted to blood lactate, and it is too gentle
+    /// at the top for the quantity Garmin's recovery time is built on: EPOC
+    /// climbs steeply once work is above threshold. Without it a parkrun 5k
+    /// raced at 92% of reserve scored 15 hours, a third of what Garmin gives a
+    /// race, while every session at or below 85% (the threshold hour, the
+    /// interval anchors) is exactly where it was.
     static func trimpPerMinute(atReserve reserve: Double) -> Double {
-        let r = min(max(reserve, 0), 1)
-        return r * trimpWeightConstant * exp(trimpExponent * r)
+        let r = min(max(reserve.isFinite ? reserve : 0, 0), 1)
+        let supra = 1 + supraThresholdSlope * max(r - supraThresholdReserve, 0)
+        return r * trimpWeightConstant * exp(trimpExponent * r) * supra
+    }
+
+    /// Where the extra weight above threshold starts, and how fast it grows:
+    /// 1.56x at 92% of reserve, 2.2x at the maximum.
+    static let supraThresholdReserve = 0.85
+    static let supraThresholdSlope = 8.0
+
+    // MARK: - Duration
+
+    /// Minutes after which steady work below threshold stops accumulating at
+    /// the full rate.
+    static let steadyStateMinutes = 60.0
+
+    /// The share of each minute past `steadyStateMinutes` that still counts, as
+    /// a function of the fraction of heart-rate reserve it was done at.
+    ///
+    /// TRIMP is linear in duration, and EPOC (what Garmin's recovery time is
+    /// derived from) is not. Below threshold, oxygen debt reaches a steady state
+    /// within the first part of a session and an extra hour adds comparatively
+    /// little; above it, the slow component keeps it climbing for as long as the
+    /// effort lasts. Scored linearly, a three-hour zone-two ride cost more than a
+    /// sixty-minute threshold run (59h against 38h for the reference athlete),
+    /// where Garmin puts the ride in its long-session band (24-48h) and the
+    /// threshold hour above it. Full weight from 80% of reserve, which is about
+    /// where threshold sits, falling linearly to a floor of 0.4: a five-hour
+    /// hike still costs more than a three-hour one.
+    static func continuationWeight(atReserve reserve: Double) -> Double {
+        let r = reserve.isFinite ? reserve : 0
+        return min(max((r - 0.35) / 0.45, 0.4), 1)
+    }
+
+    /// Duration as it is costed: the first `steadyStateMinutes` in full, the
+    /// rest at `continuationWeight`. Monotone in both arguments, so a longer or
+    /// harder session can never score less.
+    static func effectiveMinutes(_ minutes: Double, atReserve reserve: Double) -> Double {
+        guard minutes > steadyStateMinutes else { return max(minutes, 0) }
+        return steadyStateMinutes + (minutes - steadyStateMinutes) * continuationWeight(atReserve: reserve)
+    }
+
+    /// The session's duration as every load source costs it.
+    ///
+    /// Strength is exempt. Resistance work is not a steady aerobic state that
+    /// plateaus, it is sets, and session-RPE (the scale its effort answers are
+    /// on) is linear in duration by construction. Damping it would also let the
+    /// sources disagree more than they already do, because the effort answer
+    /// and the blind fallback sit at different intensities.
+    static func costedMinutes(for session: SessionInput, atReserve reserve: Double) -> Double {
+        session.profile == .strength
+            ? session.durationMinutes
+            : effectiveMinutes(session.durationMinutes, atReserve: reserve)
     }
 
     /// Heart-rate-reserve TRIMP. Needs an average heart rate, a resting figure,
     /// a max, and enough sample coverage to believe the average.
+    ///
+    /// When the session's time-in-zone distribution was imported it is costed
+    /// minute by minute instead of from the average. Banister's weighting is
+    /// convex, so an interval session (four minutes near the top, three easy,
+    /// repeated) costs more than a steady session at the same average heart
+    /// rate, which is the intervals-versus-steady behaviour Garmin users expect
+    /// and the average alone cannot see.
     static func heartRateLoad(for session: SessionInput) -> SessionLoad? {
         guard session.durationMinutes > 0,
               let reserve = intensityFraction(for: session)
         else { return nil }
 
+        let value = distributionLoad(for: session)
+            ?? costedMinutes(for: session, atReserve: reserve) * trimpPerMinute(atReserve: reserve)
         return SessionLoad(
-            value: session.durationMinutes * trimpPerMinute(atReserve: reserve),
+            value: value,
             source: .heartRate,
             heartRateCoverage: session.heartRateCoverage
         )
     }
 
+    /// TRIMP summed over the time-in-zone distribution, scaled from the covered
+    /// minutes to the whole session. Nil when there is no usable distribution,
+    /// so the caller falls back to the average.
+    static func distributionLoad(for session: SessionInput) -> Double? {
+        guard let distribution = session.heartRateDistribution,
+              distribution.totalSeconds > 0,
+              session.durationMinutes > 0
+        else { return nil }
+        let resting = session.restingHeartRate ?? defaultRestingHeartRate
+        let max = session.maxHeartRate ?? defaultMaxHeartRate
+        guard resting.isFinite, max.isFinite, max > resting else { return nil }
+
+        var covered = 0.0
+        for (bpm, seconds) in distribution.buckets {
+            let reserve = min(Swift.max((bpm - resting) / (max - resting), 0), 1)
+            // Each minute keeps the continuation weight of the intensity it was
+            // done at, so the easy half of an interval session is discounted
+            // past the hour and the hard half never is.
+            let weight = costedMinutes(for: session, atReserve: reserve) / session.durationMinutes
+            covered += seconds / 60 * trimpPerMinute(atReserve: reserve) * weight
+        }
+        // The distribution covers the minutes the sensor saw. Scale to the
+        // whole session, bounded so a sparse trace cannot more than double it.
+        let scale = min(Swift.max(session.durationMinutes / (distribution.totalSeconds / 60), 0.5), 2)
+        return covered * scale
+    }
+
     static func reportedEffortLoad(for session: SessionInput) -> SessionLoad? {
         guard let effort = session.reportedEffort, session.durationMinutes > 0 else { return nil }
         return SessionLoad(
-            value: session.durationMinutes * effort * effortToTrimpScale,
+            value: costedMinutes(for: session, atReserve: effort / 10) * effort * effortToTrimpScale,
             source: .reportedEffort,
             heartRateCoverage: session.heartRateCoverage
         )
@@ -267,7 +363,7 @@ public enum SessionLoadCalculator {
             1
         )
         return SessionLoad(
-            value: session.durationMinutes * trimpPerMinute(atReserve: reserve),
+            value: costedMinutes(for: session, atReserve: reserve) * trimpPerMinute(atReserve: reserve),
             source: .energy,
             heartRateCoverage: session.heartRateCoverage
         )
@@ -275,7 +371,8 @@ public enum SessionLoadCalculator {
 
     static func durationLoad(for session: SessionInput) -> SessionLoad {
         SessionLoad(
-            value: session.durationMinutes * session.profile.assumedEffort * effortToTrimpScale,
+            value: costedMinutes(for: session, atReserve: session.profile.assumedEffort / 10)
+                * session.profile.assumedEffort * effortToTrimpScale,
             source: .duration,
             heartRateCoverage: session.heartRateCoverage
         )

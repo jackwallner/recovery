@@ -233,13 +233,12 @@ final class StackedRecoveryTests: XCTestCase {
         }
     }
 
-    // MARK: - The free tier's habit countdown
+    // MARK: - The habit beside the countdown
 
-    /// A countdown read off the user's own habit is the gap they leave before
-    /// going again, so the next session arrives at its end by definition.
-    /// Stacking it on yesterday's residual kept a daily trainer at 34 to 50
-    /// hours on seeded data, and the countdown never reached Ready.
-    func testAHabitCountdownDoesNotStack() {
+    /// The free countdown is the model again, so it stacks like the paid one.
+    /// The habit window handed in alongside is a sentence and must not switch
+    /// stacking off, which is what it did while it was the countdown.
+    func testAHabitBesideTheCountdownDoesNotStopItStacking() {
         let habit = ObservedRecoveryPattern.Window(
             hours: 24, band: .moderate, sampleCount: 20, isBandSpecific: true
         )
@@ -252,12 +251,8 @@ final class StackedRecoveryTests: XCTestCase {
             now: now
         )
         XCTAssertTrue(described.producesCountdown)
-        XCTAssertEqual(described.carriedHours, 0)
-        XCTAssertEqual(described.totalHours, 24, accuracy: 0.001)
-        XCTAssertEqual(
-            described.recoveryCostHours, described.hours, accuracy: 0.001,
-            "Today narrates the cost beside the ring, so the two have to agree"
-        )
+        XCTAssertEqual(described.carriedHours, 10, accuracy: 0.001)
+        XCTAssertEqual(described.totalHours, described.hours + 10, accuracy: 0.001)
     }
 
     /// The modelled countdowns still stack, on either tier.

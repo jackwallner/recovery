@@ -264,7 +264,7 @@ struct EstimateDetailView: View {
         let rateClause = rate == 0
             ? "the \(PersonalRecoveryModel.windowDays)-day recovery rate above left it where it was"
             : "the \(PersonalRecoveryModel.windowDays)-day recovery rate above is \(abs(rate))% of it"
-        return "\(abs(note.percent))% \(direction) overall, and \(rateClause). The rest is the two figures answering different questions: \(RechargeConversionCopy.standardColumn) is the gap you actually leave, while \(RechargeConversionCopy.proColumn) scores this session against your own baseline instead of the population reference."
+        return "\(abs(note.percent))% \(direction) overall, and \(rateClause). The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session."
     }
 
     private func detailRow(_ label: String, _ value: String) -> some View {

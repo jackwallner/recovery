@@ -91,11 +91,11 @@ final class ObservedRecoveryPatternTests: XCTestCase {
         XCTAssertNil(pattern.window(forLoad: 80, referenceLoad: 70))
     }
 
-    /// Somebody who trains twice a week has a real, long gap, and the countdown
-    /// reports the shared 72-hour safety ceiling.
+    /// Somebody who trains every four and a half days has a real, long gap,
+    /// and the sentence reports it up to the shared four-day ceiling.
     func testALongHabitSurvivesUpToTheObservedCeiling() {
         let pattern = ObservedRecoveryPattern.analyse(
-            sessions: regular(count: 8, everyDays: 3.5, load: 90), now: now
+            sessions: regular(count: 8, everyDays: 4.5, load: 90), now: now
         )
         XCTAssertEqual(pattern.usualGapHours(for: .moderate) ?? 0, RecoveryCalculator.maximumHours, accuracy: 1)
     }
@@ -155,14 +155,45 @@ final class ObservedRecoveryPatternTests: XCTestCase {
         } ?? 0, accuracy: 0.001)
     }
 
-    // MARK: - The free tier reads it
+    // MARK: - Both tiers state it
 
-    /// The point of the redesign: the free countdown *is* the habit. It is not a
-    /// blend of the habit and the model, because a blend is a third number that
-    /// is neither what the person does nor what the model says.
-    func testTheStandardTierCountdownIsTheObservedGap() {
+    /// The habit is a sentence, never the countdown. It was the free countdown
+    /// from model version 11 to 15, and that measured how often somebody trains
+    /// rather than what the session cost: a 30-minute jog read 47 hours for
+    /// anyone training three times a week. On both tiers the window is the
+    /// model's, and it is identical with or without the habit beside it.
+    func testTheHabitNeverReplacesTheModelledWindow() {
         let window = ObservedRecoveryPattern.Window(
             hours: 41, band: .hard, sampleCount: 7, isBandSpecific: true
+        )
+        for personalization in [RecoveryPersonalization.standard, .personalized(factor: 1)] {
+            let modelled = RecoveryCalculator.estimate(
+                for: RecoveryFixtures.thresholdRun60,
+                baseline: .standard(for: .endurance),
+                personalization: personalization,
+                now: now
+            )
+            let withHabit = RecoveryCalculator.estimate(
+                for: RecoveryFixtures.thresholdRun60,
+                baseline: .standard(for: .endurance),
+                personalization: personalization,
+                observed: window,
+                now: now
+            )
+            XCTAssertEqual(withHabit.hours, modelled.hours, accuracy: 0.001)
+            XCTAssertEqual(withHabit.readyAt, modelled.readyAt)
+            XCTAssertTrue(
+                withHabit.reasons.contains { $0.contains("usually gone again after about 41h") },
+                "the habit is stated beside the window: \(withHabit.reasons)"
+            )
+        }
+    }
+
+    /// The pooled figure is not "after a hard session", so the sentence must
+    /// not claim it is.
+    func testThePooledHabitIsPhrasedAsBetweenSessions() {
+        let window = ObservedRecoveryPattern.Window(
+            hours: 30, band: .hard, sampleCount: 9, isBandSpecific: false
         )
         let estimate = RecoveryCalculator.estimate(
             for: RecoveryFixtures.thresholdRun60,
@@ -170,45 +201,7 @@ final class ObservedRecoveryPatternTests: XCTestCase {
             observed: window,
             now: now
         )
-        XCTAssertEqual(estimate.tier, .standard)
-        XCTAssertEqual(estimate.hours, 41, accuracy: 0.001)
-        XCTAssertTrue(
-            estimate.reasons.contains { $0.contains("your own history") },
-            "the free tier has to name the evidence: \(estimate.reasons)"
-        )
-    }
-
-    /// Recharge+ recommends, so the habit is a sentence there rather than the
-    /// countdown. If the observed window replaced the paid number too, the
-    /// upgrade would buy the user their own calendar back.
-    func testThePersonalizedTierRecommendsRatherThanDescribes() {
-        let window = ObservedRecoveryPattern.Window(
-            hours: 41, band: .hard, sampleCount: 7, isBandSpecific: true
-        )
-        let estimate = RecoveryCalculator.estimate(
-            for: RecoveryFixtures.thresholdRun60,
-            baseline: .standard(for: .endurance),
-            personalization: .personalized(factor: 1),
-            observed: window,
-            now: now
-        )
-        XCTAssertNotEqual(estimate.hours, 41, accuracy: 0.001)
-        XCTAssertTrue(
-            estimate.reasons.contains { $0.contains("usually go again") },
-            "the recommendation is stated against the habit: \(estimate.reasons)"
-        )
-    }
-
-    /// No pattern yet is not a reason to show nothing: the modelled estimate is
-    /// what the free tier falls back to, and it says so in as many words.
-    func testWithNoPatternTheFreeTierFallsBackToTheModel() {
-        let modelled = RecoveryCalculator.estimate(
-            for: RecoveryFixtures.thresholdRun60, baseline: .standard(for: .endurance), now: now
-        )
-        XCTAssertGreaterThan(modelled.hours, 0)
-        XCTAssertTrue(
-            modelled.reasons.contains { $0.contains("Not enough history yet") },
-            "\(modelled.reasons)"
-        )
+        XCTAssertTrue(estimate.reasons.contains { $0.contains("between sessions") }, "\(estimate.reasons)")
+        XCTAssertFalse(estimate.reasons.contains { $0.contains("After a hard session") }, "\(estimate.reasons)")
     }
 }

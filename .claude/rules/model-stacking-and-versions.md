@@ -45,6 +45,25 @@ the suite could see it, because `Shared/Models/RecoveryRecords.swift` was not in
 the test target. It is now, and `StackedRecoveryPersistenceTests` covers the
 round-trip, the rescore path, the legacy nil, and the version bump.
 
+### The nights after the session move a running countdown (Recharge+)
+Garmin updates recovery time through the day from sleep, stress and activity
+(owner's manuals: "updates your recovery time throughout the day based on
+changes in sleep, stress, relaxation, and physical activity"). Recharge used to
+read only the night *before* the session, so a hard session followed by four
+hours of broken sleep counted down exactly like one followed by eight good ones.
+
+`RecoveryContext.followingNights` carries the nights after, and
+`RecoveryCalculator.contextAdjustment(_:nightsBefore:)` scores each night on its
+own and averages them with the nights after weighted double
+(`followingNightWeight`), inside the same -15%/+20% clamp. A night only counts
+if it began before the countdown would have ended from the night before alone
+(`provisionalEnd`), so a bad night after Ready can never reopen a finished
+window, and the rule needs no clock. The engine passes up to four following
+nights from `DailyContextRecord`; a rescore triggered by the morning's sleep or
+HRV write is what moves the countdown, and `publish()` reschedules the Ready
+alert. HRV and breathing rate are now the **median** of the day rather than the
+last sample, which was often the post-session one.
+
 ### What the 30-day analysis actually measures
 Three independent signals, blended geometrically with the questionnaire prior on
 a weight that grows with evidence and caps at 0.70, then clamped to
@@ -57,9 +76,14 @@ a weight that grows with evidence and caps at 0.70, then clamped to
    their usual intensity. Revealed preference. HR-reserve only, deliberately: an
    RPE-derived intensity compared against a reserve fraction answers the
    question with a change of units. Needs 3 samples.
-3. **Density.** Chronic weekly load against a population reference, on a log
-   scale. The classic activity-class adjustment, capped at a third of the
-   sample weight the observed signals reach.
+3. **Kinetics.** Median one-minute heart-rate recovery against 25 bpm.
+
+**Density is gone (version 16).** It was chronic weekly load against a
+population reference, which is what the personal baseline already divides by
+and what `fitnessScale` already moves the reference with, so a daily trainer was
+discounted for the same fact three times. Weekly volume left the questionnaire
+prior for the same reason. Volume now reaches the model exactly twice, once per
+tier: `fitnessScale` on the standard tier, the measured baseline on Recharge+.
 
 The prior is never fully discarded — it carries age, which nothing in the
 history can observe.
@@ -70,8 +94,12 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **13**
-(the user can correct a session's intensity and pin their own hours to the three
+window disagrees with what the same session would produce today. Currently **16**
+(Garmin parity, see the doc comment on `recoveryModelVersion` and
+`GarminScenarioTests`: the free countdown is the model again, a 96-hour ceiling,
+sub-threshold minutes past the hour discounted, time-in-zone heart rate, the
+nights after the session, a capped quiet threshold, no density; 15 scored
+duplicate workouts once; 14 was release hardening; 13 let the user correct a session's intensity and pin their own hours to the three
 bands, see "What the user is allowed to tell the model" in model-tiers.md; 12 moved tolerance
 evidence onto the next session's start time and unioned overlapping sleep
 intervals; 11 was where the tiers stopped being two runs of the same calculation: the free one describes

@@ -13,8 +13,15 @@ import Foundation
 /// |---|---|---|
 /// | Rebound | How much of the day-after disturbance in resting heart rate and HRV is still there on day two | The closest thing to a direct measurement of individual recovery kinetics that a wrist sensor can produce |
 /// | Tolerance | Whether sessions started *inside* a predicted window held their intensity | Revealed preference: what actually happened when they trained through it |
-/// | Density | Chronic weekly load against a population reference | The classic activity-class adjustment; someone doing 500 load-units a week is adapted to a shorter turnaround than someone doing 150 |
 /// | Kinetics | How far the heart rate falls in the minute after a workout ends | The one thing here that is a *direct* reading of parasympathetic reactivation rather than an inference from it, and Apple Watch writes it for free |
+///
+/// There used to be a fourth, **density** (chronic weekly load against a
+/// population reference), and it was the same fact counted a third time: the
+/// personal baseline already divides every session by what this person's
+/// ordinary training day costs, and `fitnessScale` already moves the reference
+/// with their weekly volume. A marathoner training every day was discounted by
+/// all three. Removed in model version 16, along with weekly volume's term in
+/// the questionnaire prior, for the same reason.
 ///
 /// Each is a mild multiplier. They are blended with the onboarding prior on a
 /// weight that grows with the amount of evidence, so a Recharge+ user gets a
@@ -60,11 +67,6 @@ public enum PersonalRecoveryModel {
     /// never fully discarded: it carries age, which nothing in the history can
     /// observe.
     static let maximumEvidenceWeight = 0.70
-
-    /// Population reference for weekly load, in the same units as
-    /// `SessionLoadCalculator`. Three endurance sessions at the standard typical
-    /// load.
-    static let referenceWeeklyLoad = 3 * WorkoutProfile.endurance.standardTypicalLoad
 
     // MARK: - Inputs
 
@@ -139,7 +141,6 @@ public enum PersonalRecoveryModel {
         public let reboundSamples: Int
         public let toleranceFactor: Double?
         public let toleranceSamples: Int
-        public let densityFactor: Double?
         public let kineticsFactor: Double?
         public let kineticsSamples: Int
         /// The person's own median one-minute heart-rate recovery, in bpm.
@@ -159,7 +160,6 @@ public enum PersonalRecoveryModel {
             reboundSamples: Int,
             toleranceFactor: Double?,
             toleranceSamples: Int,
-            densityFactor: Double?,
             kineticsFactor: Double? = nil,
             kineticsSamples: Int = 0,
             medianHeartRateRecovery: Double? = nil,
@@ -174,7 +174,6 @@ public enum PersonalRecoveryModel {
             self.reboundSamples = reboundSamples
             self.toleranceFactor = toleranceFactor
             self.toleranceSamples = toleranceSamples
-            self.densityFactor = densityFactor
             self.kineticsFactor = kineticsFactor
             self.kineticsSamples = kineticsSamples
             self.medianHeartRateRecovery = medianHeartRateRecovery
@@ -191,7 +190,6 @@ public enum PersonalRecoveryModel {
             reboundSamples: 0,
             toleranceFactor: nil,
             toleranceSamples: 0,
-            densityFactor: nil,
             weeklyLoad: 0,
             sessionsPerWeek: 0,
             qualifyingSessions: 0,
@@ -246,16 +244,11 @@ public enum PersonalRecoveryModel {
 
         let rebound = reboundEvidence(sessions: window, days: recentDays)
         let tolerance = toleranceEvidence(sessions: window)
-        let density = window.count >= 4 ? densityFactor(weeklyLoad: weeklyLoad) : nil
         let kinetics = kineticsEvidence(days: recentDays)
 
-        // Density is a weaker inference than the other two — it says what the
-        // person trains, not how they respond — so it is capped at a third of
-        // the sample weight the observed signals can reach.
         var weighted: [(factor: Double, weight: Double)] = []
         if let value = rebound.factor { weighted.append((value, Double(rebound.samples))) }
         if let value = tolerance.factor { weighted.append((value, Double(tolerance.samples))) }
-        if let value = density { weighted.append((value, min(Double(window.count), saturationSamples / 3))) }
         if let value = kinetics.factor { weighted.append((value, Double(kinetics.samples))) }
 
         let prior = profile.prior
@@ -271,8 +264,7 @@ public enum PersonalRecoveryModel {
                 reboundSamples: rebound.samples,
                 toleranceFactor: nil,
                 toleranceSamples: tolerance.samples,
-                densityFactor: nil,
-                kineticsFactor: nil,
+                    kineticsFactor: nil,
                 kineticsSamples: kinetics.samples,
                 medianHeartRateRecovery: kinetics.median,
                 weeklyLoad: weeklyLoad,
@@ -302,7 +294,6 @@ public enum PersonalRecoveryModel {
             reboundSamples: rebound.samples,
             toleranceFactor: tolerance.factor,
             toleranceSamples: tolerance.samples,
-            densityFactor: density,
             kineticsFactor: kinetics.factor,
             kineticsSamples: kinetics.samples,
             medianHeartRateRecovery: kinetics.median,
@@ -321,7 +312,7 @@ public enum PersonalRecoveryModel {
     /// This is the only signal in the file that is a *reading* rather than an
     /// inference. Rebound infers recovery kinetics from two overnight
     /// measurements taken a day apart; tolerance infers them from what the
-    /// person chose to do next; density infers them from how much they train.
+    /// person chose to do next; and the personal baseline already accounts for how much they train.
     /// One-minute heart-rate recovery is the thing itself — parasympathetic
     /// reactivation, measured directly, on a scale with published norms — and
     /// Apple Watch writes it after qualifying workouts for nothing.
@@ -478,17 +469,6 @@ public enum PersonalRecoveryModel {
 
         guard samples.count >= minimumToleranceSamples else { return (nil, samples.count) }
         return (samples.reduce(0, +) / Double(samples.count), samples.count)
-    }
-
-    // MARK: - Signal 3: density
-
-    /// Chronic weekly load against a population reference, on a log scale so
-    /// doubling the weekly load and halving it move the factor by the same
-    /// amount in opposite directions.
-    static func densityFactor(weeklyLoad: Double) -> Double? {
-        guard weeklyLoad > 0 else { return nil }
-        let doublings = log2(weeklyLoad / referenceWeeklyLoad)
-        return min(max(1 - 0.10 * doublings, 0.90), 1.10)
     }
 
     // MARK: - Explanation
