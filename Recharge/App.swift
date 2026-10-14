@@ -214,6 +214,15 @@ struct RechargeApp: App {
                         await engine.refresh(force: true)
                     }
 
+                    #if DEBUG
+                    if let delay = HealthSeederConfig.followUpDelay {
+                        Task {
+                            try? await Task.sleep(for: .seconds(delay))
+                            await HealthSeeder.writeFollowUpWorkout()
+                        }
+                    }
+                    #endif
+
                     await requestReadyNotificationsIfNeeded()
                 }
                 .onChange(of: scenePhase) { _, phase in

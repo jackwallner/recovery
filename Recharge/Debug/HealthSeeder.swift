@@ -39,6 +39,17 @@ enum HealthSeederConfig {
         }
         return defaultDays
     }
+
+    /// `RECHARGE_SEED_FOLLOWUP_SECONDS=N` writes one more workout, ending at the
+    /// moment it is written, N seconds after launch. Nothing in the app is
+    /// touched to make it arrive: the HealthKit observer has to notice it and
+    /// carry it all the way to the snapshot and the Ready alert on its own,
+    /// which is the path a workout synced from the Watch takes. Under 30 seconds
+    /// it lands inside the launch refresh's throttle window, which is the case
+    /// the observer used to drop.
+    static var followUpDelay: Double? {
+        ProcessInfo.processInfo.environment["RECHARGE_SEED_FOLLOWUP_SECONDS"].flatMap(Double.init)
+    }
 }
 
 private let seedMarker = "RechargeSeededSample"
@@ -129,6 +140,22 @@ enum HealthSeeder {
         } catch {
             SeedTrace.mark("FAILED: \(String(describing: error))")
             return false
+        }
+    }
+
+    /// See `HealthSeederConfig.followUpDelay`. A hard 45-minute run, so it
+    /// starts a countdown that visibly replaces whatever was showing.
+    static func writeFollowUpWorkout() async {
+        let end = Date.now
+        do {
+            try await writeWorkout(
+                Session(activity: .running, minutes: 45, reserve: 0.82, coverage: 0.97),
+                start: end.addingTimeInterval(-45 * 60),
+                end: end
+            )
+            SeedTrace.mark("follow-up workout written, ending \(end.timeIntervalSince1970)")
+        } catch {
+            SeedTrace.mark("follow-up workout FAILED: \(String(describing: error))")
         }
     }
 
