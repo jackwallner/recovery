@@ -373,9 +373,12 @@ struct TodayView: View {
         return parts.joined(separator: " ")
     }
 
+    /// "Just now" only for the first minute. It used to cover the first hour,
+    /// so a session that ended 59 minutes ago read "just now" beside a History
+    /// row stamped an hour earlier.
     private func relativeSessionTime(_ estimate: RecoveryEstimate) -> String {
         let elapsed = now.timeIntervalSince(estimate.sessionEnd)
-        if elapsed < 3600 { return "just now" }
+        if elapsed < 60 { return "just now" }
         return "\(CountdownFormat.remaining(elapsed)) ago"
     }
 
