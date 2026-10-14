@@ -42,7 +42,7 @@ public enum CountdownFormat {
     /// the same three characters.
     ///
     /// Never longer than six characters, so a circular or corner slot does not
-    /// truncate. `2d 23h` is the widest it gets, and only above 48 hours.
+    /// truncate. `3d 23h` is the widest it gets, and only above 72 hours.
     public static func compactRemaining(_ seconds: TimeInterval) -> String {
         guard seconds > 0 else { return "Ready" }
         let totalMinutes = Int((seconds / 60).rounded(.up))
