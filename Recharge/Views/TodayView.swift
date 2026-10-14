@@ -180,9 +180,13 @@ struct TodayView: View {
                 .padding(.horizontal, Theme.Space.xl)
                 .padding(.top, Theme.Space.sm)
 
+            // A failed read only raises the access card when there is nothing
+            // else to show. Over a running countdown it said Recharge "needs
+            // workout access before it can start a countdown" beside the
+            // countdown it had started, and the line under the date already
+            // reports the failure.
             if settings.hasDeferredHealthAccess
-                || engine.lastImportFailed
-                || (engine.lastSuccessfulImport == nil && engine.estimates.isEmpty) {
+                || (engine.estimates.isEmpty && (engine.lastImportFailed || engine.lastSuccessfulImport == nil)) {
                 healthAccessCard
                     .padding(.horizontal, Theme.Space.lg)
                     .padding(.top, Theme.Space.md)
