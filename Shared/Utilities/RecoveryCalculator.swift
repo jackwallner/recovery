@@ -134,7 +134,7 @@ public enum RecoveryCalculator {
         // that earns a countdown of its own may inherit it: an easy walk taken
         // mid-window neither starts a countdown nor lengthens the one already
         // running, which is the same guarantee `RecoveryResolver` gives.
-        let carried = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
+        let residual = qualifies && carriedHours.isFinite ? max(carriedHours, 0) : 0
 
         let personal = personalization.factor.isFinite
             ? min(max(personalization.factor, PersonalRecoveryModel.minimumFactor), PersonalRecoveryModel.maximumFactor)
@@ -151,7 +151,8 @@ public enum RecoveryCalculator {
         func countdownEnd(admittingNightsBefore cutoff: Date) -> Date {
             let adjusted = unadjusted * (1 + contextAdjustment(context, nightsBefore: cutoff))
             let hours = min(max(adjusted * session.profile.windowMultiplier, minimumCountdownHours), maximumHours)
-            return session.endDate.addingTimeInterval(min(hours + carried, maximumHours) * 3600)
+            let stacked = hours + stackedContribution(residual: residual, sessionHours: hours)
+            return session.endDate.addingTimeInterval(min(stacked, maximumHours) * 3600)
         }
         var nightsCutoff = Date.distantPast
         var end = countdownEnd(admittingNightsBefore: nightsCutoff)
@@ -192,10 +193,12 @@ public enum RecoveryCalculator {
             }
         }
 
-        // The countdown runs for this session's cost *plus* what was left over,
-        // bounded by the same ceiling a single session obeys. `hours` stays the
-        // session's own cost: it is what the tier comparison and the history
-        // rows are asking about.
+        // The countdown runs for this session's cost plus its share of what was
+        // left over, bounded by the same ceiling a single session obeys.
+        // `hours` stays the session's own cost: it is what the tier comparison
+        // and the history rows are asking about. `carried` is the residual's
+        // actual contribution, so "18h, incl. 6h carried" always adds up.
+        let carried = qualifies ? stackedContribution(residual: residual, sessionHours: hours) : 0
         let total = qualifies ? min(hours + carried, maximumHours) : 0
 
         let confidence = confidence(
@@ -247,11 +250,13 @@ public enum RecoveryCalculator {
     // MARK: - Stacking
 
     /// Recovery still outstanding when `session` ended, given where the previous
-    /// countdown was due to finish. The whole of the stacking rule.
+    /// countdown was due to finish. Half of the stacking rule;
+    /// `stackedContribution` is the other half, and decides how much of it the
+    /// new countdown inherits.
     ///
     /// Recovery time is cumulative: a session done inside a running countdown
-    /// starts its own from where that countdown would have ended rather than
-    /// from now, so two hard sessions in a day cost more than one. Recharge used
+    /// adds to it rather than starting fresh, so two hard sessions in a day
+    /// cost more than one. Recharge used
     /// to take the *maximum* of overlapping windows, which is the simplest
     /// defensible rule and the wrong one — it made a same-day double read
     /// exactly like a single session, at the one moment somebody coming from a
@@ -268,6 +273,31 @@ public enum RecoveryCalculator {
         guard let previousReadyAt else { return 0 }
         return max(previousReadyAt.timeIntervalSince(session.endDate) / 3600, 0)
     }
+
+    /// How much of the remaining countdown a new session adds on top of its own
+    /// hours: the larger of the two in full, the smaller at `overlapShare`.
+    ///
+    /// It was the whole residual, and that has no fixed point for anybody who
+    /// trains inside their own countdown every day. An athlete doing an easy
+    /// morning session and a steady evening one gained about eight hours a day
+    /// on the free tier and sat at the 96-hour ceiling for half of every
+    /// fortnight, a countdown that could never reach Ready. Garmin's own figure
+    /// visibly does not add in full either: an easy run on top of a long
+    /// countdown nudges it rather than adding its whole standalone value, and
+    /// the5krunner notes two moderate sessions leave more fatigue than the
+    /// figure shows.
+    ///
+    /// The total is continuous and increasing in both inputs, so a harder
+    /// session or more leftover recovery can never shorten the countdown, and a
+    /// hard double is still 1.5 times a single.
+    public static func stackedContribution(residual: Double, sessionHours: Double) -> Double {
+        guard residual.isFinite, sessionHours.isFinite, residual > 0, sessionHours >= 0 else { return 0 }
+        let total = max(residual, sessionHours) + overlapShare * min(residual, sessionHours)
+        return max(total - sessionHours, 0)
+    }
+
+    /// The share of the smaller of two overlapping windows that still counts.
+    public static let overlapShare = 0.5
 
     // MARK: - Stage 3: relative load to hours
 

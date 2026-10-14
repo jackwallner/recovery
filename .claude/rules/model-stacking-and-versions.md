@@ -22,7 +22,19 @@ which is the simplest defensible rule and the wrong one: a same-day double read
 exactly like a single session, at the one moment somebody coming from a Garmin
 expects the number to jump.
 
-`RecoveryCalculator.carriedHours(into:from:)` is the whole rule and it is pure.
+**Since version 17 the overlap is the larger window in full plus half the
+smaller** (`RecoveryCalculator.stackedContribution`, `overlapShare` 0.5), not
+the whole residual. Adding in full has no fixed point for anyone who trains
+inside their own countdown every day: a two-a-day athlete gained about eight
+hours a day on the free tier and sat at the 96h ceiling half the time, never
+reaching Ready. Garmin's figure does not add in full either (an easy run on a
+long countdown nudges it). The rule is continuous and increasing in both inputs,
+a hard double is still 1.5x a single, and `carriedHours` stores the residual's
+actual contribution so "incl. Xh carried" still adds up.
+`FrequentTrainerStackingTests` pins it.
+
+`RecoveryCalculator.carriedHours(into:from:)` (the raw residual) plus
+`stackedContribution` is the whole rule, and both are pure.
 The caller that walks the chain lives in `RecoveryEngine.rescore`, which is also
 where the subtlety is. **The two tiers carry separate chains.** A standard window
 and a personalized window for the same session end at different times, so one

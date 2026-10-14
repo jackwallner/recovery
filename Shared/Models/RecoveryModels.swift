@@ -100,7 +100,10 @@ import Foundation
 /// real half hour of training.
 /// 17: the nights after a session are admitted one at a time, each against the
 /// window the earlier ones left, so a bad night that fell after a good night had
-/// already brought Ready forward can no longer reopen the countdown.
+/// already brought Ready forward can no longer reopen the countdown. And
+/// overlapping windows combine as the larger plus half the smaller
+/// (`RecoveryCalculator.stackedContribution`) rather than adding in full,
+/// which pinned a two-a-day athlete's free countdown at the 96-hour ceiling.
 public let recoveryModelVersion = 17
 
 // MARK: - Tier

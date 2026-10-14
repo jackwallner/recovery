@@ -83,7 +83,11 @@ final class StackedRecoveryTests: XCTestCase {
         XCTAssertEqual(stacked.standardHours, alone.standardHours, accuracy: 1e-9)
         XCTAssertEqual(stacked.relativeLoad, alone.relativeLoad, accuracy: 1e-9)
         XCTAssertEqual(stacked.category, alone.category)
-        XCTAssertEqual(stacked.carriedHours, 20, accuracy: 1e-9)
+        XCTAssertEqual(
+            stacked.carriedHours,
+            RecoveryCalculator.stackedContribution(residual: 20, sessionHours: alone.hours),
+            accuracy: 1e-9
+        )
     }
 
     /// An expired window carries nothing. Without this a session done a week
@@ -251,14 +255,70 @@ final class StackedRecoveryTests: XCTestCase {
             now: now
         )
         XCTAssertTrue(described.producesCountdown)
-        XCTAssertEqual(described.carriedHours, 10, accuracy: 0.001)
-        XCTAssertEqual(described.totalHours, described.hours + 10, accuracy: 0.001)
+        let contribution = RecoveryCalculator.stackedContribution(residual: 10, sessionHours: described.hours)
+        XCTAssertGreaterThan(contribution, 0)
+        XCTAssertEqual(described.carriedHours, contribution, accuracy: 0.001)
+        XCTAssertEqual(described.totalHours, described.hours + contribution, accuracy: 0.001)
     }
 
     /// The modelled countdowns still stack, on either tier.
     func testAModelledCountdownStillStacksWithoutAHabit() {
         let session = run("today", endingHoursAgo: 0)
         let stacked = estimate(session, carried: 10)
-        XCTAssertEqual(stacked.carriedHours, 10, accuracy: 0.001)
+        XCTAssertEqual(
+            stacked.carriedHours,
+            RecoveryCalculator.stackedContribution(residual: 10, sessionHours: stacked.hours),
+            accuracy: 0.001
+        )
+        XCTAssertGreaterThan(stacked.carriedHours, 0)
+    }
+}
+
+/// The two-a-day athlete the additive rule could never let reach Ready.
+final class FrequentTrainerStackingTests: XCTestCase {
+
+    private let now = RecoveryFixtures.now
+
+    func testOverlapAddsTheLargerInFullAndHalfTheSmaller() {
+        XCTAssertEqual(RecoveryCalculator.stackedContribution(residual: 10, sessionHours: 30), 5, accuracy: 1e-9)
+        XCTAssertEqual(RecoveryCalculator.stackedContribution(residual: 40, sessionHours: 12), 34, accuracy: 1e-9)
+        XCTAssertEqual(RecoveryCalculator.stackedContribution(residual: 0, sessionHours: 12), 0)
+        // Monotone in both inputs: more leftover or a bigger session never
+        // shortens the countdown.
+        var previous = 0.0
+        for residual in stride(from: 0.0, through: 60, by: 1.5) {
+            let total = 20 + RecoveryCalculator.stackedContribution(residual: residual, sessionHours: 20)
+            XCTAssertGreaterThanOrEqual(total, previous - 1e-9)
+            previous = total
+        }
+    }
+
+    /// Easy 45 minutes every morning and a steady hour every evening for two
+    /// weeks, on the free tier. The countdown settles, never pins the ceiling.
+    func testATwoADayTrainerSettlesWellBelowTheCeiling() {
+        var readyAt: Date?
+        var totals: [Double] = []
+        for day in 0..<14 {
+            for (hour, minutes, reserve) in [(7.0, 45.0, 0.55), (18.0, 60.0, 0.68)] {
+                let end = now.addingTimeInterval(Double(day) * 86_400 + hour * 3600)
+                let session = SessionInput(
+                    id: "d\(day)-\(Int(hour))", profile: .endurance,
+                    startDate: end.addingTimeInterval(-minutes * 60), endDate: end,
+                    durationMinutes: minutes, averageHeartRate: 55 + reserve * 130,
+                    restingHeartRate: 55, maxHeartRate: 185, heartRateCoverage: 0.95
+                )
+                let estimate = RecoveryCalculator.estimate(
+                    for: session,
+                    baseline: .standard(for: .endurance),
+                    carriedHours: RecoveryCalculator.carriedHours(into: session, from: readyAt),
+                    now: end
+                )
+                readyAt = estimate.readyAt
+                totals.append(estimate.totalHours)
+            }
+        }
+        let lastWeek = totals.suffix(14)
+        XCTAssertLessThan(lastWeek.max() ?? 99, 48, "\(lastWeek)")
+        XCTAssertLessThan(abs((totals.last ?? 0) - totals[totals.count - 3]), 2, "no steady state: \(totals)")
     }
 }
