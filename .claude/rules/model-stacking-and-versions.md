@@ -56,9 +56,12 @@ hours of broken sleep counted down exactly like one followed by eight good ones.
 `RecoveryCalculator.contextAdjustment(_:nightsBefore:)` scores each night on its
 own and averages them with the nights after weighted double
 (`followingNightWeight`), inside the same -15%/+20% clamp. A night only counts
-if it began before the countdown would have ended from the night before alone
-(`provisionalEnd`), so a bad night after Ready can never reopen a finished
-window, and the rule needs no clock. The engine passes up to four following
+if it began before the countdown would have ended, judged against the window
+as the nights before it left it, so a bad night after Ready can never reopen
+a finished window, and the rule needs no clock. Version 16 judged every night
+against the night-before window alone, which let a bad second night back in
+after a good first night had already brought Ready forward
+(`testABadNightAfterAGoodNightBroughtReadyForwardIsNotAdmitted`). The engine passes up to four following
 nights from `DailyContextRecord`; a rescore triggered by the morning's sleep or
 HRV write is what moves the countdown, and `publish()` reschedules the Ready
 alert. HRV and breathing rate are now the **median** of the day rather than the
@@ -94,8 +97,8 @@ shorten a countdown.
 
 `recoveryModelVersion` (in `RecoveryModels.swift`) must be bumped whenever the
 numbers change. It is stored on every estimate so history can explain why an old
-window disagrees with what the same session would produce today. Currently **16**
-(Garmin parity, see the doc comment on `recoveryModelVersion` and
+window disagrees with what the same session would produce today. Currently **17**
+(the nights after a session are admitted one at a time; 16 was Garmin parity, see the doc comment on `recoveryModelVersion` and
 `GarminScenarioTests`: the free countdown is the model again, a 96-hour ceiling,
 sub-threshold minutes past the hour discounted, time-in-zone heart rate, the
 nights after the session, a capped quiet threshold, no density; 15 scored

@@ -56,7 +56,7 @@ Pure, `Sendable`, with no HealthKit or SwiftData imports. That makes the
 
 ## Rules that hold everywhere
 Condensed from the deep notes below; the reasoning and the bugs behind each one live there.
-- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **16**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
+- Bump `recoveryModelVersion` (`Shared/Models/RecoveryModels.swift`, currently **17**) whenever the numbers change. A bump also thaws frozen records in `RecoveryEngine.rescore`.
 - Complication and widget views render from `entry.date`, never from `Date.now`.
 - The phone owns the model and the Watch app deliberately cannot read Health. Do not add HealthKit to the Watch to fix a delivery bug.
 - Every link in the background chain (HealthKit observer, `WCSession` activation, application context, Watch background task, App Group write, timeline reload) is guarded by a silent `return`. Observer queries and `WCSession` activation run from `RechargeApp.init` (`Recharge/App.swift`), not from a scene callback.
