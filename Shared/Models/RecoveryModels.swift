@@ -98,7 +98,10 @@ import Foundation
 /// adjusts a running countdown from the nights after the session, not only the
 /// night before it. And the personal quiet threshold can no longer swallow a
 /// real half hour of training.
-public let recoveryModelVersion = 16
+/// 17: the nights after a session are admitted one at a time, each against the
+/// window the earlier ones left, so a bad night that fell after a good night had
+/// already brought Ready forward can no longer reopen the countdown.
+public let recoveryModelVersion = 17
 
 // MARK: - Tier
 

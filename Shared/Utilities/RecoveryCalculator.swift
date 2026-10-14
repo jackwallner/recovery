@@ -142,16 +142,25 @@ public enum RecoveryCalculator {
         let unadjusted = baseHours(forRelativeLoad: relative) * clampCalibration(calibration) * personal
 
         // The nights after the session only count while the countdown they
-        // would adjust was still running. The window as it stood from the night
-        // before is what decides that, so a night that landed after Ready can
-        // never reopen a finished countdown, and the rule needs no clock.
-        let preAdjustment = contextAdjustment(context, nightsBefore: .distantPast)
-        let provisionalHours = min(
-            max(unadjusted * (1 + preAdjustment) * session.profile.windowMultiplier, minimumCountdownHours),
-            maximumHours
-        )
-        let provisionalEnd = session.endDate.addingTimeInterval(min(provisionalHours + carried, maximumHours) * 3600)
-        let adjustment = contextAdjustment(context, nightsBefore: provisionalEnd)
+        // would adjust was still running. They are admitted one at a time, in
+        // order, each against the window as the nights before it left it: a
+        // good first night that brings Ready forward to the afternoon makes the
+        // next night one after Ready, and a bad one there may not reopen it.
+        // Judged against the night-before window alone, it was admitted. The
+        // rule needs no clock, so a rescore days later reaches the same answer.
+        func countdownEnd(admittingNightsBefore cutoff: Date) -> Date {
+            let adjusted = unadjusted * (1 + contextAdjustment(context, nightsBefore: cutoff))
+            let hours = min(max(adjusted * session.profile.windowMultiplier, minimumCountdownHours), maximumHours)
+            return session.endDate.addingTimeInterval(min(hours + carried, maximumHours) * 3600)
+        }
+        var nightsCutoff = Date.distantPast
+        var end = countdownEnd(admittingNightsBefore: nightsCutoff)
+        for night in context.followingNights {
+            guard night.date < end else { break }
+            nightsCutoff = night.date.addingTimeInterval(1)
+            end = countdownEnd(admittingNightsBefore: nightsCutoff)
+        }
+        let adjustment = contextAdjustment(context, nightsBefore: nightsCutoff)
         let scaled = unadjusted * (1 + adjustment)
 
         // Computed for **every** session, qualifying or not, because "what did
@@ -225,7 +234,7 @@ public enum RecoveryCalculator {
                 personalization: personalization,
                 observed: observed,
                 manualHours: qualifies && personalization.tier == .personalized ? manualHours : nil,
-                nightsBefore: provisionalEnd
+                nightsBefore: nightsCutoff
             ),
             tier: personalization.tier,
             personalFactor: qualifies ? personalization.factor : 1,

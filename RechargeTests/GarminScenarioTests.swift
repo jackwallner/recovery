@@ -346,6 +346,48 @@ final class GarminScenarioTests: XCTestCase {
         XCTAssertEqual(late.readyAt, plain.readyAt)
     }
 
+    /// The nights are admitted in order, each against the window the nights
+    /// before it left. A good first night that brings Ready forward to the
+    /// evening makes the next night one after Ready, and a bad one there must
+    /// not reopen the countdown, even though it fell inside the window as it
+    /// stood before the good night was known.
+    func testABadNightAfterAGoodNightBroughtReadyForwardIsNotAdmitted() throws {
+        let athlete = Self.recreational
+        let calendar = Calendar.current
+        let baseline = RecoveryBaseline.standard(for: .endurance, fitnessScale: athlete.profile.fitnessScale)
+        let day = calendar.startOfDay(for: now)
+        func estimate(_ end: Date, _ nights: [RecoveryContext.Night]) -> RecoveryEstimate {
+            RecoveryCalculator.estimate(
+                for: session(athlete, minutes: 60, reserve: 0.80, end: end),
+                baseline: baseline,
+                context: context(following: nights),
+                personalization: .personalized(factor: 1),
+                now: now
+            )
+        }
+        // Find a session end whose good-night window closes before a midnight
+        // that the unadjusted window still covers.
+        var found: (end: Date, good: RecoveryContext.Night, secondNight: Date)?
+        for hour in 0..<24 where found == nil {
+            let end = day.addingTimeInterval(Double(hour) * 3600)
+            let firstNight = calendar.date(byAdding: .day, value: 1, to: day)!
+            let good = RecoveryContext.Night(date: firstNight, sleepHours: 8.5, heartRateVariability: 62, restingHeartRate: 51)
+            let plainEnd = estimate(end, []).readyAt
+            let goodEnd = estimate(end, [good]).readyAt
+            var midnight = calendar.date(byAdding: .day, value: 1, to: firstNight)!
+            while midnight < plainEnd {
+                if midnight >= goodEnd { found = (end, good, midnight); break }
+                midnight = calendar.date(byAdding: .day, value: 1, to: midnight)!
+            }
+        }
+        let scenario = try XCTUnwrap(found, "no session end puts a midnight between the two windows")
+        let bad = RecoveryContext.Night(date: scenario.secondNight, sleepHours: 3.5, heartRateVariability: 30, restingHeartRate: 64)
+        let goodOnly = estimate(scenario.end, [scenario.good])
+        let both = estimate(scenario.end, [scenario.good, bad])
+        XCTAssertEqual(both.readyAt, goodOnly.readyAt)
+        XCTAssertEqual(both.hours, goodOnly.hours, accuracy: 0.001)
+    }
+
     /// The nights after count double against the night before: how the session
     /// was absorbed says more than how the person went into it.
     func testTheNightsAfterOutweighTheNightBefore() {
