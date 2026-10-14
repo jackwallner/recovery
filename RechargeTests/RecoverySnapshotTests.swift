@@ -160,6 +160,25 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.phase(at: now.addingTimeInterval(ceiling * 3600)), .ready)
     }
 
+    /// The widget, complication and Watch ring draw `progress` beside the
+    /// phase. Past the staleness cutoff the phase is "no recent workout", and
+    /// the ring has to be as empty as it is for somebody who never trained.
+    func testProgressIsEmptyOnceTheSessionIsStale() {
+        let snapshot = RecoverySnapshot(estimate: estimate(hours: 20, endedHoursAgo: 24 * 9), isPro: false)
+        XCTAssertEqual(snapshot.phase(at: now), .noRecentWorkout)
+        XCTAssertEqual(snapshot.progress(at: now), 0)
+    }
+
+    /// The snapshot and `RecoveryResolver` agree on when a session goes stale,
+    /// including a 96-hour countdown, which reaches Ready at the four-day mark.
+    func testACeilingCountdownShowsReadyBeforeItGoesStale() {
+        let ceiling = RecoveryCalculator.maximumHours
+        let snapshot = RecoverySnapshot(estimate: estimate(hours: ceiling, endedHoursAgo: 0), isPro: false)
+        XCTAssertEqual(snapshot.phase(at: now.addingTimeInterval((ceiling + 1) * 3600)), .ready)
+        XCTAssertEqual(snapshot.progress(at: now.addingTimeInterval((ceiling + 1) * 3600)), 1)
+        XCTAssertEqual(snapshot.phase(at: now.addingTimeInterval((ceiling + 25) * 3600)), .noRecentWorkout)
+    }
+
     func testProgressIsEmptyWhenThereIsNoSession() {
         XCTAssertEqual(RecoverySnapshot.empty.progress(at: now), 0)
     }

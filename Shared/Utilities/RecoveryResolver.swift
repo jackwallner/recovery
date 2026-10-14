@@ -29,11 +29,27 @@ public enum RecoveryResolver {
     /// A session older than this tells the user nothing useful about today.
     public static let stalenessCutoff: TimeInterval = 4 * 86_400
 
+    /// How long Ready stays on screen at the least, however late it came.
+    public static let readyGrace: TimeInterval = 86_400
+
+    /// Whether a session is too old to talk about. Four days after it ended, or
+    /// a day after its countdown ran out, whichever is later. The cutoff was
+    /// four days flat, which left a day of Ready under the old 72-hour ceiling
+    /// and none under the 96-hour one: a race countdown reached Ready at the
+    /// four-day mark and went straight to "No workout".
+    public static func isStale(sessionEnd: Date, readyAt: Date?, now: Date) -> Bool {
+        let staleFrom = max(
+            sessionEnd.addingTimeInterval(stalenessCutoff),
+            (readyAt ?? sessionEnd).addingTimeInterval(readyGrace)
+        )
+        return now > staleFrom
+    }
+
     /// Phase for a whole set of estimates.
     public static func phase(in estimates: [RecoveryEstimate], now: Date = .now) -> RecoveryPhase {
         guard let current = current(in: estimates, now: now) else { return .noRecentWorkout }
         // Past the cutoff it reads as "no recent workout" rather than a stale Ready.
-        if now.timeIntervalSince(current.sessionEnd) > stalenessCutoff { return .noRecentWorkout }
+        if isStale(sessionEnd: current.sessionEnd, readyAt: current.readyAt, now: now) { return .noRecentWorkout }
         return current.phase(at: now)
     }
 

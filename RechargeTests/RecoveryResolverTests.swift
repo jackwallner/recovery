@@ -87,6 +87,26 @@ final class RecoveryResolverTests: XCTestCase {
         XCTAssertEqual(RecoveryResolver.phase(in: [ancient], now: now), .noRecentWorkout)
     }
 
+    /// A countdown at the 96-hour ceiling runs out at exactly the four-day
+    /// mark. Ready has to stay on screen for a day after that, as it did for
+    /// every countdown under the old 72-hour ceiling, rather than skipping
+    /// straight to "no recent workout".
+    func testACountdownAtTheCeilingStillShowsReadyForADay() {
+        let ceiling = RecoveryCalculator.maximumHours
+        for hoursPastReady in [0.1, 6, 23.9] {
+            let race = estimate(
+                id: "race",
+                hoursFromNow: -hoursPastReady,
+                endedHoursAgo: ceiling + hoursPastReady,
+                hours: ceiling
+            )
+            XCTAssertEqual(RecoveryResolver.phase(in: [race], now: now), .ready, "\(hoursPastReady)h past Ready")
+            XCTAssertEqual(RecoveryResolver.explanation(in: [race], now: now)?.sessionID, "race")
+        }
+        let dayAfter = estimate(id: "race", hoursFromNow: -24.1, endedHoursAgo: ceiling + 24.1, hours: ceiling)
+        XCTAssertEqual(RecoveryResolver.phase(in: [dayAfter], now: now), .noRecentWorkout)
+    }
+
     // MARK: - What a screen may explain
 
     func testAStaleSessionIsStillCurrentButNoLongerExplained() {

@@ -176,7 +176,7 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
 
     public func phase(at now: Date) -> RecoveryPhase {
         guard let sessionEnd else { return .noRecentWorkout }
-        if now.timeIntervalSince(sessionEnd) > 4 * 86_400 { return .noRecentWorkout }
+        if RecoveryResolver.isStale(sessionEnd: sessionEnd, readyAt: readyAt, now: now) { return .noRecentWorkout }
         guard let readyAt else { return .ready }
         let remaining = readyAt.timeIntervalSince(now)
         if remaining <= 0 { return .ready }
@@ -189,9 +189,14 @@ public struct RecoverySnapshot: Codable, Sendable, Equatable {
         return max(readyAt.timeIntervalSince(now), 0)
     }
 
-    /// Fraction of the original window still to run, 0...1. Drives the ring.
+    /// Fraction of the window that has run, 0...1. Drives the ring.
+    ///
+    /// Empty past the staleness cutoff, like a snapshot with no session. The
+    /// snapshot still holds the old session, whose ring is full, so a user four
+    /// days on from their last workout saw a solid ring beside "No workout" on
+    /// the widget, the complication and the Watch app.
     public func progress(at now: Date) -> Double {
-        guard hasSession else { return 0 }
+        guard hasSession, phase(at: now) != .noRecentWorkout else { return 0 }
         guard hours > 0, let readyAt else { return 1 }
         let total = hours * 3600
         let remaining = max(readyAt.timeIntervalSince(now), 0)
