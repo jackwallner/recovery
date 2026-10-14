@@ -42,7 +42,7 @@ public enum CountdownFormat {
     /// the same three characters.
     ///
     /// Never longer than six characters, so a circular or corner slot does not
-    /// truncate. `2d 23h` is the widest it gets, and only above 48 hours.
+    /// truncate. `3d 23h` is the widest it gets, and only above 72 hours.
     public static func compactRemaining(_ seconds: TimeInterval) -> String {
         guard seconds > 0 else { return "Ready" }
         let totalMinutes = Int((seconds / 60).rounded(.up))
@@ -113,6 +113,21 @@ public enum CountdownFormat {
     /// Complication-width ready time: `7:30 AM`.
     public static func clock(_ date: Date) -> String {
         timeFormatter.string(from: date)
+    }
+
+    /// Ready time with the weekday once it is not today: `7:30 AM`, then
+    /// `Thu 7:30 AM`.
+    ///
+    /// A countdown can run four days, and a bare clock reading on Monday
+    /// evening that means Thursday morning reads as tomorrow morning. Used on
+    /// the complication surfaces wide enough to carry the day; the circular
+    /// slot keeps the bare clock and leaves the day to the countdown beside it.
+    ///
+    /// - Parameter now: the instant being rendered, which on a complication is
+    ///   the timeline entry's date, never the wall clock.
+    public static func clockWithDay(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
+        if calendar.isDate(date, inSameDayAs: now) { return clock(date) }
+        return "\(weekdayFormatter.string(from: date)) \(clock(date))"
     }
 
     /// Coarse ready time for low-confidence estimates, where a minute-precise

@@ -112,7 +112,7 @@ final class ComplicationCopyTests: XCTestCase {
         for phase in phases {
             for style in ComplicationStyle.allCases {
                 for dataState in ComplicationCopy.DataState.allCases {
-                    for minutes in stride(from: 1, through: 72 * 60, by: 7) {
+                    for minutes in stride(from: 1, through: Int(RecoveryCalculator.maximumHours) * 60, by: 7) {
                         let remaining = TimeInterval(minutes * 60)
                         let primary = ComplicationCopy.primary(
                             phase: phase,
@@ -135,7 +135,7 @@ final class ComplicationCopyTests: XCTestCase {
         for phase in phases {
             for style in ComplicationStyle.allCases {
                 for dataState in ComplicationCopy.DataState.allCases {
-                    for minutes in stride(from: 1, through: 72 * 60, by: 7) {
+                    for minutes in stride(from: 1, through: Int(RecoveryCalculator.maximumHours) * 60, by: 7) {
                         let remaining = TimeInterval(minutes * 60)
                         let inline = ComplicationCopy.inline(
                             phase: phase,
@@ -284,6 +284,32 @@ final class ComplicationCopyTests: XCTestCase {
             ),
             CountdownFormat.clock(readyAt)
         )
+    }
+
+    /// A countdown can run four days, so a bare "7:30 AM" on Monday evening
+    /// that means Thursday reads as tomorrow. The surfaces wide enough to carry
+    /// the day carry it once the ready time is not on the rendered day.
+    func testAMultiDayReadyClockNamesTheDay() {
+        let calendar = Calendar.current
+        let renderedAt = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: now) ?? now
+        let readyAt = renderedAt.addingTimeInterval(80 * 3600)
+        let remaining = readyAt.timeIntervalSince(renderedAt)
+        let weekday = CountdownFormat.clockWithDay(readyAt, now: renderedAt)
+        XCTAssertNotEqual(weekday, CountdownFormat.clock(readyAt))
+        XCTAssertTrue(weekday.hasSuffix(CountdownFormat.clock(readyAt)))
+
+        let inline = ComplicationCopy.inline(phase: .recovering, style: .readyClock, remaining: remaining, readyAt: readyAt)
+        let title = ComplicationCopy.rectangularTitle(phase: .recovering, style: .readyClock, remaining: remaining, readyAt: readyAt)
+        let secondary = ComplicationCopy.secondary(
+            phase: .recovering, style: .countdown, remaining: remaining, readyAt: readyAt, activityLabel: "run"
+        )
+        for text in [inline, title, secondary] {
+            XCTAssertTrue(text.contains(weekday), "\"\(text)\" does not say which day")
+        }
+
+        // Later the same day it stays a bare clock reading.
+        let sameDay = renderedAt.addingTimeInterval(2.5 * 3600)
+        XCTAssertEqual(CountdownFormat.clockWithDay(sameDay, now: renderedAt), CountdownFormat.clock(sameDay))
     }
 
     /// The clock styles read `readyAt`, which a malformed snapshot can be
