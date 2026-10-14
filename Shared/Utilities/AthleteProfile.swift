@@ -226,6 +226,26 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
         self.healthDerivedFields = healthDerivedFields
     }
 
+    // MARK: Age bands
+
+    /// The bands onboarding and Settings offer, each tagged by its midpoint.
+    /// Health stores an exact age, so a picker has to show the band an exact
+    /// age falls in rather than look for a tag equal to it.
+    public static let ageBands: [(label: String, midpoint: Int)] = [
+        ("Under 25", 21), ("25 to 34", 30), ("35 to 44", 40), ("45 to 54", 50), ("55 or over", 60)
+    ]
+
+    /// The midpoint of the band `age` falls in.
+    public static func ageBandMidpoint(for age: Int) -> Int {
+        switch age {
+        case ..<25: 21
+        case ..<35: 30
+        case ..<45: 40
+        case ..<55: 50
+        default: 60
+        }
+    }
+
     // MARK: Maximum heart rate
 
     /// Age-predicted maximum heart rate.

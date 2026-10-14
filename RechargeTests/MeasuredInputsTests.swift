@@ -456,4 +456,19 @@ final class MeasuredInputsTests: XCTestCase {
             "the receipt claims a measured ceiling and a formula are the same thing"
         )
     }
+
+    /// Settings shows age as a band, and Health supplies an exact age. Every
+    /// exact age has to land on one of the picker's tags, or the row is blank
+    /// beside a footer saying the age was read.
+    func testEveryExactAgeLandsOnASettingsBand() {
+        let tags = Set(AthleteProfile.ageBands.map(\.midpoint))
+        for age in 13...100 {
+            XCTAssertTrue(tags.contains(AthleteProfile.ageBandMidpoint(for: age)), "\(age)")
+        }
+        XCTAssertEqual(AthleteProfile.ageBandMidpoint(for: 34), 30)
+        XCTAssertEqual(AthleteProfile.ageBandMidpoint(for: 35), 40)
+        for band in AthleteProfile.ageBands {
+            XCTAssertEqual(AthleteProfile.ageBandMidpoint(for: band.midpoint), band.midpoint)
+        }
+    }
 }

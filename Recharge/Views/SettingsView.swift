@@ -444,7 +444,7 @@ struct SettingsView: View {
         Section {
             Picker("Age", selection: ageBinding) {
                 Text("Not set").tag(Int?.none)
-                ForEach(Self.ageBands, id: \.midpoint) { band in
+                ForEach(AthleteProfile.ageBands, id: \.midpoint) { band in
                     Text(band.label).tag(Int?.some(band.midpoint))
                 }
             }
@@ -479,10 +479,16 @@ struct SettingsView: View {
         }
     }
 
+    /// The picker's tags are band midpoints and the stored age is exact, so the
+    /// getter shows the band the age falls in. Reading it straight back made
+    /// the row blank for anyone whose age came from Health, which is almost
+    /// everyone, beside a footer saying their age had been read.
     private var ageBinding: Binding<Int?> {
         Binding(
-            get: { settings.athleteProfile.age },
+            get: { settings.athleteProfile.age.map(AthleteProfile.ageBandMidpoint(for:)) },
             set: { newValue in
+                // Re-selecting the band the exact age is already in keeps it.
+                guard newValue != settings.athleteProfile.age.map(AthleteProfile.ageBandMidpoint(for:)) else { return }
                 settings.athleteProfile.age = newValue
                 // Typed by hand now, so a later Health read must not silently
                 // move it back.
@@ -490,10 +496,6 @@ struct SettingsView: View {
             }
         )
     }
-
-    private static let ageBands: [(label: String, midpoint: Int)] = [
-        ("Under 25", 21), ("25 to 34", 30), ("35 to 44", 40), ("45 to 54", 50), ("55 or over", 60)
-    ]
 
     private var aboutYouFooter: String {
         let derived = settings.athleteProfile.healthDerivedFields

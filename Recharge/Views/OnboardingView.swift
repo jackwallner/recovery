@@ -516,23 +516,15 @@ private struct ProfileQuestionPage: View {
     /// heart-rate ceiling and a gentle ramp, and neither can tell 34 from 36.
     private var ageOptions: some View {
         VStack(spacing: Theme.Space.sm) {
-            ForEach(Self.ageBands, id: \.midpoint) { band in
+            ForEach(AthleteProfile.ageBands, id: \.midpoint) { band in
                 optionRow(
                     title: band.label,
-                    isSelected: profile.age == band.midpoint,
+                    isSelected: profile.age.map(AthleteProfile.ageBandMidpoint(for:)) == band.midpoint,
                     action: { profile.age = band.midpoint }
                 )
             }
         }
     }
-
-    private static let ageBands: [(label: String, midpoint: Int)] = [
-        ("Under 25", 21),
-        ("25 to 34", 30),
-        ("35 to 44", 40),
-        ("45 to 54", 50),
-        ("55 or over", 60)
-    ]
 
     private func options<T: Hashable>(
         _ values: [T],
