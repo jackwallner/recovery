@@ -174,7 +174,7 @@ public final class StoreService: NSObject, ObservableObject {
     public func start() {
         configureIfNeeded()
         #if DEBUG
-        if ScreenshotConfig.wantsPremiumActive || ScreenshotConfig.wantsReady { isPro = true }
+        if ScreenshotConfig.wantsSubscriber { isPro = true }
         #endif
         Task { await updateCustomerProductStatus(fetchPolicy: .fetchCurrent) }
         Task { await fetchProducts() }
@@ -428,7 +428,7 @@ public final class StoreService: NSObject, ObservableObject {
     public func updateCustomerProductStatus(fetchPolicy: CacheFetchPolicy = .default) async {
         configureIfNeeded()
         #if DEBUG
-        if ScreenshotConfig.wantsPremiumActive {
+        if ScreenshotConfig.wantsSubscriber {
             isPro = true
             return
         }

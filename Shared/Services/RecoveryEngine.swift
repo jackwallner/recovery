@@ -1207,15 +1207,15 @@ public final class RecoveryEngine: ObservableObject {
         // Screenshot mode seeds estimates, not `WorkoutRecord`s, so the SwiftData
         // fetch below returns nothing and the Pro capture would show 0 and 0
         // beside a history of eight scored sessions. Derive it from the same
-        // fixtures the rest of the frame is built from.
+        // fixtures the rest of the frame is built from. The fixtures only span
+        // four days, so a four-week average computed from them is a quarter of
+        // this week and the capture showed a 4x spike nobody trained. The
+        // average is stated instead, as a slightly bigger week than usual.
         if ScreenshotConfig.isEnabled {
             let acute = ScreenshotFixtures.history(now: now)
                 .filter { $0.sessionEnd >= now.addingTimeInterval(-7 * 86_400) }
                 .reduce(0) { $0 + $1.load.value }
-            let chronic = ScreenshotFixtures.history(now: now)
-                .filter { $0.sessionEnd >= now.addingTimeInterval(-28 * 86_400) }
-                .reduce(0) { $0 + $1.load.value }
-            return (acute, chronic / 4)
+            return (acute, (acute / 1.12).rounded())
         }
         #endif
         let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
@@ -1328,8 +1328,8 @@ public final class RecoveryEngine: ObservableObject {
         // The capture bypasses HealthKit entirely, so the freshness stamp has to
         // be seeded by hand or every screenshot shows an app that has never
         // successfully read anything.
-        lastSuccessfulImport = .now
-        lastImportFailed = false
+        lastSuccessfulImport = ScreenshotConfig.wantsStale ? .now.addingTimeInterval(-8 * 3600) : .now
+        lastImportFailed = ScreenshotConfig.wantsStale
     }
     #endif
 }
