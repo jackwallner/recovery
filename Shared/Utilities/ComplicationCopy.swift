@@ -129,7 +129,7 @@ public enum ComplicationCopy {
         case .readySoon, .recovering:
             switch style {
             case .countdown:
-                return readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
+                return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
             case .readyClock:
                 return CountdownFormat.compactRemaining(remaining) + " left"
             case .state:
@@ -162,7 +162,7 @@ public enum ComplicationCopy {
         case .readySoon, .recovering:
             switch style {
             case .countdown: return "\(CountdownFormat.compactRemaining(remaining)) to ready"
-            case .readyClock: return readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
+            case .readyClock: return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
             case .state: return phase == .readySoon ? "Ready soon" : "Recovering"
             }
         }
@@ -185,9 +185,16 @@ public enum ComplicationCopy {
         case .readySoon, .recovering:
             switch style {
             case .countdown: return "Recover \(CountdownFormat.compactRemaining(remaining))"
-            case .readyClock: return readyAt.map { "Ready \(CountdownFormat.clock($0))" } ?? "Recovering"
+            case .readyClock: return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
             case .state: return phase == .readySoon ? "READY SOON" : "RECOVERING"
             }
         }
+    }
+
+    /// The ready clock with its weekday when it is not on the rendered day.
+    /// The rendered instant is recovered from `readyAt - remaining`, so every
+    /// string still depends only on the timeline entry and never on the clock.
+    static func dayClock(_ readyAt: Date, remaining: TimeInterval) -> String {
+        CountdownFormat.clockWithDay(readyAt, now: readyAt.addingTimeInterval(-remaining))
     }
 }

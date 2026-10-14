@@ -1,1 +1,1 @@
-Thời gian hồi phục trên Apple Watch bạn đã có. Một lượt đếm ngược sau mỗi buổi tập nặng và trạng thái đếm ngược hoàn tất rõ ràng khi hết giờ.
+Còn bao lâu đến buổi tập nặng tiếp theo? Sau khi tập, đồng hồ đếm ngược hồi phục chạy trên mặt đồng hồ và báo khi kết thúc. Miễn phí, không cần dây đeo hay nhẫn.

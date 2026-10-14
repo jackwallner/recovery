@@ -50,8 +50,31 @@ final class CountdownTimelineTests: XCTestCase {
     }
 
     func testTheTimelineIsBoundedSoWidgetKitIsNeverHandedThousandsOfEntries() {
-        let dates = CountdownTimeline.entryDates(for: snapshot(hoursRemaining: 72, totalHours: 72), now: now)
+        let longest = RecoveryCalculator.maximumHours
+        let dates = CountdownTimeline.entryDates(for: snapshot(hoursRemaining: longest, totalHours: longest), now: now)
         XCTAssertLessThanOrEqual(dates.count, CountdownTimeline.maximumEntries)
+    }
+
+    /// The budget has to cover the longest countdown the model can produce.
+    /// Sized for the old 72-hour ceiling, a 96-hour timeline ran out of entries
+    /// at hour 77, so the last nineteen hours (including the whole Ready-soon
+    /// stretch) were a single frozen reading unless WidgetKit refreshed.
+    func testTheLongestCountdownHasAnEntryAtLeastHourlyAllTheWayToReady() {
+        for hours in [RecoveryCalculator.maximumHours, RecoveryCalculator.maximumHours - 0.5, 80, 72.0] {
+            let state = snapshot(hoursRemaining: hours, totalHours: hours)
+            let dates = CountdownTimeline.entryDates(for: state, now: now)
+            guard let readyAt = state.readyAt else { return XCTFail("fixture has no readyAt") }
+            let running = dates.filter { $0 <= readyAt }
+            XCTAssertEqual(running.last, readyAt, "\(hours)h: no entry at the flip")
+            for (earlier, later) in zip(running, running.dropFirst()) {
+                XCTAssertLessThanOrEqual(
+                    later.timeIntervalSince(earlier), 3600 + 1,
+                    "\(hours)h: a \(Int(later.timeIntervalSince(earlier) / 60))-minute gap before \(later)"
+                )
+            }
+            let finalStretch = running.filter { $0 >= readyAt.addingTimeInterval(-2 * 3600) && $0 < readyAt }
+            XCTAssertGreaterThanOrEqual(finalStretch.count, 6, "\(hours)h: the final two hours are not sampled")
+        }
     }
 
     // MARK: - The flip

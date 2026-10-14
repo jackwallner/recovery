@@ -1,1 +1,1 @@
-Palautumisaika Apple Watchiin, joka sinulla jo on. Laskuri jokaisen kovan treenin jälkeen ja selkeä laskuri valmis, kun se päättyy.
+Kauanko seuraavaan kovaan treeniin? Treenin jälkeen palautumisen lähtölaskenta näkyy kellotaulussa ja ilmoittaa, kun se päättyy. Ilmainen, ei lisävyötä tai sormusta.

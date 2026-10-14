@@ -15,10 +15,15 @@ import Foundation
 /// never from `Date.now`.
 public enum CountdownTimeline {
 
-    /// Widest timeline we will build. Beyond this WidgetKit will have refreshed
-    /// several times over anyway, and a 72-hour countdown at hourly granularity
-    /// is already 70-odd entries.
-    public static let maximumEntries = 80
+    /// Widest timeline we will build: room for an entry every hour across the
+    /// model's whole range, the fifteen-minute final stretch, and the flip.
+    ///
+    /// It was 80, sized for the old 72-hour ceiling. At 96 hours the hourly
+    /// loop used the whole budget by hour 77 and the final stretch got nothing,
+    /// so a long countdown sat on one reading for its last nineteen hours
+    /// unless WidgetKit happened to grant a refresh. Derived from the ceiling
+    /// now, so the next change to it cannot do the same thing silently.
+    public static let maximumEntries = Int(RecoveryCalculator.maximumHours.rounded(.up)) + 12
     private static let reservedFinalEntries = 2
 
     /// Instants the timeline should carry for a given snapshot.

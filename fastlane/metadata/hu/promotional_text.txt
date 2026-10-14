@@ -1,1 +1,1 @@
-Regenerációs idő az Apple Watchon, ami már megvan. Visszaszámlálás minden kemény edzés után, és világos visszaszámlálás kész, amikor lejár.
+Mennyi idő a következő kemény edzésig? Edzés után regenerációs visszaszámlálás fut az óralapon, és szól, amikor lejár. Ingyenes, nincs szükség extra pántra vagy gyűrűre.

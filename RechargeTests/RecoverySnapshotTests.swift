@@ -119,6 +119,47 @@ final class RecoverySnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.progress(at: now.addingTimeInterval(40 * 3600)), 1, accuracy: 0.001)
     }
 
+    /// The ring on the Watch, the complication gauge and the iOS widget all
+    /// draw `progress`. A countdown stacked onto the 96-hour ceiling has to
+    /// start empty, fill steadily, and land full exactly at Ready: the ring is
+    /// measured against the stacked total, so a session's own cost smaller
+    /// than the countdown must not leave it stuck at zero for the carried part.
+    func testProgressIsSaneForACountdownStackedToTheCeiling() {
+        let ceiling = RecoveryCalculator.maximumHours
+        let stacked = RecoveryEstimate(
+            sessionID: "stacked",
+            profile: .endurance,
+            activityLabel: "run",
+            calculatedAt: now,
+            sessionEnd: now,
+            readyAt: now.addingTimeInterval(ceiling * 3600),
+            hours: 70,
+            windowLowHours: ceiling * 0.85,
+            windowHighHours: ceiling,
+            load: SessionLoad(value: 400, source: .heartRate, heartRateCoverage: 0.95),
+            relativeLoad: 4,
+            category: .unusuallyHard,
+            confidence: .high,
+            reasons: [],
+            carriedHours: 40
+        )
+        XCTAssertEqual(stacked.totalHours, ceiling, accuracy: 0.001)
+        let snapshot = RecoverySnapshot(estimate: stacked, isPro: true)
+        XCTAssertEqual(snapshot.hours, ceiling, accuracy: 0.001)
+
+        var previous = -1.0
+        for hour in stride(from: 0.0, through: ceiling, by: 1) {
+            let progress = snapshot.progress(at: now.addingTimeInterval(hour * 3600))
+            XCTAssertGreaterThanOrEqual(progress, 0)
+            XCTAssertLessThanOrEqual(progress, 1)
+            XCTAssertGreaterThan(progress, previous, "the ring stalled at hour \(hour)")
+            XCTAssertEqual(progress, hour / ceiling, accuracy: 0.001)
+            previous = progress
+        }
+        XCTAssertEqual(snapshot.phase(at: now.addingTimeInterval((ceiling - 1) * 3600)), .readySoon)
+        XCTAssertEqual(snapshot.phase(at: now.addingTimeInterval(ceiling * 3600)), .ready)
+    }
+
     func testProgressIsEmptyWhenThereIsNoSession() {
         XCTAssertEqual(RecoverySnapshot.empty.progress(at: now), 0)
     }

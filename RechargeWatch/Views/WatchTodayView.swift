@@ -9,11 +9,7 @@ import WatchKit
 struct WatchTodayView: View {
     @State private var snapshot = WatchTodayView.currentSnapshot()
     @State private var now = Date.now
-#if DEBUG
-    @State private var showEffort = ScreenshotConfig.wantsEffortPrompt
-#else
     @State private var showEffort = false
-#endif
 
     /// Screenshot runs have no paired phone to write the App Group, so the
     /// capture scene supplies the snapshot instead.
@@ -63,6 +59,11 @@ struct WatchTodayView: View {
                 now = .now
                 snapshot = WatchTodayView.currentSnapshot()
                 #if DEBUG
+                // The `watchEffort` capture scene raises the prompt the same
+                // way a tap on "Rate effort" does, after the first frame.
+                if ScreenshotConfig.wantsEffortPrompt {
+                    DispatchQueue.main.async { showEffort = true }
+                }
                 ScreenshotConfig.markReady()
                 #endif
             }
@@ -73,7 +74,11 @@ struct WatchTodayView: View {
                 now = .now
                 snapshot = WatchTodayView.currentSnapshot()
             }
-            .navigationDestination(isPresented: $showEffort) {
+            // A sheet, not a navigation push. Pushing the prompt with
+            // `navigationDestination(isPresented:)` spun the NavigationStack
+            // coordinator in an update loop at 100% CPU: the screen froze on
+            // the countdown and the answer could never be given.
+            .sheet(isPresented: $showEffort) {
                 WatchEffortPrompt(activityLabel: snapshot.activityLabel) { effort in
                     showEffort = false
                     guard let sessionID = pendingEffortSessionID else { return }
