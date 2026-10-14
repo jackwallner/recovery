@@ -155,6 +155,20 @@ final class StackedRecoveryTests: XCTestCase {
         )
     }
 
+    /// At the ceiling, the carried figure is only what actually reached the
+    /// countdown. Today narrates "Xh from your run, on top of Yh already owed",
+    /// and after a marathon that pinned 96h on top of a running countdown it
+    /// read "96h ... on top of 11h" above a 96-hour ring.
+    func testTheCarriedFigureAddsUpWhenTheCeilingBites() {
+        for carried in [0.0, 5, 11, 40, 500] {
+            let stacked = estimate(run("session", endingHoursAgo: 0, minutes: 225, reserve: 0.80), carried: carried)
+            XCTAssertEqual(stacked.hours + stacked.carriedHours, stacked.totalHours, accuracy: 1e-9, "carried \(carried)")
+        }
+        let marathon = estimate(run("marathon", endingHoursAgo: 0, minutes: 225, reserve: 0.80), carried: 22)
+        XCTAssertEqual(marathon.hours, RecoveryCalculator.maximumHours, accuracy: 1e-9)
+        XCTAssertFalse(marathon.isStacked, "a capped window must not claim a residual it could not add")
+    }
+
     /// The displayed range spreads around the countdown the user is looking at,
     /// not around the session's own cost, or a stacked window shows a band that
     /// excludes its own centre.

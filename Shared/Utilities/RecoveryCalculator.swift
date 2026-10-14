@@ -198,7 +198,14 @@ public enum RecoveryCalculator {
         // `hours` stays the session's own cost: it is what the tier comparison
         // and the history rows are asking about. `carried` is the residual's
         // actual contribution, so "18h, incl. 6h carried" always adds up.
-        let carried = qualifies ? stackedContribution(residual: residual, sessionHours: hours) : 0
+        //
+        // Capped at the room the ceiling leaves. A marathon scored 96h on top of
+        // a residual told Today "96h from your run, on top of 11h already owed"
+        // above a 96-hour countdown: the residual was clamped away by the
+        // ceiling but still reported as carried.
+        let carried = qualifies
+            ? min(stackedContribution(residual: residual, sessionHours: hours), max(maximumHours - hours, 0))
+            : 0
         let total = qualifies ? min(hours + carried, maximumHours) : 0
 
         let confidence = confidence(
