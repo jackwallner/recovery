@@ -122,6 +122,9 @@ public final class HealthKitService: ObservableObject {
     private var installedObserverTypes: Set<String> = []
     private var pendingRefreshTask: Task<Void, Never>?
     private var pendingObserverCompletions: [ObserverCompletion] = []
+    private var pendingObserverForce = false
+    private var observerWokeDuringRefresh = false
+    private var observerRefreshIsReading = false
 
     /// HealthKit's completion closure is supplied by a nonisolated callback.
     /// This box keeps that callback on its originating path while allowing the
@@ -725,9 +728,27 @@ public final class HealthKitService: ObservableObject {
     /// handler open until the import and publish have finished. HealthKit may
     /// terminate a background launch as soon as its handler returns, so calling
     /// it before `RecoveryEngine.refresh()` loses the very workout that woke us.
-    private func enqueueObserverRefresh(completion: ObserverCompletion) {
+    ///
+    /// **A wake must never be answered by a refresh that started before it.**
+    /// Two ways that used to happen, both on the path a finished workout takes
+    /// when the user opens the phone straight after it: a wake arriving while
+    /// the coalesced refresh was already reading Health had its completion
+    /// called at the end of that refresh, whose queries predated the new data;
+    /// and the refresh itself was unforced, so a wake within 30 seconds of the
+    /// foreground refresh hit the throttle and imported nothing. Either way the
+    /// workout sat unimported until the next time the app was opened. Now a
+    /// wake during a refresh asks for one more pass, and anything other than
+    /// the all-day heart-rate stream forces past the throttle.
+    private func enqueueObserverRefresh(completion: ObserverCompletion, force: Bool) {
         pendingObserverCompletions.append(completion)
-        guard pendingRefreshTask == nil else { return }
+        pendingObserverForce = pendingObserverForce || force
+        guard pendingRefreshTask == nil else {
+            // Inside the coalescing delay the refresh has not read anything
+            // yet and will see this wake's data; only a wake that lands while
+            // it is reading needs another pass.
+            if observerRefreshIsReading { observerWokeDuringRefresh = true }
+            return
+        }
 
         pendingRefreshTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(800))
@@ -740,10 +761,20 @@ public final class HealthKitService: ObservableObject {
             // the workout that woke us cannot reach the wrist late on the one
             // launch where it does not.
             await PhoneWatchSession.shared.waitForActivation(timeout: 5)
-            await RecoveryEngine.shared.refresh()
-            let completions = self.pendingObserverCompletions
-            self.pendingObserverCompletions.removeAll()
-            self.pendingRefreshTask = nil
+            var completions: [ObserverCompletion] = []
+            repeat {
+                observerWokeDuringRefresh = false
+                completions += pendingObserverCompletions
+                pendingObserverCompletions.removeAll()
+                let force = pendingObserverForce
+                pendingObserverForce = false
+                observerRefreshIsReading = true
+                await RecoveryEngine.shared.refresh(force: force)
+                observerRefreshIsReading = false
+            } while observerWokeDuringRefresh
+            completions += pendingObserverCompletions
+            pendingObserverCompletions.removeAll()
+            pendingRefreshTask = nil
             completions.forEach { $0.call() }
         }
     }
@@ -795,11 +826,16 @@ public final class HealthKitService: ObservableObject {
                 }
                 #else
                 let completion = ObserverCompletion(completionHandler)
+                // Heart rate is written all day, every few minutes, so its wakes
+                // stay behind the 30-second throttle. Everything else (a
+                // workout, the morning's sleep, HRV, resting heart rate) is
+                // rare and is exactly what moves the countdown.
+                let force = identifier != HKQuantityType(.heartRate).identifier
                 Task { @MainActor in
                     // Health often delivers several notifications for one
                     // workout. Coalesce them, but keep every observer task
                     // alive until the shared refresh has published.
-                    self?.enqueueObserverRefresh(completion: completion) ?? completion.call()
+                    self?.enqueueObserverRefresh(completion: completion, force: force) ?? completion.call()
                 }
                 #endif
             }

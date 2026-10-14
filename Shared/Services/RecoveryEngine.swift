@@ -101,18 +101,43 @@ public final class RecoveryEngine: ObservableObject {
             return
         }
         #endif
-        guard !isRefreshing else { return }
+        // A forced caller that finds a refresh already running cannot be
+        // answered by it: that refresh's Health reads may predate whatever the
+        // caller came about (a workout that has just synced, a pull to
+        // refresh). It asks for one more pass and waits for it, rather than
+        // returning with its data unread.
+        if let running = runningRefresh {
+            if force { refreshAgain = true }
+            await running.value
+            return
+        }
         if !force, let lastRefresh, Date.now.timeIntervalSince(lastRefresh) < 30 { return }
-        isRefreshing = true
-        defer { isRefreshing = false }
 
-        await importWorkouts()
-        await importContext()
-        await updateAthleteProfileFromHealth()
-        guard rescore() else { return }
-        publish()
-        lastRefresh = .now
+        // Cleared inside the task rather than after the await below, so no
+        // caller can ever find a refresh that has already finished, ask it for
+        // another pass, and be answered by nothing.
+        let task = Task { @MainActor in
+            isRefreshing = true
+            defer {
+                isRefreshing = false
+                runningRefresh = nil
+            }
+            repeat {
+                refreshAgain = false
+                await importWorkouts()
+                await importContext()
+                await updateAthleteProfileFromHealth()
+                guard rescore() else { return }
+                publish()
+                lastRefresh = .now
+            } while refreshAgain
+        }
+        runningRefresh = task
+        await task.value
     }
+
+    private var runningRefresh: Task<Void, Never>?
+    private var refreshAgain = false
 
     /// Fills in everything about the person that Health can answer, so
     /// onboarding only ever asks for the rest.
