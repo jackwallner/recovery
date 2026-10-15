@@ -84,7 +84,9 @@ def main() -> None:
     # 1) Create the review submission for this app + platform.
     open_subs = [
         s for s in asc_lib.list_all(client, f"/reviewSubmissions?filter[app]={app_id}&limit=50")
-        if not s["attributes"].get("submitted")
+        # The API returns `state`, not `submitted`; filtering on the missing
+        # field matched every submission, including one already waiting.
+        if s["attributes"].get("state") == "READY_FOR_REVIEW"
     ]
     if open_subs:
         submission = open_subs[0]
