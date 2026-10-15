@@ -52,6 +52,11 @@ final class SeededWalkthroughTests: XCTestCase {
         if let override = ProcessInfo.processInfo.environment["RECHARGE_SEED_DAYS"] {
             app.launchEnvironment["RECHARGE_SEED_DAYS"] = override
         }
+        // `TEST_RUNNER_RECHARGE_SEED_PERSONA=race` on the xcodebuild line:
+        // see `HealthSeederConfig.Persona` for the shapes.
+        if let persona = ProcessInfo.processInfo.environment["RECHARGE_SEED_PERSONA"] {
+            app.launchEnvironment["RECHARGE_SEED_PERSONA"] = persona
+        }
         app.launch()
         allowHealthAccess()
         return app
@@ -145,6 +150,29 @@ final class SeededWalkthroughTests: XCTestCase {
             Thread.sleep(forTimeInterval: 0.5)
         }
         XCTAssertFalse(allow.exists, "the Health permission sheet never dismissed")
+
+        chooseFullHistory(in: sheet)
+    }
+
+    /// iOS 27 follows the category page with a second one, "How much historical
+    /// data do you want to share?", and keeps `requestAuthorization` waiting
+    /// until it is answered. Its rows and its Allow button carry no
+    /// identifiers, so it is driven by label. Full History, because the seeder
+    /// writes the whole import window and Past 30 Days would hide most of it.
+    /// Earlier runtimes never show the page, which is the `return`.
+    private func chooseFullHistory(in sheet: XCUIApplication) {
+        let fullHistory = sheet.staticTexts["Full History"]
+        guard fullHistory.waitForExistence(timeout: 10) else { return }
+        fullHistory.tap()
+        let allow = sheet.buttons["Allow"]
+        XCTAssertTrue(allow.waitForExistence(timeout: 10), "the history page has no Allow button")
+        let deadline = Date().addingTimeInterval(15)
+        while !allow.isEnabled, Date() < deadline { Thread.sleep(forTimeInterval: 0.5) }
+        XCTAssertTrue(allow.isEnabled, "choosing Full History did not enable Allow")
+        allow.tap()
+        let gone = Date().addingTimeInterval(30)
+        while fullHistory.exists, Date() < gone { Thread.sleep(forTimeInterval: 0.5) }
+        XCTAssertFalse(fullHistory.exists, "the Health history page never dismissed")
     }
 
     /// "Turn On All" is the only control that reaches the rows below the fold
@@ -318,6 +346,48 @@ final class SeededWalkthroughTests: XCTestCase {
         waitUntilHittable(hero, timeout: 15)
         hero.tap()
         attach(app, named: "05-detail")
+        app.swipeUp()
+        attach(app, named: "06-detail-scrolled")
+
+        // `TEST_RUNNER_RECHARGE_SEED_PRO=1`: flip the DEBUG "Pro unlocked
+        // (local)" switch and look at the same history as a subscriber, since
+        // the simulator has no RevenueCat to buy it with.
+        guard ProcessInfo.processInfo.environment["RECHARGE_SEED_PRO"] == "1" else { return }
+        if app.buttons["Done"].firstMatch.exists { app.buttons["Done"].firstMatch.tap() }
+        let gear = app.buttons["Settings"]
+        XCTAssertTrue(gear.waitForExistence(timeout: 10))
+        gear.tap()
+        let proSwitch = app.switches["Pro unlocked (local)"]
+        // A Form builds its rows lazily, so the switch does not exist until it
+        // is scrolled near, and `isHittable` on a missing element throws.
+        for _ in 0..<20 where !(proSwitch.exists && proSwitch.isHittable) { app.swipeUp() }
+        XCTAssertTrue(proSwitch.isHittable, "the debug Pro switch is not reachable")
+        // The switch element spans the whole row, and a tap at its centre
+        // lands on the label, which a SwiftUI Toggle ignores.
+        // The swipe's momentum can carry the row out from under a tap, so let
+        // it settle and retry. Checking the value first also keeps a switch an
+        // earlier run left on from being turned off again.
+        Thread.sleep(forTimeInterval: 1)
+        for _ in 0..<3 where proSwitch.exists && proSwitch.value as? String != "1" {
+            proSwitch.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+            Thread.sleep(forTimeInterval: 1.5)
+        }
+        // Turning Pro on rebuilds the Form above the switch, so the switch
+        // itself is gone by the time anyone asks it for a value. The third
+        // tab renaming itself is the proof instead.
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Recharge+"].waitForExistence(timeout: 10), "the debug Pro switch did not turn on")
+        Thread.sleep(forTimeInterval: 4)
+        dismissInterrupts(in: app)
+        attach(app, named: "07-today-pro")
+        waitUntilHittable(hero, timeout: 15)
+        hero.tap()
+        attach(app, named: "08-detail-pro")
+        app.swipeUp()
+        attach(app, named: "09-detail-pro-scrolled")
+        if app.buttons["Done"].firstMatch.exists { app.buttons["Done"].firstMatch.tap() }
+        show("History", in: app, landmark: app.navigationBars["History"])
+        attach(app, named: "10-history-pro")
     }
 
     /// The import is asynchronous and finishes without changing any element the

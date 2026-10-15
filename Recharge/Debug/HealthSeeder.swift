@@ -50,6 +50,28 @@ enum HealthSeederConfig {
     static var followUpDelay: Double? {
         ProcessInfo.processInfo.environment["RECHARGE_SEED_FOLLOWUP_SECONDS"].flatMap(Double.init)
     }
+
+    /// `RECHARGE_SEED_PERSONA` reshapes the seeded history so a walkthrough
+    /// can reach the states the default week never does.
+    enum Persona: String {
+        /// The default week below.
+        case standard
+        /// The default history plus a marathon that finished 90 minutes ago,
+        /// which is the only way to see a countdown past the old 72h ceiling.
+        case race
+        /// The default history plus a hard run this morning and intervals an
+        /// hour ago, so today's two countdowns overlap.
+        case double
+        /// Walks only: every session is active recovery, so nothing ever
+        /// starts a countdown.
+        case walks
+        /// Overnight context and no workouts at all.
+        case none
+    }
+
+    static var persona: Persona {
+        ProcessInfo.processInfo.environment["RECHARGE_SEED_PERSONA"].flatMap(Persona.init(rawValue:)) ?? .standard
+    }
 }
 
 private let seedMarker = "RechargeSeededSample"
@@ -133,14 +155,37 @@ enum HealthSeeder {
             SeedTrace.mark("requestAuthorization: done")
             try await deleteExistingSeed()
             SeedTrace.mark("deleteExistingSeed: done")
-            let written = try await write(days: HealthSeederConfig.days)
-            guard written > 0 else { throw SeedError.noWorkoutsWritten }
+            let written = try await write(days: HealthSeederConfig.days) + writePersonaFinale()
+            guard written > 0 || HealthSeederConfig.persona == .none else { throw SeedError.noWorkoutsWritten }
             SeedTrace.mark("seeded \(HealthSeederConfig.days) days, workouts=\(written)")
             return true
         } catch {
             SeedTrace.mark("FAILED: \(String(describing: error))")
             return false
         }
+    }
+
+    /// The workouts a persona adds on top of its history, ending recently
+    /// enough that their countdowns are live when the walkthrough looks.
+    private static func writePersonaFinale() async throws -> Int {
+        let now = Date.now
+        let finale: [(Session, endingAgo: TimeInterval)]
+        switch HealthSeederConfig.persona {
+        case .race:
+            finale = [(Session(activity: .running, minutes: 225, reserve: 0.80, coverage: 0.97), 90 * 60)]
+        case .double:
+            finale = [
+                (Session(activity: .running, minutes: 50, reserve: 0.80, coverage: 0.97), 7 * 3600),
+                (Session(activity: .highIntensityIntervalTraining, minutes: 40, reserve: 0.82, coverage: 0.92), 3600)
+            ]
+        case .standard, .walks, .none:
+            finale = []
+        }
+        for (session, endingAgo) in finale {
+            let end = now.addingTimeInterval(-endingAgo)
+            try await writeWorkout(session, start: end.addingTimeInterval(-session.minutes * 60), end: end)
+        }
+        return finale.count
     }
 
     /// See `HealthSeederConfig.followUpDelay`. A hard 45-minute run, so it
@@ -220,6 +265,17 @@ enum HealthSeeder {
 
     /// One week of training, indexed by weekday. Seven entries, some empty.
     private static func sessions(forWeekday weekday: Int, week: Int) -> [Session] {
+        switch HealthSeederConfig.persona {
+        case .none:
+            return []
+        case .walks:
+            return [Session(activity: .walking, minutes: 35 + Double(weekday * 3), reserve: 0.30, coverage: 0.85)]
+        case .standard, .race, .double:
+            return standardSessions(forWeekday: weekday, week: week)
+        }
+    }
+
+    private static func standardSessions(forWeekday weekday: Int, week: Int) -> [Session] {
         switch weekday {
         case 1: // Sunday: long ride, and a walk
             return [
