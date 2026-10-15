@@ -611,7 +611,11 @@ final class RechargeUITests: XCTestCase {
         attach(app, named: "recharge-plus-bottom")
 
         let tabBar = app.buttons["Recharge+"].firstMatch
-        let lastRow = app.buttons["Manage subscription"].firstMatch
+        // A SwiftUI `Link` is a button on iOS 26 and a link on iOS 27, so the
+        // query takes either rather than reporting the row missing.
+        let lastRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "Manage subscription"))
+            .firstMatch
         XCTAssertTrue(lastRow.exists, "the account row is missing from Recharge+")
         XCTAssertLessThanOrEqual(
             lastRow.frame.maxY, tabBar.frame.minY,
