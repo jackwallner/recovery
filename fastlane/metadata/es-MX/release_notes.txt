@@ -1,7 +1,9 @@
-Primera versión.
+Un nuevo modelo de recuperación: cada sesión se califica según lo que realmente te costó.
 
-• Cuenta regresiva tras cada entrenamiento que cuenta, con un estado cuenta regresiva completada claro
-• App para Apple Watch y cuatro familias de complicaciones: circular, rectangular, en línea y esquina
-• Curvas propias para resistencia, fuerza, mixto y sesiones suaves
-• Intensidad: ligera / moderada / intensa
-• Explicación completa de cada estimación: qué sesión la fijó, cuánto te costó y con qué confianza
+• La cuenta regresiva gratuita califica cada sesión según tu nivel de entrenamiento, en lugar de repetir tu descanso habitual entre sesiones. Ese descanso se sigue mostrando a un lado.
+• La cuenta regresiva ahora llega hasta cuatro días, así que un medio maratón o un maratón da más tiempo que una carrera larga.
+• Los intervalos cuestan más que una carrera a ritmo constante con la misma frecuencia cardíaca promedio, y una rodada larga y tranquila ya no pesa más que una hora intensa.
+• Si vuelves a entrenar antes de que termine una cuenta regresiva, las dos se combinan: la más larga completa, más la mitad de la más corta.
+• Recharge+ ajusta la cuenta regresiva en curso después de cada noche según el sueño, la VFC y la frecuencia cardíaca en reposo.
+• Las complicaciones se siguen actualizando durante una cuenta regresiva de cuatro días y muestran el día en que termina.
+• Correcciones: el estado cuenta regresiva completada ahora se queda en pantalla después de una cuenta regresiva larga, un entrenamiento que se sincroniza justo después de abrir la app se toma en cuenta de inmediato y la pregunta de esfuerzo del Apple Watch se abre correctamente.

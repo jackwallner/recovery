@@ -22,7 +22,7 @@ Recharge prikazuje omeđen prozor umjesto broja lažne preciznosti, zajedno sa s
 
 STANDARD, BESPLATNO
 
-Standardna procjena je jedna zajednička tablica, prilagođena razini treniranosti koju navedeš ili koju Recharge primijeti: vrsta sesije, trajanje i težina, mjereni prema pulsnom rasponu za tvoju dob.
+Standardna procjena je jedna zajednička tablica, prilagođena razini treniranosti koju navedeš ili koju Recharge primijeti: vrsta sesije, trajanje i težina, mjereni prema tvom pulsnom rasponu.
 
 • Uvoz treninga iz Apple Zdravlja
 • Odbrojavanje i stanje odbrojavanje gotovo
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ zamjenjuje tu tablicu tobom: svaka se sesija mjeri prema tvojoj vlastitoj 42-dnevnoj osnovici, a zadnjih 30 dana određuje koliko brzo teku tvoja odbrojavanja.
 
 • Vrijeme iz tvoje vlastite povijesti, a ne iz populacijskog prosjeka
-• San, puls u mirovanju i HRV u svakoj procjeni
+• San, puls u mirovanju i HRV u svakoj procjeni, uključujući noći nakon treninga
 • Kalibracija prema tome kako si se stvarno osjećao na kraju
 • Tjedno opterećenje prema tvom vlastitom četverotjednom prosjeku
 • Intenzitet: lagano / umjereno / teško

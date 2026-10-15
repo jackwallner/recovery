@@ -22,7 +22,7 @@ Recharge pokaže omejeno okno namesto številke z lažno natančnostjo, skupaj s
 
 STANDARD, BREZPLAČNO
 
-Standardna ocena je ena skupna tabela, prilagojena ravni treniranosti, ki jo navedeš ali ki jo opazi Recharge: vrsta vadbe, trajanje in zahtevnost, merjeni glede na razpon srčnega utripa za tvojo starost.
+Standardna ocena je ena skupna tabela, prilagojena ravni treniranosti, ki jo navedeš ali ki jo opazi Recharge: vrsta vadbe, trajanje in zahtevnost, merjeni glede na tvoj razpon srčnega utripa.
 
 • Uvoz treningov iz Apple Zdravja
 • Odštevanje in stanje odštevanje končano
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ to tabelo zamenja s teboj: vsaka vadba se meri glede na tvojo lastno 42-dnevno izhodišče, zadnjih 30 dni pa določa, kako hitro tečejo tvoja odštevanja.
 
 • Čas iz tvoje lastne zgodovine, ne iz populacijskega povprečja
-• Spanje, srčni utrip v mirovanju in HRV v vsaki oceni
+• Spanje, srčni utrip v mirovanju in HRV v vsaki oceni, vključno z nočmi po treningu
 • Umerjanje glede na to, kako si se na koncu resnično počutil
 • Tedenska obremenitev glede na tvoje štiritedensko povprečje
 • Intenzivnost: lahka / zmerna / težka

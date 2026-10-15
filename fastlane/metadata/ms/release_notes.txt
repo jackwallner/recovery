@@ -1,7 +1,9 @@
-Versi pertama.
+Model pemulihan baharu: setiap sesi dinilai berdasarkan beban sebenar yang dikenakannya.
 
-• Kiraan detik selepas setiap latihan yang dikira, dengan status kiraan selesai yang jelas
-• Aplikasi Apple Watch dan empat keluarga komplikasi: bulat, segi empat tepat, sebaris dan sudut
-• Lengkung berasingan untuk daya tahan, kekuatan, campuran dan sesi ringan
-• Intensiti: ringan / sederhana / berat
-• Penjelasan penuh bagi setiap anggaran: sesi mana yang menetapkannya, betapa beratnya untuk anda, dan sejauh mana yakin
+• Kiraan detik percuma menilai setiap sesi pada tahap latihan anda, bukan sekadar mengulang tempoh rehat biasa anda antara sesi. Tempoh itu masih dipaparkan di sebelahnya.
+• Kiraan detik kini boleh mencecah empat hari, jadi separuh maraton atau maraton dipaparkan lebih lama daripada larian jauh.
+• Latihan selang kini lebih berat daripada larian sekata pada purata degupan jantung yang sama, dan kayuhan santai yang panjang tidak lagi mengatasi satu jam yang berat.
+• Jika anda berlatih lagi sebelum kiraan detik tamat, kedua-duanya digabungkan: yang lebih panjang dikira penuh, ditambah separuh daripada yang lebih pendek.
+• Recharge+ melaraskan kiraan detik yang sedang berjalan selepas setiap malam, berdasarkan tidur, HRV dan degupan jantung rehat.
+• Komplikasi terus dikemas kini sepanjang kiraan detik empat hari dan menunjukkan hari ia tamat.
+• Pembetulan: status kiraan selesai kini kekal pada skrin selepas kiraan detik yang panjang, latihan yang disegerakkan sejurus selepas anda membuka aplikasi terus diambil kira, dan soalan usaha pada Apple Watch dibuka dengan betul.

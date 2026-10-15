@@ -1,7 +1,9 @@
-Prva različica.
+Nov model regeneracije: vsaka vadba se oceni po tem, koliko te je dejansko stala.
 
-• Odštevanje po vsakem upoštevanem treningu, z jasnim stanjem odštevanje končano
-• Aplikacija za Apple Watch in štiri družine zapletov: krožna, pravokotna, v vrstici in kotna
-• Ločene krivulje za vzdržljivost, moč, mešani trening in lahke vadbe
-• Intenzivnost: lahka / zmerna / težka
-• Popolna razlaga vsake ocene: kateri trening jo je določil, kako težak je bil zate in kako zanesljiva je
+• Brezplačno odštevanje oceni vsako vadbo glede na tvojo raven treniranosti, namesto da bi ponavljalo tvoj običajni premor med vadbami. Ta premor je še vedno prikazan ob njem.
+• Odštevanje zdaj seže do štirih dni, zato polmaraton ali maraton traja dlje kot dolg tek.
+• Intervali stanejo več kot enakomeren tek pri enakem povprečnem srčnem utripu, dolga lahkotna vožnja s kolesom pa ne odtehta več težke ure.
+• Če znova treniraš pred koncem odštevanja, se obe združita: daljše v celoti, plus polovica krajšega.
+• Recharge+ po vsaki noči prilagodi tekoče odštevanje glede na spanje, HRV in srčni utrip v mirovanju.
+• Zapleti se posodabljajo skozi celotno štiridnevno odštevanje in pokažejo dan, ko se konča.
+• Popravljeno: odštevanje končano zdaj ostane na zaslonu po dolgem odštevanju, vadba, ki se sinhronizira tik po odprtju aplikacije, se upošteva takoj, vprašanje o naporu na Apple Watchu pa se zdaj pravilno odpre.

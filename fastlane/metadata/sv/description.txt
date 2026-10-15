@@ -22,7 +22,7 @@ Recharge visar ett avgränsat fönster i stället för en siffra med falsk preci
 
 STANDARD, GRATIS
 
-Standarduppskattningen är en gemensam tabell, inställd på den träningsnivå du anger eller som Recharge ser: typ av pass, längd och hårdhet, mätt mot pulsintervallet för din ålder.
+Standarduppskattningen är en gemensam tabell, inställd på den träningsnivå du anger eller som Recharge ser: typ av pass, längd och hårdhet, mätt mot ditt eget pulsintervall.
 
 • Import av pass från Apple Hälsa
 • Nedräkningen och nedräkning klar-läget
@@ -36,7 +36,7 @@ RECHARGE+
 Recharge+ byter ut tabellen mot dig: varje pass mäts mot din egen 42-dagarsbaslinje, och de senaste 30 dagarna avgör hur snabbt dina nedräkningar går.
 
 • En tid ur din egen historik, inte ur ett befolkningssnitt
-• Sömn, vilopuls och HRV vägs in i varje uppskattning
+• Sömn, vilopuls och HRV vägs in i varje uppskattning, även nätterna efter ett pass
 • Kalibrering utifrån hur du faktiskt kände dig när tiden gick ut
 • Veckobelastning mot ditt eget fyraveckorssnitt
 • Korrigera intensiteten per pass: lugnt / måttligt / hårt

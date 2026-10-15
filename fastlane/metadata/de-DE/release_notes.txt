@@ -1,7 +1,9 @@
-Erste Version.
+Neues Regenerationsmodell: Jede Einheit wird danach bewertet, was sie dich wirklich gekostet hat.
 
-• Countdown nach jedem zählenden Workout, mit klarem Countdown beendet-Zustand
-• Apple Watch App und vier Komplikationsfamilien: rund, rechteckig, inline und Ecke
-• Eigene Kurven für Ausdauer, Kraft, gemischt und leichte Einheiten
-• Intensität: leicht / moderat / hart
-• Vollständige Erklärung jeder Schätzung: welche Einheit sie gesetzt hat, wie hart sie für dich war und wie sicher sie ist
+• Der kostenlose Countdown bewertet jede Einheit auf deinem Trainingsniveau, statt nur deinen üblichen Abstand zwischen zwei Einheiten zu wiederholen. Dieser Abstand steht weiterhin daneben.
+• Countdowns reichen jetzt bis zu vier Tage, ein Halbmarathon oder Marathon ergibt also mehr Zeit als ein langer Lauf.
+• Intervalle kosten mehr als ein gleichmäßiger Lauf mit derselben durchschnittlichen Herzfrequenz, und eine lange lockere Radausfahrt wiegt nicht mehr schwerer als eine harte Stunde.
+• Trainierst du vor Ende eines Countdowns erneut, werden beide kombiniert: der längere voll, plus die Hälfte des kürzeren.
+• Recharge+ passt einen laufenden Countdown nach jeder Nacht an Schlaf, HRV und Ruheherzfrequenz an.
+• Komplikationen aktualisieren sich über einen ganzen viertägigen Countdown und zeigen den Tag, an dem er endet.
+• Behoben: Countdown beendet bleibt nach einem langen Countdown jetzt auf dem Bildschirm, ein Workout, das kurz nach dem Öffnen der App synchronisiert wird, wird sofort übernommen, und die Belastungsfrage auf der Apple Watch öffnet sich zuverlässig.

@@ -22,7 +22,7 @@ Recharge mostra una finestra delimitata invece di un numero di falsa precisione,
 
 STANDARD, GRATIS
 
-La stima standard è un'unica tabella tarata sul tuo livello di allenamento: tipo, durata e intensità, sull'intervallo cardiaco della tua età.
+La stima standard è un'unica tabella tarata sul tuo livello di allenamento: tipo, durata e intensità, sul tuo intervallo cardiaco.
 
 • Importazione degli allenamenti da Salute di Apple
 • Il conto alla rovescia e lo stato conto completato
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ sostituisce quella tabella con te: ogni sessione è misurata sul tuo riferimento personale di 42 giorni, e gli ultimi 30 giorni regolano la velocità dei tuoi conti alla rovescia.
 
 • Un tempo che nasce dal tuo storico, non da una media di popolazione
-• Sonno, frequenza cardiaca a riposo e HRV in ogni stima
+• Sonno, frequenza cardiaca a riposo e HRV in ogni stima, comprese le notti dopo una sessione
 • Calibrazione da come ti sei sentito davvero alla fine
 • Carico settimanale rispetto alla tua media di quattro settimane
 • Intensità: leggera / moderata / intensa

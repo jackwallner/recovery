@@ -20,7 +20,7 @@ Recharge memaparkan tempoh yang bersempadan, bukan nombor berketepatan palsu, be
 
 STANDARD, PERCUMA
 
-Anggaran standard ialah satu jadual sepunya pada tahap latihan anda: jenis sesi, tempoh dan keberatannya, pada julat degupan jantung mengikut umur anda.
+Anggaran standard ialah satu jadual sepunya pada tahap latihan anda: jenis sesi, tempoh dan keberatannya, pada julat degupan jantung anda.
 
 • Import latihan daripada Apple Kesihatan
 • Kiraan detik dan status kiraan selesai
@@ -33,7 +33,7 @@ RECHARGE+
 Recharge+ menggantikan jadual itu dengan anda: setiap sesi diukur terhadap garis asas 42 hari anda sendiri, dan 30 hari terakhir menentukan sepantas mana kiraan anda berjalan.
 
 • Masa daripada sejarah anda sendiri, bukan purata populasi
-• Tidur, degupan jantung rehat dan HRV masuk ke dalam setiap anggaran
+• Tidur, degupan jantung rehat dan HRV masuk ke dalam setiap anggaran, termasuk malam-malam selepas sesi
 • Penentukuran daripada perasaan sebenar anda apabila tempoh tamat
 • Beban mingguan berbanding purata empat minggu anda sendiri
 • Intensiti: ringan / sederhana / berat

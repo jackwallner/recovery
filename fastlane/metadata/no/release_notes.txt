@@ -1,7 +1,9 @@
-Første versjon.
+En ny restitusjonsmodell: hver økt vurderes etter hva den faktisk kostet deg.
 
-• Nedtelling etter hver økt som teller, med en tydelig nedtellingen er ferdig-tilstand
-• Apple Watch-app og fire komplikasjonsfamilier: sirkulær, rektangulær, inline og hjørne
-• Egne kurver for utholdenhet, styrke, blandet og rolige økter
-• Korriger intensiteten per økt: lett / moderat / hard
-• Full forklaring på hvert estimat: hvilken økt som satte det, hvor hardt det var for deg, og hvor sikker appen er
+• Den gratis nedtellingen vurderer hver økt ut fra treningsnivået ditt, i stedet for å gjenta den vanlige pausen din mellom øktene. Pausen vises fortsatt ved siden av.
+• Nedtellinger kan nå vare opptil fire dager, så et halvmaraton eller maraton gir lengre tid enn en langtur.
+• Intervaller koster mer enn en jevn løpetur med samme snittpuls, og en lang rolig sykkeltur veier ikke lenger tyngre enn en hard time.
+• Trener du igjen før en nedtelling er ute, slås de to sammen: den lengre i sin helhet, pluss halvparten av den kortere.
+• Recharge+ justerer en pågående nedtelling etter hver natt ut fra søvn, HRV og hvilepuls.
+• Komplikasjonene fortsetter å oppdateres gjennom en hel nedtelling på fire dager og viser dagen den slutter.
+• Rettet: nedtellingen er ferdig blir nå stående på skjermen etter en lang nedtelling, en økt som synkroniseres like etter at du åpner appen, registreres med en gang, og innsatsspørsmålet på Apple Watch åpnes som det skal.

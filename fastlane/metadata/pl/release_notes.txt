@@ -1,7 +1,9 @@
-Pierwsza wersja.
+Nowy model regeneracji: każdy trening jest oceniany według tego, ile naprawdę Cię kosztował.
 
-• Odliczanie po każdym liczącym się treningu, z wyraźnym stanem odliczanie zakończone
-• Aplikacja na Apple Watch i cztery rodziny komplikacji: okrągła, prostokątna, liniowa i narożna
-• Osobne krzywe dla wytrzymałości, siły, treningu mieszanego i lekkich sesji
-• Intensywność: lekka / umiarkowana / trudna
-• Pełne wyjaśnienie każdego szacunku: który trening go ustawił, jak ciężki był dla Ciebie i jak pewny jest wynik
+• Darmowe odliczanie ocenia każdy trening na Twoim poziomie treningowym, zamiast powtarzać Twoją zwykłą przerwę między treningami. Ta przerwa nadal jest widoczna obok.
+• Odliczanie sięga teraz czterech dni, więc półmaraton czy maraton daje dłuższy czas niż długie wybieganie.
+• Interwały kosztują więcej niż równy bieg przy tym samym średnim tętnie, a długa spokojna jazda na rowerze nie przeważa już nad ciężką godziną.
+• Jeśli trenujesz ponownie przed końcem odliczania, oba się łączą: dłuższe w całości plus połowa krótszego.
+• Recharge+ koryguje trwające odliczanie po każdej nocy na podstawie snu, HRV i tętna spoczynkowego.
+• Komplikacje aktualizują się przez całe czterodniowe odliczanie i pokazują dzień, w którym się kończy.
+• Poprawki: stan odliczanie zakończone zostaje teraz na ekranie po długim odliczaniu, trening zsynchronizowany tuż po otwarciu aplikacji jest uwzględniany od razu, a pytanie o wysiłek na Apple Watchu otwiera się prawidłowo.

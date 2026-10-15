@@ -1,7 +1,9 @@
-Första versionen.
+En ny återhämtningsmodell: varje pass poängsätts efter vad det faktiskt kostade dig.
 
-• Nedräkning efter varje pass som räknas, med ett tydligt nedräkning klar-läge
-• Apple Watch-app och fyra komplikationsfamiljer: cirkulär, rektangulär, inline och hörn
-• Egna kurvor för uthållighet, styrka, blandat och lugna pass
-• Korrigera intensiteten per pass: lugnt / måttligt / hårt
-• Full förklaring av varje uppskattning: vilket pass som satte den, hur hårt det var för dig och hur säker appen är
+• Den kostnadsfria nedräkningen poängsätter varje pass utifrån din träningsnivå, i stället för att upprepa ditt vanliga uppehåll mellan passen. Uppehållet visas fortfarande bredvid.
+• Nedräkningar kan nu sträcka sig upp till fyra dagar, så ett halvmaraton eller maraton ger längre tid än ett långpass.
+• Intervaller kostar mer än en jämn löprunda med samma snittpuls, och en lång lugn cykeltur väger inte längre tyngre än en hård timme.
+• Tränar du igen innan en nedräkning är slut slås de två ihop: den längre i sin helhet, plus hälften av den kortare.
+• Recharge+ justerar en pågående nedräkning efter varje natt utifrån sömn, HRV och vilopuls.
+• Komplikationerna fortsätter att uppdateras under hela en fyradagarsnedräkning och visar vilken dag den tar slut.
+• Åtgärdat: nedräkning klar ligger nu kvar på skärmen efter en lång nedräkning, ett pass som synkas strax efter att du öppnat appen tas med direkt, och ansträngningsfrågan på Apple Watch öppnas som den ska.

@@ -22,7 +22,7 @@ Recharge hiển thị một khoảng có giới hạn thay vì một con số ch
 
 TIÊU CHUẨN, MIỄN PHÍ
 
-Ước tính tiêu chuẩn là một bảng chung, đặt theo mức độ tập luyện bạn khai báo hoặc Recharge quan sát được: loại buổi tập, độ dài và độ nặng, đo theo dải nhịp tim tương ứng với tuổi bạn.
+Ước tính tiêu chuẩn là một bảng chung, đặt theo mức độ tập luyện bạn khai báo hoặc Recharge quan sát được: loại buổi tập, độ dài và độ nặng, đo theo dải nhịp tim của chính bạn.
 
 • Nhập buổi tập từ Apple Sức khỏe
 • Đếm ngược và trạng thái đếm ngược hoàn tất
@@ -36,7 +36,7 @@ RECHARGE+
 Recharge+ thay bảng đó bằng chính bạn: mỗi buổi tập được đo theo đường cơ sở 42 ngày của riêng bạn, và 30 ngày gần nhất quyết định các lượt đếm ngược chạy nhanh đến đâu.
 
 • Thời gian rút ra từ lịch sử của bạn, không phải trung bình dân số
-• Giấc ngủ, nhịp tim nghỉ và HRV được đưa vào mỗi ước tính
+• Giấc ngủ, nhịp tim nghỉ và HRV được đưa vào mỗi ước tính, kể cả những đêm sau buổi tập
 • Hiệu chỉnh theo cảm nhận thật của bạn khi hết giờ
 • Tải hàng tuần so với trung bình bốn tuần của chính bạn
 • Điều chỉnh cường độ từng buổi: nhẹ / vừa / nặng

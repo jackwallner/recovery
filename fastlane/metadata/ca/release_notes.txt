@@ -1,7 +1,9 @@
-Primera versió.
+Un nou model de recuperació: cada sessió es puntua segons el que realment t'ha costat.
 
-• Compte enrere després de cada entrenament que compta, amb un estat compte enrere complet clar
-• App per a l'Apple Watch i quatre famílies de complicacions: circular, rectangular, en línia i cantonada
-• Corbes pròpies per a resistència, força, mixt i sessions suaus
-• Intensitat: lleugera / moderada / intensa
-• Explicació completa de cada estimació: quina sessió la va fixar, què et va costar i amb quina confiança
+• El compte enrere gratuït puntua cada sessió segons el teu nivell d'entrenament, en lloc de repetir el teu descans habitual entre sessions. Aquest descans continua apareixent al costat.
+• El compte enrere ara arriba fins a quatre dies, així que una mitja marató o una marató dona més temps que una tirada llarga.
+• Les sèries costen més que una cursa a ritme constant amb la mateixa freqüència cardíaca mitjana, i una sortida llarga i suau en bici ja no pesa més que una hora dura.
+• Si tornes a entrenar abans que acabi un compte enrere, tots dos es combinen: el més llarg sencer, més la meitat del més curt.
+• Recharge+ ajusta el compte enrere en curs després de cada nit segons el son, la VFC i la freqüència cardíaca en repòs.
+• Les complicacions continuen actualitzant-se durant un compte enrere de quatre dies i mostren el dia que s'acaba.
+• Correccions: l'estat compte enrere complet ara es manté a la pantalla després d'un compte enrere llarg, un entrenament que se sincronitza just després d'obrir l'app s'incorpora de seguida i la pregunta d'esforç de l'Apple Watch s'obre correctament.

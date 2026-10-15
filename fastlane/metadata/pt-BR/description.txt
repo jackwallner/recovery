@@ -22,7 +22,7 @@ O Recharge mostra uma janela delimitada em vez de um número de falsa precisão,
 
 PADRÃO, GRÁTIS
 
-A estimativa padrão é uma tabela comum, ajustada ao nível de treino que você informa ou que o Recharge observa: tipo de treino, duração e dureza, medidos na faixa cardíaca correspondente à sua idade.
+A estimativa padrão é uma tabela comum, ajustada ao nível de treino que você informa ou que o Recharge observa: tipo de treino, duração e dureza, medidos na sua faixa cardíaca.
 
 • Importação de treinos do Saúde da Apple
 • A contagem regressiva e o estado contagem concluída
@@ -36,7 +36,7 @@ RECHARGE+
 O Recharge+ troca essa tabela por você: cada treino é medido contra a sua própria referência de 42 dias, e os últimos 30 dias definem a velocidade das suas contagens.
 
 • Um tempo tirado do seu histórico, não de uma média populacional
-• Sono, frequência cardíaca de repouso e VFC em cada estimativa
+• Sono, frequência cardíaca de repouso e VFC em cada estimativa, inclusive nas noites depois de um treino
 • Calibração a partir de como você realmente se sentiu no fim
 • Carga semanal contra a sua própria média de quatro semanas
 • Correção da intensidade por treino: leve / moderada / intensa

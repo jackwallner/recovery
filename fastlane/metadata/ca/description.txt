@@ -22,7 +22,7 @@ Recharge mostra una finestra acotada en lloc d'un número de falsa precisió, am
 
 ESTÀNDARD, GRATIS
 
-L'estimació estàndard és una taula comuna, ajustada al nivell d'entrenament que indiques o que observa Recharge: tipus de sessió, durada i duresa, mesurats sobre el rang cardíac que correspon a la teva edat.
+L'estimació estàndard és una taula comuna, ajustada al nivell d'entrenament que indiques o que observa Recharge: tipus de sessió, durada i duresa, mesurats sobre el teu rang cardíac.
 
 • Importació d'entrenaments des de Salut d'Apple
 • El compte enrere i l'estat compte enrere complet
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ substitueix aquesta taula per tu: cada sessió es mesura contra la teva pròpia referència de 42 dies, i els darrers 30 dies marquen la velocitat dels teus comptes enrere.
 
 • Un temps sortit del teu historial, no d'una mitjana de població
-• Son, freqüència cardíaca en repòs i VFC a cada estimació
+• Son, freqüència cardíaca en repòs i VFC a cada estimació, incloses les nits posteriors a una sessió
 • Calibratge a partir de com et vas sentir de debò en acabar
 • Càrrega setmanal davant la teva pròpia mitjana de quatre setmanes
 • Intensitat: lleugera / moderada / intensa

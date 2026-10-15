@@ -22,7 +22,7 @@ Recharge muestra una ventana acotada en vez de un número de falsa precisión, j
 
 ESTÁNDAR, GRATIS
 
-La estimación estándar es una tabla común, ajustada al nivel de entrenamiento que indicas o que observa Recharge: tipo de sesión, duración y dureza, medidos sobre el rango cardíaco que corresponde a tu edad.
+La estimación estándar es una tabla común, ajustada al nivel de entrenamiento que indicas o que observa Recharge: tipo de sesión, duración y dureza, medidos sobre tu rango cardíaco.
 
 • Importación de entrenamientos desde Salud de Apple
 • La cuenta regresiva y el estado cuenta regresiva completada
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ sustituye esa tabla por ti: cada sesión se mide contra tu propia referencia de 42 días, y los últimos 30 días marcan la velocidad de tus cuentas regresivas.
 
 • Un tiempo salido de tu historial, no de un promedio de población
-• Sueño, frecuencia cardíaca en reposo y VFC en cada estimación
+• Sueño, frecuencia cardíaca en reposo y VFC en cada estimación, incluidas las noches posteriores a una sesión
 • Calibración a partir de cómo te sentiste de verdad al terminar
 • Carga semanal frente a tu propio promedio de cuatro semanas
 • Intensidad: ligera / moderada / intensa

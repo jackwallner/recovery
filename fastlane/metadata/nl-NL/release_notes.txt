@@ -1,7 +1,9 @@
-Eerste versie.
+Een nieuw herstelmodel: elke sessie wordt beoordeeld op wat die je echt heeft gekost.
 
-• Aftelling na elke meetellende workout, met een duidelijke aftelling klaar-status
-• Apple Watch-app en vier complicatiefamilies: rond, rechthoekig, inline en hoek
-• Aparte curves voor duur, kracht, gemengd en lichte sessies
-• Intensiteit: licht / gemiddeld / zwaar
-• Volledige uitleg bij elke schatting: welke sessie hem zette, hoe zwaar die voor jou was en hoe zeker de app is
+• De gratis aftelling beoordeelt elke sessie op jouw trainingsniveau, in plaats van je gebruikelijke tijd tussen twee sessies te herhalen. Die tijd staat er nog steeds naast.
+• Aftellingen lopen nu tot vier dagen, dus een halve of hele marathon geeft meer tijd dan een lange duurloop.
+• Intervallen kosten meer dan een gelijkmatige loop met dezelfde gemiddelde hartslag, en een lange rustige fietsrit weegt niet langer zwaarder dan een pittig uur.
+• Train je opnieuw voordat een aftelling afloopt, dan worden ze samengevoegd: de langere volledig, plus de helft van de kortere.
+• Recharge+ past een lopende aftelling na elke nacht aan op basis van slaap, HRV en rusthartslag.
+• Complicaties blijven bijwerken tijdens een aftelling van vier dagen en tonen de dag waarop die eindigt.
+• Opgelost: aftelling klaar blijft nu op het scherm staan na een lange aftelling, een workout die vlak na het openen van de app synchroniseert wordt meteen meegenomen, en de inspanningsvraag op de Apple Watch opent goed.

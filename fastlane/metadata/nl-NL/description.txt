@@ -22,7 +22,7 @@ Recharge toont een begrensd venster in plaats van een getal met valse precisie, 
 
 STANDAARD, GRATIS
 
-De standaardschatting is één gedeelde tabel, afgestemd op het trainingsniveau dat je opgeeft of dat Recharge waarneemt: soort sessie, duur en zwaarte, gemeten tegen het hartslagbereik dat bij je leeftijd hoort.
+De standaardschatting is één gedeelde tabel, afgestemd op het trainingsniveau dat je opgeeft of dat Recharge waarneemt: soort sessie, duur en zwaarte, gemeten tegen je eigen hartslagbereik.
 
 • Workouts importeren uit Apple Gezondheid
 • De aftelling en de aftelling klaar-status
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ vervangt die tabel door jou: elke sessie wordt gemeten tegen je eigen basislijn van 42 dagen, en de laatste 30 dagen bepalen hoe snel je aftellingen lopen.
 
 • Een tijd uit je eigen historie, niet uit een gemiddelde
-• Slaap, rusthartslag en HRV in elke schatting verwerkt
+• Slaap, rusthartslag en HRV in elke schatting verwerkt, ook die van de nachten na een sessie
 • Kalibratie op hoe je je echt voelde toen een aftelling afliep
 • Weekbelasting tegen je eigen gemiddelde over vier weken
 • Intensiteit: licht / gemiddeld / zwaar

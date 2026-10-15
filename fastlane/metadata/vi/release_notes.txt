@@ -1,7 +1,9 @@
-Phiên bản đầu tiên.
+Mô hình hồi phục mới: mỗi buổi tập được chấm theo đúng mức tải mà nó thực sự gây ra cho bạn.
 
-• Đếm ngược sau mỗi buổi tập được tính, kèm trạng thái đếm ngược hoàn tất rõ ràng
-• Ứng dụng Apple Watch và bốn họ tiện ích: tròn, chữ nhật, nội tuyến và góc
-• Đường cong riêng cho sức bền, sức mạnh, hỗn hợp và buổi nhẹ
-• Điều chỉnh cường độ từng buổi: nhẹ / vừa / nặng
-• Giải thích đầy đủ cho mỗi ước tính: buổi nào đặt ra nó, nặng đến đâu với bạn và mức tin cậy
+• Đếm ngược miễn phí chấm mỗi buổi tập theo mức độ tập luyện của bạn, thay vì lặp lại khoảng nghỉ quen thuộc giữa các buổi của bạn. Khoảng nghỉ đó vẫn hiển thị ngay bên cạnh.
+• Đếm ngược giờ có thể kéo dài tới bốn ngày, nên một bán marathon hay marathon sẽ cho thời gian dài hơn một buổi chạy dài.
+• Với cùng nhịp tim trung bình, chạy biến tốc được tính nặng hơn chạy đều, và một buổi đạp xe nhẹ nhàng kéo dài không còn nặng hơn một giờ tập nặng.
+• Nếu bạn tập lại trước khi đếm ngược kết thúc, hai lượt sẽ được cộng lại: lượt dài hơn tính đủ, cộng thêm một nửa lượt ngắn hơn.
+• Recharge+ điều chỉnh đếm ngược đang chạy sau mỗi đêm, dựa trên giấc ngủ, HRV và nhịp tim nghỉ.
+• Tiện ích tiếp tục cập nhật suốt một lượt đếm ngược bốn ngày và hiển thị ngày kết thúc.
+• Đã sửa: trạng thái đếm ngược hoàn tất giờ vẫn ở lại trên màn hình sau một lượt đếm ngược dài, bài tập đồng bộ ngay sau khi bạn mở ứng dụng được ghi nhận lập tức, và câu hỏi về mức gắng sức trên Apple Watch mở đúng cách.

@@ -1,7 +1,9 @@
-First release.
+A new recovery model: every session is scored on what it actually cost.
 
-• Recovery countdown after every qualifying workout, with a clear completion state
-• Apple Watch app and four complication families: circular, rectangular, inline, and corner
-• Separate recovery curves for endurance, strength, mixed training, and easy sessions
-• One-tap effort rating on the wrist for sessions where wrist heart rate isn't reliable
-• Full explanation of every estimate: which session set it, how hard it was for you, and how confident it is
+• The free countdown scores each session at your training level, instead of repeating your usual gap between sessions. That gap is still shown beside it.
+• Countdowns now reach four days, so a half marathon or marathon reads longer than a long run.
+• Intervals cost more than a steady run at the same average heart rate, and a long easy ride no longer outweighs a hard hour.
+• Train again before a countdown ends and the two combine: the longer one in full, plus half of the shorter.
+• Recharge+ adjusts a running countdown after each night's sleep, HRV, and resting heart rate.
+• Complications keep updating through a four-day countdown and show the day it ends.
+• Fixed: Ready now stays on screen after a long countdown, a workout that syncs just after you open the app is picked up straight away, and the Watch effort prompt opens properly.

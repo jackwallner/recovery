@@ -22,7 +22,7 @@ Recharge näyttää rajatun ikkunan eikä väärän tarkan luvun, ja kertoo sign
 
 VAKIO, ILMAINEN
 
-Vakioarvio on yksi yhteinen taulukko, asetettuna ilmoittamallesi tai Rechargen havaitsemalle harjoitustasolle: treenin tyyppi, kesto ja kovuus, mitattuna ikääsi vastaavalla sykealueella.
+Vakioarvio on yksi yhteinen taulukko, asetettuna ilmoittamallesi tai Rechargen havaitsemalle harjoitustasolle: treenin tyyppi, kesto ja kovuus, mitattuna omalla sykealueellasi.
 
 • Treenien tuonti Apple Terveydestä
 • Laskuri ja laskuri valmis-tila
@@ -36,7 +36,7 @@ RECHARGE+
 Recharge+ korvaa taulukon sinulla: jokainen treeni mitataan omaa 42 päivän perustasoasi vasten, ja viimeiset 30 päivää määrittävät, kuinka nopeasti laskurisi kulkevat.
 
 • Aika omasta historiastasi, ei väestön keskiarvosta
-• Uni, leposyke ja HRV mukana jokaisessa arviossa
+• Uni, leposyke ja HRV mukana jokaisessa arviossa, myös treeniä seuraavilta öiltä
 • Kalibrointi sen mukaan, miltä sinusta oikeasti tuntui lopussa
 • Viikkokuormitus omaa neljän viikon keskiarvoasi vasten
 • Korjaa treenin intensiteettiä: kevyt / kohtalainen / kova

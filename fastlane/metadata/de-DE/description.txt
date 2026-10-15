@@ -22,7 +22,7 @@ Recharge zeigt ein begrenztes Fenster statt einer Zahl mit falscher Präzision, 
 
 STANDARD, KOSTENLOS
 
-Die Standardschätzung ist eine gemeinsame Tabelle auf deinem Trainingsniveau: Art der Einheit, Dauer und Härte, am Herzfrequenzbereich für dein Alter.
+Die Standardschätzung ist eine gemeinsame Tabelle auf deinem Trainingsniveau: Art der Einheit, Dauer und Härte, gemessen an deinem Herzfrequenzbereich.
 
 • Import von Workouts aus Apple Health
 • Der Countdown und der Countdown beendet-Zustand
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ ersetzt diese Tabelle durch dich: jede Einheit wird an deiner eigenen 42-Tage-Basislinie gemessen, und die letzten 30 Tage bestimmen, wie schnell deine Countdowns laufen.
 
 • Eine Zeit aus deiner Historie statt aus einem Durchschnitt
-• Schlaf, Ruheherzfrequenz und HRV fließen in jede Schätzung ein
+• Schlaf, Ruheherzfrequenz und HRV fließen in jede Schätzung ein, auch aus den Nächten nach einer Einheit
 • Kalibrierung daraus, wie du dich beim Ablauf wirklich gefühlt hast
 • Wochenbelastung gegen deinen eigenen Vier-Wochen-Schnitt
 • Intensität: leicht / moderat / hart

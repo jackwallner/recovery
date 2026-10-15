@@ -22,7 +22,7 @@ A Recharge behatárolt ablakot mutat egy hamis pontosságú szám helyett, azzal
 
 ALAP, INGYENES
 
-Az alapbecslés egyetlen közös táblázat, a megadott vagy a Recharge által megfigyelt edzettségi szintedhez igazítva: az edzés típusa, hossza és keménysége, a korodhoz tartozó pulzustartományhoz mérve.
+Az alapbecslés egyetlen közös táblázat, a megadott vagy a Recharge által megfigyelt edzettségi szintedhez igazítva: az edzés típusa, hossza és keménysége, a saját pulzustartományodhoz mérve.
 
 • Edzések importja az Apple Egészségből
 • A visszaszámlálás és a visszaszámlálás kész állapot
@@ -35,7 +35,7 @@ RECHARGE+
 A Recharge+ téged tesz a táblázat helyébe: minden edzés a saját 42 napos alapvonaladhoz mérve, és az utolsó 30 nap szabja meg, milyen gyorsan futnak a visszaszámlálásaid.
 
 • Idő a saját előzményeidből, nem népességátlagból
-• Alvás, nyugalmi pulzus és HRV minden becslésben
+• Alvás, nyugalmi pulzus és HRV minden becslésben, az edzés utáni éjszakákat is beleértve
 • Kalibrálás abból, hogyan érezted magad valójában a végén
 • Heti terhelés a saját négyhetes átlagodhoz mérve
 • Intenzitás: könnyű / közepes / kemény

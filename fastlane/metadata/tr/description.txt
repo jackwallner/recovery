@@ -22,7 +22,7 @@ Recharge, yanlış kesinlikte bir sayı yerine sınırlı bir pencere gösterir 
 
 STANDART, ÜCRETSİZ
 
-Standart tahmin ortak bir tablodur, belirttiğin ya da Recharge'ın gözlemlediği antrenman düzeyine ayarlanır: seansın türü, süresi ve zorluğu, yaşına karşılık gelen nabız aralığına göre ölçülür.
+Standart tahmin ortak bir tablodur, belirttiğin ya da Recharge'ın gözlemlediği antrenman düzeyine ayarlanır: seansın türü, süresi ve zorluğu, senin nabız aralığına göre ölçülür.
 
 • Apple Sağlık'tan antrenman aktarımı
 • Geri sayım ve geri sayım tamamlandı durumu
@@ -36,7 +36,7 @@ RECHARGE+
 Recharge+ bu tabloyu seninle değiştirir: her seans kendi 42 günlük referansına göre ölçülür ve son 30 gün geri sayımlarının ne kadar hızlı işleyeceğini belirler.
 
 • Nüfus ortalamasından değil, kendi geçmişinden çıkan bir süre
-• Her tahmine katılan uyku, istirahat nabzı ve HRV
+• Seans sonrasındaki geceler dahil, her tahmine katılan uyku, istirahat nabzı ve HRV
 • Süre dolduğunda gerçekte nasıl hissettiğine göre kalibrasyon
 • Haftalık yük, kendi dört haftalık ortalamana karşı
 • Seans yoğunluğunu düzeltme: hafif / orta / zor

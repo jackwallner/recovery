@@ -1,7 +1,9 @@
-První verze.
+Nový model regenerace: každý trénink se hodnotí podle toho, kolik vás skutečně stál.
 
-• Odpočítávání po každém započítaném tréninku, s jasným stavem odpočet dokončen
-• Aplikace pro Apple Watch a čtyři rodiny komplikací: kruhová, obdélníková, řádková a rohová
-• Vlastní křivky pro vytrvalost, sílu, smíšený trénink a lehké lekce
-• Intenzita: lehká / střední / vysoká
-• Úplné vysvětlení každého odhadu: který trénink ho nastavil, jak těžký pro vás byl a jak jistý je výsledek
+• Bezplatné odpočítávání hodnotí každý trénink podle vaší tréninkové úrovně, místo aby opakovalo vaši obvyklou pauzu mezi tréninky. Ta pauza je dál vidět vedle něj.
+• Odpočítávání teď sahá až na čtyři dny, takže půlmaraton nebo maraton vyjde déle než dlouhý běh.
+• Intervaly stojí víc než rovnoměrný běh při stejném průměrném tepu a dlouhá klidná jízda na kole už nepřeváží tvrdou hodinu.
+• Když trénujete znovu před koncem odpočítávání, obě se spojí: delší celé a k tomu polovina kratšího.
+• Recharge+ upraví běžící odpočítávání po každé noci podle spánku, HRV a klidového tepu.
+• Komplikace se aktualizují po celé čtyřdenní odpočítávání a ukazují den, kdy skončí.
+• Opraveno: stav odpočet dokončen teď po dlouhém odpočítávání zůstane na obrazovce, trénink synchronizovaný hned po otevření aplikace se načte okamžitě a dotaz na námahu na Apple Watch se otevře správně.

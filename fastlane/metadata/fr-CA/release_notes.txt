@@ -1,7 +1,9 @@
-Première version.
+Un nouveau modèle de récupération : chaque séance est évaluée selon ce qu'elle vous a réellement coûté.
 
-• Décompte après chaque entraînement admissible, avec un état décompte terminé clair
-• App Apple Watch et quatre familles de complications : circulaire, rectangulaire, en ligne et coin
-• Courbes distinctes pour l'endurance, la force, le mixte et les séances légères
-• Intensité : légère / modérée / intense
-• Explication complète de chaque estimation : la séance qui l'a fixée, sa dureté pour vous et le niveau de confiance
+• Le décompte gratuit évalue chaque séance selon votre niveau d'entraînement, plutôt que de reprendre votre écart habituel entre deux séances. Cet écart reste affiché à côté.
+• Les décomptes vont maintenant jusqu'à quatre jours : un demi-marathon ou un marathon donne ainsi plus de temps qu'une longue sortie.
+• L'entraînement par intervalles coûte plus qu'une course régulière à la même fréquence cardiaque moyenne, et une longue sortie à vélo tranquille ne pèse plus davantage qu'une heure exigeante.
+• Si vous vous entraînez de nouveau avant la fin d'un décompte, les deux se cumulent : le plus long au complet, plus la moitié du plus court.
+• Recharge+ ajuste un décompte en cours après chaque nuit, selon le sommeil, la VFC et la fréquence cardiaque au repos.
+• Les complications continuent de se mettre à jour pendant un décompte de quatre jours et affichent le jour où il se termine.
+• Corrections : l'état décompte terminé reste maintenant à l'écran après un long décompte, un entraînement synchronisé juste après l'ouverture de l'app est pris en compte immédiatement, et la question sur l'effort s'ouvre correctement sur l'Apple Watch.

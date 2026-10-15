@@ -1,7 +1,9 @@
-Prima versione.
+Un nuovo modello di recupero: ogni sessione viene valutata in base a quanto ti è costata davvero.
 
-• Conto alla rovescia dopo ogni allenamento valido, con uno stato conto completato chiaro
-• App per Apple Watch e quattro famiglie di complicazioni: circolare, rettangolare, in linea e angolo
-• Curve distinte per resistenza, forza, misto e sessioni leggere
-• Intensità: leggera / moderata / intensa
-• Spiegazione completa di ogni stima: quale sessione l'ha fissata, quanto è stata dura per te e con quanta fiducia
+• Il conto alla rovescia gratuito valuta ogni sessione al tuo livello di allenamento, invece di ripetere la tua pausa abituale tra una sessione e l'altra. Quella pausa resta comunque visibile accanto.
+• I conti alla rovescia arrivano ora fino a quattro giorni, così una mezza maratona o una maratona danno più tempo di una corsa lunga.
+• Le ripetute costano più di una corsa costante con la stessa frequenza cardiaca media, e una lunga uscita tranquilla in bici non supera più un'ora dura.
+• Se ti alleni di nuovo prima che finisca un conto alla rovescia, i due si combinano: il più lungo per intero, più metà del più corto.
+• Recharge+ regola il conto alla rovescia in corso dopo ogni notte in base a sonno, HRV e frequenza cardiaca a riposo.
+• Le complicazioni continuano ad aggiornarsi per tutto un conto alla rovescia di quattro giorni e mostrano il giorno in cui finisce.
+• Correzioni: lo stato conto completato ora resta sullo schermo dopo un conto alla rovescia lungo, un allenamento sincronizzato subito dopo l'apertura dell'app viene acquisito immediatamente e la domanda sullo sforzo su Apple Watch si apre correttamente.

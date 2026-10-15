@@ -1,7 +1,9 @@
-Ensimmäinen versio.
+Uusi palautumismalli: jokainen treeni pisteytetään sen mukaan, mitä se sinulle todella maksoi.
 
-• Laskuri jokaisen laskettavan treenin jälkeen, ja selkeä laskuri valmis-tila
-• Apple Watch -sovellus ja neljä komplikaatioperhettä: pyöreä, suorakulmainen, inline ja kulma
-• Omat käyrät kestävyydelle, voimalle, sekatreenille ja kevyille treeneille
-• Korjaa treenin intensiteettiä: kevyt / kohtalainen / kova
-• Täysi selitys jokaiselle arviolle: mikä treeni sen asetti, kuinka kova se oli sinulle ja kuinka varma sovellus on
+• Ilmainen laskuri pisteyttää jokaisen treenin harjoitustasosi mukaan sen sijaan, että toistaisi tavallisen taukosi treenien välillä. Tauko näkyy yhä vieressä.
+• Laskuri voi nyt ulottua neljään päivään, joten puolimaraton tai maraton antaa pidemmän ajan kuin pitkä lenkki.
+• Intervallit maksavat enemmän kuin tasainen juoksu samalla keskisykkeellä, eikä pitkä rauhallinen pyörälenkki enää paina enemmän kuin kova tunti.
+• Jos treenaat uudelleen ennen kuin laskuri päättyy, ne yhdistetään: pidempi kokonaan, plus puolet lyhyemmästä.
+• Recharge+ säätää käynnissä olevaa laskuria jokaisen yön jälkeen unen, HRV:n ja leposykkeen perusteella.
+• Komplikaatiot päivittyvät koko neljän päivän laskurin ajan ja näyttävät päivän, jona se päättyy.
+• Korjattu: laskuri valmis pysyy nyt näytöllä pitkän laskurin jälkeen, treeni, joka synkronoituu heti sovelluksen avaamisen jälkeen, otetaan mukaan saman tien, ja Apple Watchin rasituskysymys avautuu oikein.

@@ -1,7 +1,9 @@
-Versi pertama.
+Model pemulihan baru: setiap sesi dinilai dari beban yang benar-benar ditimbulkannya.
 
-• Hitung mundur setelah setiap latihan yang dihitung, dengan status hitung mundur selesai yang jelas
-• Aplikasi Apple Watch dan empat keluarga komplikasi: bundar, persegi panjang, sebaris, dan sudut
-• Kurva terpisah untuk daya tahan, kekuatan, campuran, dan sesi ringan
-• Intensitas: ringan / sedang / berat
-• Penjelasan lengkap untuk setiap perkiraan: sesi mana yang menetapkannya, seberat apa untukmu, dan seberapa yakin
+• Hitung mundur gratis menilai setiap sesi sesuai tingkat latihanmu, bukan sekadar mengulang jeda biasamu antarsesi. Jeda itu tetap ditampilkan di sampingnya.
+• Hitung mundur kini bisa mencapai empat hari, jadi setengah maraton atau maraton tampil lebih lama daripada lari jarak jauh.
+• Interval kini lebih berat daripada lari stabil dengan detak jantung rata-rata yang sama, dan bersepeda santai yang panjang tidak lagi mengalahkan satu jam yang berat.
+• Kalau kamu berlatih lagi sebelum hitung mundur selesai, keduanya digabung: yang lebih panjang dihitung penuh, ditambah separuh dari yang lebih pendek.
+• Recharge+ menyesuaikan hitung mundur yang sedang berjalan setelah setiap malam, berdasarkan tidur, HRV, dan detak jantung istirahat.
+• Komplikasi terus diperbarui sepanjang hitung mundur empat hari dan menampilkan hari berakhirnya.
+• Perbaikan: status hitung mundur selesai kini tetap tampil di layar setelah hitung mundur yang panjang, latihan yang tersinkron sesaat setelah kamu membuka aplikasi langsung terbaca, dan pertanyaan tingkat usaha di Apple Watch terbuka dengan benar.

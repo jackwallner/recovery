@@ -1,7 +1,9 @@
-Első verzió.
+Új regenerációs modell: minden edzést aszerint pontoz, mennyibe került valójában.
 
-• Visszaszámlálás minden beszámított edzés után, világos visszaszámlálás kész állapottal
-• Apple Watch app és négy komplikációcsalád: kör, téglalap, soros és sarok
-• Külön görbék állóképességhez, erőhöz, vegyes edzéshez és könnyű mozgáshoz
-• Intenzitás: könnyű / közepes / kemény
-• Minden becslés teljes magyarázata: melyik edzés állította be, mennyire volt kemény neked, és mennyire biztos
+• Az ingyenes visszaszámlálás minden edzést az edzettségi szintedhez mérten pontoz, ahelyett hogy a szokásos, edzések közötti szünetedet ismételné. Ez a szünet továbbra is ott látszik mellette.
+• A visszaszámlálás most már négy napig is tarthat, így egy félmaraton vagy maraton hosszabb időt ad, mint egy hosszú futás.
+• Az intervallum többe kerül, mint egy egyenletes futás azonos átlagpulzussal, és egy hosszú, könnyű tekerés már nem nyom többet egy kemény óránál.
+• Ha a visszaszámlálás vége előtt újra edzel, a kettő összeadódik: a hosszabb teljes egészében, plusz a rövidebb fele.
+• A Recharge+ minden éjszaka után az alvás, a HRV és a nyugalmi pulzus alapján igazítja a futó visszaszámlálást.
+• A komplikációk a négynapos visszaszámlálás végéig frissülnek, és mutatják, melyik napon jár le.
+• Javítva: a visszaszámlálás kész állapot most a képernyőn marad egy hosszú visszaszámlálás után, az app megnyitása után közvetlenül szinkronizálódó edzés azonnal bekerül, és az Apple Watch erőfeszítés-kérdése rendesen megnyílik.

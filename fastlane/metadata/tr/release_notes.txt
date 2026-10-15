@@ -1,7 +1,9 @@
-İlk sürüm.
+Yeni toparlanma modeli: her seans, sana gerçekte ne kadara mal olduğuna göre puanlanır.
 
-• Sayılan her antrenmanın ardından geri sayım ve net bir geri sayım tamamlandı durumu
-• Apple Watch uygulaması ve dört komplikasyon ailesi: dairesel, dikdörtgen, satır içi ve köşe
-• Dayanıklılık, kuvvet, karma ve hafif seanslar için ayrı eğriler
-• Seans yoğunluğunu düzeltme: hafif / orta / zor
-• Her tahminin tam açıklaması: hangi seans belirledi, senin için ne kadar zordu ve ne kadar kesin
+• Ücretsiz geri sayım, seanslar arasındaki olağan aranı tekrarlamak yerine her seansı antrenman düzeyine göre puanlar. Bu ara yine yanında gösterilir.
+• Geri sayımlar artık dört güne kadar uzanıyor, böylece yarı maraton ya da maraton uzun bir koşudan daha uzun bir süre verir.
+• Aynı ortalama nabızda interval, sabit tempolu bir koşudan daha fazla yük sayılır ve uzun, rahat bir bisiklet sürüşü artık zorlu bir saatin önüne geçmez.
+• Bir geri sayım bitmeden yeniden antrenman yaparsan ikisi birleşir: uzun olan tamamen, kısa olanın da yarısı eklenir.
+• Recharge+, süren geri sayımı her gecenin uykusuna, HRV'sine ve istirahat nabzına göre ayarlar.
+• Komplikasyonlar dört günlük bir geri sayım boyunca güncellenmeye devam eder ve bittiği günü gösterir.
+• Düzeltmeler: geri sayım tamamlandı durumu artık uzun bir geri sayımdan sonra ekranda kalıyor, uygulamayı açtıktan hemen sonra eşitlenen bir antrenman anında alınıyor ve Apple Watch'taki efor sorusu düzgün açılıyor.

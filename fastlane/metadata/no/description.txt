@@ -22,7 +22,7 @@ Recharge viser et avgrenset vindu i stedet for et tall med falsk presisjon, samm
 
 STANDARD, GRATIS
 
-Standardestimatet er én felles tabell, stilt inn etter treningsnivået du oppgir, eller som Recharge ser: type økt, lengde og hardhet, målt mot pulsområdet for alderen din.
+Standardestimatet er én felles tabell, stilt inn etter treningsnivået du oppgir, eller som Recharge ser: type økt, lengde og hardhet, målt mot ditt eget pulsområde.
 
 • Import av økter fra Apple Helse
 • Nedtellingen og nedtellingen er ferdig-tilstanden
@@ -36,7 +36,7 @@ RECHARGE+
 Recharge+ bytter ut tabellen med deg: hver økt måles mot din egen 42-dagers baselinje, og de siste 30 dagene bestemmer hvor raskt nedtellingene går.
 
 • En tid fra din egen historikk, ikke fra et befolkningssnitt
-• Søvn, hvilepuls og HRV vektlegges i hvert estimat
+• Søvn, hvilepuls og HRV vektlegges i hvert estimat, også nettene etter en økt
 • Kalibrering ut fra hvordan du faktisk følte deg da tiden gikk ut
 • Ukebelastning mot ditt eget snitt over fire uker
 • Korriger intensiteten per økt: lett / moderat / hard

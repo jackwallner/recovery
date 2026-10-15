@@ -5,7 +5,7 @@ WHAT YOU SEE
 • A countdown in hours after every qualifying workout
 • A clear Countdown complete state when the estimate expires
 • The reason behind it: which session set the window, and how confident Recharge is
-• Watch complications in four families — circular, rectangular, inline, and corner — in the style you choose
+• Watch complications in four families (circular, rectangular, inline, and corner), in the style you choose
 
 BUILT FOR HYBRID TRAINING
 
@@ -22,7 +22,7 @@ Recharge shows you a bounded window, not a false-precision number. It shows whic
 
 STANDARD, FREE
 
-The standard estimate is one shared table, set to your training level: session type, length, and intensity, scored against the heart-rate range for your age.
+The standard estimate is one shared table, set to your training level: session type, length, and intensity, scored against your heart-rate range.
 
 • Apple Health workout import
 • The countdown and completion state, with notifications when enabled
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ replaces that table with you: every session is scored against your own 42-day baseline, and the last 30 days set how fast your countdowns run.
 
 • A recovery time built from your own history, not a population average
-• Sleep, resting heart rate, and HRV folded into each estimate
+• Sleep, resting heart rate, and HRV folded into each estimate, including the nights after a session
 • Calibration from how you say you actually felt when a countdown ran out
 • Weekly load against your own four-week average
 • Light / Moderate / Hard intensity correction for each session

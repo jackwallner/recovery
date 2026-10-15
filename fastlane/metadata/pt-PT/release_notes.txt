@@ -1,7 +1,9 @@
-Primeira versão.
+Um novo modelo de recuperação: cada sessão é pontuada pelo que realmente lhe custou.
 
-• Contagem decrescente após cada treino elegível, com um estado contagem concluída claro
-• App para Apple Watch e quatro famílias de complicações: circular, retangular, em linha e canto
-• Curvas próprias para resistência, força, misto e sessões leves
-• Correção da intensidade por sessão: leve / moderada / intensa
-• Explicação completa de cada estimativa: que sessão a definiu, quanto lhe custou e com que confiança
+• A contagem decrescente gratuita pontua cada sessão ao seu nível de treino, em vez de repetir o seu intervalo habitual entre sessões. Esse intervalo continua a aparecer ao lado.
+• As contagens chegam agora aos quatro dias, por isso uma meia maratona ou uma maratona dá mais tempo do que uma corrida longa.
+• As séries custam mais do que uma corrida contínua com a mesma frequência cardíaca média, e um passeio longo e tranquilo de bicicleta deixa de pesar mais do que uma hora dura.
+• Se voltar a treinar antes de uma contagem terminar, as duas combinam-se: a mais longa por inteiro, mais metade da mais curta.
+• O Recharge+ ajusta a contagem em curso depois de cada noite, com base no sono, na VFC e na frequência cardíaca em repouso.
+• As complicações continuam a atualizar-se durante uma contagem de quatro dias e mostram o dia em que termina.
+• Correções: o estado contagem concluída mantém-se agora no ecrã depois de uma contagem longa, um treino sincronizado logo após abrir a app é incluído de imediato, e a pergunta de esforço no Apple Watch abre corretamente.

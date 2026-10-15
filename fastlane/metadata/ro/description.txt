@@ -22,7 +22,7 @@ Recharge arată o fereastră delimitată în loc de un număr fals precis, împr
 
 STANDARD, GRATUIT
 
-Estimarea standard este o tabelă comună la nivelul tău de antrenament: tipul, durata și intensitatea, față de intervalul de puls pentru vârsta ta.
+Estimarea standard este o tabelă comună la nivelul tău de antrenament: tipul, durata și intensitatea, față de intervalul tău de puls.
 
 • Import de antrenamente din Apple Sănătate
 • Numărătoarea și starea numărătoarea s-a încheiat
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ înlocuiește acea tabelă cu tine: fiecare sesiune este măsurată față de propria ta bază de 42 de zile, iar ultimele 30 de zile stabilesc cât de repede curg numărătorile.
 
 • Un timp din propriul tău istoric, nu dintr-o medie de populație
-• Somn, puls în repaus și HRV incluse în fiecare estimare
+• Somn, puls în repaus și HRV incluse în fiecare estimare, inclusiv din nopțile de după o sesiune
 • Calibrare pornind de la cum te-ai simțit cu adevărat la final
 • Efort săptămânal față de propria ta medie pe patru săptămâni
 • Intensitate: ușoară / moderată / grea

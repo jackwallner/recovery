@@ -1,7 +1,9 @@
-Prima versiune.
+Un model nou de refacere: fiecare sesiune e evaluată după cât te-a costat de fapt.
 
-• Numărătoare după fiecare antrenament care contează, cu o stare numărătoarea s-a încheiat clară
-• Aplicație pentru Apple Watch și patru familii de complicații: circulară, dreptunghiulară, în linie și colț
-• Curbe separate pentru rezistență, forță, mixt și sesiuni ușoare
-• Intensitate: ușoară / moderată / grea
-• Explicație completă pentru fiecare estimare: ce sesiune a stabilit-o, cât de greu a fost pentru tine și cât de sigură este
+• Numărătoarea gratuită evaluează fiecare sesiune la nivelul tău de antrenament, în loc să repete pauza ta obișnuită dintre sesiuni. Pauza aceasta apare în continuare alături.
+• Numărătoarea ajunge acum la patru zile, așa că un semimaraton sau un maraton dă un timp mai lung decât o alergare lungă.
+• Intervalele costă mai mult decât o alergare constantă cu același puls mediu, iar o tură lungă și ușoară pe bicicletă nu mai cântărește mai mult decât o oră grea.
+• Dacă te antrenezi din nou înainte să se termine o numărătoare, cele două se combină: cea mai lungă integral, plus jumătate din cea mai scurtă.
+• Recharge+ ajustează numărătoarea în curs după fiecare noapte, în funcție de somn, HRV și pulsul în repaus.
+• Complicațiile se actualizează pe toată durata unei numărători de patru zile și arată ziua în care se încheie.
+• Remediat: starea numărătoarea s-a încheiat rămâne acum pe ecran după o numărătoare lungă, un antrenament sincronizat imediat după ce deschizi aplicația e preluat pe loc, iar întrebarea despre efort de pe Apple Watch se deschide corect.

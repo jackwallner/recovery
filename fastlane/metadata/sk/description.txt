@@ -22,7 +22,7 @@ Recharge ukazuje ohraničené okno namiesto čísla s falošnou presnosťou, spo
 
 ŠTANDARD, ZADARMO
 
-Štandardný odhad je jedna spoločná tabuľka, nastavená podľa tréningovej úrovne, ktorú uvediete alebo ktorú Recharge vypozoruje: typ lekcie, dĺžka a tvrdosť, merané voči tepovému rozsahu pre váš vek.
+Štandardný odhad je jedna spoločná tabuľka, nastavená podľa tréningovej úrovne, ktorú uvediete alebo ktorú Recharge vypozoruje: typ lekcie, dĺžka a tvrdosť, merané voči vášmu tepovému rozsahu.
 
 • Import tréningov z Apple Zdravie
 • Odpočítavanie a stav odpočítavanie dokončené
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ nahradí túto tabuľku vami: každá lekcia sa meria voči vašej vlastnej 42-dňovej základnej línii a posledných 30 dní určuje, ako rýchlo vaše odpočty bežia.
 
 • Čas z vašej vlastnej histórie, nie z populačného priemeru
-• Spánok, pokojový tep a HRV v každom odhade
+• Spánok, pokojový tep a HRV v každom odhade, vrátane nocí po tréningu
 • Kalibrácia podľa toho, ako ste sa na konci naozaj cítili
 • Týždenná záťaž proti vášmu vlastnému štvortýždňovému priemeru
 • Intenzita: ľahká / stredná / vysoká

@@ -22,7 +22,7 @@ Recharge pokazuje ograniczone okno zamiast liczby o fałszywej precyzji, razem z
 
 STANDARD, ZA DARMO
 
-Szacunek standardowy to jedna wspólna tabela, dopasowana do poziomu treningowego, który podasz lub który zauważy Recharge: rodzaj sesji, długość i intensywność, mierzone względem zakresu tętna dla Twojego wieku.
+Szacunek standardowy to jedna wspólna tabela, dopasowana do poziomu treningowego, który podasz lub który zauważy Recharge: rodzaj sesji, długość i intensywność, mierzone względem Twojego zakresu tętna.
 
 • Import treningów z Apple Zdrowie
 • Odliczanie i stan odliczanie zakończone
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ zastępuje tę tabelę Tobą: każda sesja jest mierzona względem Twojej własnej 42-dniowej linii bazowej, a ostatnie 30 dni ustala tempo Twoich odliczań.
 
 • Czas z Twojej własnej historii, a nie ze średniej populacji
-• Sen, tętno spoczynkowe i HRV wliczone w każdy szacunek
+• Sen, tętno spoczynkowe i HRV wliczone w każdy szacunek, również z nocy po treningu
 • Kalibracja na podstawie tego, jak naprawdę się czułeś na końcu
 • Obciążenie tygodniowe wobec Twojej średniej z czterech tygodni
 • Intensywność: lekka / umiarkowana / trudna

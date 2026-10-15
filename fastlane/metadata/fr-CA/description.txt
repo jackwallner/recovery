@@ -22,7 +22,7 @@ Recharge affiche une fenêtre bornée plutôt qu'un chiffre faussement précis, 
 
 STANDARD, GRATUIT
 
-L'estimation standard est une table commune réglée sur votre niveau d'entraînement : type de séance, durée et intensité, sur la plage cardiaque de votre âge.
+L'estimation standard est une table commune réglée sur votre niveau d'entraînement : type de séance, durée et intensité, sur votre plage cardiaque.
 
 • Importation des entraînements depuis Apple Santé
 • Le décompte et l'état décompte terminé
@@ -35,7 +35,7 @@ RECHARGE+
 Recharge+ remplace cette table par vous : chaque séance est mesurée sur votre propre référence de 42 jours, et les 30 derniers jours règlent la vitesse de vos décomptes.
 
 • Un temps tiré de votre historique, pas d'une moyenne de population
-• Sommeil, fréquence cardiaque au repos et VFC intégrés à chaque estimation
+• Sommeil, fréquence cardiaque au repos et VFC intégrés à chaque estimation, y compris les nuits qui suivent une séance
 • Calibration à partir de ce que vous avez ressenti à la fin d'un décompte
 • Charge hebdomadaire face à votre propre moyenne sur quatre semaines
 • Intensité : légère / modérée / intense
