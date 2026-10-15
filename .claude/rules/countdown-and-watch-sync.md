@@ -220,3 +220,11 @@ App Group key, because the Watch has no workout history of its own.
   cold launch that failed its first read would look like an app that had never
   read anything. The phone still reports every failed attempt, because it has a
   scene, a pull-to-refresh, and room for a line.
+
+- **Ready stays on screen for a day, however long the countdown was.**
+  `RecoveryResolver.isStale` is the one staleness rule for Today, the snapshot,
+  the widgets and the Watch: four days after the session or a day after
+  `readyAt`, whichever is later. It was four days flat, which left a day of
+  Ready under the 72h ceiling and none under the 96h one, so a race went from
+  "3d 23h" straight to "No workout". Past the cutoff `progress` is 0, so the
+  ring is empty beside "No workout" rather than full.

@@ -118,3 +118,26 @@ Moved verbatim from AGENTS.md. Loads when a matching file is read; update it her
   and nothing in `RecoveryEngine` noticed. It does now (model version 15):
   `DuplicateWorkouts` drops any workout whose overlap covers half the longer
   one, keeping the copy with more heart-rate coverage.
+
+- **Seeded personas and the iOS 27 history page.** `RECHARGE_SEED_PERSONA`
+  (`TEST_RUNNER_RECHARGE_SEED_PERSONA` on the xcodebuild line) reshapes the
+  seeded store: `standard` (default), `race` (a 225-minute run 90 minutes ago,
+  the only way to see a countdown at the 96h ceiling), `double` (a hard run and
+  intervals six hours apart, so two countdowns overlap), `walks` (nothing ever
+  starts a countdown) and `none` (overnight context, no workouts).
+  `TEST_RUNNER_RECHARGE_SEED_PRO=1` flips the DEBUG "Pro unlocked (local)"
+  switch at the end and walks the same store as a subscriber; the switch is
+  rebuilt when Pro changes, so the proof is the third tab renaming itself.
+  iOS 27 adds a second Health sheet page ("How much historical data...", Past
+  30 Days / Full History) with no identifiers, and `requestAuthorization` waits
+  on it: `chooseFullHistory` drives it by label. Without it every run sits on
+  onboarding and fails with "the tab bar never appeared". The first run after
+  `simctl erase` can also stall inside XCTest while the device is still
+  settling; boot and wait on `simctl bootstatus -b` first.
+- **Scene tour.** `SceneTourUITests` screenshots every phone scene (including
+  `stale`, Today after eight hours of failed Health reads) and asserts nothing,
+  so it skips unless `TEST_RUNNER_RECHARGE_SCENE_TOUR=1`.
+- **Screenshot tier.** `ScreenshotConfig.wantsSubscriber` (premiumActive and
+  ready) is read by both `StoreService` and `ScreenshotFixtures`, so the shell
+  and the estimates are always the same tier. The fixture snapshot is the lead
+  history row, not a separate value.
