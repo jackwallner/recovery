@@ -28,6 +28,9 @@ public enum WhatsNew {
     /// intervals and long easy sessions are costed the way Garmin costs them,
     /// and Recharge+ moves a running countdown with the nights after the
     /// session. Almost every figure an existing user has seen moves, so it fires.
+    /// Model version 17 shipped in the same release, so its stacking rule (the
+    /// larger overlapping countdown in full plus half the smaller) is announced
+    /// here rather than in a 1.5 nobody would see separately.
     public static let currentVersion = "1.4"
 
     public static func shouldShow(lastShown: String?) -> Bool {
@@ -56,6 +59,11 @@ public enum WhatsNew {
             symbol: "waveform.path.ecg",
             title: "Intervals count for what they were",
             detail: "Recharge reads the time you spent at each heart rate, so hard repeats cost more than a steady run at the same average, and a long easy ride no longer outweighs a hard hour."
+        ),
+        Item(
+            symbol: "square.stack.3d.up.fill",
+            title: "Sessions close together add up",
+            detail: "Train again before a countdown ends and the two combine: the longer one counts in full, plus half of the shorter. Training twice a day still reaches Ready."
         ),
         Item(
             symbol: "moon.zzz.fill",
