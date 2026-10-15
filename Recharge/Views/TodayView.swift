@@ -522,7 +522,11 @@ struct TodayView: View {
                         .font(.title3)
                         .foregroundStyle(Theme.recovering)
                     VStack(alignment: .leading, spacing: Theme.Space.hair) {
-                        Text("How hard was that session?")
+                        // Named, because the session it asks about is often
+                        // not the one the hero names: a morning lift with a
+                        // patchy trace sat under "96h from your run" and read
+                        // as a question about the run.
+                        Text("How hard was your \(engine.awaitingEffort?.activityLabel ?? "session")?")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
                         // Not "your rating decides the estimate", which is what
