@@ -1,0 +1,61 @@
+{
+  "announcementVersion" : "1.4",
+  "features" : [
+    {
+      "detail" : "Every session scored against your own 42-day baseline and 30-day recovery pattern.",
+      "title" : "A recharge time built from your own history"
+    },
+    {
+      "detail" : "The nights before and after a session move the countdown within a bounded range, as they do on Garmin.",
+      "title" : "Sleep, HRV, and resting heart rate"
+    },
+    {
+      "detail" : "How hard this week has been compared with your own four-week average.",
+      "title" : "Weekly load against your 4-week average"
+    },
+    {
+      "detail" : "Override Light, Moderate, or Hard and recalculate its estimate.",
+      "title" : "Correct a session's intensity"
+    }
+  ],
+  "questions" : {
+    "age" : {
+      "detail" : "Sets the heart-rate ceiling every session is measured against, and how quickly the window closes.",
+      "title" : "How old are you?"
+    },
+    "bounceBack" : {
+      "detail" : "Your own read on it. Recharge starts here and replaces it with what your data shows.",
+      "title" : "After a hard session, when do you feel ready again?"
+    },
+    "experience" : {
+      "detail" : "Years of consistent training change how the same relative load lands.",
+      "title" : "How long have you been training?"
+    },
+    "weeklyVolume" : {
+      "detail" : "Someone training six days a week is adapted to a shorter turnaround than someone training two.",
+      "title" : "How many sessions in a typical week?"
+    }
+  },
+  "updates" : [
+    {
+      "detail" : "The free countdown scores each session at your training level, like a Garmin does, instead of repeating your usual gap between sessions. That gap is still shown beside it.",
+      "title" : "Standard is a recovery time again"
+    },
+    {
+      "detail" : "Countdowns now reach four days, so a half marathon or a marathon reads longer than a long run.",
+      "title" : "Up to four days after a race"
+    },
+    {
+      "detail" : "Recharge reads the time you spent at each heart rate, so hard repeats cost more than a steady run at the same average, and a long easy ride no longer outweighs a hard hour.",
+      "title" : "Intervals count for what they were"
+    },
+    {
+      "detail" : "Train again before a countdown ends and the two combine: the longer one counts in full, plus half of the shorter. Training twice a day still reaches Ready.",
+      "title" : "Sessions close together add up"
+    },
+    {
+      "detail" : "Recharge+ adjusts a running countdown after each night's sleep, HRV, and resting heart rate, not only the night before the session.",
+      "title" : "Updated by the nights after"
+    }
+  ]
+}

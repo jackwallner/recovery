@@ -1,0 +1,597 @@
+[
+  {
+    "ambiguous" : false,
+    "code" : 1,
+    "label" : "workout",
+    "name" : "americanFootball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 2,
+    "label" : "workout",
+    "name" : "archery",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 3,
+    "label" : "workout",
+    "name" : "australianFootball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 4,
+    "label" : "workout",
+    "name" : "badminton",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 5,
+    "label" : "workout",
+    "name" : "baseball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 6,
+    "label" : "basketball game",
+    "name" : "basketball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 7,
+    "label" : "workout",
+    "name" : "bowling",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 8,
+    "label" : "boxing session",
+    "name" : "boxing",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 9,
+    "label" : "climb",
+    "name" : "climbing",
+    "profile" : "strength"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 10,
+    "label" : "workout",
+    "name" : "cricket",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 11,
+    "label" : "cross-training session",
+    "name" : "crossTraining",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 12,
+    "label" : "workout",
+    "name" : "curling",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 13,
+    "label" : "ride",
+    "name" : "cycling",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 14,
+    "label" : "workout",
+    "name" : "dance",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 15,
+    "label" : "workout",
+    "name" : "danceInspiredTraining",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 16,
+    "label" : "elliptical session",
+    "name" : "elliptical",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 17,
+    "label" : "workout",
+    "name" : "equestrianSports",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 18,
+    "label" : "workout",
+    "name" : "fencing",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 19,
+    "label" : "workout",
+    "name" : "fishing",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : true,
+    "code" : 20,
+    "label" : "functional session",
+    "name" : "functionalStrengthTraining",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 21,
+    "label" : "workout",
+    "name" : "golf",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 22,
+    "label" : "workout",
+    "name" : "gymnastics",
+    "profile" : "strength"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 23,
+    "label" : "workout",
+    "name" : "handball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 24,
+    "label" : "hike",
+    "name" : "hiking",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 25,
+    "label" : "workout",
+    "name" : "hockey",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 26,
+    "label" : "workout",
+    "name" : "hunting",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 27,
+    "label" : "workout",
+    "name" : "lacrosse",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 28,
+    "label" : "martial arts session",
+    "name" : "martialArts",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 29,
+    "label" : "workout",
+    "name" : "mindAndBody",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 30,
+    "label" : "workout",
+    "name" : "mixedMetabolicCardioTraining",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 31,
+    "label" : "workout",
+    "name" : "paddleSports",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 32,
+    "label" : "workout",
+    "name" : "play",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 33,
+    "label" : "mobility session",
+    "name" : "preparationAndRecovery",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 34,
+    "label" : "workout",
+    "name" : "racquetball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 35,
+    "label" : "row",
+    "name" : "rowing",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 36,
+    "label" : "workout",
+    "name" : "rugby",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 37,
+    "label" : "run",
+    "name" : "running",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 38,
+    "label" : "workout",
+    "name" : "sailing",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 39,
+    "label" : "workout",
+    "name" : "skatingSports",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 40,
+    "label" : "workout",
+    "name" : "snowSports",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 41,
+    "label" : "soccer game",
+    "name" : "soccer",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 42,
+    "label" : "workout",
+    "name" : "softball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 43,
+    "label" : "workout",
+    "name" : "squash",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 44,
+    "label" : "stair session",
+    "name" : "stairClimbing",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 45,
+    "label" : "workout",
+    "name" : "surfingSports",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 46,
+    "label" : "swim",
+    "name" : "swimming",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 47,
+    "label" : "workout",
+    "name" : "tableTennis",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 48,
+    "label" : "tennis match",
+    "name" : "tennis",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 49,
+    "label" : "workout",
+    "name" : "trackAndField",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 50,
+    "label" : "lifting session",
+    "name" : "traditionalStrengthTraining",
+    "profile" : "strength"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 51,
+    "label" : "workout",
+    "name" : "volleyball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 52,
+    "label" : "walk",
+    "name" : "walking",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 53,
+    "label" : "workout",
+    "name" : "waterFitness",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 54,
+    "label" : "workout",
+    "name" : "waterPolo",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 55,
+    "label" : "workout",
+    "name" : "waterSports",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 56,
+    "label" : "workout",
+    "name" : "wrestling",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 57,
+    "label" : "yoga session",
+    "name" : "yoga",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 58,
+    "label" : "barre session",
+    "name" : "barre",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 59,
+    "label" : "core session",
+    "name" : "coreTraining",
+    "profile" : "strength"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 60,
+    "label" : "ski",
+    "name" : "crossCountrySkiing",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 61,
+    "label" : "ski run",
+    "name" : "downhillSkiing",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 62,
+    "label" : "mobility session",
+    "name" : "flexibility",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : true,
+    "code" : 63,
+    "label" : "HIIT session",
+    "name" : "highIntensityIntervalTraining",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 64,
+    "label" : "jump rope session",
+    "name" : "jumpRope",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 65,
+    "label" : "boxing session",
+    "name" : "kickboxing",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 66,
+    "label" : "pilates session",
+    "name" : "pilates",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 67,
+    "label" : "snowboard session",
+    "name" : "snowboarding",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 68,
+    "label" : "stair session",
+    "name" : "stairs",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 69,
+    "label" : "stair session",
+    "name" : "stepTraining",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 70,
+    "label" : "workout",
+    "name" : "wheelchairWalkPace",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 71,
+    "label" : "workout",
+    "name" : "wheelchairRunPace",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 72,
+    "label" : "workout",
+    "name" : "taiChi",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 73,
+    "label" : "cardio session",
+    "name" : "mixedCardio",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 74,
+    "label" : "workout",
+    "name" : "handCycling",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 75,
+    "label" : "workout",
+    "name" : "discSports",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 76,
+    "label" : "workout",
+    "name" : "fitnessGaming",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 77,
+    "label" : "workout",
+    "name" : "cardioDance",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 78,
+    "label" : "workout",
+    "name" : "socialDance",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 79,
+    "label" : "workout",
+    "name" : "pickleball",
+    "profile" : "mixed"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 80,
+    "label" : "mobility session",
+    "name" : "cooldown",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 82,
+    "label" : "triathlon session",
+    "name" : "swimBikeRun",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 83,
+    "label" : "workout",
+    "name" : "transition",
+    "profile" : "easy"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 84,
+    "label" : "workout",
+    "name" : "underwaterDiving",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 3000,
+    "label" : "workout",
+    "name" : "other",
+    "profile" : "endurance"
+  },
+  {
+    "ambiguous" : false,
+    "code" : 9999,
+    "label" : "workout",
+    "name" : "unknown",
+    "profile" : "endurance"
+  }
+]

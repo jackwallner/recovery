@@ -1,0 +1,8 @@
+# Copy to local.properties and fill in values locally. Never commit keys.
+sdk.dir=
+REVENUECAT_TEST_KEY=
+REVENUECAT_PLAY_KEY=
+PLAY_UPLOAD_KEYSTORE=
+PLAY_UPLOAD_KEY_ALIAS=
+PLAY_UPLOAD_STORE_PASSWORD=
+PLAY_UPLOAD_KEY_PASSWORD=
