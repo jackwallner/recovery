@@ -61,6 +61,24 @@ class PortSmokeTest {
     }
     @After fun close() { scenario?.close() }
 
+    @Test fun reviewerAccessRejectsWrongCodeAndPersistsValidGrant() = runBlocking {
+        val code = checkNotNull(InstrumentationRegistry.getArguments().getString("reviewCode")) { "Supply the private reviewer code through the local test harness." }
+        launch(seed = false)
+        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNodeWithText("Version 1.1.0 · Model v17").performScrollTo().performTouchInput { longClick() }
+        compose.onNodeWithText("Reviewer code").performTextInput("wrong")
+        click("Unlock")
+        compose.onNodeWithText("That code isn't valid.").assertIsDisplayed()
+        assertFalse(app.graph.store.current.isPro)
+        compose.onNodeWithText("Reviewer code").performTextClearance()
+        compose.onNodeWithText("Reviewer code").performTextInput(code)
+        click("Unlock")
+        assertTrue(app.graph.store.current.isPro)
+        app.graph.store.start()
+        assertTrue(app.graph.store.current.isPro)
+        assertTrue(StoreService(app, app.graph.diagnostics).current.isPro)
+    }
+
     @Test fun firstRunCanCompleteWithoutAccessOrPurchase() {
         launch(seed = false, onboarding = true)
         compose.onNodeWithText("Recovery time,\nfrom your workouts").assertIsDisplayed()
