@@ -9,6 +9,8 @@ import android.os.Build
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -134,9 +136,11 @@ private fun questionDetail(key: String)=AppContent.questionDetail(key)
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable fun SettingsScreen(graph: AppGraph,health: HealthState,isPro: Boolean,connect: (Boolean)->Unit,upgrade: ()->Unit,privacy: ()->Unit) {
     val settings=graph.settings;val scope=rememberCoroutineScope();val context=LocalContext.current
     val store by graph.store.state.collectAsState()
+    var reviewer by remember{mutableStateOf(false)}
     var editor by remember{mutableStateOf<String?>(null)};var delete by remember{mutableStateOf(false)};var message by remember{mutableStateOf<String?>(null)}
     val notificationPermission=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()){graph.notifications.schedule(graph.health.state.value)}
     Page {
@@ -177,10 +181,11 @@ private fun questionDetail(key: String)=AppContent.questionDetail(key)
             ActionRow("Privacy policy",onClick=privacy);ActionRow("Terms"){openLink(context,Legal.TERMS_URL)}
         }
         CardBlock{Title("Your data");TextButton(onClick={delete=true}){Text("Delete local health data",color=MaterialTheme.colorScheme.error)};Small("Deletes Recharge's local health cache and derived estimates. Health Connect records and purchases are not affected.")}
-        Small(DISCLAIMER);Small("Version "+com.jackwallner.recovery.BuildConfig.VERSION_NAME+" · Model v17")
+        Small(DISCLAIMER);Text("Version "+com.jackwallner.recovery.BuildConfig.VERSION_NAME+" · Model v17",color=MaterialTheme.colorScheme.onSurfaceVariant,fontSize=13.sp,modifier=Modifier.combinedClickable(onClick={},onLongClick={reviewer=true}))
         Small("Wear OS and widgets are not included in this version.")
         message?.let{Text(it)}
     }
+    if(reviewer)ReviewerCodeDialog(graph){reviewer=false}
     editor?.let{key->
         when {
             key=="maximum"->MaximumHeartRateDialog(settings.maxHeartRate,{settings.updateMaxHeartRate(it);editor=null},{editor=null})
@@ -203,3 +208,13 @@ private fun questionDetail(key: String)=AppContent.questionDetail(key)
 }
 const val PRIVACY_TEXT="Recharge reads workouts, heart rate, active energy, resting heart rate, HRV (RMSSD), sleep, breathing rate, VO2 max and weight from Health Connect with your permission. Health readings, effort answers and derived estimates stay on your device. We do not send health data to a server. Read access is optional per data type and can be revoked in Health Connect. Core workout revocation clears the local cache. Optional revocation removes the affected inputs and recalculates local estimates. Delete local health data clears the cache without deleting records from Health Connect. Removing app storage also deletes it. RevenueCat and Google Play process purchase information, anonymous app identifiers, app version information, and counts, dates and short labels about purchase screens. No health data or free text is included in purchase diagnostics. No ads or app account. Contact jackwallner@gmail.com."
 @Composable fun PrivacyScreen(){Surface{Page{Title("Recharge Privacy Policy");Text(PRIVACY_TEXT);Small(DISCLAIMER)}}}
+
+@Composable private fun ReviewerCodeDialog(graph: AppGraph,close: ()->Unit) {
+    var code by remember{mutableStateOf("")}
+    var failed by remember{mutableStateOf(false)}
+    AlertDialog(onDismissRequest=close,title={Text("Reviewer access")},text={Column {
+        Text("Enter the code provided in the Play review instructions.")
+        OutlinedTextField(code,{code=it;failed=false},label={Text("Reviewer code")},singleLine=true,keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Password,autoCorrectEnabled=false),visualTransformation=androidx.compose.ui.text.input.PasswordVisualTransformation())
+        if(failed)Text("That code isn't valid.",color=MaterialTheme.colorScheme.error)
+    }},confirmButton={TextButton(onClick={if(graph.store.activateReviewAccess(code))close()else failed=true}){Text("Unlock")}},dismissButton={TextButton(onClick=close){Text("Cancel")}})
+}
