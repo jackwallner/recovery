@@ -123,3 +123,8 @@ listed. No credentials, grants or integration settings were changed. Data safety
 must still disclose actual app-side collection, including purchase history and
 anonymous identifiers, plus custom purchase-screen attributes where used.
 RevenueCat's general guide is https://www.revenuecat.com/docs/platform-resources/google-platform-resources/google-plays-data-safety.
+
+Play price conversion preserves the configured US money value explicitly.
+Google conversion can choose a different nearby US price point, so use its
+conversion for other regions and keep the requested US ladder unchanged.
+The offline product plan still passes; no Play product was changed here.
