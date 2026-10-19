@@ -96,3 +96,22 @@ started outside instrumentation cannot use classes supplied by the target APK.
 
 The owned `sol-recharge` AVD, serial `emulator-5582`, emulator process, log watcher
 and `~/tmp/sol-recharge` were removed after verification. Other AVDs were preserved.
+
+## Pro Play queue checkpoint, 2026-10-18
+
+This queue runs directly on jmbp with JDK21, using one owned `sol-*` emulator
+and one memory-limited Gradle build at a time. The handoff supersedes older
+Air-build and SSH examples. Existing RevenueCat Play credentials are confirmed.
+
+Unaccepted reviewer access is on `wip/android-port`, pending JVM, actual-dialog
+device, signed artifact, optimized QA and lint verification. Long-press the
+Settings version line to enter the private `RECHARGE_PLAY_REVIEW_CODE` from
+existing `~/.recovery_credentials`. Only its SHA-256 is in ignored properties.
+The input is masked, uses a Password keyboard and disables autocorrect. The
+review grant stores only the digest, survives purchase refresh, and becomes
+invalid when the configured digest changes. It never writes a fake purchase
+cache. Four JVM cases and a private-argument device case cover the flow.
+
+Listing metadata uses `play-assets/metadata/android/en-US`; PNG encodings of
+four real free-screen captures preserve their original decoded pixels. App
+creation, products, upload and Console declarations remain pending.
