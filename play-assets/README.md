@@ -2,11 +2,13 @@
 
 Prepared for later Play staging. No listing or product has been uploaded.
 
-- `en-US/`: title, short description and full description, without prices.
+- `en-US/`: source listing copy, without prices.
+- `metadata/android/en-US/`: matching API staging layout, with verified limits.
 - `icon-512.png`: the existing app icon at 512 pixels.
 - `feature-graphic.png`: 1024 x 500 graphic, with SVG source.
 - `screenshots/`: real Pro captures of free screens with local workout fixtures.
-  Native 720 x 1440 JPEG captures meet the 2:1 limit. They show only the free tier,
+  Native 720 x 1440 captures meet the 2:1 limit. PNG copies preserve the decoded
+  JPEG pixels exactly for the staging tool; the JPEG originals are retained. They show only the free tier,
   with no purchase unlock or Test Store prices.
 - `../docs/android/`: Android privacy policy and terms.
 - `../scripts/play-products.py`: offline plan by default. Proposed US ladder:
