@@ -119,7 +119,7 @@ private fun questionDetail(key: String)=AppContent.questionDetail(key)
         Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center) {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical=24.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(16.dp)) {
                 when(step) {
-                    "welcome"->{Text("Recovery time,\nfrom your workouts",fontSize=32.sp,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center);Text("Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete. Recharge reads Health Connect and never writes to it.",textAlign=TextAlign.Center)}
+                    "welcome"->{Text("Recovery time,\nfrom your workouts",fontSize=32.sp,lineHeight=38.sp,fontWeight=FontWeight.Bold,textAlign=TextAlign.Center);Text("Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete. Recharge reads Health Connect and never writes to it.",textAlign=TextAlign.Center)}
                     "health"->{Title("Recharge reads\nHealth Connect");Text("Your workouts and heart rate build the estimate. Sleep, resting heart rate, HRV (RMSSD), breathing rate, cardio fitness and weight sharpen it. Nothing is written back, and health data stays on your device.",textAlign=TextAlign.Center);Small("A compatible fitness source must share records first. One-minute heart rate recovery is unavailable. Age is asked for below.");if(requesting)CircularProgressIndicator()}
                     "receipt"->{Title("Here's what Health gave us");ReceiptCard(health);Small(questions.size.toString()+" short questions left, for the things Health can't answer.")}
                     "honesty"->{Title("What the number actually means");Text("Recharge estimates a training-load recovery window from your recent workouts. It is not a measure of muscle repair, illness, injury risk, or whether you are fit to train, and it is not medical advice. Talk with a qualified health professional before making medical decisions.",textAlign=TextAlign.Center)}
@@ -131,7 +131,7 @@ private fun questionDetail(key: String)=AppContent.questionDetail(key)
         Box(Modifier.fillMaxWidth().height(44.dp),contentAlignment=Alignment.Center){if(step=="offer")TextButton(onClick=finish,enabled=!actions.busy){Text("Get Started")}}
         Button(onClick={when(step){"health"->{requesting=true;connect{requesting=false;questions=graph.settings.profile.gaps;hasReceipt=graph.health.state.value.receipt.isNotEmpty();resolved=true;index++}};"offer"->actions.purchase(annual);else->index++}},enabled=!requesting&&!actions.busy&&(step!="offer"||annual!=null),modifier=Modifier.fillMaxWidth().height(52.dp).testTag("onboarding-primary")){Text(when{requesting||actions.busy->"Please wait…";step=="offer"->ConversionCopy.ctaLabel;step=="honesty"->"I understand";!answered->"Skip this one";else->"Continue"})}
         Box(Modifier.fillMaxWidth().height(52.dp)){if(step=="offer")LegalRow(actions)}
-        LinearProgressIndicator(progress={((index+1).toFloat()/(if(resolved)steps.size else 9)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(4.dp))
+        LinearProgressIndicator(progress={((index+1).toFloat()/(if(resolved)steps.size else 9)).coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().height(4.dp),trackColor=MaterialTheme.colorScheme.surfaceContainerHighest)
         Spacer(Modifier.height(12.dp))
     }
 }

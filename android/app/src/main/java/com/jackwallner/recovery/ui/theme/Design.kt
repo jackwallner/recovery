@@ -35,8 +35,8 @@ object Palette {
     fun phase(phase: RecoveryPhase)=when(phase){RecoveryPhase.recovering->recovering;RecoveryPhase.readySoon->readySoon;RecoveryPhase.ready->ready;else->idle}
 }
 @Composable fun RechargeTheme(dark: Boolean,content: @Composable ()->Unit) {
-    val colors=if(dark)darkColorScheme(primary=Palette.recovering,onPrimary=Color.Black,secondary=Palette.pro,secondaryContainer=Color(0xFF29325C),onSecondaryContainer=Color(0xFFDDE2FF),background=Color.Black,surface=Color.Black,surfaceContainer=Color(0xFF1C1C1E),surfaceVariant=Color(0xFF1C1C1E),onSurfaceVariant=Color(0xFFADAEB5))
-        else lightColorScheme(primary=Color(0xFFA94F00),onPrimary=Color.White,secondary=Palette.pro,secondaryContainer=Color(0xFFE4E7FF),onSecondaryContainer=Color(0xFF27326D),background=Color.White,surface=Color.White,surfaceContainer=Color(0xFFF2F2F7),surfaceVariant=Color(0xFFF2F2F7),onSurfaceVariant=Color(0xFF64646C))
+    val colors=if(dark)darkColorScheme(primary=Palette.recovering,onPrimary=Color.Black,secondary=Palette.pro,secondaryContainer=Color(0xFF29325C),onSecondaryContainer=Color(0xFFDDE2FF),background=Color.Black,surface=Color.Black,surfaceContainer=Color(0xFF1C1C1E),surfaceVariant=Color(0xFF1C1C1E),onSurfaceVariant=Color(0xFFADAEB5),outlineVariant=Color(0xFF3A3A3C),surfaceContainerHighest=Color(0xFF2C2C2E))
+        else lightColorScheme(primary=Color(0xFFA94F00),onPrimary=Color.White,secondary=Palette.pro,secondaryContainer=Color(0xFFE4E7FF),onSecondaryContainer=Color(0xFF27326D),background=Color.White,surface=Color.White,surfaceContainer=Color(0xFFF2F2F7),surfaceVariant=Color(0xFFF2F2F7),onSurfaceVariant=Color(0xFF64646C),outlineVariant=Color(0xFFE5E5EA),surfaceContainerHighest=Color(0xFFE5E5EA))
     MaterialTheme(colorScheme=colors,content=content)
 }
 @Composable fun Page(content: @Composable ColumnScope.()->Unit) {Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=20.dp,vertical=16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)){content();Spacer(Modifier.height(8.dp))}}
