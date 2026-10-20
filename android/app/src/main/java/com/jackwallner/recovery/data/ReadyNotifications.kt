@@ -32,7 +32,7 @@ import com.jackwallner.recovery.model.RecoveryResolver
 
 class ReadyNotifications(private val context: Context,private val settings: Settings) {
     private val alarm=context.getSystemService(AlarmManager::class.java)
-    private fun pending()=PendingIntent.getBroadcast(context,4101,Intent(context,ReadyReceiver::class.java).setAction("com.jackwallner.recovery.COUNTDOWN_ENDED"),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    private fun pending()=PendingIntent.getBroadcast(context,4101,Intent(context,ReadyReceiver::class.java).setAction(ReadyReceiver.ACTION_COUNTDOWN_ENDED),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     fun allowed()=Build.VERSION.SDK_INT<33||ContextCompat.checkSelfPermission(context,Manifest.permission.POST_NOTIFICATIONS)==PackageManager.PERMISSION_GRANTED
     fun schedule(state: HealthState) {
         val estimate=RecoveryResolver.active(state.scored.estimates)
@@ -59,6 +59,7 @@ class ReadyNotifications(private val context: Context,private val settings: Sett
 }
 class ReadyReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context,intent: Intent?) {
+        if(intent?.action!=Intent.ACTION_BOOT_COMPLETED&&intent?.action!=ACTION_COUNTDOWN_ENDED)return
         val pending=goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -69,6 +70,7 @@ class ReadyReceiver: BroadcastReceiver() {
             } finally {pending.finish()}
         }
     }
+    companion object {const val ACTION_COUNTDOWN_ENDED="com.jackwallner.recovery.COUNTDOWN_ENDED"}
 }
 class RefreshWorker(context: Context,parameters: WorkerParameters): CoroutineWorker(context,parameters) {
     override suspend fun doWork(): Result {
