@@ -128,3 +128,31 @@ Play price conversion preserves the configured US money value explicitly.
 Google conversion can choose a different nearby US price point, so use its
 conversion for other regions and keep the requested US ladder unchanged.
 The offline product plan still passes; no Play product was changed here.
+
+## Host verification, 2026-10-20
+
+Run directly on jmbp (or jmbp2) with `JAVA_HOME=~/jdks/temurin-17/Contents/Home` and
+the checked-in wrapper; the SSH Pro scripts above are historical. Lease one idle
+`agent-emu-1`/`agent-emu-2` and boot it with
+`-memory 3072 -cores 4 -gpu host -feature -Vulkan -no-window -no-snapshot-save`.
+Its 2 GB default with swiftshader let system_server die mid-install under a
+Gradle build ("Can't find service: package"). Release it with
+`adb -s <serial> emu kill` only.
+
+- `scripts/test-android-host.sh`: connected suite (21 cases) plus the external
+  revoke check. `scripts/capture-android-host.py OUT`: 13 debug captures, free,
+  forced Recharge+ and Test Store plans; it waits for a stable dump before each
+  shot because a free to forced-pro relaunch rescored after the first frame.
+- A never-used Health Connect shows its own onboarding before the grant sheet
+  and ignores Back; tests tap its `secondary_button` ("Go back").
+- Tab bar tint is the recovering orange (iOS `.tint(Theme.recovering)`), and
+  ring/progress tracks are neutral grays; Material defaults were lavender.
+- `data_extraction_rules.xml` excludes every domain from cloud backup and device
+  transfer (allowBackup=false does not cover device transfer on 12+).
+- Frame cadence on the x86_64 emulator is host bound: optimized QA gfxinfo P50
+  32 ms, captures 10 to 23 fps. Not native 60 fps; measure on a real device.
+
+Play Console answers (app access, Health Connect declaration, Data safety) are
+in `project-docs/android/play-console.md`. Still pending: Play app creation,
+products activation, AAB upload from the Air, App content forms, licence-tester
+purchase and restore, then production.

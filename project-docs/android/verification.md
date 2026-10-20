@@ -114,3 +114,15 @@ health-write permission or advertising-ID permission is present in release.
 
 The owned `sol-recharge` AVD, serial `emulator-5582`, emulator process, log watcher
 and `~/tmp/sol-recharge` were removed after verification. Other AVDs were preserved.
+
+## Host run, 2026-10-20
+
+Run on jmbp directly, AVD `agent-emu-1` (API 36 Play image, 3 GB, host GPU),
+with the checked-in wrapper and Temurin 17. On the final source: 4,411 JVM
+tests, 21 of 21 connected cases, the external Health Connect revoke across
+restart, debug, test APK, optimized QA and lint (0 errors) all pass. Thirteen
+debug captures (free, forced Recharge+, Test Store plans, light and dark) were
+reviewed; the onboarding title line overlap, Material lavender tab indicator
+and ring/progress tracks were fixed to match iOS. Optimized QA cadence on this
+x86_64 emulator is host bound (gfxinfo P50 32 ms), so native 60 fps is not
+established here. Evidence: `~/fleet-evidence/shift-android-recovery-3-1792514226/` on jmbp.
