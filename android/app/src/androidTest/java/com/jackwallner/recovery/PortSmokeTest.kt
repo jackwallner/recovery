@@ -85,7 +85,12 @@ class PortSmokeTest {
         click("Continue")
         // The real Health Connect permission request is dismissed with Back.
         click("Continue")
-        androidx.test.uiautomator.UiDevice.getInstance(instrumentation).pressBack()
+        // A device that has never used Health Connect shows its own onboarding first.
+        // It ignores Back; its "Go back" button declines and returns to the app.
+        val device = androidx.test.uiautomator.UiDevice.getInstance(instrumentation)
+        val onboardingBack = androidx.test.uiautomator.By.res("com.android.healthconnect.controller:id/secondary_button")
+        device.wait(androidx.test.uiautomator.Until.hasObject(onboardingBack), 5000)
+        device.findObject(onboardingBack)?.click() ?: device.pressBack()
         compose.waitUntil(15000) { compose.onAllNodesWithText("Skip this one").fetchSemanticsNodes().isNotEmpty() }
         repeat(4) { click("Skip this one") }
         click("I understand")
