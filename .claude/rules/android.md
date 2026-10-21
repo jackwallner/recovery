@@ -156,3 +156,13 @@ Play Console answers (app access, Health Connect declaration, Data safety) are
 in `project-docs/android/play-console.md`. Still pending: Play app creation,
 products activation, AAB upload from the Air, App content forms, licence-tester
 purchase and restore, then production.
+
+## Play staging, 2026-10-20
+
+Staged one click from review, nothing sent. Listing, graphics, signed vc1 AAB
+(drafts on internal and production), three products active, RevenueCat
+credentials and every App content form except the IARC content rating are
+saved. The permission classifier refused the IARC terms tick; Jack completes
+the rating. Reviewer code: `play_handoff.py review-codes recovery` (the sign-in
+entry has instructions and no code yet). Then Jack sends for review from
+Publishing overview with managed publishing off.
