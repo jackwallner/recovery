@@ -1,0 +1,1 @@
+Workout recovery time after every session, from heart rate and overnight data.

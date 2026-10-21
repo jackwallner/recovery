@@ -1,0 +1,1 @@
+Temps de récupération après chaque entraînement, selon votre fréquence cardiaque

@@ -1,0 +1,1 @@
+Tempo de repouso após cada treino, com base na frequência cardíaca e no sono

@@ -1,0 +1,1 @@
+Restitutionstid efter hvert træningspas, ud fra puls, belastning og søvn

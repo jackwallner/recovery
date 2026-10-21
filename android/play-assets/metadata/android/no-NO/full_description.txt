@@ -1,0 +1,24 @@
+Vet når du kan trene igjen. Etter hver godkjente treningsøkt anslår Recharge et restitusjonsvindu ut fra treningsbelastningen din. Nedtellingen når Ready når anslaget er ferdig.
+
+Koble til en kompatibel treningsapp eller wearable via Health Connect. Recharge leser delte treningsøkter og puls. Valgfritt gir søvn, hvilepuls, HRV (RMSSD), pustefrekvens, kondisjon og vekt mer sammenheng. Helsedataene dine blir på enheten, og Recharge skriver aldri til Health Connect.
+
+INKLUDERT UTEN KOSTNAD
+• En nedtelling på ditt treningsnivå
+• Treningshistorikk og grunnene bak hvert anslag
+• Spørsmål om innsats når styrke- eller blandede økter har mangelfull puls
+• Et varsel når nedtellingen er ferdig, hvis du tillater det
+
+RECHARGE+
+• Din egen grunnlinje fra de siste øktene dine
+• Sammenheng fra natten og et restitusjonsmønster over 30 dager
+• Personlig kalibrering ut fra tilbakemeldingene dine om formen
+• Justering av intensitet og faste restitusjonstimer
+• Sammenheng rundt treningsbelastningen
+
+En kompatibel kilde må dele dataene før Recharge kan lese dem. Pulsrestitusjon etter ett minutt er ikke tilgjengelig. Wear OS og moduler er ikke med i denne versjonen.
+
+Recharge gir et anslag for kondisjonstrening, ikke medisinske råd. Appen måler ikke muskelreparasjon, sykdom, skaderisiko eller om du er klar til å trene. Snakk med kvalifisert helsepersonell før du tar medisinske beslutninger.
+
+Ingen konto og ingen reklame. Valgfrie Recharge+ abonnementer fornyes automatisk med mindre du sier dem opp i Google Play. Livstidstilgang finnes også.
+
+Appen er på engelsk.

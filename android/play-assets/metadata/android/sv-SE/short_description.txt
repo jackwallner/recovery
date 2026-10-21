@@ -1,0 +1,1 @@
+Återhämtningstid efter varje träningspass, utifrån puls, belastning och sömn

@@ -1,0 +1,24 @@
+Sachez quand vous réentraîner. Après chaque séance éligible, Recharge estime une fenêtre de récupération selon votre charge d'entraînement. Le compte à rebours passe à Ready quand cette estimation est terminée.
+
+Connectez une app de fitness ou un appareil connecté compatible via Health Connect. Recharge lit les séances partagées et la fréquence cardiaque. En option, le sommeil, la fréquence cardiaque au repos, la VFC (RMSSD), la fréquence respiratoire, la forme cardio et le poids ajoutent du contexte. Vos données de santé restent sur votre appareil, et Recharge n'écrit jamais dans Health Connect.
+
+INCLUS GRATUITEMENT
+• Un compte à rebours adapté à votre niveau d'entraînement
+• L'historique des séances et les raisons de chaque estimation
+• Des réponses sur l'effort quand une séance de musculation ou mixte a une fréquence cardiaque incomplète
+• Une notification à la fin du compte à rebours, si vous l'autorisez
+
+RECHARGE+
+• Votre propre référence à partir de vos séances récentes
+• Le contexte de la nuit et un profil de récupération sur 30 jours
+• Un étalonnage personnel grâce à vos retours sur votre forme
+• Des corrections d'intensité et des heures de récupération fixées
+• Le contexte de la charge d'entraînement
+
+Une source compatible doit partager ses données avant que Recharge puisse les lire. La récupération de la fréquence cardiaque à une minute n'est pas disponible. Wear OS et les widgets ne sont pas inclus dans cette version.
+
+Recharge fournit une estimation d'entraînement cardiovasculaire, pas un avis médical. L'app ne mesure ni la réparation musculaire, ni la maladie, ni le risque de blessure, ni votre aptitude à vous entraîner. Parlez à un professionnel de santé qualifié avant toute décision médicale.
+
+Sans compte ni publicité. Les abonnements Recharge+ facultatifs se renouvellent automatiquement sauf résiliation dans Google Play. Un accès à vie est aussi proposé.
+
+L'application est en anglais.

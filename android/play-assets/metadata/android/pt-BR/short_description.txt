@@ -1,0 +1,1 @@
+Tempo de descanso depois de cada treino, calculado com seu batimento e seu sono

@@ -1,0 +1,24 @@
+Biết khi nào tập lại được. Sau mỗi buổi tập hợp lệ, Recharge ước tính khoảng thời gian hồi phục dựa trên khối lượng tập của bạn. Bộ đếm ngược chuyển sang Ready khi ước tính đó kết thúc.
+
+Kết nối ứng dụng thể dục hoặc thiết bị đeo tương thích qua Health Connect. Recharge đọc các buổi tập được chia sẻ và nhịp tim. Nếu muốn, giấc ngủ, nhịp tim lúc nghỉ, HRV (RMSSD), nhịp thở, thể lực tim mạch và cân nặng sẽ bổ sung thêm bối cảnh. Dữ liệu sức khỏe của bạn ở lại trên thiết bị, và Recharge không bao giờ ghi vào Health Connect.
+
+CÓ SẴN MIỄN PHÍ
+• Bộ đếm ngược theo trình độ tập luyện của bạn
+• Lịch sử buổi tập và lý do đằng sau mỗi ước tính
+• Câu hỏi về mức gắng sức khi buổi tập sức mạnh hoặc kết hợp thiếu dữ liệu nhịp tim
+• Thông báo khi đếm ngược kết thúc, nếu bạn cho phép
+
+RECHARGE+
+• Mức chuẩn riêng từ các buổi tập gần đây của bạn
+• Bối cảnh ban đêm và xu hướng hồi phục 30 ngày
+• Hiệu chỉnh cá nhân từ phản hồi của bạn về cảm giác cơ thể
+• Điều chỉnh cường độ buổi tập và ghim số giờ hồi phục
+• Bối cảnh khối lượng tập
+
+Một nguồn tương thích phải chia sẻ dữ liệu trước thì Recharge mới đọc được. Chỉ số hồi phục nhịp tim sau một phút chưa có. Phiên bản này chưa có Wear OS và tiện ích.
+
+Recharge đưa ra ước tính cho việc tập luyện tim mạch, không phải lời khuyên y tế. Ứng dụng không đo quá trình phục hồi cơ, bệnh tật, nguy cơ chấn thương hay việc bạn có đủ sức để tập hay không. Hãy trao đổi với chuyên gia y tế có chuyên môn trước khi đưa ra quyết định y tế.
+
+Không cần tài khoản, không có quảng cáo. Các gói đăng ký Recharge+ tùy chọn tự động gia hạn trừ khi bạn hủy trong Google Play. Ngoài ra còn có quyền truy cập trọn đời.
+
+Ứng dụng có giao diện bằng tiếng Anh.

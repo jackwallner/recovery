@@ -1,0 +1,24 @@
+Tudd, mikor edzhetsz újra. Minden megfelelő edzés után a Recharge megbecsüli a regenerációs időablakot az edzésterhelésed alapján. A visszaszámláló Ready állapotba vált, amikor a becslés lejár.
+
+Csatlakoztass egy kompatibilis fitneszalkalmazást vagy viselhető eszközt a Health Connect segítségével. A Recharge beolvassa a megosztott edzéseket és a pulzust. Ha szeretnéd, az alvás, a nyugalmi pulzus, a HRV (RMSSD), a légzésszám, a kardió állóképesség és a testsúly további hátteret ad. Az egészségügyi adataid az eszközödön maradnak, és a Recharge soha nem ír a Health Connectbe.
+
+INGYEN TARTALMAZZA
+• Visszaszámláló az edzettségi szintedhez igazítva
+• Edzésnapló és minden becslés indoklása
+• Kérdések az erőfeszítésről, ha egy erő- vagy vegyes edzés pulzusadatai hiányosak
+• Értesítés a visszaszámlálás végén, ha engedélyezed
+
+RECHARGE+
+• Saját kiindulási szint a legutóbbi edzéseidből
+• Éjszakai háttéradatok és 30 napos regenerációs minta
+• Személyes kalibrálás a visszajelzéseid alapján
+• Intenzitáskorrekciók és rögzített regenerációs órák
+• Háttér az edzésterhelésről
+
+Egy kompatibilis forrásnak meg kell osztania az adatokat, mielőtt a Recharge beolvashatja őket. Az egyperces pulzusvisszaállás nem érhető el. A Wear OS és a widgetek nem részei ennek a verziónak.
+
+A Recharge kardiovaszkuláris edzésbecslést ad, nem orvosi tanácsot. Nem méri az izmok helyreállását, a betegséget, a sérülésveszélyt, sem azt, hogy edzhetsz-e. Orvosi döntések előtt beszélj képzett egészségügyi szakemberrel.
+
+Nincs fiók és nincs reklám. Az opcionális Recharge+ előfizetések automatikusan megújulnak, amíg le nem mondod őket a Google Playen. Élethosszig tartó hozzáférés is elérhető.
+
+Az alkalmazás angol nyelvű.

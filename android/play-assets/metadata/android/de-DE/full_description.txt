@@ -1,0 +1,24 @@
+Wann kannst du wieder trainieren? Nach jedem passenden Workout schätzt Recharge ein Regenerationsfenster aus deiner Trainingsbelastung. Der Countdown springt auf Ready, sobald diese Schätzung abgelaufen ist.
+
+Verbinde eine kompatible Fitness-App oder ein Wearable über Health Connect. Recharge liest geteilte Workouts und deine Herzfrequenz. Optional liefern Schlaf, Ruhepuls, HRV (RMSSD), Atemfrequenz, Cardio-Fitness und Gewicht zusätzlichen Kontext. Deine Gesundheitsdaten bleiben auf deinem Gerät, und Recharge schreibt nie etwas in Health Connect.
+
+KOSTENLOS ENTHALTEN
+• Ein Countdown passend zu deinem Trainingsniveau
+• Trainingsverlauf und die Gründe hinter jeder Schätzung
+• Angaben zur Anstrengung, wenn Kraft- oder gemischte Einheiten lückenhafte Pulsdaten haben
+• Eine Benachrichtigung, wenn der Countdown abgelaufen ist (falls erlaubt)
+
+RECHARGE+
+• Deine eigene Basis aus deinen letzten Workouts
+• Kontext aus der Nacht und ein 30-Tage-Regenerationsmuster
+• Persönliche Kalibrierung über dein Feedback zur Bereitschaft
+• Korrekturen der Intensität und fest eingestellte Regenerationsstunden
+• Kontext zur Trainingsbelastung
+
+Eine kompatible Quelle muss ihre Daten teilen, bevor Recharge sie lesen kann. Die Herzfrequenzerholung nach einer Minute ist nicht verfügbar. Wear OS und Widgets sind in dieser Version nicht enthalten.
+
+Recharge liefert eine Schätzung zum Herz-Kreislauf-Training, keine medizinische Beratung. Die App misst weder Muskelreparatur noch Krankheit, Verletzungsrisiko oder ob du trainingsfähig bist. Sprich vor medizinischen Entscheidungen mit qualifiziertem Fachpersonal.
+
+Kein Konto, keine Werbung. Optionale Recharge+ Abos verlängern sich automatisch, bis du sie in Google Play kündigst. Ein lebenslanger Zugang ist ebenfalls erhältlich.
+
+Die App ist auf Englisch.

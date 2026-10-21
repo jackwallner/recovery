@@ -1,0 +1,24 @@
+Tiedät, milloin voit treenata. Jokaisen kelvollisen harjoituksen jälkeen Recharge arvioi palautumisikkunan harjoituskuormasi perusteella. Laskuri siirtyy tilaan Ready, kun arvio on kulunut loppuun.
+
+Yhdistä yhteensopiva treenisovellus tai puettava laite Health Connectin kautta. Recharge lukee jaetut harjoitukset ja sykkeen. Halutessasi uni, leposyke, HRV (RMSSD), hengitystiheys, kestävyyskunto ja paino tuovat lisää taustaa. Terveystietosi pysyvät laitteellasi, eikä Recharge kirjoita koskaan Health Connectiin.
+
+MAKSUTTA MUKANA
+• Laskuri omalla harjoitustasollasi
+• Harjoitushistoria ja jokaisen arvion perustelut
+• Kysymykset rasituksesta, kun voima- tai sekaharjoituksen sykedata on puutteellista
+• Ilmoitus, kun laskuri on valmis, jos sallit sen
+
+RECHARGE+
+• Oma vertailutaso viimeaikaisista harjoituksistasi
+• Yön tiedot ja 30 päivän palautumiskuvio
+• Henkilökohtainen kalibrointi palautteesi perusteella
+• Tehon korjaukset ja kiinnitetyt palautumistunnit
+• Taustaa harjoituskuormasta
+
+Yhteensopivan lähteen täytyy jakaa tiedot, ennen kuin Recharge voi lukea niitä. Minuutin sykepalautuminen ei ole käytettävissä. Wear OS ja widgetit eivät kuulu tähän versioon.
+
+Recharge antaa arvion sydän- ja verenkiertoelimistön harjoittelusta, ei lääketieteellistä neuvontaa. Se ei mittaa lihasten korjautumista, sairautta, loukkaantumisriskiä tai sitä, oletko valmis harjoittelemaan. Keskustele pätevän terveydenhuollon ammattilaisen kanssa ennen lääketieteellisiä päätöksiä.
+
+Ei tiliä eikä mainoksia. Valinnaiset Recharge+ tilaukset uusiutuvat automaattisesti, ellet peru niitä Google Playssa. Saatavilla on myös elinikäinen käyttöoikeus.
+
+Sovellus on englanninkielinen.

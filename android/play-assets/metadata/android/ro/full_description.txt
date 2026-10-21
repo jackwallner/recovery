@@ -1,0 +1,24 @@
+Afli când te antrenezi iar. După fiecare antrenament eligibil, Recharge estimează o fereastră de refacere pe baza încărcării tale de antrenament. Numărătoarea inversă ajunge la Ready când estimarea se încheie.
+
+Conectează o aplicație de fitness sau un dispozitiv purtabil compatibil prin Health Connect. Recharge citește antrenamentele partajate și pulsul. Opțional, somnul, pulsul în repaus, HRV (RMSSD), ritmul respirator, condiția cardio și greutatea adaugă context. Datele tale de sănătate rămân pe dispozitiv, iar Recharge nu scrie niciodată în Health Connect.
+
+INCLUS GRATUIT
+• O numărătoare inversă pe nivelul tău de antrenament
+• Istoricul antrenamentelor și motivele fiecărei estimări
+• Întrebări despre efort când un antrenament de forță sau mixt are date de puls incomplete
+• O notificare la finalul numărătorii, dacă o permiți
+
+RECHARGE+
+• Propriul tău reper din antrenamentele recente
+• Contextul nopții și un tipar de refacere pe 30 de zile
+• Calibrare personală pe baza răspunsurilor tale despre cum te simți
+• Corecții de intensitate și ore de refacere fixate
+• Context despre încărcarea de antrenament
+
+O sursă compatibilă trebuie să partajeze datele înainte ca Recharge să le poată citi. Revenirea pulsului la un minut nu este disponibilă. Wear OS și widgeturile nu sunt incluse în această versiune.
+
+Recharge oferă o estimare de antrenament cardiovascular, nu un sfat medical. Nu măsoară refacerea musculară, boala, riscul de accidentare sau dacă ești apt să te antrenezi. Discută cu un profesionist calificat din domeniul sănătății înainte de a lua decizii medicale.
+
+Fără cont și fără reclame. Abonamentele opționale Recharge+ se reînnoiesc automat dacă nu le anulezi în Google Play. Este disponibil și accesul pe viață.
+
+Aplicația este în limba engleză.

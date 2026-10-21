@@ -1,0 +1,24 @@
+Ketahui kapan latihan lagi. Setelah setiap latihan yang memenuhi syarat, Recharge memperkirakan jendela pemulihan dari beban latihan Anda. Hitung mundur mencapai Ready saat perkiraan itu selesai.
+
+Hubungkan aplikasi kebugaran atau perangkat wearable yang kompatibel melalui Health Connect. Recharge membaca latihan yang dibagikan dan detak jantung. Secara opsional, tidur, detak jantung istirahat, HRV (RMSSD), laju napas, kebugaran kardio, dan berat badan menambah konteks. Data kesehatan Anda tetap di perangkat, dan Recharge tidak pernah menulis ke Health Connect.
+
+TERSEDIA GRATIS
+• Hitung mundur sesuai tingkat latihan Anda
+• Riwayat latihan dan alasan di balik setiap perkiraan
+• Pertanyaan tentang usaha saat latihan beban atau campuran punya data detak jantung yang tidak lengkap
+• Notifikasi saat hitung mundur selesai, jika Anda izinkan
+
+RECHARGE+
+• Patokan pribadi dari latihan terbaru Anda
+• Konteks malam hari dan pola pemulihan 30 hari
+• Kalibrasi pribadi dari masukan Anda tentang kondisi Anda
+• Koreksi intensitas sesi dan jam pemulihan yang disematkan
+• Konteks beban latihan
+
+Sumber yang kompatibel harus membagikan data sebelum Recharge dapat membacanya. Pemulihan detak jantung satu menit tidak tersedia. Wear OS dan widget belum termasuk dalam versi ini.
+
+Recharge memberikan perkiraan latihan kardiovaskular, bukan nasihat medis. Aplikasi ini tidak mengukur pemulihan otot, penyakit, risiko cedera, atau apakah Anda siap berlatih. Bicaralah dengan tenaga kesehatan yang berkualifikasi sebelum mengambil keputusan medis.
+
+Tanpa akun dan tanpa iklan. Langganan opsional Recharge+ diperpanjang otomatis kecuali dibatalkan di Google Play. Akses seumur hidup juga tersedia.
+
+Aplikasi ini dalam bahasa Inggris.

@@ -1,0 +1,24 @@
+Viete, kedy znova trénovať. Po každom vhodnom tréningu Recharge odhadne okno regenerácie podľa vašej tréningovej záťaže. Odpočet dôjde na Ready, keď odhad uplynie.
+
+Prepojte kompatibilnú fitness aplikáciu alebo nositeľné zariadenie cez Health Connect. Recharge číta zdieľané tréningy a srdcovú frekvenciu. Voliteľne pridajú kontext spánok, pokojový tep, HRV (RMSSD), dychová frekvencia, kardio kondícia a hmotnosť. Zdravotné údaje zostávajú vo vašom zariadení a Recharge do Health Connect nikdy nič nezapisuje.
+
+ZADARMO V CENE
+• Odpočet podľa vašej tréningovej úrovne
+• História tréningov a dôvody každého odhadu
+• Otázky na námahu, keď má silový alebo zmiešaný tréning neúplné údaje o tepe
+• Upozornenie po skončení odpočtu, ak ho povolíte
+
+RECHARGE+
+• Vlastná východisková úroveň z vašich posledných tréningov
+• Kontext z noci a 30-dňový vzorec regenerácie
+• Osobná kalibrácia podľa vašej spätnej väzby
+• Úpravy intenzity a pevne nastavené hodiny regenerácie
+• Kontext tréningovej záťaže
+
+Kompatibilný zdroj musí údaje najprv zdieľať, aby ich Recharge mohol čítať. Pokles tepu po jednej minúte nie je k dispozícii. Wear OS a widgety nie sú súčasťou tejto verzie.
+
+Recharge poskytuje odhad kardiovaskulárneho tréningu, nie lekársku radu. Nemeria obnovu svalov, chorobu, riziko zranenia ani to, či ste schopní trénovať. Pred lekárskymi rozhodnutiami sa poraďte s kvalifikovaným zdravotníkom.
+
+Bez účtu a bez reklám. Voliteľné predplatné Recharge+ sa automaticky obnovuje, kým ho nezrušíte v Google Play. K dispozícii je aj doživotný prístup.
+
+Aplikácia je v angličtine.

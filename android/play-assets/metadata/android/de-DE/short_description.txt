@@ -1,0 +1,1 @@
+Regenerationszeit nach jedem Training, berechnet aus Puls, Belastung und Schlaf

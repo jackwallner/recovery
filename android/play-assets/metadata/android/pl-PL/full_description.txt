@@ -1,0 +1,24 @@
+Wiesz, kiedy znów trenować. Po każdym kwalifikującym się treningu Recharge szacuje okno regeneracji na podstawie obciążenia treningowego. Odliczanie dochodzi do Ready, gdy ten szacunek się kończy.
+
+Połącz zgodną aplikację fitness lub urządzenie ubieralne przez Health Connect. Recharge odczytuje udostępnione treningi i tętno. Opcjonalnie sen, tętno spoczynkowe, HRV (RMSSD), częstość oddechu, wydolność i masa ciała dodają kontekstu. Dane o zdrowiu zostają na urządzeniu, a Recharge nigdy nie zapisuje niczego w Health Connect.
+
+W ZESTAWIE BEZPŁATNIE
+• Odliczanie dopasowane do Twojego poziomu treningu
+• Historia treningów i powody każdego szacunku
+• Pytania o wysiłek, gdy trening siłowy lub mieszany ma niepełne dane tętna
+• Powiadomienie po zakończeniu odliczania, jeśli na nie pozwolisz
+
+RECHARGE+
+• Własny punkt odniesienia z ostatnich treningów
+• Kontekst z nocy i 30-dniowy wzorzec regeneracji
+• Osobista kalibracja na podstawie Twoich odpowiedzi o samopoczuciu
+• Korekty intensywności i przypięte godziny regeneracji
+• Kontekst obciążenia treningowego
+
+Zgodne źródło musi udostępnić dane, zanim Recharge będzie mógł je odczytać. Spadek tętna po minucie nie jest dostępny. Wear OS i widżety nie są częścią tej wersji.
+
+Recharge podaje szacunek dotyczący treningu wydolnościowego, a nie poradę medyczną. Nie mierzy regeneracji mięśni, choroby, ryzyka kontuzji ani tego, czy możesz trenować. Przed podjęciem decyzji medycznych porozmawiaj z wykwalifikowanym specjalistą.
+
+Bez konta i bez reklam. Opcjonalne subskrypcje Recharge+ odnawiają się automatycznie, dopóki nie anulujesz ich w Google Play. Dostępny jest też dostęp dożywotni.
+
+Aplikacja jest w języku angielskim.

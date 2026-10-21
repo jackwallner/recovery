@@ -1,0 +1,1 @@
+Thời gian hồi phục sau mỗi buổi tập, tính theo nhịp tim, mức tải và giấc ngủ

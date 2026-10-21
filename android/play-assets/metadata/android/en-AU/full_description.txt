@@ -1,0 +1,22 @@
+Know when to train again. Finish a qualifying workout and Recharge estimates a training-load recovery window, then counts it down to Ready.
+
+Connect a compatible fitness app or wearable through Health Connect. Recharge reads shared workouts and heart rate. Optional sleep, resting heart rate, HRV (RMSSD), breathing rate, cardio fitness and weight add context. Health data stays on your device, and Recharge never writes to Health Connect.
+
+INCLUDED FREE
+• A countdown at your training level
+• Workout history and the reasons behind each estimate
+• Effort answers when strength or mixed workouts have patchy heart rate
+• A countdown-complete notification when allowed
+
+RECHARGE+
+• Your own recent workout baseline
+• Overnight context and a 30-day recovery pattern
+• Personal calibration from readiness feedback
+• Session intensity corrections and pinned recovery hours
+• Training-load context
+
+A compatible source must share records before Recharge can read them. One-minute heart rate recovery is unavailable. Wear OS and widgets are not included in this version.
+
+Recharge provides a cardiovascular training estimate, not medical advice. It does not measure muscle repair, illness, injury risk or whether you are fit to train. Talk with a qualified health professional before making medical decisions.
+
+No account or ads. Optional Recharge+ subscriptions renew automatically unless cancelled in Google Play. Lifetime access is also available.

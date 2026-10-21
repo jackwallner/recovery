@@ -1,0 +1,1 @@
+Restitusjonstid etter hver treningsøkt, beregnet fra puls, belastning og søvn

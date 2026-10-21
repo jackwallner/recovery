@@ -1,0 +1,24 @@
+Vet när du kan träna igen. Efter varje godkänt träningspass uppskattar Recharge ett återhämtningsfönster utifrån din träningsbelastning. Nedräkningen når Ready när uppskattningen är klar.
+
+Anslut en kompatibel träningsapp eller wearable via Health Connect. Recharge läser delade träningspass och puls. Valfritt ger sömn, vilopuls, HRV (RMSSD), andningsfrekvens, kondition och vikt mer sammanhang. Dina hälsodata stannar på enheten, och Recharge skriver aldrig till Health Connect.
+
+INGÅR UTAN KOSTNAD
+• En nedräkning på din träningsnivå
+• Träningshistorik och skälen bakom varje uppskattning
+• Frågor om ansträngning när styrke- eller blandade pass har ofullständig puls
+• En avisering när nedräkningen är klar, om du tillåter det
+
+RECHARGE+
+• Din egen baslinje från dina senaste pass
+• Sammanhang från natten och ett återhämtningsmönster över 30 dagar
+• Personlig kalibrering utifrån din feedback om hur du känner dig
+• Justering av intensitet och fasta återhämtningstimmar
+• Sammanhang kring träningsbelastningen
+
+En kompatibel källa måste dela sina data innan Recharge kan läsa dem. Pulsåterhämtning efter en minut är inte tillgänglig. Wear OS och widgetar ingår inte i den här versionen.
+
+Recharge ger en uppskattning för konditionsträning, inte medicinsk rådgivning. Appen mäter inte muskelreparation, sjukdom, skaderisk eller om du är redo att träna. Prata med kvalificerad vårdpersonal innan du fattar medicinska beslut.
+
+Inget konto och ingen reklam. Valfria Recharge+ prenumerationer förnyas automatiskt om du inte säger upp dem i Google Play. Livstidsåtkomst finns också.
+
+Appen är på engelska.

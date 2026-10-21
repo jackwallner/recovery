@@ -1,0 +1,1 @@
+Čas regeneracije po vsakem treningu, izračunan iz srčnega utripa in spanja

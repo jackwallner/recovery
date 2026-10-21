@@ -1,0 +1,1 @@
+Tempo di recupero dopo ogni allenamento, calcolato da battito, carico e sonno

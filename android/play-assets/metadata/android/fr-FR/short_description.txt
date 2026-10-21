@@ -1,0 +1,1 @@
+Temps de récupération après chaque séance, selon votre fréquence cardiaque

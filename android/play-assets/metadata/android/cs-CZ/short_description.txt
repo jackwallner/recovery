@@ -1,0 +1,1 @@
+Doba regenerace po každém tréninku, spočítaná z tepu, zátěže a spánku

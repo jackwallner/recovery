@@ -1,0 +1,24 @@
+Znaj kada opet trenirati. Nakon svakog odgovarajućeg treninga Recharge procjenjuje razdoblje oporavka prema tvom trenažnom opterećenju. Odbrojavanje dolazi do Ready kad procjena istekne.
+
+Poveži kompatibilnu fitness aplikaciju ili nosivi uređaj putem Health Connect. Recharge čita dijeljene treninge i puls. Po želji san, puls u mirovanju, HRV (RMSSD), frekvencija disanja, kardio kondicija i težina daju dodatni kontekst. Zdravstveni podaci ostaju na tvom uređaju, a Recharge nikad ne zapisuje u Health Connect.
+
+BESPLATNO UKLJUČENO
+• Odbrojavanje prema tvojoj razini treniranosti
+• Povijest treninga i razlozi iza svake procjene
+• Pitanja o naporu kad trening snage ili mješoviti trening ima nepotpune podatke o pulsu
+• Obavijest kad odbrojavanje završi, ako to dopustiš
+
+RECHARGE+
+• Vlastita polazna vrijednost iz tvojih nedavnih treninga
+• Kontekst noći i 30-dnevni obrazac oporavka
+• Osobna kalibracija prema tvojim povratnim informacijama
+• Ispravci intenziteta i fiksni sati oporavka
+• Kontekst trenažnog opterećenja
+
+Kompatibilni izvor mora podijeliti podatke prije nego što ih Recharge može čitati. Pad pulsa nakon jedne minute nije dostupan. Wear OS i widgeti nisu dio ove verzije.
+
+Recharge daje procjenu kardiovaskularnog treninga, a ne liječnički savjet. Ne mjeri obnovu mišića, bolest, rizik od ozljede ni jesi li spreman za trening. Prije zdravstvenih odluka razgovaraj s kvalificiranim zdravstvenim stručnjakom.
+
+Bez računa i bez oglasa. Neobavezne pretplate Recharge+ automatski se obnavljaju dok ih ne otkažeš u Google Playu. Dostupan je i doživotni pristup.
+
+Aplikacija je na engleskom jeziku.

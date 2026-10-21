@@ -1,0 +1,1 @@
+Czas regeneracji po każdym treningu, liczony z tętna, obciążenia i snu

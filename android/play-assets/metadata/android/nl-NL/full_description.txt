@@ -1,0 +1,24 @@
+Weet wanneer je weer traint. Na elke geschikte training schat Recharge een herstelvenster op basis van je trainingsbelasting. De aftelling springt op Ready zodra die schatting is afgelopen.
+
+Koppel een compatibele fitness-app of wearable via Health Connect. Recharge leest gedeelde trainingen en je hartslag. Optioneel geven slaap, rusthartslag, HRV (RMSSD), ademfrequentie, conditie en gewicht extra context. Je gezondheidsgegevens blijven op je apparaat en Recharge schrijft nooit naar Health Connect.
+
+GRATIS INBEGREPEN
+• Een aftelling op jouw trainingsniveau
+• Trainingsgeschiedenis en de redenen achter elke schatting
+• Vragen over inspanning als een kracht- of gemengde training onvolledige hartslagdata heeft
+• Een melding als de aftelling klaar is, als je dat toestaat
+
+RECHARGE+
+• Je eigen basislijn uit je recente trainingen
+• Context van de nacht en een herstelpatroon over 30 dagen
+• Persoonlijke kalibratie op basis van je feedback over hoe je je voelt
+• Correcties van de intensiteit en vastgezette hersteluren
+• Context over je trainingsbelasting
+
+Een compatibele bron moet gegevens delen voordat Recharge ze kan lezen. Hartslagherstel na één minuut is niet beschikbaar. Wear OS en widgets zitten niet in deze versie.
+
+Recharge geeft een schatting voor cardiovasculaire training, geen medisch advies. De app meet geen spierherstel, ziekte, blessurerisico of of je fit genoeg bent om te trainen. Overleg met een gekwalificeerde zorgverlener voordat je medische beslissingen neemt.
+
+Geen account en geen advertenties. Optionele Recharge+ abonnementen worden automatisch verlengd tenzij je ze opzegt in Google Play. Er is ook levenslange toegang.
+
+De app is in het Engels.

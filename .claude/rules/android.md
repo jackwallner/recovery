@@ -116,6 +116,14 @@ Listing metadata uses `play-assets/metadata/android/en-US`; PNG encodings of
 four real free-screen captures preserve their original decoded pixels. App
 creation, products, upload and Console declarations remain pending.
 
+Listing copy covers the same 50 Play locales as Sober (fastlane supply layout,
+`android/play-assets/listing-en-US.md` lists them). en-US is the live listing
+verbatim. Titles keep "Recharge" plus the local recovery-time phrase from the
+iOS `name.txt`/`keywords.txt`; every non-English description ends by saying the
+app is in English, because the Android app is not localized.
+`scripts/validate-play-listing.py` checks limits, house rules, the English line
+per locale, and en-US against a local `.play-live-listing.json` when present.
+
 RevenueCat integration check on2026-10-18: developer notifications plus two
 transaction webhooks, with the same previously verified destination domains as
 VO2 Max. Both disable paywall-event forwarding; no advertising integration is

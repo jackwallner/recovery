@@ -1,0 +1,24 @@
+Yeniden ne zaman antrenman yapacağını bil. Uygun her antrenmandan sonra Recharge, antrenman yüküne göre bir toparlanma süresi tahmin eder. Tahmin dolduğunda geri sayım Ready durumuna geçer.
+
+Uyumlu bir fitness uygulamasını veya giyilebilir cihazı Health Connect üzerinden bağla. Recharge paylaşılan antrenmanları ve nabzı okur. İstersen uyku, dinlenik nabız, HRV (RMSSD), solunum hızı, kardiyo kondisyon ve kilo ek bağlam sağlar. Sağlık verilerin cihazında kalır ve Recharge Health Connect'e asla veri yazmaz.
+
+ÜCRETSİZ OLARAK DAHİL
+• Antrenman seviyene göre bir geri sayım
+• Antrenman geçmişi ve her tahminin gerekçesi
+• Kuvvet veya karma antrenmanlarda nabız verisi eksik olduğunda efor soruları
+• İzin verirsen geri sayım bitince bir bildirim
+
+RECHARGE+
+• Son antrenmanlarından oluşan kendi referans seviyen
+• Gece verileri ve 30 günlük toparlanma düzeni
+• Nasıl hissettiğine dair geri bildirimlerinle kişisel kalibrasyon
+• Yoğunluk düzeltmeleri ve sabitlenmiş toparlanma saatleri
+• Antrenman yükü bağlamı
+
+Recharge'ın verileri okuyabilmesi için uyumlu bir kaynağın bunları paylaşması gerekir. Bir dakikalık nabız toparlanması kullanılamaz. Wear OS ve widget'lar bu sürümde yer almaz.
+
+Recharge kardiyovasküler bir antrenman tahmini sunar, tıbbi tavsiye değildir. Kas onarımını, hastalığı, sakatlanma riskini veya antrenmana uygun olup olmadığını ölçmez. Tıbbi kararlar vermeden önce yetkin bir sağlık uzmanıyla konuş.
+
+Hesap yok, reklam yok. İsteğe bağlı Recharge+ abonelikleri, Google Play'den iptal edilmedikçe otomatik olarak yenilenir. Ömür boyu erişim seçeneği de vardır.
+
+Uygulama İngilizcedir.

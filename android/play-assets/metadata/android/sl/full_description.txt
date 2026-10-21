@@ -1,0 +1,24 @@
+Veš, kdaj spet trenirati. Po vsakem ustreznem treningu Recharge oceni okno regeneracije glede na tvojo trenažno obremenitev. Odštevanje pride do Ready, ko se ocena izteče.
+
+Poveži združljivo fitnes aplikacijo ali nosljivo napravo prek Health Connect. Recharge bere deljene treninge in srčni utrip. Po želji spanje, utrip v mirovanju, HRV (RMSSD), frekvenca dihanja, kardio pripravljenost in teža dodajo kontekst. Zdravstveni podatki ostanejo v tvoji napravi, Recharge pa v Health Connect nikoli ne piše.
+
+BREZPLAČNO VKLJUČENO
+• Odštevanje na tvoji ravni treniranosti
+• Zgodovina treningov in razlogi za vsako oceno
+• Vprašanja o naporu, ko ima trening moči ali mešani trening nepopolne podatke o utripu
+• Obvestilo ob koncu odštevanja, če ga dovoliš
+
+RECHARGE+
+• Lastna izhodiščna vrednost iz tvojih nedavnih treningov
+• Kontekst noči in 30-dnevni vzorec regeneracije
+• Osebna kalibracija na podlagi tvojih odzivov o počutju
+• Popravki intenzivnosti in fiksne ure regeneracije
+• Kontekst trenažne obremenitve
+
+Združljiv vir mora podatke najprej deliti, da jih Recharge lahko prebere. Upad srčnega utripa po eni minuti ni na voljo. Wear OS in pripomočki niso del te različice.
+
+Recharge daje oceno kardiovaskularnega treninga, ne zdravniškega nasveta. Ne meri obnove mišic, bolezni, tveganja za poškodbe ali tega, ali si pripravljen na trening. Pred zdravstvenimi odločitvami se posvetuj z usposobljenim zdravstvenim delavcem.
+
+Brez računa in brez oglasov. Neobvezne naročnine Recharge+ se samodejno podaljšujejo, dokler jih ne prekličeš v Google Play. Na voljo je tudi dosmrtni dostop.
+
+Aplikacija je v angleščini.
