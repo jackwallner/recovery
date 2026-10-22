@@ -175,6 +175,9 @@ final class AccessibilityAuditUITests: XCTestCase {
             attach(app, String(format: "onboarding-xxxl-%02d", index))
             guard let next = primaries.map({ app.buttons[$0].firstMatch }).first(where: { $0.exists }) else { break }
             measure("onboarding \(index) primary", next, in: app)
+            for secondary in ["Get Started", "Not now", "Skip"] {
+                measure("onboarding \(index) secondary \(secondary)", app.buttons[secondary].firstMatch, in: app)
+            }
             guard next.isHittable else { break }
             next.tap()
             sleep(1)
@@ -186,5 +189,19 @@ final class AccessibilityAuditUITests: XCTestCase {
         sleep(3)
         attach(app, "onboarding-default-01")
         measure("primary", app.buttons["Continue"].firstMatch, in: app)
+        for index in 2...12 {
+            guard let next = ["Continue", "Skip this one", "I understand"]
+                .map({ app.buttons[$0].firstMatch }).first(where: { $0.exists && $0.isHittable }) else { break }
+            next.tap()
+            sleep(1)
+            for secondary in ["Get Started", "Not now", "Skip"] {
+                measure("default page \(index) secondary \(secondary)", app.buttons[secondary].firstMatch, in: app)
+            }
+            if app.buttons["Continue with Recharge+"].firstMatch.exists {
+                attach(app, "onboarding-default-offer")
+                measure("offer cta", app.buttons["Continue with Recharge+"].firstMatch, in: app)
+                break
+            }
+        }
     }
 }
