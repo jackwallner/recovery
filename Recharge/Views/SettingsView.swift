@@ -22,6 +22,10 @@ struct SettingsView: View {
     @State private var showDeleteConfirmation = false
     @State private var localDataMessage: String?
 
+    /// Closes Settings when it fills the trailing pane of the unfolded iPhone
+    /// Duo rather than a sheet, where `dismiss` has nothing to dismiss.
+    var onDone: (() -> Void)?
+
     var body: some View {
         NavigationStack {
             Form {
@@ -53,7 +57,7 @@ struct SettingsView: View {
             // third tab is Recharge+, which is worth going to.
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") { if let onDone { onDone() } else { dismiss() } }
                 }
             }
             .sheet(isPresented: $showPaywall) {

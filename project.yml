@@ -189,6 +189,8 @@ targets:
       # surface area.
       - path: Shared/Utilities/HealthIngestSummary.swift
       - path: Shared/Utilities/DateHelpers.swift
+      # The iPhone Duo pane math, without the views that use it.
+      - path: Recharge/Utilities/UnfoldedSplit.swift
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
