@@ -21,6 +21,10 @@ struct EstimateDetailView: View {
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
 
+    /// Closes the detail when it fills the trailing pane of the unfolded iPhone
+    /// Duo rather than a sheet, where `dismiss` has nothing to dismiss.
+    var onDone: (() -> Void)?
+
     private var estimate: RecoveryEstimate {
         engine.estimates.first { $0.sessionID == capturedEstimate.sessionID } ?? capturedEstimate
     }
@@ -48,10 +52,14 @@ struct EstimateDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") { close() }
                 }
             }
         }
+    }
+
+    private func close() {
+        if let onDone { onDone() } else { dismiss() }
     }
 
     // MARK: - Header
@@ -379,7 +387,7 @@ struct EstimateDetailView: View {
 
     private var proTeaser: some View {
         Button {
-            dismiss()
+            close()
             NotificationCenter.default.post(name: .rechargeUpgradeRequested, object: nil)
         } label: {
             Card {

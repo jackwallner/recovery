@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.requestReview) private var requestReview
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var selectedTab = Tab.today
     @State private var showWhatsNew = false
@@ -22,6 +23,13 @@ struct RootView: View {
     /// The third tab is built on first visit rather than at launch. See
     /// `tabContent(.plus)`.
     @State private var hasVisitedPlusTab = false
+    /// The container's width and fold, measured so the unfolded iPhone Duo can
+    /// put Today and History on opposite sides of the fold.
+    @State private var paneGeometry = PaneGeometry(width: 0, fold: nil)
+    /// Settings or one session's detail, opened from Today or History. Split,
+    /// it covers History in the trailing pane; folded it is a sheet, which only
+    /// happens when the Duo closes with a pane open.
+    @State private var trailingPanel: TrailingPanel?
 
     /// Three tabs, the Vitals shape: the number, the record of it, and the
     /// upgrade. **Settings is not a tab**, it is a gear button on Today, because
@@ -29,6 +37,24 @@ struct RootView: View {
     /// twice.
     enum Tab: Hashable {
         case today, history, plus
+    }
+
+    /// Unfolded, History has its own pane beside Today, so it is never a tab.
+    private var split: UnfoldedSplit? {
+        UnfoldedSplit.make(
+            width: paneGeometry.width,
+            isRegularWidth: horizontalSizeClass == .regular,
+            fold: paneGeometry.fold
+        )
+    }
+
+    /// The panel as a sheet, for the one case it is not a pane: the Duo closed
+    /// while it was open. The sheet's own dismissal must not close a pane.
+    private var trailingPanelSheet: Binding<TrailingPanel?> {
+        Binding(
+            get: { split == nil ? trailingPanel : nil },
+            set: { if $0 == nil, split == nil { trailingPanel = nil } }
+        )
     }
 
     var body: some View {
@@ -52,11 +78,19 @@ struct RootView: View {
     /// rather than as a floating control. Overlaying costs one thing in return —
     /// every scrollable tab has to reserve room for the bar at rest — and
     /// `tabBarClearance()` is that, applied *inside* each `NavigationStack`.
+    ///
+    /// One view tree in every pose: opening or closing the Duo only moves these
+    /// frames, so no tab is rebuilt and each keeps its scroll position.
     private var main: some View {
-        ZStack(alignment: .bottom) {
-            tabContent(.today) { TodayView(isPresentingSheet: $todayIsPresentingSheet) }
-            tabContent(.history) { HistoryView() }
-            tabContent(.plus) {
+        ZStack(alignment: .bottomLeading) {
+            // Behind the fold, which the panes leave uncovered.
+            Theme.background.ignoresSafeArea()
+
+            tabContent(.today, isVisible: selectedTab == .today, pane: .leading) {
+                TodayView(isPresentingSheet: $todayIsPresentingSheet)
+            }
+            tabContent(.history, isVisible: showsHistory, pane: .trailing) { HistoryView() }
+            tabContent(.plus, isVisible: selectedTab == .plus, pane: .leading) {
                 Group {
                     // Built only once the tab has been visited. Two reasons, and
                     // the second is the one that bites: the paywall fetches
@@ -87,11 +121,37 @@ struct RootView: View {
                 // inside it.
             }
 
+            panelOverHistory
+
             tabBar
+                // Within the leading pane while split, never across the fold.
+                .frame(maxWidth: split?.primaryWidth ?? .infinity)
                 .zIndex(2)
+        }
+        .onGeometryChange(for: PaneGeometry.self) { proxy in
+            PaneGeometry(width: proxy.size.width, fold: proxy.verticalFold())
+        } action: { paneGeometry = $0 }
+        .environment(\.openInTrailingPane, split == nil ? nil : TrailingPaneAction(open: { showPanel($0) }))
+        .onChange(of: split != nil) { _, isSplit in
+            if isSplit, selectedTab == .history { selectedTab = .today }
+        }
+        // Notification routes and the screenshot hook still ask for History.
+        .onChange(of: selectedTab) { _, tab in
+            if tab == .history, split != nil { selectedTab = .today }
         }
         .ignoresSafeArea(edges: .bottom)
         .tint(Theme.recovering)
+        .sheet(item: trailingPanelSheet) { panel in
+            trailingPanelContent(panel)
+        }
+        #if DEBUG
+        .onChange(of: paneGeometry) { _, geometry in
+            guard DuoScreenshotTour.isEnabled else { return }
+            NSLog("DUOGEOM width=%.1f fold=%@ split=%@", geometry.width,
+                  String(describing: geometry.fold), String(describing: split))
+        }
+        .task(id: split != nil) { await runDuoTour(split: split != nil) }
+        #endif
         .task { await evaluateLaunchSurfaces() }
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
             Task { await evaluateReadyMomentSurfaces() }
@@ -168,11 +228,13 @@ struct RootView: View {
             TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
                 select(.today)
             }
-            TabButton(
-                icon: "list.bullet.rectangle",
-                label: "History",
-                isSelected: selectedTab == .history
-            ) { select(.history) }
+            if split == nil {
+                TabButton(
+                    icon: "list.bullet.rectangle",
+                    label: "History",
+                    isSelected: selectedTab == .history
+                ) { select(.history) }
+            }
             TabButton(
                 icon: store.isPro ? "sparkles" : "lock.fill",
                 label: store.isPro ? "Recharge+" : "Upgrade",
@@ -296,29 +358,190 @@ struct RootView: View {
     /// countdown expires, so nothing here may talk over it.
     private var isPresentingSomething: Bool {
         showWhatsNew || showTrialOffer || showPaywall || todayIsPresentingSheet
+            || trailingPanelSheet.wrappedValue != nil
     }
+
+    // MARK: - Unfolded panes
+
+    /// History fills the trailing pane unless Settings or a detail covers it.
+    private var showsHistory: Bool {
+        split == nil ? selectedTab == .history : trailingPanel == nil
+    }
+
+    /// Settings or a session's detail, over History in the trailing pane.
+    @ViewBuilder
+    private var panelOverHistory: some View {
+        if let split, let trailingPanel {
+            trailingPanelContent(trailingPanel)
+                .id(trailingPanel.id)
+                .environment(\.horizontalSizeClass, .compact)
+                .horizontalToolbarInPane(true)
+                .frame(width: split.secondaryWidth)
+                .frame(maxHeight: .infinity)
+                .padding(.leading, split.secondaryX)
+                .transition(.opacity)
+                .zIndex(1)
+        }
+    }
+
+    private func showPanel(_ panel: TrailingPanel?) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { trailingPanel = panel }
+    }
+
+    private func trailingPanelContent(_ panel: TrailingPanel) -> some View {
+        Group {
+            switch panel {
+            case .settings:
+                SettingsView(onDone: { showPanel(nil) })
+            case .estimate(let estimate):
+                EstimateDetailView(capturedEstimate: estimate, onDone: { showPanel(nil) })
+            }
+        }
+        .environmentObject(settings)
+        .environmentObject(store)
+        .environmentObject(engine)
+    }
+
+    #if DEBUG
+    /// See `DuoScreenshotTour`. Each route starts from Today with no panel.
+    private func runDuoTour(split isSplit: Bool) async {
+        guard DuoScreenshotTour.isEnabled else { return }
+        try? await Task.sleep(for: .seconds(DuoScreenshotTour.firstDelay))
+        // Loops until the panes split or join, so a slow capture still lands
+        // on every route.
+        while !Task.isCancelled {
+            for route in DuoScreenshotTour.routes(split: isSplit) {
+                guard !Task.isCancelled else { return }
+                NSLog("DUOTOUR %@ route=%@", isSplit ? "inner" : "outer", route)
+                withAnimation { trailingPanel = nil }
+                try? await Task.sleep(for: .milliseconds(700))
+                withAnimation { openDuoRoute(route) }
+                try? await Task.sleep(for: .seconds(DuoScreenshotTour.step))
+            }
+        }
+    }
+
+    /// `tab/panel`, either half optional: `plus/detail:4`, `settings`.
+    private func openDuoRoute(_ route: String) {
+        for part in route.split(separator: "/").map(String.init) {
+            switch part {
+            case "today": selectedTab = .today
+            case "history": selectedTab = .history
+            case "plus":
+                hasVisitedPlusTab = true
+                selectedTab = .plus
+            case "settings": trailingPanel = .settings
+            case _ where part.hasPrefix("detail"):
+                let index = Int(part.split(separator: ":").last ?? "") ?? 0
+                let estimates = engine.estimates.sorted { $0.sessionEnd > $1.sessionEnd }
+                if estimates.indices.contains(index) { trailingPanel = .estimate(estimates[index]) }
+            default: break
+            }
+        }
+    }
+    #endif
 
     /// Every tab stays alive and keeps its scroll position and navigation stack,
     /// which is what a system `TabView` does and what a plain `if` would throw
     /// away on every switch.
+    ///
+    /// `pane` is the side of the fold the tab takes while split. Each pane is
+    /// phone-width and laid out as on a phone.
     @ViewBuilder
     private func tabContent<Content: View>(
         _ tab: Tab,
+        isVisible: Bool,
+        pane: UnfoldedPane,
         @ViewBuilder content: () -> Content
     ) -> some View {
         content()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .opacity(selectedTab == tab ? 1 : 0)
-            .allowsHitTesting(selectedTab == tab)
-            .accessibilityHidden(selectedTab != tab)
+            .environment(\.unfoldedPane, split == nil ? nil : pane)
+            .environment(\.horizontalSizeClass, split == nil ? horizontalSizeClass : .compact)
+            .horizontalToolbarInPane(split != nil)
+            .frame(maxWidth: paneWidth(pane), maxHeight: .infinity)
+            .padding(.leading, pane == .trailing ? split?.secondaryX ?? 0 : 0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .opacity(isVisible ? 1 : 0)
+            .allowsHitTesting(isVisible)
+            .accessibilityHidden(!isVisible)
             // The selected tab is also the frontmost one. `accessibilityHidden`
             // does not reach into the UIKit navigation stack each tab hosts, so
             // a History that had been scrolled still answered the accessibility
             // hit test over Today: VoiceOver touch exploration found invisible
             // History rows, and the ring could not be tapped from a UI test.
-            .zIndex(selectedTab == tab ? 1 : 0)
+            .zIndex(isVisible ? 1 : 0)
     }
 
+    private func paneWidth(_ pane: UnfoldedPane) -> CGFloat {
+        guard let split else { return .infinity }
+        return pane == .leading ? split.primaryWidth : split.secondaryWidth
+    }
+}
+
+private struct PaneGeometry: Equatable, Sendable {
+    var width: CGFloat
+    var fold: ClosedRange<CGFloat>?
+}
+
+/// Which side of the unfolded iPhone Duo's fold a screen fills. `nil` in the
+/// environment everywhere else, including the folded Duo.
+enum UnfoldedPane: Sendable {
+    case leading, trailing
+}
+
+/// What the trailing pane can show over History.
+enum TrailingPanel: Identifiable, Equatable {
+    case settings
+    case estimate(RecoveryEstimate)
+
+    var id: String {
+        switch self {
+        case .settings: "settings"
+        case .estimate(let estimate): "estimate-\(estimate.sessionID)"
+        }
+    }
+}
+
+/// Opens Settings or a session's detail in the trailing pane. Only set while
+/// split; Today and History raise their own sheets when it is `nil`.
+struct TrailingPaneAction {
+    let open: (TrailingPanel) -> Void
+
+    func callAsFunction(_ panel: TrailingPanel) { open(panel) }
+}
+
+private struct UnfoldedPaneKey: EnvironmentKey {
+    static var defaultValue: UnfoldedPane? { nil }
+}
+
+private struct OpenInTrailingPaneKey: EnvironmentKey {
+    static var defaultValue: TrailingPaneAction? { nil }
+}
+
+extension EnvironmentValues {
+    var unfoldedPane: UnfoldedPane? {
+        get { self[UnfoldedPaneKey.self] }
+        set { self[UnfoldedPaneKey.self] = newValue }
+    }
+
+    var openInTrailingPane: TrailingPaneAction? {
+        get { self[OpenInTrailingPaneKey.self] }
+        set { self[OpenInTrailingPaneKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// iOS 27.1 can move a stack's toolbar into a vertical bar on its trailing
+    /// edge, which in a pane lands beside the fold. A pane keeps the phone's
+    /// horizontal bar; folded, the system default is unchanged.
+    @ViewBuilder
+    func horizontalToolbarInPane(_ isPane: Bool) -> some View {
+        if #available(iOS 27.1, *) {
+            toolbarVerticalBehavior(isPane ? .disabled : .automatic)
+        } else {
+            self
+        }
+    }
 }
 
 /// Raised by any locked surface that wants the upgrade pitch. `RootView` owns
@@ -365,9 +588,20 @@ extension View {
     /// it moves where the content comes to rest rather than the scroll view's
     /// frame, so passing content still runs under the capsule and only the last
     /// row is guaranteed to clear it.
+    ///
+    /// The trailing pane of the unfolded iPhone Duo has no tab bar under it, so
+    /// it reserves nothing.
     func tabBarClearance() -> some View {
-        safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: TabBarMetrics.clearance)
+        modifier(TabBarClearance())
+    }
+}
+
+private struct TabBarClearance: ViewModifier {
+    @Environment(\.unfoldedPane) private var pane
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
         }
     }
 }
