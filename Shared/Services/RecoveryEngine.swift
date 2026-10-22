@@ -1219,25 +1219,14 @@ public final class RecoveryEngine: ObservableObject {
         }
         #endif
         let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
-        let acuteCutoff = now.addingTimeInterval(-7 * 86_400)
-        let chronicCutoff = now.addingTimeInterval(-28 * 86_400)
-        let acute = workouts.filter { $0.endDate >= acuteCutoff }.reduce(0) { $0 + $1.sessionLoad }
-        let chronicTotal = workouts.filter { $0.endDate >= chronicCutoff }.reduce(0) { $0 + $1.sessionLoad }
         // Chronic is expressed as a weekly average so the two are comparable.
-        return (acute, chronicTotal / 4)
+        return LoadSeries.balance(workouts.map { (end: $0.endDate, load: $0.sessionLoad) }, now: now)
     }
 
     /// Daily load totals for the last `days` days, oldest first.
     public func dailyLoads(days: Int = 14, now: Date = .now) -> [(date: Date, load: Double)] {
         let workouts = ((try? context.fetch(FetchDescriptor<WorkoutRecord>())) ?? [])
-        var totals: [String: Double] = [:]
-        for workout in workouts {
-            totals[DateHelpers.dayKey(for: workout.endDate), default: 0] += workout.sessionLoad
-        }
-        return (0..<days).reversed().compactMap { offset in
-            let date = DateHelpers.daysAgo(offset, from: now)
-            return (date: date, load: totals[DateHelpers.dayKey(for: date)] ?? 0)
-        }
+        return LoadSeries.daily(workouts.map { (end: $0.endDate, load: $0.sessionLoad) }, days: days, now: now)
     }
 
     // MARK: - Helpers

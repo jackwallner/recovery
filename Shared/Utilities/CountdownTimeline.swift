@@ -31,7 +31,7 @@ public enum CountdownTimeline {
     /// - Parameters:
     ///   - snapshot: the cached estimate.
     ///   - now: the moment the timeline is being built.
-    public static func entryDates(for snapshot: RecoverySnapshot, now: Date) -> [Date] {
+    public static func entryDates(for snapshot: RecoverySnapshot, now: Date, calendar: Calendar = .current) -> [Date] {
         guard let readyAt = snapshot.readyAt, readyAt > now else {
             // Nothing running: one entry now, and the caller sets a far-out
             // refresh policy. The phone reloads timelines on every new estimate,
@@ -44,7 +44,7 @@ public enum CountdownTimeline {
 
         // Hourly down to the last two hours.
         if remaining > 2 * 3600 {
-            var cursor = nextHourBoundary(after: now)
+            var cursor = nextHourBoundary(after: now, calendar: calendar)
             while cursor < readyAt.addingTimeInterval(-2 * 3600),
                   dates.count < maximumEntries - reservedFinalEntries {
                 dates.append(cursor)
@@ -85,15 +85,18 @@ public enum CountdownTimeline {
     /// Next whole hour after `date`, so entries land on times a user recognises
     /// rather than at arbitrary offsets from when the timeline happened to build.
     ///
-    /// Built by truncating to the current hour and adding one, not with
-    /// `date(bySetting:)` — that searches *forward* for the next matching
+    /// Built from the end of the current hour, not with
+    /// `date(bySetting:)`, which searches *forward* for the next matching
     /// component, which from 09:40 lands on 11:00 and leaves an 80-minute hole
     /// the countdown would visibly jump across.
     static func nextHourBoundary(after date: Date, calendar: Calendar = .current) -> Date {
-        let components = calendar.dateComponents([.year, .month, .day, .hour], from: date)
-        guard let hourStart = calendar.date(from: components),
-              let next = calendar.date(byAdding: .hour, value: 1, to: hourStart)
-        else { return date.addingTimeInterval(3600) }
+        // The calendar's own hour interval, because rebuilding the hour from
+        // wall-clock components lands on the first of the two 01:00 hours the
+        // night the clocks go back, which puts the "next" boundary an hour
+        // before a date inside the second one.
+        guard let next = calendar.dateInterval(of: .hour, for: date)?.end, next > date else {
+            return date.addingTimeInterval(3600)
+        }
         return next
     }
 }

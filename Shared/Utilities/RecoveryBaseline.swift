@@ -271,27 +271,29 @@ public struct RecoveryBaseline: Sendable, Equatable {
         for profile: WorkoutProfile,
         now: Date = .now,
         historyDays: Int = RecoveryBaseline.historyDays,
-        fitnessScale: Double = 1
+        fitnessScale: Double = 1,
+        calendar: Calendar = .current
     ) -> RecoveryBaseline {
         let cutoff = now.addingTimeInterval(-Double(historyDays) * 86_400)
         let recent = history.filter { $0.date >= cutoff && $0.profile != .easy }
 
         let inProfile = recent.filter { $0.profile == profile }
         if inProfile.count >= minimumSamples {
-            return baseline(from: inProfile, for: profile, fitnessScale: fitnessScale)
+            return baseline(from: inProfile, for: profile, fitnessScale: fitnessScale, calendar: calendar)
         }
 
         // Not enough same-profile history. Pooling across profiles is a worse
         // comparison but a much better one than the standard reference, so use
         // it whenever it clears the threshold.
         if recent.count >= minimumSamples {
-            return baseline(from: recent, for: profile, fitnessScale: fitnessScale)
+            return baseline(from: recent, for: profile, fitnessScale: fitnessScale, calendar: calendar)
         }
 
         return baseline(
             from: inProfile.isEmpty ? recent : inProfile,
             for: profile,
-            fitnessScale: fitnessScale
+            fitnessScale: fitnessScale,
+            calendar: calendar
         )
     }
 
@@ -300,11 +302,12 @@ public struct RecoveryBaseline: Sendable, Equatable {
     private static func baseline(
         from entries: [(profile: WorkoutProfile, load: Double, date: Date)],
         for profile: WorkoutProfile,
-        fitnessScale: Double
+        fitnessScale: Double,
+        calendar: Calendar
     ) -> RecoveryBaseline {
         var byDay: [String: Double] = [:]
         for entry in entries {
-            byDay[DateHelpers.dayKey(for: entry.date), default: 0] += entry.load
+            byDay[DateHelpers.dayKey(for: entry.date, calendar: calendar), default: 0] += entry.load
         }
         return RecoveryBaseline(
             loads: entries.map(\.load),
