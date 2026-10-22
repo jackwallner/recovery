@@ -603,17 +603,24 @@ private struct TabBarClearance: ViewModifier {
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .bottom, spacing: 0) {
-            LinearGradient(
-                stops: [
-                    .init(color: Theme.background.opacity(0), location: 0),
-                    .init(color: Theme.background, location: 0.3)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .opacity(pane == .leading ? 1 : 0)
-            .allowsHitTesting(false)
-            .frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
+            // The band runs on through the home indicator's safe area. Sized
+            // to the inset alone it stopped above it, and a Recharge+ card
+            // showed again below the band with its heading cut in half.
+            Color.clear
+                .frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
+                .background {
+                    LinearGradient(
+                        stops: [
+                            .init(color: Theme.background.opacity(0), location: 0),
+                            .init(color: Theme.background, location: 0.3)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .opacity(pane == .leading ? 1 : 0)
+                    .ignoresSafeArea(edges: .bottom)
+                }
+                .allowsHitTesting(false)
         }
     }
 }
