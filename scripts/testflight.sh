@@ -5,6 +5,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|--help|-h)
+      exec "$HOME/ios/release/testflight.sh" --project Recharge.xcodeproj --scheme Recharge "$@"
+      ;;
+    --) break ;;
+  esac
+done
+
 # The design system's mechanical half, before anything is bumped. Every check
 # it runs was a real regression in this app once, and all of them are invisible
 # in a diff: an off-grid padding, a fourth corner radius, a button that does not
