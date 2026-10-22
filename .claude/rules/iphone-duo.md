@@ -52,4 +52,15 @@ paths:
   `-DuoRoutes` and `-DuoRoutesRegular`). `DUOTOUR` lines in app.log map shots
   to routes and `DUOGEOM` lines record the measured width and fold.
   `simctl openurl` raises an alert on iOS 27, so the tour runs on a timer and
-  gh-sim's `--url noop://N` only paces the screenshots.
+  gh-sim's `--url noop://N` only paces the screenshots. A shot lands about
+  every 6.5 s against a 12 s step, so pass 16 URLs to see every route twice
+  and pick the settled frame (`launch-outer` catches the ring mid-draw).
+- Store set (2026-10-21): inner Today + History, Today + Run detail,
+  Recharge+ + session detail, Recharge+ + History; outer Today. The Recharge+
+  pane rests with the Training load card at the band's fade edge, the least
+  clean edge in the set.
+- Record with `gh-sim all --record-seconds 30` and `-DuoTourStep 5`, so the
+  device is warm when the launch recording starts. In `launch` mode the cold
+  first launch took over three minutes and the recorder left an unfinalized
+  temp file with no moov atom; one `all` run also lost both recordings to a
+  tests recording that never finalized. Retry once before giving up.
