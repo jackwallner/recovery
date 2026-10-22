@@ -82,6 +82,7 @@ These files load automatically when you read a file matching their `paths:`. Age
 | `.claude/rules/countdown-and-watch-sync.md` | The countdown timeline; The RPE path is the only Watch → phone write; Staleness on the glance surfaces | Complications, widgets, the Watch app, WatchConnectivity, background delivery |
 | `.claude/rules/build-and-release.md` | Generating the project; App Store record, metadata and products | `project.yml`, `testflight.sh`, signing, StoreKit config, ASC metadata, IAP copy |
 | `.claude/rules/testing-and-fixtures.md` | Paywall verification; fixtures; the seeded Health walkthrough | UI tests, `ScreenshotFixtures`, `HealthSeeder`, verifying the paywall |
+| `.claude/rules/iphone-duo.md` | Unfolded split, trailing-pane panels, Duo capture tour | `RootView`, the pane screens, `UnfoldedSplit`, iPhone Duo captures |
 | `.claude/rules/android.md` | Native Android port, parity fixtures, Health Connect, signing and Pro isolation | `android/**` |
 
 ## App-specific notes

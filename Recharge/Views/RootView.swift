@@ -589,8 +589,10 @@ extension View {
     /// frame, so passing content still runs under the capsule and only the last
     /// row is guaranteed to clear it.
     ///
-    /// The trailing pane of the unfolded iPhone Duo has no tab bar under it, so
-    /// it reserves nothing.
+    /// On the unfolded iPhone Duo the trailing pane has no tab bar under it, so
+    /// it reserves nothing, and the leading pane fills its room with the page
+    /// background: beside a History pane that runs to the bottom edge, a card
+    /// passing under the capsule reads as covered rather than scrolling.
     func tabBarClearance() -> some View {
         modifier(TabBarClearance())
     }
@@ -601,7 +603,17 @@ private struct TabBarClearance: ViewModifier {
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
+            LinearGradient(
+                stops: [
+                    .init(color: Theme.background.opacity(0), location: 0),
+                    .init(color: Theme.background, location: 0.3)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .opacity(pane == .leading ? 1 : 0)
+            .allowsHitTesting(false)
+            .frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
         }
     }
 }
