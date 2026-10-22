@@ -28,6 +28,9 @@ paths:
   `tabBarClearance()` reserves nothing there; in the leading pane it fills the
   room with a background band, so a Recharge+ card never rests under the pill
   beside a History pane that runs to the bottom edge. Folded it stays clear.
+  The band's background ignores the bottom safe area: sized to the inset
+  alone it stopped above the home indicator, and the Training load card
+  showed again below it with its heading cut in half.
   Today ignores the top safe area in a pane, because the status bar sits over
   the trailing pane, level with its title.
 - Measured on the gh-sim iPhone Duo (iOS 27.1): fold division 455.5...495.5,
@@ -55,10 +58,11 @@ paths:
   gh-sim's `--url noop://N` only paces the screenshots. A shot lands about
   every 6.5 s against a 12 s step, so pass 16 URLs to see every route twice
   and pick the settled frame (`launch-outer` catches the ring mid-draw).
-- Store set (2026-10-21): inner Today + History, Today + Run detail,
-  Recharge+ + session detail, Recharge+ + History; outer Today. The Recharge+
-  pane rests with the Training load card at the band's fade edge, the least
-  clean edge in the set.
+- Store set (staged 2026-10-22 on version 1.1.1, en-US APP_IPHONE_DUO):
+  inner Today + History, Today + Run detail, Recharge+ + session detail,
+  Recharge+ + History; outer Today. Captured after the band fix, so the
+  Recharge+ pane rests with its 30-day card fading into the band. Release
+  1.1.1 only with a build carrying the Duo layout.
 - Record with `gh-sim all --record-seconds 30` and `-DuoTourStep 5`, so the
   device is warm when the launch recording starts. In `launch` mode the cold
   first launch took over three minutes and the recorder left an unfinalized
