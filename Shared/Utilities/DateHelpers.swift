@@ -25,3 +25,35 @@ public enum DateHelpers {
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
     }
 }
+
+/// The weekly-load figures behind the Recharge+ load view, pure so they can be
+/// driven with a fixed clock and calendar.
+public enum LoadSeries {
+    public typealias Entry = (end: Date, load: Double)
+
+    /// Daily load totals for the last `days` local days, oldest first, today last.
+    public static func daily(
+        _ entries: [Entry],
+        days: Int,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> [(date: Date, load: Double)] {
+        var totals: [String: Double] = [:]
+        for entry in entries {
+            totals[DateHelpers.dayKey(for: entry.end, calendar: calendar), default: 0] += entry.load
+        }
+        return (0..<days).reversed().compactMap { offset in
+            let date = DateHelpers.daysAgo(offset, from: now, calendar: calendar)
+            return (date: date, load: totals[DateHelpers.dayKey(for: date, calendar: calendar)] ?? 0)
+        }
+    }
+
+    /// Acute (7-day) and chronic (28-day, as a weekly average) load.
+    public static func balance(_ entries: [Entry], now: Date) -> (acute: Double, chronic: Double) {
+        let acuteCutoff = now.addingTimeInterval(-7 * 86_400)
+        let chronicCutoff = now.addingTimeInterval(-28 * 86_400)
+        let acute = entries.filter { $0.end >= acuteCutoff }.reduce(0) { $0 + $1.load }
+        let chronicTotal = entries.filter { $0.end >= chronicCutoff }.reduce(0) { $0 + $1.load }
+        return (acute, chronicTotal / 4)
+    }
+}
