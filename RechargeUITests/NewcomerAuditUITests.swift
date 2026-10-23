@@ -220,7 +220,7 @@ final class NewcomerAuditUITests: XCTestCase {
         settle()
 
         // The card that sells Recharge+, tapped as a curious newcomer would.
-        app.buttons["Your own recharge time"].firstMatch.tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Your own recharge time")).firstMatch.tap()
         settle(2)
         attach(app, "result-08-card-tap")
         log("result-08-card-tap", app)
