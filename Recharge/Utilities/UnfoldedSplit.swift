@@ -34,6 +34,30 @@ struct UnfoldedSplit: Equatable, Sendable {
     }
 }
 
+/// Which side of the unfolded iPhone Duo's fold a screen fills. `nil` in the
+/// environment everywhere else, including the folded Duo.
+enum UnfoldedPane: Sendable {
+    case leading, trailing
+}
+
+extension UnfoldedSplit {
+    /// The band a scrollable screen keeps above its bottom safe area for
+    /// the floating tab bar, which sits `barClearance` above the screen's edge.
+    ///
+    /// Folded, the band is clear and as tall as the bar, so the last row rests
+    /// above the capsule and passing rows still scroll behind it. The trailing
+    /// pane has no bar under it. The leading pane's band runs from the bar's
+    /// top edge to the bottom of the screen, so nothing is ever drawn under the
+    /// capsule beside a History pane that runs to the bottom edge.
+    static func tabBarBand(pane: UnfoldedPane?, barClearance: CGFloat, bottomSafeArea: CGFloat) -> CGFloat {
+        switch pane {
+        case nil: barClearance
+        case .trailing: 0
+        case .leading: max(0, barClearance - bottomSafeArea)
+        }
+    }
+}
+
 extension GeometryProxy {
     /// The vertical fold's horizontal extent in this proxy's space. Inactive
     /// folds count too, so the panes don't jump while the device opens.

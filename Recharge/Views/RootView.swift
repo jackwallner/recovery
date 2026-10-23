@@ -146,11 +146,14 @@ struct RootView: View {
         }
         #if DEBUG
         .onChange(of: paneGeometry) { _, geometry in
-            guard DuoScreenshotTour.isEnabled else { return }
+            guard DuoScreenshotTour.isEnabled || DuoScreenshotTour.screen(split: true) != nil else { return }
             NSLog("DUOGEOM width=%.1f fold=%@ split=%@", geometry.width,
                   String(describing: geometry.fold), String(describing: split))
         }
-        .task(id: split != nil) { await runDuoTour(split: split != nil) }
+        .task(id: split != nil) {
+            await openDuoScreen(split: split != nil)
+            await runDuoTour(split: split != nil)
+        }
         #endif
         .task { await evaluateLaunchSurfaces() }
         .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
@@ -421,6 +424,20 @@ struct RootView: View {
         }
     }
 
+    /// See `DuoScreenshotTour.screen`. Reapplied when the panes split or join.
+    private func openDuoScreen(split isSplit: Bool) async {
+        guard let route = DuoScreenshotTour.screen(split: isSplit) else { return }
+        // A session detail needs the seeded sessions, which load just after launch.
+        for _ in 0..<50 where route.contains("detail") && engine.estimates.isEmpty {
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        try? await Task.sleep(for: .milliseconds(500))
+        guard !Task.isCancelled else { return }
+        NSLog("DUOSCREEN %@ route=%@", isSplit ? "inner" : "outer", route)
+        trailingPanel = nil
+        openDuoRoute(route)
+    }
+
     /// `tab/panel`, either half optional: `plus/detail:4`, `settings`.
     private func openDuoRoute(_ route: String) {
         for part in route.split(separator: "/").map(String.init) {
@@ -481,12 +498,6 @@ struct RootView: View {
 private struct PaneGeometry: Equatable, Sendable {
     var width: CGFloat
     var fold: ClosedRange<CGFloat>?
-}
-
-/// Which side of the unfolded iPhone Duo's fold a screen fills. `nil` in the
-/// environment everywhere else, including the folded Duo.
-enum UnfoldedPane: Sendable {
-    case leading, trailing
 }
 
 /// What the trailing pane can show over History.
@@ -590,9 +601,10 @@ extension View {
     /// row is guaranteed to clear it.
     ///
     /// On the unfolded iPhone Duo the trailing pane has no tab bar under it, so
-    /// it reserves nothing, and the leading pane fills its room with the page
-    /// background: beside a History pane that runs to the bottom edge, a card
-    /// passing under the capsule reads as covered rather than scrolling.
+    /// it reserves nothing. The leading pane covers everything from the bar's
+    /// top edge down with the page background: a card passing under the
+    /// capsule there read as covered, with its heading sliced by the band's
+    /// edge, beside a History pane that runs to the bottom of the screen.
     func tabBarClearance() -> some View {
         modifier(TabBarClearance())
     }
@@ -600,21 +612,23 @@ extension View {
 
 private struct TabBarClearance: ViewModifier {
     @Environment(\.unfoldedPane) private var pane
+    @State private var bottomSafeArea: CGFloat = 0
 
     func body(content: Content) -> some View {
-        content.safeAreaInset(edge: .bottom, spacing: 0) {
-            LinearGradient(
-                stops: [
-                    .init(color: Theme.background.opacity(0), location: 0),
-                    .init(color: Theme.background, location: 0.3)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .opacity(pane == .leading ? 1 : 0)
-            .allowsHitTesting(false)
-            .frame(height: pane == .trailing ? 0 : TabBarMetrics.clearance)
-        }
+        content
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Theme.background
+                    .frame(height: UnfoldedSplit.tabBarBand(
+                        pane: pane,
+                        barClearance: TabBarMetrics.clearance,
+                        bottomSafeArea: bottomSafeArea
+                    ))
+                    // The home indicator's strip, under the bar, is covered too.
+                    .background(Theme.background.ignoresSafeArea(edges: .bottom))
+                    .opacity(pane == .leading ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { bottomSafeArea = $0 }
     }
 }
 

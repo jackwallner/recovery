@@ -14,10 +14,22 @@ import Foundation
 ///
 /// A route is `tab/panel`, either half optional. Tabs: `today`, `history`,
 /// `plus`. Panels: `settings`, and `detail:<n>`, the nth newest session.
+///
+/// `-DuoScreen <route>` opens one route at launch instead, for
+/// `gh-sim all --screen "-DuoScreen <route>"`, which relaunches the app once
+/// per surface and screenshots it folded and unfolded. Split, the whole route
+/// opens; folded, only its tab, so the outer display never shows a sheet,
+/// unless `-DuoScreenFolded <route>` names another one.
 enum DuoScreenshotTour {
     private static let arguments = ProcessInfo.processInfo.arguments
 
     static var isEnabled: Bool { arguments.contains("-DuoTour") }
+
+    static func screen(split: Bool) -> String? {
+        guard let route = value("-DuoScreen") else { return nil }
+        if split { return route }
+        return value("-DuoScreenFolded") ?? route.split(separator: "/").first.map(String.init)
+    }
 
     static func routes(split: Bool) -> [String] {
         let list = value(split ? "-DuoRoutesRegular" : "-DuoRoutes")

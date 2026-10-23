@@ -55,4 +55,33 @@ final class UnfoldedSplitTests: XCTestCase {
             XCTAssertEqual(split.secondaryX + split.secondaryWidth, width)
         }
     }
+
+    // MARK: - The tab bar's band
+
+    /// `TabBarMetrics.clearance`: the capsule's 56 pt plus the 12 pt under it.
+    private let barClearance: CGFloat = 68
+
+    func testLeadingPaneBandMeetsTheBarsTopEdge() {
+        // 34 pt is the home indicator's strip on the unfolded Duo. The band and
+        // that strip together cover exactly the bar's height, so the band's top
+        // edge is the capsule's top edge and nothing scrolls in under it.
+        for safeArea: CGFloat in [0, 20, 34] {
+            let band = UnfoldedSplit.tabBarBand(pane: .leading, barClearance: barClearance, bottomSafeArea: safeArea)
+            XCTAssertEqual(band + safeArea, barClearance)
+        }
+    }
+
+    func testLeadingPaneBandIsNeverNegative() {
+        XCTAssertEqual(UnfoldedSplit.tabBarBand(pane: .leading, barClearance: barClearance, bottomSafeArea: 90), 0)
+    }
+
+    func testTrailingPaneReservesNothing() {
+        XCTAssertEqual(UnfoldedSplit.tabBarBand(pane: .trailing, barClearance: barClearance, bottomSafeArea: 34), 0)
+    }
+
+    func testFoldedKeepsThePhoneClearance() {
+        // Folded is the ordinary phone layout: the last row rests a full bar
+        // above the home indicator, as it always has.
+        XCTAssertEqual(UnfoldedSplit.tabBarBand(pane: nil, barClearance: barClearance, bottomSafeArea: 34), barClearance)
+    }
 }

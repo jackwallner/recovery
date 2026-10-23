@@ -25,9 +25,14 @@ paths:
   `tabBarClearance()` inset, which fills its proposal.
 - `\.unfoldedPane` tells a screen which side it fills (`nil` folded and on
   every other iPhone). The trailing pane has no tab bar under it, so
-  `tabBarClearance()` reserves nothing there; in the leading pane it fills the
-  room with a background band, so a Recharge+ card never rests under the pill
-  beside a History pane that runs to the bottom edge. Folded it stays clear.
+  `tabBarClearance()` reserves nothing there. In the leading pane it lays an
+  opaque page-coloured band from the capsule's top edge to the bottom of the
+  screen (`UnfoldedSplit.tabBarBand`, pinned in `UnfoldedSplitTests`), so
+  nothing is ever drawn under the pill. It used to be a 68 pt fade sitting
+  above the 34 pt home-indicator strip: the Training load card showed through
+  that strip with its heading sliced by the band's edge, and the fade erased
+  the 30-day card's bottom edge (review rejection, 2026-10-23). Folded it
+  stays clear and as tall as the bar, so rows still scroll behind the capsule.
   Today ignores the top safe area in a pane, because the status bar sits over
   the trailing pane, level with its title.
 - Measured on the gh-sim iPhone Duo (iOS 27.1): fold division 455.5...495.5,
@@ -46,19 +51,19 @@ paths:
   as centred form sheets. None of them shows in screenshot mode.
 - Unattended captures: `RECHARGE_SCREENSHOT_MODE=1` with
   `RECHARGE_SCREENSHOT_SCENE=premiumActive` and `TZ=America/Los_Angeles`
-  (the runner is on UTC, which put the fixture sessions at midnight), plus the
-  launch arguments
-  `-DuoTour -DuoTourFirst 3 -DuoTourStep 12` (see `DuoScreenshotTour` for
-  `-DuoRoutes` and `-DuoRoutesRegular`). `DUOTOUR` lines in app.log map shots
-  to routes and `DUOGEOM` lines record the measured width and fold.
-  `simctl openurl` raises an alert on iOS 27, so the tour runs on a timer and
-  gh-sim's `--url noop://N` only paces the screenshots. A shot lands about
-  every 6.5 s against a 12 s step, so pass 16 URLs to see every route twice
-  and pick the settled frame (`launch-outer` catches the ring mid-draw).
+  (the runner is on UTC, which put the fixture sessions at midnight), plus one
+  `gh-sim all --device 'iPhone Duo' --screen "-DuoScreen <route>"` per
+  surface. gh-sim relaunches the app per `--screen` and shoots it folded and
+  unfolded; split, the whole route opens, folded only its tab (or
+  `-DuoScreenFolded <route>`), so the outer display never shows a sheet.
+  `DUOSCREEN` and `DUOGEOM` lines in app.log record the route and the measured
+  width and fold. Never `--url`: `simctl openurl` raises an alert on iOS 27.
+  The timed `-DuoTour` walk (see `DuoScreenshotTour`) is still there for
+  recordings.
 - Store set (2026-10-21): inner Today + History, Today + Run detail,
-  Recharge+ + session detail, Recharge+ + History; outer Today. The Recharge+
-  pane rests with the Training load card at the band's fade edge, the least
-  clean edge in the set.
+  Recharge+ + session detail, Recharge+ + History; outer Today. At rest the
+  Recharge+ pane ends on the 30-day card's bottom edge (about 594 pt), just
+  above the band at 601 pt; the Training load card starts under it.
 - Record with `gh-sim all --record-seconds 30` and `-DuoTourStep 5`, so the
   device is warm when the launch recording starts. In `launch` mode the cold
   first launch took over three minutes and the recorder left an unfinalized
