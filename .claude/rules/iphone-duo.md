@@ -35,6 +35,11 @@ paths:
   stays clear and as tall as the bar, so rows still scroll behind the capsule.
   Today ignores the top safe area in a pane, because the status bar sits over
   the trailing pane, level with its title.
+- Every tab icon sits in one fixed `TabBarMetrics.iconSlotHeight` slot.
+  The buttons centred an icon-over-label stack on each glyph's own height,
+  and `sparkles` is shorter than `hourglass`, so "Recharge+" sat 5-7 px below
+  "Today" in every unfolded capture (review rejection, 2026-10-23).
+  `TabBarMetricsTests` measures each glyph against the slot.
 - Measured on the gh-sim iPhone Duo (iOS 27.1): fold division 455.5...495.5,
   so both panes are 455.5 pt (0 and 495.5). The root is 951 pt once the panes
   disable the vertical toolbar (867 pt before, for under half a second, and an

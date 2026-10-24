@@ -228,18 +228,18 @@ struct RootView: View {
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            TabButton(icon: "hourglass", label: "Today", isSelected: selectedTab == .today) {
+            TabButton(icon: TabBarMetrics.Symbol.today, label: "Today", isSelected: selectedTab == .today) {
                 select(.today)
             }
             if split == nil {
                 TabButton(
-                    icon: "list.bullet.rectangle",
+                    icon: TabBarMetrics.Symbol.history,
                     label: "History",
                     isSelected: selectedTab == .history
                 ) { select(.history) }
             }
             TabButton(
-                icon: store.isPro ? "sparkles" : "lock.fill",
+                icon: store.isPro ? TabBarMetrics.Symbol.plus : TabBarMetrics.Symbol.upgrade,
                 label: store.isPro ? "Recharge+" : "Upgrade",
                 tint: Theme.pro,
                 isSelected: selectedTab == .plus
@@ -565,26 +565,6 @@ extension Notification.Name {
     static let rechargePlusRequested = Notification.Name("rechargePlusRequested")
 }
 
-/// One tab. Ported from Protein, which is where this bar's shape comes from.
-/// The tab bar's geometry lives in one place so the bar and the room made for
-/// it stay equal.
-///
-/// Constants rather than a measured height on purpose: every term below is
-/// fixed, including `buttonHeight` and the 10pt label inside it, so the bar is
-/// the same size at every Dynamic Type setting and there is nothing to measure.
-/// If the bar is ever allowed to grow with text, this becomes a measurement and
-/// `RootView` has to read it back, not a constant somebody remembers to update.
-enum TabBarMetrics {
-    /// Matches `TabButton`'s frame, which is 44 because that is the minimum
-    /// comfortable touch target.
-    static let buttonHeight: CGFloat = 44
-    static let verticalPadding: CGFloat = 6
-    static let bottomPadding: CGFloat = 12
-
-    /// The capsule's full height plus the gap under it.
-    static var clearance: CGFloat { buttonHeight + verticalPadding * 2 + bottomPadding }
-}
-
 extension View {
     /// Reserves room for the floating tab bar at the bottom of a scrollable tab.
     ///
@@ -632,6 +612,7 @@ private struct TabBarClearance: ViewModifier {
     }
 }
 
+/// One tab. Ported from Protein, which is where this bar's shape comes from.
 private struct TabButton: View {
     let icon: String
     let label: String
@@ -643,9 +624,13 @@ private struct TabButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: Theme.Space.xxs) {
+            VStack(spacing: TabBarMetrics.labelSpacing) {
+                // A fixed slot, not the glyph's own height: SF Symbols differ
+                // in height, and a centred stack moved each label by the
+                // difference ("Recharge+" sat 2 pt below "Today").
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .font(.system(size: TabBarMetrics.iconPointSize, weight: .medium, design: .rounded))
+                    .frame(height: TabBarMetrics.iconSlotHeight)
                 Text(label)
                     .font(.caption2.weight(.semibold))
                     .lineLimit(1)

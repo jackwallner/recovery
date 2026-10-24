@@ -191,6 +191,8 @@ targets:
       - path: Shared/Utilities/DateHelpers.swift
       # The iPhone Duo pane math, without the views that use it.
       - path: Recharge/Utilities/UnfoldedSplit.swift
+      # The tab bar's slots, measured against the glyphs it draws.
+      - path: Recharge/Utilities/TabBarMetrics.swift
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
