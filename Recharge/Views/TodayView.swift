@@ -31,6 +31,10 @@ struct TodayView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.openURL) private var openURL
+    /// Set while the unfolded iPhone Duo is split: Settings and the detail
+    /// open beside Today, in the trailing pane, instead of as a sheet.
+    @Environment(\.openInTrailingPane) private var openInTrailingPane
+    @Environment(\.unfoldedPane) private var unfoldedPane
 
     @State private var now = Date.now
     @State private var showSettings = false
@@ -82,6 +86,9 @@ struct TodayView: View {
                 }
                 .refreshable { await engine.refresh(force: true) }
             }
+            // In a Duo pane the status bar sits over the other pane, so the
+            // band above the date would be empty. Today rises into it.
+            .ignoresSafeArea(.container, edges: unfoldedPane == nil ? [] : .top)
             .background(Theme.background)
             .toolbar(.hidden, for: .navigationBar)
             .tabBarClearance()
@@ -99,7 +106,7 @@ struct TodayView: View {
                 // Settings is a sheet from this screen's gear button now rather
                 // than a tab, so the capture run has to raise it from here.
                 if ScreenshotConfig.wantsSettings {
-                    showSettings = true
+                    openSettings()
                     return
                 }
                 ScreenshotConfig.markReady()
@@ -159,6 +166,17 @@ struct TodayView: View {
                     feedbackTarget = nil
                 }
             }
+            // Unfolding with a sheet up moves it into the trailing pane.
+            .onChange(of: openInTrailingPane == nil) { _, isFolded in
+                guard !isFolded else { return }
+                if showSettings {
+                    showSettings = false
+                    openSettings()
+                } else if showDetail {
+                    showDetail = false
+                    openDetail()
+                }
+            }
             .onChange(of: showSettings) { _, _ in publishSheetState() }
             .onChange(of: showDetail) { _, _ in publishSheetState() }
             .onChange(of: showEffortSheet) { _, _ in publishSheetState() }
@@ -178,7 +196,7 @@ struct TodayView: View {
         return VStack(spacing: 0) {
             header
                 .padding(.horizontal, Theme.Space.xl)
-                .padding(.top, Theme.Space.sm)
+                .padding(.top, unfoldedPane == nil ? Theme.Space.sm : Theme.Space.step(7))
 
             // A failed read only raises the access card when there is nothing
             // else to show. Over a running countdown it said Recharge "needs
@@ -216,7 +234,7 @@ struct TodayView: View {
                 freshness
             }
             Spacer()
-            Button { showSettings = true } label: {
+            Button { openSettings() } label: {
                 Image(systemName: "gearshape")
                     .font(.body.weight(.medium))
                     .foregroundStyle(Theme.textSecondary)
@@ -232,7 +250,7 @@ struct TodayView: View {
     // MARK: - Hero
 
     private func hero(ringSize: CGFloat) -> some View {
-        Button { if explained != nil { showDetail = true } } label: {
+        Button { openDetail() } label: {
             VStack(spacing: Theme.Space.md) {
                 ZStack {
                     CountdownRing(progress: progress, phase: phase, lineWidth: ringSize * 0.085)
@@ -632,6 +650,15 @@ struct TodayView: View {
     }
 
     // MARK: - Sheets
+
+    private func openSettings() {
+        if let openInTrailingPane { openInTrailingPane(.settings) } else { showSettings = true }
+    }
+
+    private func openDetail() {
+        guard let explained else { return }
+        if let openInTrailingPane { openInTrailingPane(.estimate(explained)) } else { showDetail = true }
+    }
 
     /// Raises the readiness question, once the screen has settled and only for
     /// something the engine is actually waiting on.

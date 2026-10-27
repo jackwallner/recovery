@@ -1,0 +1,10 @@
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q001", "match": "blank-launch|*|today|*", "reason": "simulator launch: the launch screen fades into Today, which draws from the cached snapshot on first render", "status": "accepted"}
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q002", "match": "blank-launch|*|today-free|*", "reason": "simulator launch into Today as a free user; same launch fade", "status": "accepted"}
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q003", "match": "blank-launch|*|welcome|*", "reason": "simulator launch on a loaded host; welcome draws on first render", "status": "accepted"}
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q004", "match": "blank-launch|*|settings|*", "reason": "the journey's launch charged to its first checkpoint, on a loaded host", "status": "accepted"}
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q005", "match": "blank-launch|*|history-before-interruption|*", "reason": "the journey's launch charged to its first checkpoint, on a loaded host", "status": "accepted"}
+{"created": "2026-10-26T03:01:16+00:00", "id": "Q006", "match": "blank-launch|*|today-after-relaunch|*", "reason": "relaunch on a loaded host (load 54)", "status": "accepted"}
+{"created": "2026-10-26T03:01:17+00:00", "id": "Q007", "match": "motion-jump|*|history|*", "reason": "a tab switch to History replaces the screen in one frame", "status": "accepted"}
+{"created": "2026-10-26T03:01:17+00:00", "id": "Q008", "match": "motion-jump|*|upgrade|*", "reason": "the system sheet sliding the paywall up", "status": "accepted"}
+{"created": "2026-10-26T03:01:17+00:00", "id": "Q009", "match": "motion-jump|*|today-after-upgrade|*", "reason": "the system sheet sliding the paywall down after Close", "status": "accepted"}
+{"created": "2026-10-26T03:01:17+00:00", "id": "Q010", "match": "motion-jump|*|history-before-interruption|*", "reason": "a tab switch to History replaces the screen in one frame", "status": "accepted"}

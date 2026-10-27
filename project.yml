@@ -13,7 +13,7 @@ settings:
     DEVELOPMENT_TEAM: YXG4MP6W39
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.1.1"
-    CURRENT_PROJECT_VERSION: "46"
+    CURRENT_PROJECT_VERSION: "47"
     GENERATE_INFOPLIST_FILE: NO
 
 packages:
@@ -189,6 +189,10 @@ targets:
       # surface area.
       - path: Shared/Utilities/HealthIngestSummary.swift
       - path: Shared/Utilities/DateHelpers.swift
+      # The iPhone Duo pane math, without the views that use it.
+      - path: Recharge/Utilities/UnfoldedSplit.swift
+      # The tab bar's slots, measured against the glyphs it draws.
+      - path: Recharge/Utilities/TabBarMetrics.swift
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES

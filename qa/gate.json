@@ -1,0 +1,17 @@
+{
+  "project": "Recharge.xcodeproj",
+  "scheme": "RechargeUITests",
+  "uitests_dir": "RechargeUITests",
+  "journeys": [
+    "RechargeUITests/ReleaseJourneysUITests"
+  ],
+  "personas": [
+    "newcomer",
+    "accessibility",
+    "reduce-motion",
+    "german"
+  ],
+  "persona_overrides": {},
+  "slot": null,
+  "bundle_id": "com.jackwallner.recovery"
+}

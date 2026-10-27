@@ -23,6 +23,9 @@ struct HistoryView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.openURL) private var openURL
+    /// Set while the unfolded iPhone Duo is split, where a row's detail opens
+    /// in this pane rather than as a sheet across the fold.
+    @Environment(\.openInTrailingPane) private var openInTrailingPane
 
     @State private var selected: RecoveryEstimate?
     @State private var isRequestingHealth = false
@@ -81,6 +84,12 @@ struct HistoryView: View {
             #if DEBUG
             .onAppear { ScreenshotConfig.markReady() }
             #endif
+            // Unfolding with a sheet up moves it into the pane.
+            .onChange(of: openInTrailingPane == nil) { _, isFolded in
+                guard !isFolded, let estimate = selected, let openInTrailingPane else { return }
+                selected = nil
+                openInTrailingPane(.estimate(estimate))
+            }
             .sheet(item: $selected) { estimate in
                 EstimateDetailView(capturedEstimate: estimate)
                     .environmentObject(store)
@@ -215,7 +224,13 @@ struct HistoryView: View {
                 ForEach(grouped) { group in
                     Section {
                         ForEach(group.estimates, id: \.sessionID) { estimate in
-                            Button { selected = estimate } label: {
+                            Button {
+                                if let openInTrailingPane {
+                                    openInTrailingPane(.estimate(estimate))
+                                } else {
+                                    selected = estimate
+                                }
+                            } label: {
                                 HistoryRow(estimate: estimate)
                             }
                             .pressable(.card)
