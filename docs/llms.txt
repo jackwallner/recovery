@@ -4,12 +4,12 @@
 
 ## App
 
-- [Recharge Workout Recovery Time | Apple Watch Recovery App](https://jackwallner.github.io/recovery/index.html.md): Workout recovery time app for Apple Watch. Get a training-load countdown after every workout from Apple Health. No ring, no strap, no account. Free to start.
+- [Recharge Workout Recovery Time | Apple Watch Recovery App](https://jackwallner.com/ios/recovery/index.html.md): Workout recovery time app for Apple Watch. Get a training-load countdown after every workout from Apple Health. No ring, no strap, no account. Free to start.
 
 ## Optional
 
 - [Recharge Android Privacy Policy](https://jackwallner.github.io/recovery/android/privacy-policy.html.md)
 - [Recharge Android Terms](https://jackwallner.github.io/recovery/android/terms.html.md)
-- [Recharge Privacy Policy](https://jackwallner.github.io/recovery/privacy-policy.html.md): Recharge reads selected Apple Health data only after you grant permission. It does not require an account and does not write to Apple Health.
-- [Recharge: Recovery Time | Support](https://jackwallner.github.io/recovery/support.html.md): Walks, yoga, and mobility work are treated as active recovery and never start a countdown. Other sessions still need enough duration and intensity to...
-- [Recharge Terms of Use](https://jackwallner.github.io/recovery/terms.html.md): By using Recharge, you agree to these Terms of Use and Apple's Standard Licensed Application End User License Agreement.
+- [Recharge Privacy Policy](https://jackwallner.com/ios/recovery/privacy-policy.html.md): Recharge reads selected Apple Health data only after you grant permission. It does not require an account and does not write to Apple Health.
+- [Recharge: Recovery Time | Support](https://jackwallner.com/ios/recovery/support.html.md): Walks, yoga, and mobility work are treated as active recovery and never start a countdown. Other sessions still need enough duration and intensity to...
+- [Recharge Terms of Use](https://jackwallner.com/ios/recovery/terms.html.md): By using Recharge, you agree to these Terms of Use and Apple's Standard Licensed Application End User License Agreement.

@@ -2,7 +2,7 @@
 
 > By using Recharge, you agree to these Terms of Use and Apple's Standard Licensed Application End User License Agreement.
 
-Web page: https://jackwallner.github.io/recovery/terms.html
+Web page: https://jackwallner.com/ios/recovery/terms.html
 
 ## Recharge Terms of Use
 

@@ -2,7 +2,7 @@
 
 > Recharge reads selected Apple Health data only after you grant permission. It does not require an account and does not write to Apple Health.
 
-Web page: https://jackwallner.github.io/recovery/privacy-policy.html
+Web page: https://jackwallner.com/ios/recovery/privacy-policy.html
 
 ## Recharge Privacy Policy
 

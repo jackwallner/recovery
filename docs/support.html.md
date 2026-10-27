@@ -2,7 +2,7 @@
 
 > Walks, yoga, and mobility work are treated as active recovery and never start a countdown. Other sessions still need enough duration and intensity to...
 
-Web page: https://jackwallner.github.io/recovery/support.html
+Web page: https://jackwallner.com/ios/recovery/support.html
 
 ## Support
 
