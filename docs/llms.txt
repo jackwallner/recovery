@@ -6,6 +6,10 @@
 
 - [Recharge Workout Recovery Time | Apple Watch Recovery App](https://jackwallner.com/ios/recovery/index.html.md): Workout recovery time app for Apple Watch. Get a training-load countdown after every workout from Apple Health. No ring, no strap, no account. Free to start.
 
+## Guides
+
+- [Best Workout Recovery Time App for Apple Watch](https://jackwallner.com/ios/recovery/best-workout-recovery-app.html.md): Five Apple Watch apps for workout recovery time compared: a countdown after each workout, or a morning readiness score. Ratings as of October 2026.
+
 ## Optional
 
 - [Recharge Android Privacy Policy](https://jackwallner.github.io/recovery/android/privacy-policy.html.md)
