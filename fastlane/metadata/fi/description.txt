@@ -49,8 +49,8 @@ Recharge+ on saatavilla kuukausi- tai vuositilauksena tai kertaostoksena ikuises
 
 Hinnat näkyvät sovelluksessa ennen ostoa ja vaihtelevat alueittain. Maksu veloitetaan Apple-tililtäsi oston vahvistuksen yhteydessä. Tilaukset uusiutuvat automaattisesti: tiliä veloitetaan 24 tunnin sisällä ennen jakson päättymistä, ellei automaattista uusiutumista poisteta käytöstä vähintään 24 tuntia aiemmin. Hallinnoi tai peruuta kohdassa Asetukset › Apple-tili › Tilaukset. Kokeilun käyttämätön osa menetetään ostettaessa.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 TIETOSUOJA

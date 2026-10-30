@@ -46,8 +46,8 @@ Recharge+ ditawarkan sebagai langganan bulanan atau tahunan, atau sebagai pembel
 
 Harga dipaparkan dalam aplikasi sebelum anda membeli dan berbeza mengikut wilayah. Bayaran dikenakan pada akaun Apple anda apabila pembelian disahkan. Langganan diperbaharui secara automatik: caj dikenakan dalam tempoh 24 jam sebelum tempoh semasa berakhir, melainkan pembaharuan automatik dimatikan sekurang-kurangnya 24 jam lebih awal. Urus atau batalkan di Tetapan › Akaun Apple › Langganan. Bahagian percubaan percuma yang tidak digunakan akan hilang apabila membeli.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVASI

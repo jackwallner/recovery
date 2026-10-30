@@ -49,8 +49,8 @@ O Recharge+ está disponível como assinatura mensal ou anual, ou como compra ú
 
 Os preços aparecem no app antes da compra e variam conforme a região. O pagamento é debitado do seu ID Apple na confirmação da compra. As assinaturas renovam automaticamente: a cobrança ocorre nas 24 horas antes do fim do período, a menos que a renovação seja desativada pelo menos 24 horas antes. Gerencie ou cancele em Ajustes › ID Apple › Assinaturas. A parte não usada de um teste grátis é perdida na compra.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACIDADE

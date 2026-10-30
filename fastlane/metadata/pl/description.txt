@@ -48,8 +48,8 @@ Recharge+ jest dostępny jako subskrypcja miesięczna lub roczna albo jako jedno
 
 Ceny są pokazywane w aplikacji przed zakupem i różnią się w zależności od regionu. Płatność jest pobierana z Twojego konta Apple przy potwierdzeniu zakupu. Subskrypcje odnawiają się automatycznie: konto jest obciążane w ciągu 24 godzin przed końcem okresu, chyba że automatyczne odnawianie zostanie wyłączone co najmniej 24 godziny wcześniej. Zarządzaj lub anuluj w Ustawienia › Konto Apple › Subskrypcje. Niewykorzystana część okresu próbnego przepada przy zakupie.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRYWATNOŚĆ

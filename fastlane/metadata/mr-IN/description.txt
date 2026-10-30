@@ -49,8 +49,8 @@ Recharge+ मासिक किंवा वार्षिक सबस्क�
 
 किमती खरेदीपूर्वी अ‍ॅपमध्ये दिसतात आणि प्रदेशानुसार वेगळ्या असतात. खरेदीच्या पुष्टीवर तुमच्या Apple खात्यातून पैसे घेतले जातात. सबस्क्रिप्शन आपोआप नूतनीकरण होते: कालावधी संपण्याच्या 24 तास आधी शुल्क आकारले जाते, जोपर्यंत ऑटो-रिन्यूअल किमान 24 तास आधी बंद केले जात नाही. सेटिंग्ज › Apple खाते › सबस्क्रिप्शन मध्ये व्यवस्थापित करा किंवा रद्द करा. मोफत चाचणीचा न वापरलेला भाग खरेदीवर संपतो.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 प्रायव्हसी

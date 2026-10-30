@@ -49,8 +49,8 @@ Recharge+ có dưới dạng đăng ký hàng tháng hoặc hàng năm, hoặc m
 
 Giá được hiển thị trong ứng dụng trước khi mua và khác nhau theo khu vực. Khoản thanh toán được tính vào tài khoản Apple của bạn khi xác nhận mua. Đăng ký tự động gia hạn: tài khoản bị tính phí trong vòng 24 giờ trước khi kỳ hiện tại kết thúc, trừ khi tắt tự động gia hạn ít nhất 24 giờ trước đó. Quản lý hoặc hủy trong Cài đặt › Tài khoản Apple › Đăng ký. Phần chưa dùng của bản dùng thử sẽ mất khi mua.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 QUYỀN RIÊNG TƯ

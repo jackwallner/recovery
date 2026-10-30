@@ -48,8 +48,8 @@ Recharge+ പ്രതിമാസ അല്ലെങ്കിൽ വാർഷ�
 
 വാങ്ങുന്നതിന് മുമ്പ് വിലകൾ ആപ്പിൽ കാണിക്കും, പ്രദേശം അനുസരിച്ച് വ്യത്യാസപ്പെടും. വാങ്ങൽ സ്ഥിരീകരിക്കുമ്പോൾ നിങ്ങളുടെ Apple അക്കൗണ്ടിൽ നിന്ന് പണം ഈടാക്കും. സബ്സ്ക്രിപ്ഷനുകൾ സ്വയമേവ പുതുക്കും: കാലാവധി അവസാനിക്കുന്നതിന് 24 മണിക്കൂറിനുള്ളിൽ ഈടാക്കും, സ്വയം പുതുക്കൽ കുറഞ്ഞത് 24 മണിക്കൂർ മുമ്പ് ഓഫാക്കിയില്ലെങ്കിൽ. ക്രമീകരണങ്ങൾ › Apple അക്കൗണ്ട് › സബ്സ്ക്രിപ്ഷനുകൾ എന്നതിൽ നിയന്ത്രിക്കുകയോ റദ്ദാക്കുകയോ ചെയ്യുക. സൗജന്യ ട്രയലിന്റെ ഉപയോഗിക്കാത്ത ഭാഗം വാങ്ങലോടെ അവസാനിക്കും.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 സ്വകാര്യത

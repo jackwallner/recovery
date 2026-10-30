@@ -48,8 +48,8 @@ Recharge+는 월간 또는 연간 구독으로, 혹은 한 번만 결제하는 �
 
 가격은 구매 전 앱에 표시되며 지역에 따라 다릅니다. 구매를 확인하면 Apple 계정으로 결제됩니다. 구독은 자동 갱신되며, 기간이 끝나기 최소 24시간 전에 자동 갱신을 끄지 않으면 종료 전 24시간 이내에 청구됩니다. 관리와 해지는 설정 › Apple 계정 › 구독에서 할 수 있습니다. 무료 체험의 남은 기간은 구매 시 소멸됩니다.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 개인정보

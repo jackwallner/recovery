@@ -49,8 +49,8 @@ Recharge+ ମାସିକ କିମ୍ବା ବାର୍ଷିକ ସବସ୍�
 
 କିଣିବା ପୂର୍ବରୁ ମୂଲ୍ୟ ଆପରେ ଦେଖାଯାଏ ଏବଂ ଅଞ୍ଚଳ ଅନୁଯାୟୀ ଭିନ୍ନ ହୁଏ। କ୍ରୟ ନିଶ୍ଚିତ ହେଲେ ଆପଣଙ୍କ Apple ଖାତାରୁ ଦେୟ ନିଆଯାଏ। ସବସ୍କ୍ରିପସନ ସ୍ୱୟଂଚାଳିତ ଭାବେ ନବୀକରଣ ହୁଏ: ଅବଧି ଶେଷ ହେବାର 24 ଘଣ୍ଟା ମଧ୍ୟରେ ଦେୟ ନିଆଯାଏ, ଯଦି ସ୍ୱୟଂ ନବୀକରଣ ଅତି କମରେ 24 ଘଣ୍ଟା ପୂର୍ବରୁ ବନ୍ଦ ନ କରାଯାଏ। ସେଟିଂସ › Apple ଖାତା › ସବସ୍କ୍ରିପସନ ରେ ପରିଚାଳନା କିମ୍ବା ବାତିଲ କରନ୍ତୁ। ମାଗଣା ଟ୍ରାଏଲର ଅବ୍ୟବହୃତ ଅଂଶ କ୍ରୟ ସମୟରେ ଶେଷ ହୋଇଯାଏ।
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ଗୋପନୀୟତା

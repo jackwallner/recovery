@@ -49,8 +49,8 @@ Recharge+ ਮਾਸਿਕ ਜਾਂ ਸਾਲਾਨਾ ਸਬਸਕ੍ਰਿਪ�
 
 ਕੀਮਤਾਂ ਖਰੀਦਣ ਤੋਂ ਪਹਿਲਾਂ ਐਪ ਵਿੱਚ ਦਿਖਦੀਆਂ ਹਨ ਅਤੇ ਖੇਤਰ ਅਨੁਸਾਰ ਵੱਖਰੀਆਂ ਹੁੰਦੀਆਂ ਹਨ। ਖਰੀਦ ਦੀ ਪੁਸ਼ਟੀ 'ਤੇ ਤੁਹਾਡੇ Apple ਖਾਤੇ ਤੋਂ ਭੁਗਤਾਨ ਲਿਆ ਜਾਂਦਾ ਹੈ। ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਆਪਣੇ ਆਪ ਨਵੇਂ ਹੁੰਦੇ ਹਨ: ਮਿਆਦ ਖਤਮ ਹੋਣ ਤੋਂ 24 ਘੰਟੇ ਪਹਿਲਾਂ ਦੇ ਅੰਦਰ ਚਾਰਜ ਲਿਆ ਜਾਂਦਾ ਹੈ, ਜੇ ਆਟੋ-ਰਿਨਿਊਅਲ ਘੱਟੋ-ਘੱਟ 24 ਘੰਟੇ ਪਹਿਲਾਂ ਬੰਦ ਨਾ ਕੀਤਾ ਜਾਵੇ। ਸੈਟਿੰਗਾਂ › Apple ਖਾਤਾ › ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਵਿੱਚ ਪ੍ਰਬੰਧ ਕਰੋ ਜਾਂ ਰੱਦ ਕਰੋ। ਮੁਫ਼ਤ ਟ੍ਰਾਇਲ ਦਾ ਬਾਕੀ ਹਿੱਸਾ ਖਰੀਦ 'ਤੇ ਖਤਮ ਹੋ ਜਾਂਦਾ ਹੈ।
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ਪ੍ਰਾਈਵੇਸੀ

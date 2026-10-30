@@ -48,8 +48,8 @@ Recharge+ is available as a monthly or yearly subscription, or a one-time lifeti
 
 Prices are shown in the app before you buy and vary by region. Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew automatically, and your account is charged within 24 hours before the end of the current period, unless auto-renew is turned off at least 24 hours before it ends. Manage or cancel your subscription in Settings › Apple ID › Subscriptions. Any unused portion of a free trial is forfeited when you purchase a subscription.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY

@@ -49,8 +49,8 @@ Recharge+ доступний як місячна чи річна передпл�
 
 Ціни показані в застосунку до покупки й відрізняються залежно від регіону. Оплата списується з вашого облікового запису Apple при підтвердженні покупки. Передплати поновлюються автоматично: списання відбувається протягом 24 годин до кінця періоду, якщо автопоновлення не вимкнено щонайменше за 24 години. Керуйте або скасуйте в Налаштування › Обліковий запис Apple › Передплати. Невикористана частина пробного періоду при покупці згорає.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 КОНФІДЕНЦІЙНІСТЬ

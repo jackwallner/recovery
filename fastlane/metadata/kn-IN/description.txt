@@ -49,8 +49,8 @@ Recharge+ ಮಾಸಿಕ ಅಥವಾ ವಾರ್ಷಿಕ ಚಂದಾದಾ�
 
 ಖರೀದಿಸುವ ಮೊದಲು ಬೆಲೆಗಳು ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ ಮತ್ತು ಪ್ರದೇಶವಾರು ಬದಲಾಗುತ್ತವೆ. ಖರೀದಿ ದೃಢಪಡಿಸಿದಾಗ ನಿಮ್ಮ Apple ಖಾತೆಯಿಂದ ಪಾವತಿ ಪಡೆಯಲಾಗುತ್ತದೆ. ಚಂದಾದಾರಿಕೆಗಳು ತಾನಾಗಿಯೇ ನವೀಕರಣಗೊಳ್ಳುತ್ತವೆ: ಅವಧಿ ಮುಗಿಯುವ 24 ಗಂಟೆಗಳ ಒಳಗೆ ಶುಲ್ಕ ವಿಧಿಸಲಾಗುತ್ತದೆ, ಸ್ವಯಂ ನವೀಕರಣವನ್ನು ಕನಿಷ್ಠ 24 ಗಂಟೆ ಮೊದಲು ಆಫ್ ಮಾಡದಿದ್ದರೆ. ಸೆಟ್ಟಿಂಗ್‌ಗಳು › Apple ಖಾತೆ › ಚಂದಾದಾರಿಕೆಗಳು ನಲ್ಲಿ ನಿರ್ವಹಿಸಿ ಅಥವಾ ರದ್ದುಗೊಳಿಸಿ. ಉಚಿತ ಪ್ರಯೋಗದ ಬಳಸದ ಭಾಗ ಖರೀದಿಯೊಂದಿಗೆ ಮುಗಿಯುತ್ತದೆ.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ಗೌಪ್ಯತೆ

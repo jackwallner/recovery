@@ -46,8 +46,8 @@ Recharge+ மாதாந்திர அல்லது ஆண்டு சந�
 
 விலைகள் வாங்குவதற்கு முன் ஆப்பில் காட்டப்படும், பகுதிக்கேற்ப மாறும். வாங்குதல் உறுதிசெய்யப்படும்போது உங்கள் Apple கணக்கிலிருந்து கட்டணம் பிடிக்கப்படும். சந்தாக்கள் தானாகப் புதுப்பிக்கப்படும்: காலம் முடிவதற்கு 24 மணி நேரத்திற்குள் கட்டணம் பிடிக்கப்படும், தானியங்கிப் புதுப்பிப்பு குறைந்தது 24 மணி நேரம் முன்பே நிறுத்தப்படாவிட்டால். அமைப்புகள் › Apple கணக்கு › சந்தாக்கள் இல் நிர்வகிக்கவும் அல்லது ரத்து செய்யவும். இலவச சோதனையின் பயன்படுத்தப்படாத பகுதி வாங்கும்போது முடிந்துவிடும்.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 தனியுரிமை

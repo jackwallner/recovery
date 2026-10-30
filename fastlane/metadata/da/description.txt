@@ -49,8 +49,8 @@ Recharge+ fås som måneds- eller årsabonnement eller som et engangskøb på li
 
 Priserne vises i appen, før du køber, og varierer efter region. Betalingen trækkes fra din Apple-konto ved bekræftelse af købet. Abonnementer fornyes automatisk: kontoen trækkes inden for 24 timer før periodens udløb, medmindre automatisk fornyelse slås fra mindst 24 timer før. Administrer eller opsig i Indstillinger › Apple-konto › Abonnementer. Ubrugt del af en prøveperiode mistes ved køb.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVATLIV

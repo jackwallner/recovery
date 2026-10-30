@@ -49,8 +49,8 @@ Recharge+ ماہانہ یا سالانہ سبسکرپشن کے طور پر، ی�
 
 قیمتیں خریدنے سے پہلے ایپ میں دکھائی جاتی ہیں اور خطے کے مطابق مختلف ہوتی ہیں۔ خریداری کی تصدیق پر رقم آپ کے Apple اکاؤنٹ سے لی جاتی ہے۔ سبسکرپشن خودبخود تجدید ہوتی ہیں: مدت ختم ہونے سے 24 گھنٹے پہلے کے اندر رقم لی جاتی ہے، بشرطیکہ خودکار تجدید کم از کم 24 گھنٹے پہلے بند نہ کی گئی ہو۔ ترتیبات › Apple اکاؤنٹ › سبسکرپشنز میں انتظام یا منسوخ کریں۔ مفت آزمائش کا غیر استعمال شدہ حصہ خریداری پر ختم ہو جاتا ہے۔
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 پرائیویسی

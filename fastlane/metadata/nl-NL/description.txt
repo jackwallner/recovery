@@ -48,8 +48,8 @@ Recharge+ is er als maand- of jaarabonnement, of als eenmalige levenslange aanko
 
 Prijzen worden in de app getoond voordat je koopt en verschillen per regio. De betaling wordt bij bevestiging van de aankoop van je Apple ID afgeschreven. Abonnementen verlengen automatisch: er wordt afgeschreven binnen 24 uur voor het einde van de periode, tenzij automatische verlenging minstens 24 uur van tevoren is uitgezet. Beheer of zeg op via Instellingen › Apple ID › Abonnementen. Een niet gebruikt deel van een proefperiode vervalt bij aankoop.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY

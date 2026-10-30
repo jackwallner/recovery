@@ -49,8 +49,8 @@ Recharge+ నెలవారీ లేదా వార్షిక సబ్‌�
 
 కొనుగోలుకు ముందు ధరలు యాప్‌లో కనిపిస్తాయి, ప్రాంతాన్ని బట్టి మారతాయి. కొనుగోలు నిర్ధారించినప్పుడు మీ Apple ఖాతా నుంచి చెల్లింపు తీసుకుంటారు. సబ్‌స్క్రిప్షన్‌లు స్వయంచాలకంగా రెన్యువల్ అవుతాయి: వ్యవధి ముగియడానికి 24 గంటల లోపు ఛార్జ్ అవుతుంది, ఆటో-రెన్యువల్ కనీసం 24 గంటల ముందు ఆపకపోతే. సెట్టింగ్‌లు › Apple ఖాతా › సబ్‌స్క్రిప్షన్‌లు లో నిర్వహించండి లేదా రద్దు చేయండి. ఉచిత ట్రయల్‌లో వాడని భాగం కొనుగోలుతో ముగుస్తుంది.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 గోప్యత

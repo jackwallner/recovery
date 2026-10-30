@@ -1,6 +1,6 @@
-Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete.
+Recharge estimates your workout recovery time on the Apple Watch you already own. Finish a qualifying workout and it starts a training-load countdown in hours. When it runs out, the estimate is complete.
 
-That is the whole app. It answers the recovery-time question after an activity, built for the Apple Watch you already own. No ring, strap, or second hardware ecosystem.
+The standard estimate, the Watch app and all four complication families are free. There is no account, and no ring or strap to buy.
 
 WHAT YOU SEE
 
@@ -50,8 +50,8 @@ Recharge+ is available as a monthly or yearly subscription, or a one-time lifeti
 
 Prices are shown in the app before you buy and vary by region. Payment is charged to your Apple Account at confirmation. Subscriptions renew automatically and are charged within 24 hours before the period ends unless auto-renew is turned off at least 24 hours before then. Manage or cancel in Settings › Apple Account › Subscriptions. Any unused trial time is forfeited when you purchase a subscription.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY

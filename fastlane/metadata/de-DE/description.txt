@@ -48,8 +48,8 @@ Recharge+ gibt es als Monats- oder Jahresabo oder als einmaligen Lifetime-Kauf.
 
 Die Preise werden in der App vor dem Kauf angezeigt und sind je nach Region unterschiedlich. Die Zahlung wird bei Kaufbestätigung über deine Apple-ID abgebucht. Abos verlängern sich automatisch; dein Konto wird innerhalb von 24 Stunden vor Ende der Periode belastet, sofern die automatische Verlängerung nicht mindestens 24 Stunden vorher deaktiviert wird. Verwalten oder kündigen unter Einstellungen › Apple-ID › Abonnements. Ein nicht genutzter Teil einer Gratisphase verfällt beim Kauf.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 DATENSCHUTZ

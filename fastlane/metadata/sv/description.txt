@@ -49,8 +49,8 @@ Recharge+ finns som månads- eller årsprenumeration, eller som ett engångsköp
 
 Priser visas i appen innan du köper och varierar mellan regioner. Betalningen dras från ditt Apple-konto när köpet bekräftas. Prenumerationer förnyas automatiskt: kontot debiteras inom 24 timmar före periodens slut om inte automatisk förnyelse stängs av minst 24 timmar innan. Hantera eller säg upp i Inställningar › Apple-konto › Prenumerationer. Oanvänd del av en provperiod går förlorad vid köp.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 INTEGRITET

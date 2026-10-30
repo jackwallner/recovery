@@ -48,8 +48,8 @@ Recharge+ dostupan je kao mjesečna ili godišnja pretplata ili kao jednokratna 
 
 Cijene se prikazuju u aplikaciji prije kupnje i razlikuju se ovisno o regiji. Plaćanje se naplaćuje s tvog Apple računa pri potvrdi kupnje. Pretplate se obnavljaju automatski: račun se tereti unutar 24 sata prije kraja razdoblja, osim ako se automatska obnova isključi najmanje 24 sata ranije. Upravljaj ili otkaži u Postavke › Apple račun › Pretplate. Neiskorišteni dio probnog razdoblja gubi se kupnjom.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVATNOST

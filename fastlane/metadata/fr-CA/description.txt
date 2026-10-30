@@ -48,8 +48,8 @@ Recharge+ est offert en abonnement mensuel ou annuel, ou en achat unique à vie.
 
 Les prix sont affichés dans l'app avant l'achat et varient selon la région. Le paiement est débité de votre identifiant Apple à la confirmation de l'achat. Les abonnements se renouvellent automatiquement : votre compte est débité dans les 24 heures avant la fin de la période, sauf désactivation au moins 24 heures avant. Gérez ou résiliez dans Réglages › identifiant Apple › Abonnements. Toute partie non utilisée d'un essai gratuit est perdue à l'achat.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 CONFIDENTIALITÉ

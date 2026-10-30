@@ -48,8 +48,8 @@ Recharge+ je k dispozícii ako mesačné alebo ročné predplatné, prípadne ak
 
 Ceny sa zobrazujú v aplikácii pred nákupom a líšia sa podľa regiónu. Platba sa strhne z vášho účtu Apple pri potvrdení nákupu. Predplatné sa obnovuje automaticky: účet je zaťažený do 24 hodín pred koncom obdobia, ak automatické obnovenie nevypnete najmenej 24 hodín vopred. Spravujte alebo zrušte v Nastavenia › Účet Apple › Predplatné. Nevyužitá časť skúšobnej verzie pri nákupe prepadá.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 SÚKROMIE

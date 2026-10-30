@@ -49,8 +49,8 @@ Recharge+ માસિક કે વાર્ષિક સબસ્ક્રિ�
 
 ખરીદતા પહેલાં કિંમતો એપમાં દેખાય છે અને પ્રદેશ પ્રમાણે અલગ હોય છે. ખરીદીની પુષ્ટિ પર તમારા Apple ખાતામાંથી ચુકવણી લેવાય છે. સબસ્ક્રિપ્શન આપોઆપ રિન્યુ થાય છે: સમયગાળો પૂરો થાય તેના 24 કલાક પહેલાં ચાર્જ થાય છે, સિવાય કે ઓટો-રિન્યુઅલ ઓછામાં ઓછા 24 કલાક પહેલાં બંધ કરાયું હોય. સેટિંગ્સ › Apple ખાતું › સબસ્ક્રિપ્શન માં મેનેજ કે રદ કરો. મફત ટ્રાયલનો બાકી ભાગ ખરીદી વખતે પૂરો થઈ જાય છે.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 પ્રાઇવસી

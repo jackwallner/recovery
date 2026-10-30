@@ -49,8 +49,8 @@ Recharge+ मासिक या वार्षिक सब्सक्रि�
 
 कीमतें खरीदने से पहले ऐप में दिखती हैं और क्षेत्र के अनुसार अलग होती हैं। खरीद की पुष्टि पर आपके Apple खाते से भुगतान लिया जाता है। सब्सक्रिप्शन अपने आप रिन्यू होते हैं: अवधि खत्म होने से 24 घंटे पहले तक शुल्क लिया जाता है, बशर्ते ऑटो-रिन्यूअल कम से कम 24 घंटे पहले बंद न किया गया हो। सेटिंग्स › Apple खाता › सब्सक्रिप्शन में मैनेज या रद्द करें। मुफ़्त ट्रायल का बचा हुआ हिस्सा खरीद पर खत्म हो जाता है।
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 प्राइवेसी

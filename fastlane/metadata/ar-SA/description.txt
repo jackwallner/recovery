@@ -49,8 +49,8 @@ RECHARGE+
 
 تظهر الأسعار في التطبيق قبل الشراء وتختلف حسب المنطقة. يُخصم المبلغ من حساب Apple عند تأكيد الشراء. تتجدد الاشتراكات تلقائياً: يتم الخصم خلال 24 ساعة قبل نهاية الفترة، ما لم يُوقف التجديد التلقائي قبل 24 ساعة على الأقل. أدر أو ألغِ من الإعدادات › حساب Apple › الاشتراكات. يسقط الجزء غير المستخدم من التجربة المجانية عند الشراء.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 الخصوصية

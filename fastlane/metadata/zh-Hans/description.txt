@@ -48,8 +48,8 @@ Recharge+ 提供按月或按年订阅，也可以一次性买断永久使用。
 
 价格会在购买前显示在 App 内，并因地区而异。确认购买时将从你的 Apple 账户扣款。订阅会自动续订：除非在当前周期结束前至少 24 小时关闭自动续订，否则会在结束前 24 小时内扣款。可在「设置 › Apple 账户 › 订阅」中管理或取消。免费试用中未使用的部分在购买时失效。
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 隐私

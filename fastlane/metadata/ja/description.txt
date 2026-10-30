@@ -48,8 +48,8 @@ Recharge+ は月額または年額のサブスクリプション、あるいは�
 
 価格は購入前にアプリ内に表示され、地域によって異なります。購入確定時に Apple アカウントへ課金されます。サブスクリプションは自動更新され、期間終了の24時間前までに自動更新をオフにしない限り、終了前24時間以内に課金されます。管理と解約は「設定 › Apple アカウント › サブスクリプション」から。無料トライアルの未使用分は購入時に失効します。
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 プライバシー

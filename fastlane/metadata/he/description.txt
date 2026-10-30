@@ -49,8 +49,8 @@ Recharge+ זמין כמנוי חודשי או שנתי, או כרכישה חד-�
 
 המחירים מוצגים באפליקציה לפני הרכישה ומשתנים לפי אזור. התשלום נגבה מחשבון Apple שלך עם אישור הרכישה. מנויים מתחדשים אוטומטית: החיוב מתבצע בתוך 24 שעות לפני סוף התקופה, אלא אם החידוש האוטומטי כובה לפחות 24 שעות מראש. ניהול או ביטול בהגדרות › חשבון Apple › מנויים. חלק שלא נוצל מתקופת ניסיון אובד ברכישה.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 פרטיות

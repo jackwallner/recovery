@@ -48,8 +48,8 @@ Recharge+ je na voljo kot mesečna ali letna naročnina ali kot enkratni doživl
 
 Cene so prikazane v aplikaciji pred nakupom in se razlikujejo po regijah. Plačilo se obračuna z Apple računa ob potrditvi nakupa. Naročnine se samodejno podaljšajo: račun se bremeni v 24 urah pred koncem obdobja, razen če samodejno podaljšanje izklopiš vsaj 24 ur prej. Upravljaj ali prekliči v Nastavitve › Apple račun › Naročnine. Neizkoriščeni del brezplačnega preizkusa ob nakupu propade.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ZASEBNOST

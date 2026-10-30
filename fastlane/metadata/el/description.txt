@@ -46,8 +46,8 @@ RECHARGE+
 
 Οι τιμές εμφανίζονται στην εφαρμογή πριν από την αγορά και διαφέρουν ανά περιοχή. Η πληρωμή χρεώνεται στον λογαριασμό Apple κατά την επιβεβαίωση της αγοράς. Οι συνδρομές ανανεώνονται αυτόματα: η χρέωση γίνεται εντός 24 ωρών πριν από το τέλος της περιόδου, εκτός αν η αυτόματη ανανέωση απενεργοποιηθεί τουλάχιστον 24 ώρες νωρίτερα. Διαχειρίσου ή ακύρωσε στις Ρυθμίσεις › Λογαριασμός Apple › Συνδρομές. Το αχρησιμοποίητο μέρος μιας δωρεάν δοκιμής χάνεται με την αγορά.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ΑΠΟΡΡΗΤΟ

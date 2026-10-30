@@ -49,8 +49,8 @@ Recharge+ aylık veya yıllık abonelik olarak ya da tek seferlik ömür boyu sa
 
 Fiyatlar satın almadan önce uygulamada gösterilir ve bölgeye göre değişir. Ödeme, satın alma onaylandığında Apple hesabından tahsil edilir. Abonelikler otomatik yenilenir: dönem bitmeden önceki 24 saat içinde tahsilat yapılır, otomatik yenileme en az 24 saat önce kapatılmadıysa. Ayarlar › Apple hesabı › Abonelikler bölümünden yönet veya iptal et. Ücretsiz denemenin kullanılmayan kısmı satın alma ile kaybolur.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 GİZLİLİK

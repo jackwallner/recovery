@@ -48,8 +48,8 @@ Recharge+ è disponibile come abbonamento mensile o annuale, o come acquisto sin
 
 I prezzi sono mostrati nell'app prima dell'acquisto e variano in base alla regione. Il pagamento viene addebitato sul tuo ID Apple alla conferma dell'acquisto. Gli abbonamenti si rinnovano automaticamente: l'addebito avviene nelle 24 ore prima della fine del periodo, salvo disattivazione del rinnovo almeno 24 ore prima. Gestisci o annulla in Impostazioni › ID Apple › Abbonamenti. La parte non usata di una prova gratuita si perde con l'acquisto.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 PRIVACY

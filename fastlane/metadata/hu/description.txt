@@ -48,8 +48,8 @@ A Recharge+ havi vagy éves előfizetésként, illetve egyszeri örökös vásá
 
 Az árak vásárlás előtt megjelennek az appban, és régiónként eltérnek. A fizetés a vásárlás megerősítésekor terheli az Apple-fiókodat. Az előfizetések automatikusan megújulnak: a terhelés az időszak vége előtti 24 órában történik, hacsak az automatikus megújítást legalább 24 órával korábban ki nem kapcsolod. Kezelés vagy lemondás: Beállítások › Apple-fiók › Előfizetések. Az ingyenes próbaidő fel nem használt része a vásárláskor elvész.
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ADATVÉDELEM

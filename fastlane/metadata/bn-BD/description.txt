@@ -49,8 +49,8 @@ Recharge+ মাসিক বা বার্ষিক সাবস্ক্র�
 
 কেনার আগে দাম অ্যাপে দেখানো হয় এবং অঞ্চলভেদে আলাদা হয়। কেনা নিশ্চিত করলে আপনার Apple অ্যাকাউন্ট থেকে টাকা কাটা হয়। সাবস্ক্রিপশন স্বয়ংক্রিয়ভাবে নবায়ন হয়: মেয়াদ শেষের ২৪ ঘণ্টার মধ্যে চার্জ হয়, যদি না অন্তত ২৪ ঘণ্টা আগে স্বয়ংক্রিয় নবায়ন বন্ধ করা হয়। সেটিংস › Apple অ্যাকাউন্ট › সাবস্ক্রিপশন থেকে পরিচালনা বা বাতিল করুন। ফ্রি ট্রায়ালের বাকি অংশ কেনার সময় শেষ হয়ে যায়।
 
-Privacy: https://jackwallner.github.io/recovery/privacy-policy.html
-Terms: https://jackwallner.github.io/recovery/terms.html
+Privacy: https://jackwallner.com/ios/recovery/privacy-policy.html
+Terms: https://jackwallner.com/ios/recovery/terms.html
 EULA: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 প্রাইভেসি
