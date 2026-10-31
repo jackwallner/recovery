@@ -479,6 +479,14 @@ public final class RecoveryEngine: ObservableObject {
             rescorePersistenceFailed = true
             return false
         }
+        // Classification is stored per session, at import, and the anchored
+        // workout query never hands a session over twice. So a change to
+        // "Functional and hybrid training" in Settings reaches the sessions
+        // already on the phone only if it is re-applied here, before anything
+        // below reads a profile.
+        for workout in fetchedWorkouts {
+            workout.reclassify(ambiguousProfile: settings.ambiguousProfile)
+        }
         // One session recorded by two apps is scored once. The copy that is
         // dropped keeps no load, so the weekly figures do not count it either.
         let duplicateIDs = Self.duplicateIDs(in: fetchedWorkouts)
