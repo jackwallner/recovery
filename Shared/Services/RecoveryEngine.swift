@@ -594,7 +594,10 @@ public final class RecoveryEngine: ObservableObject {
             if estimate.producesCountdown { standardReadyAt = estimate.readyAt }
         }
 
-        let isPro = StoreService.shared.isPro
+        // Not `isPro`: a process with no scene (a Health wake, a background
+        // refresh) never asks RevenueCat, so `isPro` is false there for a
+        // subscriber and this pass would publish the free tier to the wrist.
+        let isPro = StoreService.shared.scoringIsPro
         let analysis = PersonalRecoveryModel.analyse(
             profile: settings.athleteProfile,
             sessions: zip(inputs, standardEstimates).map { session, standard in
@@ -932,7 +935,7 @@ public final class RecoveryEngine: ObservableObject {
         if let estimate = RecoveryResolver.current(in: estimates) {
             snapshot = RecoverySnapshot(
                 estimate: estimate,
-                isPro: StoreService.shared.isPro,
+                isPro: StoreService.shared.scoringIsPro,
                 healthDataState: healthDataState
             )
         } else {
