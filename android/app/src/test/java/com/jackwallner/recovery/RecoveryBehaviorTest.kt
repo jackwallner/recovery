@@ -41,4 +41,13 @@ class RecoveryBehaviorTest {
     @Test fun emptyAndStaleSnapshotsDoNotDisplayProgress() {assertEquals(0.0,RecoverySnapshot().progress(now),0.0);assertEquals(0.0,RecoverySnapshot(now.daysAgo(9),now.daysAgo(10),24.0).progress(now),0.0)}
     @Test fun sixRecentSessionsCanDeriveTrainingVolume() {val workouts=(1..6).map{workout(it.toString(),now.daysAgo(it))};assertNotNull(RecoveryEngine.derivedTrainingProfile(workouts,WorkoutProfile.mixed,now).first)}
     @Test fun walksCannotInflateDerivedTrainingVolume() {val workouts=(1..10).map{workout(it.toString(),now.daysAgo(it),code=52)};assertNull(RecoveryEngine.derivedTrainingProfile(workouts,WorkoutProfile.mixed,now).first)}
+    @Test fun readyAlertIsDueForTheCountdownThatJustRanOut() {val estimates=score(listOf(workout("run",now.hoursAfter(-50.0)))).estimates;assertEquals("run",RecoveryResolver.alertDue(estimates,now)?.sessionID)}
+    @Test fun readyAlertSurvivesAWalkLoggedDuringTheCountdown() {
+        val estimates=score(listOf(workout("run",now.hoursAfter(-50.0)),workout("walk",now.hoursAfter(-20.0),code=52))).estimates
+        assertEquals("walk",RecoveryResolver.current(estimates,now)?.sessionID)
+        assertEquals("run",RecoveryResolver.alertDue(estimates,now)?.sessionID)
+    }
+    @Test fun readyAlertWaitsWhileALaterCountdownIsRunning() {assertNull(RecoveryResolver.alertDue(score(listOf(workout("first",now.hoursAfter(-50.0)),workout("second",now.hoursAfter(-1.0)))).estimates,now))}
+    @Test fun readyAlertIsNotRaisedForACountdownThatEndedMoreThanADayAgo() {assertNull(RecoveryResolver.alertDue(score(listOf(workout("run",now.hoursAfter(-80.0)))).estimates,now))}
+    @Test fun readyAlertIsNotRaisedBeforeTheCountdownRunsOut() {assertNull(RecoveryResolver.alertDue(score(listOf(workout("run",now.hoursAfter(-10.0)))).estimates,now))}
 }

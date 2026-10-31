@@ -42,6 +42,11 @@ object CountdownFormat {
 object RecoveryResolver {
     fun active(estimates: List<RecoveryEstimate>,now: Instant=Instant.now())=estimates.filter{it.producesCountdown&&it.readyAt>now}.maxByOrNull{it.readyAt}
     fun current(estimates: List<RecoveryEstimate>,now: Instant=Instant.now())=active(estimates,now)?:estimates.maxByOrNull{it.sessionEnd}
+    /** The countdown the Ready alert announces: the latest one that ran out inside `windowSeconds`, and none while another is running. Not `current`, which falls back to the newest session of any kind, so a walk logged after the run that set the countdown has no countdown to announce. */
+    fun alertDue(estimates: List<RecoveryEstimate>,now: Instant=Instant.now(),windowSeconds: Long=86400L): RecoveryEstimate? {
+        if(active(estimates,now)!=null)return null
+        return estimates.filter{it.producesCountdown&&it.readyAt<=now&&it.readyAt>=now.minusSeconds(windowSeconds)}.maxByOrNull{it.readyAt}
+    }
     fun isStale(sessionEnd: Instant,readyAt: Instant?,now: Instant)=now>maxOf(sessionEnd.plusSeconds(4*86400L),(readyAt?:sessionEnd).plusSeconds(86400))
     fun phase(estimates: List<RecoveryEstimate>,now: Instant=Instant.now()): RecoveryPhase {
         val current=current(estimates,now)?:return RecoveryPhase.noRecentWorkout
