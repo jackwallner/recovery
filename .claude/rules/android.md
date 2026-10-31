@@ -85,6 +85,16 @@ unlocked Recharge+ through the SDK, and restore returned without an error.
 finished, preserving the delivered Ready notification. A newly active countdown,
 permission revocation, data deletion or disabling notifications clears it.
 
+`ReadyNotifications.deliver` announces `RecoveryResolver.alertDue`, never
+`RecoveryResolver.current`. `current` is a display rule: with nothing running it
+falls back to the newest session of any kind, so a walk logged after the run
+that set the countdown made `deliver` see a session with no countdown and drop
+the alert without a trace. `RecoveryBehaviorTest` pins it with
+`readyAlertSurvivesAWalkLoggedDuringTheCountdown`. `alertDue` is the latest
+countdown that ran out in the last 24 hours, and none while another is running.
+iOS schedules from the snapshot taken while the countdown was active, so it never
+asks the question.
+
 The standalone Java Health Connect writer lives only in the instrumentation
 APK and uses framework APIs, its own UID and its own write permissions. A helper
 started outside instrumentation cannot use classes supplied by the target APK.
