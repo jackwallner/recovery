@@ -10,6 +10,7 @@ paths:
   - "RechargeTests/RecoveryCalculatorTests.swift"
   - "RechargeTests/FixtureTableTests.swift"
   - "RechargeTests/WorkoutClassifierTests.swift"
+  - "RechargeTests/WorkoutReclassificationTests.swift"
 ---
 
 # Recharge: scoring a single session
@@ -176,3 +177,19 @@ recovery, so nothing to wait out"` — including the two states that used to
 disown it. "Your ride 12h ago didn't start a countdown" told the user what the
 app declined to do rather than what it found, on a first launch, about the only
 workout they had come to see.
+
+### The classification is stored once, so the setting has to be re-applied
+`WorkoutRecord.profileRaw` is written at import with whatever "Functional and
+hybrid training" said that day, and since the workout query became anchored
+(2bc90fd) Health hands a session over exactly once. Nothing revisits it, so
+`rescoreAfterModelSettingChange` rescored the same stale profile and the picker
+only ever moved sessions recorded after the change. The same 60-minute
+functional session with a patchy heart-rate trace is 6.3h as Mixed and 17.1h as
+Strength, so this was not a small error. `RecoveryEngine.rescore` now calls
+`WorkoutRecord.reclassify(ambiguousProfile:)` on every stored session before it
+reads a profile; a per-session override lives in `profileOverrideRaw` and still
+wins. `WorkoutReclassificationTests` pins it.
+
+The general rule: **anything the import stamps onto a record from a setting is
+stale the moment the setting changes**, because the importer will not run on
+that record again. Re-derive it in `rescore`, or do not store it.

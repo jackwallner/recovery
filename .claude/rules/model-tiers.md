@@ -8,12 +8,15 @@ paths:
   - "Shared/Services/RechargeSettings.swift"
   - "Shared/Services/NotificationService.swift"
   - "Shared/Models/RecoveryModels.swift"
+  - "Shared/Models/RecoverySnapshot.swift"
+  - "Shared/Services/StoreService.swift"
   - "Recharge/Views/EstimateDetailView.swift"
   - "RechargeTests/ObservedRecoveryPatternTests.swift"
   - "RechargeTests/RecoveryTierTests.swift"
   - "RechargeTests/UserCorrectionTests.swift"
   - "RechargeTests/MeasuredInputsTests.swift"
   - "RechargeTests/RecoveryResolverTests.swift"
+  - "RechargeTests/KnownEntitlementTests.swift"
 ---
 
 # Recharge: the two tiers and what the user can change
@@ -270,3 +273,21 @@ onboarding asks for permission at the end of setup, and
 `hasRequestedReadyNotifications` gets the prompt in front of an upgrading user
 exactly once — an enabled toggle with no permission behind it is scheduled and
 silently never delivered.
+
+### A process with no scene is a subscriber too
+`StoreService.isPro` is false at the start of every process, and RevenueCat is
+configured only from the scene's `.task` (`StoreService.start()`). A launch with
+no scene never asks: a HealthKit wake after a workout, the `BGAppRefreshTask`, a
+Watch delivery. Those are the paths the complication and the Ready alert depend
+on, and they ran `rescore` and `publish` with `isPro == false`, so a Recharge+
+subscriber's wrist, widgets and notification carried the **free** figure until
+the app was next opened by hand.
+
+`KnownEntitlement` keeps RevenueCat's last answer in the App Group
+(`StoreService.apply` writes it) and `StoreService.scoringIsPro` falls back to it
+until the process has an answer of its own. The engine reads `scoringIsPro` to
+pick the tier it scores, publishes and schedules under; **screens still gate on
+`isPro`**, which RevenueCat alone decides, so a lapsed subscription costs a few
+background wakes at the old tier and nothing else. `KnownEntitlementTests` pins
+the policy; the wiring (`rescore`, `publish`) is one line each and has no test,
+because `RecoveryEngine` is not in the test target.
