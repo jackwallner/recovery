@@ -228,3 +228,13 @@ App Group key, because the Watch has no workout history of its own.
   Ready under the 72h ceiling and none under the 96h one, so a race went from
   "3d 23h" straight to "No workout". Past the cutoff `progress` is 0, so the
   ring is empty beside "No workout" rather than full.
+
+### Notification center calls never run on the main actor
+`removePendingNotificationRequests` is a synchronous XPC round trip to
+`usernotificationsd`. `publish()` (main actor, reached from `WCSession`
+activation at launch) called it inline, so on a loaded machine the main thread
+sat in `xpc_connection_send_message_with_reply_sync` for 60+ seconds: the app
+never went idle and every XCUITest query timed out ("Failed to get matching
+snapshots"). `NotificationService` now queues schedule and cancel on one serial
+background queue, in order. Diagnosis: the `Spindump_*.txt` attachment in the
+gh-sim result shows the main thread's stack.

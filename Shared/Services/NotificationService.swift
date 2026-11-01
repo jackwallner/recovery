@@ -45,33 +45,43 @@ public enum NotificationService {
         }
     }
 
+    /// Every call into the notification center that is not `async` is a
+    /// synchronous XPC round trip to `usernotificationsd`
+    /// (`removePendingNotificationRequests` blocks on the reply). `publish()`
+    /// runs on the main actor, so on a loaded machine the main thread sat in
+    /// `xpc_connection_send_message_with_reply_sync` for a minute or more: the
+    /// app never went idle and every UI query against it timed out (spindump of
+    /// the CI failures, 2026-11-01). They run here, in order, off the main thread.
+    private static let queue = DispatchQueue(label: "com.jackwallner.recovery.ready-notification", qos: .utility)
+
     /// Schedules the Ready alert for a snapshot, replacing any previous one.
-    /// A snapshot with no live countdown just cancels.
+    /// A snapshot with no live countdown just cancels. Returns immediately.
     public static func scheduleReadyNotification(for snapshot: RecoverySnapshot, now: Date = .now) {
         guard let readyAt = snapshot.readyAt, readyAt > now else {
             cancelReadyNotification()
             return
         }
 
-        let content = UNMutableNotificationContent()
-        content.title = readyTitle
-        content.body = readyBody(for: snapshot)
-        content.sound = .default
-        content.userInfo = [routeKey: readyRouteValue]
+        let body = readyBody(for: snapshot)
+        let interval = max(readyAt.timeIntervalSince(now), 1)
+        queue.async {
+            let content = UNMutableNotificationContent()
+            content.title = readyTitle
+            content.body = body
+            content.sound = .default
+            content.userInfo = [routeKey: readyRouteValue]
 
-        let trigger = UNTimeIntervalNotificationTrigger(
-            timeInterval: max(readyAt.timeIntervalSince(now), 1),
-            repeats: false
-        )
-        let request = UNNotificationRequest(
-            identifier: readyNotificationID, content: content, trigger: trigger
-        )
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: readyNotificationID, content: content, trigger: trigger
+            )
 
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [readyNotificationID])
-        center.add(request) { error in
-            if let error {
-                logger.error("Ready notification not scheduled: \(String(describing: error), privacy: .private)")
+            let center = UNUserNotificationCenter.current()
+            center.removePendingNotificationRequests(withIdentifiers: [readyNotificationID])
+            center.add(request) { error in
+                if let error {
+                    logger.error("Ready notification not scheduled: \(String(describing: error), privacy: .private)")
+                }
             }
         }
     }
@@ -93,8 +103,10 @@ public enum NotificationService {
     }
 
     public static func cancelReadyNotification() {
-        UNUserNotificationCenter.current()
-            .removePendingNotificationRequests(withIdentifiers: [readyNotificationID])
+        queue.async {
+            UNUserNotificationCenter.current()
+                .removePendingNotificationRequests(withIdentifiers: [readyNotificationID])
+        }
     }
 }
 
