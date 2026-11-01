@@ -68,6 +68,16 @@ public enum Theme {
         : UIColor(red: 0.24, green: 0.30, blue: 0.78, alpha: 1) })
     #endif
 
+    /// Pro accent for small bold text on its own 15% tint (the lock badge). The
+    /// accessibility audit measured `pro` at 3.0:1 there at 10 pt.
+    #if os(watchOS)
+    public static let proText = pro
+    #else
+    public static let proText = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 0.62, green: 0.68, blue: 1.0, alpha: 1)
+        : UIColor(red: 0.14, green: 0.18, blue: 0.56, alpha: 1) })
+    #endif
+
     public static func color(for phase: RecoveryPhase) -> Color {
         switch phase {
         case .recovering: recovering

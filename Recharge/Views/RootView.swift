@@ -640,6 +640,15 @@ private struct TabButton: View {
                     .minimumScaleFactor(0.8)
                     .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
             }
+            // `TabBarMetrics` promises one bar height at every text size. At AX3
+            // the caption grew past the 44 pt button, the three labels ran into
+            // each other, and the bar covered the row above its clearance. The
+            // system's own tab bar stops scaling here and offers the Large
+            // Content Viewer instead; so does this.
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            .accessibilityShowsLargeContentViewer {
+                Label(label, systemImage: icon)
+            }
             .frame(minWidth: 78, minHeight: TabBarMetrics.buttonHeight)
             .background(
                 isSelected ? tint.opacity(0.14) : .clear,

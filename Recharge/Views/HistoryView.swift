@@ -289,35 +289,46 @@ struct HistoryView: View {
 
 private struct HistoryRow: View {
     let estimate: RecoveryEstimate
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Side by side the two columns split a 390 pt row between them, and at AX3
+    /// the time wrapped mid-token ("10:09 A / M"). Stacked, each gets the width.
+    private var layout: AnyLayout {
+        typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Space.xs))
+            : AnyLayout(HStackLayout(spacing: Theme.Space.sm))
+    }
 
     var body: some View {
         Card(padding: 14) {
-            HStack(spacing: Theme.Space.sm) {
-                Image(systemName: Theme.symbol(
-                    forActivityLabel: estimate.activityLabel,
-                    profile: estimate.profile
-                ))
-                    .font(.title3)
-                    .frame(width: 28)
-                    .foregroundStyle(estimate.producesCountdown ? Theme.recovering : Theme.idle)
+            layout {
+                HStack(spacing: Theme.Space.sm) {
+                    Image(systemName: Theme.symbol(
+                        forActivityLabel: estimate.activityLabel,
+                        profile: estimate.profile
+                    ))
+                        .font(.title3)
+                        .frame(width: 28)
+                        .foregroundStyle(estimate.producesCountdown ? Theme.recovering : Theme.idle)
 
-                VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                    Text(estimate.activityLabel.asSessionTitle)
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                    // An easy session's category is measured against the easy
-                    // population reference, which makes a three-hour round of
-                    // golf read "Very hard" on a row that also says it started
-                    // no countdown. The category answers a question nobody asked
-                    // of an active-recovery session; say what the row means.
-                    Text("\(estimate.profile == .easy ? "Active recovery" : estimate.category.shortLabel) · \(timeLabel)")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Theme.textSecondary)
+                    VStack(alignment: .leading, spacing: Theme.Space.xxs) {
+                        Text(estimate.activityLabel.asSessionTitle)
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        // An easy session's category is measured against the easy
+                        // population reference, which makes a three-hour round of
+                        // golf read "Very hard" on a row that also says it started
+                        // no countdown. The category answers a question nobody asked
+                        // of an active-recovery session; say what the row means.
+                        Text("\(estimate.profile == .easy ? "Active recovery" : estimate.category.shortLabel) · \(timeLabel)")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
 
-                Spacer(minLength: 0)
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
 
-                VStack(alignment: .trailing, spacing: Theme.Space.xxs) {
+                VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: Theme.Space.xxs) {
                     // What the session cost, on every row without exception.
                     // Which is a different figure from the countdown it set: a
                     // walk costs a couple of hours and starts nothing, and the

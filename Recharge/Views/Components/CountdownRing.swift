@@ -117,10 +117,10 @@ struct ProBadge: View {
             Image(systemName: "lock.fill")
             Text("Recharge+")
         }
-        .font(.system(size: 10, weight: .bold, design: .rounded))
+        .font(.system(.caption2, design: .rounded, weight: .bold))
         .padding(.horizontal, Theme.Space.xs)
         .padding(.vertical, Theme.Space.xxs)
         .background(Theme.pro.opacity(0.15), in: Capsule())
-        .foregroundStyle(Theme.pro)
+        .foregroundStyle(Theme.proText)
     }
 }
