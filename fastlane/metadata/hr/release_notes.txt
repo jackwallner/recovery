@@ -1,9 +1,1 @@
-Novi model oporavka: svaki trening se boduje prema tome koliko te je stvarno koštao.
-
-• Besplatno odbrojavanje boduje svaki trening prema tvojoj razini treniranosti, umjesto da ponavlja tvoju uobičajenu pauzu između treninga. Ta pauza i dalje stoji pokraj njega.
-• Odbrojavanje sada doseže četiri dana, pa polumaraton ili maraton traje dulje od dugog trčanja.
-• Intervali koštaju više od ujednačenog trčanja uz isti prosječni puls, a duga lagana vožnja biciklom više ne nadjačava težak sat.
-• Ako ponovno treniraš prije kraja odbrojavanja, oba se spajaju: dulje u cijelosti i pola kraćeg.
-• Recharge+ prilagođava tekuće odbrojavanje nakon svake noći prema snu, HRV-u i pulsu u mirovanju.
-• Komplikacije se osvježavaju kroz cijelo četverodnevno odbrojavanje i prikazuju dan kad završava.
-• Ispravljeno: odbrojavanje gotovo sada ostaje na zaslonu nakon dugog odbrojavanja, trening koji se sinkronizira tik nakon otvaranja aplikacije odmah se učitava, a pitanje o naporu na Apple Watchu ispravno se otvara.
+Poboljšanja u pozadini i ispravci grešaka kako bi Recharge radio glatko. Hvala što ste tu.
