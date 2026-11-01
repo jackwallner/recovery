@@ -46,7 +46,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(app.buttons["today.hero"].waitForExistence(timeout: 20), "Today never rendered")
         QA.checkpoint(app, "today")
 
-        app.buttons["History"].firstMatch.tap()
+        showHistory(app)
         QA.checkpoint(app, "history")
 
         app.buttons["Recharge+"].firstMatch.tap()
@@ -80,7 +80,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         continueAfterFailure = false
         let app = launch(scene: "premiumActive")
         XCTAssertTrue(app.buttons["today.hero"].waitForExistence(timeout: 20))
-        app.buttons["History"].firstMatch.tap()
+        showHistory(app)
         QA.checkpoint(app, "history-before-interruption")
 
         QA.interrupt(app)

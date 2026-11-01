@@ -8,3 +8,4 @@
 {"created": "2026-10-26T03:01:17+00:00", "id": "Q008", "match": "motion-jump|*|upgrade|*", "reason": "the system sheet sliding the paywall up", "status": "accepted"}
 {"created": "2026-10-26T03:01:17+00:00", "id": "Q009", "match": "motion-jump|*|today-after-upgrade|*", "reason": "the system sheet sliding the paywall down after Close", "status": "accepted"}
 {"created": "2026-10-26T03:01:17+00:00", "id": "Q010", "match": "motion-jump|*|history-before-interruption|*", "reason": "a tab switch to History replaces the screen in one frame", "status": "accepted"}
+{"created": "2026-11-01T08:00:00+00:00", "id": "Q011", "match": "motion-jump|*|settings|*", "reason": "the system sheet sliding Settings up from Today; the settings scene raises it 400 ms after launch and the jump is its own presentation, not a layout glitch", "status": "accepted"}
