@@ -72,6 +72,7 @@ struct PaywallView: View {
 
     @EnvironmentObject private var store: StoreService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     @State private var selected: Package?
     @State private var errorMessage: String?
@@ -87,6 +88,12 @@ struct PaywallView: View {
                         plans
                         features
                         footer
+                        // At accessibility sizes the pinned action row would fill
+                        // the screen and a plan card scrolled under it. It joins
+                        // the content instead and scrolls with it.
+                        if typeSize.isAccessibilitySize {
+                            cta.padding(.bottom, bottomClearance)
+                        }
                     }
                     .padding(.horizontal, Theme.Space.lg)
                     .padding(.bottom, Theme.Space.sm)
@@ -95,11 +102,13 @@ struct PaywallView: View {
                 // The hero, features, and three plan cards are taller than the
                 // sheet on every current iPhone. A separate action row keeps
                 // the decision and its terms visible without covering a plan.
-                cta
-                    .padding(.horizontal, Theme.Space.lg)
-                    .padding(.top, Theme.Space.sm)
-                    .padding(.bottom, Theme.Space.xs + bottomClearance)
-                    .background(.regularMaterial)
+                if !typeSize.isAccessibilitySize {
+                    cta
+                        .padding(.horizontal, Theme.Space.lg)
+                        .padding(.top, Theme.Space.sm)
+                        .padding(.bottom, Theme.Space.xs + bottomClearance)
+                        .background(.regularMaterial)
+                }
             }
             .background(Theme.background)
             .navigationBarTitleDisplayMode(.inline)

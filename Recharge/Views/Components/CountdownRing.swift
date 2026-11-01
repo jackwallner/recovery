@@ -91,6 +91,9 @@ struct ConfidencePips: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(confidence.label)
+        // Read-only: without this the audit treats the element as a control
+        // and measures its 14 pt height as a hit area.
+        .accessibilityAddTraits(.isStaticText)
     }
 }
 

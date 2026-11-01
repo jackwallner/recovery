@@ -22,14 +22,31 @@ public enum Theme {
     public static let cardSurfaceLight = Color(.tertiarySystemBackground)
     public static let ringTrack = Color(.systemFill)
     public static let textPrimary = Color(.label)
-    public static let textSecondary = Color(.secondaryLabel)
-    public static let textTertiary = Color(.tertiaryLabel)
+    /// Solid greys rather than the system label alphas: the alpha labels
+    /// measure 3.4:1 (secondary) and about 2:1 (tertiary) against the card and
+    /// page surfaces, below the 4.5:1 floor. These clear it on both.
+    public static let textSecondary = adaptive(light: 0.28, dark: 0.72)
+    public static let textTertiary = adaptive(light: 0.36, dark: 0.62)
+
+    private static func adaptive(light: CGFloat, dark: CGFloat) -> Color {
+        Color(UIColor { $0.userInterfaceStyle == .dark
+            ? UIColor(white: dark, alpha: 1) : UIColor(white: light, alpha: 1) })
+    }
     #endif
 
     // MARK: - State palette
 
     /// Recovering. Warm amber: something is still running down.
     public static let recovering = Color(red: 1.0, green: 0.62, blue: 0.20)
+    /// The same amber as text or a bar button on a light page. The fill amber
+    /// measures 2.1:1 there; this one clears 4.5:1 and keeps the hue.
+    #if os(watchOS)
+    public static let recoveringText = recovering
+    #else
+    public static let recoveringText = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 1.0, green: 0.62, blue: 0.20, alpha: 1)
+        : UIColor(red: 0.62, green: 0.30, blue: 0.0, alpha: 1) })
+    #endif
     public static let recoveringSecondary = Color(red: 1.0, green: 0.45, blue: 0.28)
 
     /// Ready soon. Between the two, so the transition reads as progress.
@@ -43,7 +60,13 @@ public enum Theme {
     public static let idle = Color(red: 0.48, green: 0.52, blue: 0.60)
 
     /// Pro accent, used only on paywall and locked surfaces.
+    #if os(watchOS)
     public static let pro = Color(red: 0.36, green: 0.44, blue: 0.92)
+    #else
+    public static let pro = Color(UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor(red: 0.36, green: 0.44, blue: 0.92, alpha: 1)
+        : UIColor(red: 0.24, green: 0.30, blue: 0.78, alpha: 1) })
+    #endif
 
     public static func color(for phase: RecoveryPhase) -> Color {
         switch phase {

@@ -285,6 +285,8 @@ struct EstimateDetailView: View {
                 .font(.system(.footnote, design: .rounded, weight: .medium))
                 .monospacedDigit()
                 .foregroundStyle(Theme.textPrimary)
+                // "1.40×" is read as a symbol by VoiceOver.
+                .accessibilityLabel(value.replacingOccurrences(of: "×", with: " times"))
         }
     }
 

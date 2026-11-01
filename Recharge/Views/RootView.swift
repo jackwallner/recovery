@@ -140,7 +140,7 @@ struct RootView: View {
             if tab == .history, split != nil { selectedTab = .today }
         }
         .ignoresSafeArea(edges: .bottom)
-        .tint(Theme.recovering)
+        .tint(Theme.recoveringText)
         .sheet(item: trailingPanelSheet) { panel in
             trailingPanelContent(panel)
         }
@@ -631,12 +631,15 @@ private struct TabButton: View {
                 Image(systemName: icon)
                     .font(.system(size: TabBarMetrics.iconPointSize, weight: .medium, design: .rounded))
                     .frame(height: TabBarMetrics.iconSlotHeight)
+                    .foregroundStyle(isSelected ? tint : Theme.textSecondary)
+                // The label stays a text colour: the phase tints are amber and
+                // green, which fall below 4.5:1 as text on a light page.
                 Text(label)
                     .font(.caption2.weight(.semibold))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                    .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
             }
-            .foregroundStyle(isSelected ? tint : Color(.tertiaryLabel))
             .frame(minWidth: 78, minHeight: TabBarMetrics.buttonHeight)
             .background(
                 isSelected ? tint.opacity(0.14) : .clear,
