@@ -146,6 +146,14 @@ public final class StoreService: NSObject, ObservableObject {
         customerInfo != nil || localProOverride != nil
     }
 
+    /// The tier the engine scores, publishes and schedules the Ready alert
+    /// under. Equal to `isPro` once RevenueCat has answered; before that it is
+    /// the last answer it gave, because a launch with no scene never asks. See
+    /// `KnownEntitlement`.
+    public var scoringIsPro: Bool {
+        KnownEntitlement.scoringIsPro(entitlementResolved: entitlementStatusResolved, isPro: isPro)
+    }
+
     /// Per-product intro-offer eligibility. The paywall reads this so it only
     /// advertises a free trial to users who will actually receive one — Apple
     /// 3.1.2 requires the offer shown to match what StoreKit will grant.
@@ -477,6 +485,7 @@ public final class StoreService: NSObject, ObservableObject {
         let active = customerInfo.entitlements.active.keys.sorted().joined(separator: ", ")
         logger.info("Applied customerInfo, active: [\(active, privacy: .private)]")
         let hasActive = customerInfo.hasRechargeProEntitlement
+        KnownEntitlement.record(hasActive)
         if isPro != hasActive {
             isPro = hasActive
         } else if !wasResolved {

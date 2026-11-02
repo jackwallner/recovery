@@ -112,6 +112,29 @@ public final class WorkoutRecord {
         set { intensityOverrideRaw = newValue?.rawValue }
     }
 
+    /// Applies the current classification rule to a session imported earlier.
+    ///
+    /// `profileRaw` is written once, at import, so it holds whatever the
+    /// "Functional and hybrid training" setting said that day. Health's workout
+    /// query is anchored, which means a session is handed over once and never
+    /// again, so the import path never gets a second chance to classify it and a
+    /// changed setting had no other way in: the picker moved only the sessions
+    /// recorded after the change, and the countdown on screen kept the curve the
+    /// user had just said was wrong.
+    ///
+    /// A per-session override is not touched. It lives in `profileOverrideRaw`,
+    /// which `effectiveProfile` already prefers.
+    ///
+    /// - Returns: whether the stored classification changed.
+    @discardableResult
+    public func reclassify(ambiguousProfile: WorkoutProfile) -> Bool {
+        guard let code = UInt(exactly: activityCode) else { return false }
+        let current = WorkoutClassifier.profile(activityCode: code, ambiguousProfile: ambiguousProfile)
+        guard profileRaw != current.rawValue else { return false }
+        profileRaw = current.rawValue
+        return true
+    }
+
     public var profileOverride: WorkoutProfile? {
         get { profileOverrideRaw.flatMap(WorkoutProfile.init(rawValue:)) }
         set { profileOverrideRaw = newValue?.rawValue }

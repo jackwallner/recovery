@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 import androidx.core.app.NotificationCompat
@@ -44,9 +43,7 @@ class ReadyNotifications(private val context: Context,private val settings: Sett
     fun cancel(){alarm.cancel(pending());context.getSystemService(NotificationManager::class.java).cancel(4101)}
     fun deliver(state: HealthState) {
         if(!settings.notifyOnReady||!allowed())return
-        val estimate=RecoveryResolver.current(state.scored.estimates)?:return
-        val now=Instant.now()
-        if(!estimate.producesCountdown||estimate.readyAt>now||estimate.readyAt<now.minusSeconds(86400))return
+        val estimate=RecoveryResolver.alertDue(state.scored.estimates)?:return
         val token=estimate.sessionID+":"+estimate.readyAt.toEpochMilli()
         if(settings.values.string("lastReadyNotification")==token)return
         val manager=context.getSystemService(NotificationManager::class.java)

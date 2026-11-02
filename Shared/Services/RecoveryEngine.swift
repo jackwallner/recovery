@@ -479,6 +479,14 @@ public final class RecoveryEngine: ObservableObject {
             rescorePersistenceFailed = true
             return false
         }
+        // Classification is stored per session, at import, and the anchored
+        // workout query never hands a session over twice. So a change to
+        // "Functional and hybrid training" in Settings reaches the sessions
+        // already on the phone only if it is re-applied here, before anything
+        // below reads a profile.
+        for workout in fetchedWorkouts {
+            workout.reclassify(ambiguousProfile: settings.ambiguousProfile)
+        }
         // One session recorded by two apps is scored once. The copy that is
         // dropped keeps no load, so the weekly figures do not count it either.
         let duplicateIDs = Self.duplicateIDs(in: fetchedWorkouts)
@@ -586,7 +594,10 @@ public final class RecoveryEngine: ObservableObject {
             if estimate.producesCountdown { standardReadyAt = estimate.readyAt }
         }
 
-        let isPro = StoreService.shared.isPro
+        // Not `isPro`: a process with no scene (a Health wake, a background
+        // refresh) never asks RevenueCat, so `isPro` is false there for a
+        // subscriber and this pass would publish the free tier to the wrist.
+        let isPro = StoreService.shared.scoringIsPro
         let analysis = PersonalRecoveryModel.analyse(
             profile: settings.athleteProfile,
             sessions: zip(inputs, standardEstimates).map { session, standard in
@@ -924,7 +935,7 @@ public final class RecoveryEngine: ObservableObject {
         if let estimate = RecoveryResolver.current(in: estimates) {
             snapshot = RecoverySnapshot(
                 estimate: estimate,
-                isPro: StoreService.shared.isPro,
+                isPro: StoreService.shared.scoringIsPro,
                 healthDataState: healthDataState
             )
         } else {

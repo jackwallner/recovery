@@ -40,6 +40,52 @@ public enum HealthDataState: String, Codable, Sendable, Equatable {
     }
 }
 
+/// What RevenueCat last said about the customer, kept where a launch with no
+/// scene can read it.
+///
+/// `StoreService.isPro` starts false in every process, and RevenueCat is only
+/// configured from the scene's `.task`. A process that starts without a scene
+/// (a HealthKit wake after a workout, a background refresh, a Watch delivery)
+/// has therefore never heard from RevenueCat, and used to score, publish and
+/// schedule the Ready alert as the free tier for a subscriber, which is the
+/// path the Watch complication and the notification depend on. The countdown
+/// on the wrist and the alert's time were the free figure until somebody next
+/// opened the app by hand.
+///
+/// This is only ever the answer for **scoring**. The screens still gate on
+/// `StoreService.isPro`, which RevenueCat alone decides, so a lapsed
+/// subscription costs a few background wakes at the old tier and no more.
+public enum KnownEntitlement {
+    static let key = "lastKnownProEntitlement"
+
+    public static func record(
+        _ isPro: Bool,
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) {
+        (defaults ?? .standard).set(isPro, forKey: key)
+    }
+
+    public static func lastKnownIsPro(
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) -> Bool {
+        (defaults ?? .standard).bool(forKey: key)
+    }
+
+    /// The tier a rescore should score, publish and schedule under.
+    ///
+    /// RevenueCat's own answer once this process has one. Before that, the last
+    /// answer it gave, unless something in this process already knows better
+    /// (`isPro` true from a local override or a purchase in flight).
+    public static func scoringIsPro(
+        entitlementResolved: Bool,
+        isPro: Bool,
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) -> Bool {
+        if isPro { return true }
+        return entitlementResolved ? false : lastKnownIsPro(defaults: defaults)
+    }
+}
+
 /// The compact record the phone writes and every other surface reads.
 ///
 /// The phone owns the model: it has the full HealthKit store and the long
