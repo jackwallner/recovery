@@ -165,6 +165,9 @@ targets:
       - path: Shared/Services/NotificationService.swift
       - path: Shared/Models/RecoveryModels.swift
       - path: Shared/Models/RecoverySnapshot.swift
+      # The string catalog and the bundle lookup the copy resolves through.
+      - path: Shared/Localizable.xcstrings
+      - path: Shared/Utilities/Localization.swift
       # The SwiftData schema, so the persistence round-trip is testable. It was
       # out of the target and the gap showed: `carriedHours` was computed,
       # published, and rendered without ever being written to a record, and

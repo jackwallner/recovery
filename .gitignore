@@ -36,3 +36,4 @@ Screenshots/raw/
 
 # macOS
 .DS_Store
+__pycache__/

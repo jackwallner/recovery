@@ -503,50 +503,50 @@ public enum RecoveryCalculator {
         let categoryLabel = category.label(for: tier)
 
         let minutes = Int(session.durationMinutes.rounded())
+        let activity = WorkoutClassifier.displayLabel(session.activityLabel)
         if session.profile == .easy {
             if session.intensityOverride == .light {
-                reasons.append("You marked this session light, so it counts as active recovery.")
-                reasons.append("Light enough to leave the countdown where it is.")
+                reasons.append(String(localized: "You marked this session light, so it counts as active recovery.", bundle: .recharge))
+                reasons.append(String(localized: "Light enough to leave the countdown where it is.", bundle: .recharge))
                 return reasons
             }
-            reasons.append("\(minutes)-minute \(session.activityLabel) counts as active recovery.")
-            reasons.append("Light enough to leave the countdown where it is.")
+            reasons.append(String(localized: "\(minutes)-minute \(activity) counts as active recovery.", bundle: .recharge))
+            reasons.append(String(localized: "Light enough to leave the countdown where it is.", bundle: .recharge))
             return reasons
         }
 
         if !qualifies {
-            let comparison = tier == .standard ? "below the level that starts a countdown" : "below your usual session load"
-            reasons.append("\(categoryLabel.lowercased()): a \(minutes)-minute \(session.activityLabel) \(comparison).")
-            reasons.append("Counted toward your training load, but no countdown started.")
+            reasons.append(belowThresholdReason(tier: tier, category: category, minutes: minutes, activity: activity))
+            reasons.append(String(localized: "Counted toward your training load, but no countdown started.", bundle: .recharge))
             return reasons
         }
 
-        reasons.append("\(categoryLabel): \(minutes)-minute \(session.activityLabel).")
+        reasons.append(String(localized: "\(categoryLabel): \(minutes)-minute \(activity).", bundle: .recharge))
         if let override = session.intensityOverride {
-            reasons.append("You marked this session \(override.label.lowercased()), so that is what it was scored as.")
+            reasons.append(overrideReason(override))
         } else {
-            reasons.append("Load estimated from \(load.source.label).")
+            reasons.append(loadSourceReason(load.source))
         }
 
         // Stated before anything else that moved the number, because when a band
         // is pinned nothing else did.
         if let manualHours, manualHours.isFinite, manualHours > 0 {
-            reasons.append("You pinned \(CountdownFormat.hours(manualHours)) to this intensity, so the model's own figure is not used here.")
+            reasons.append(String(localized: "You pinned \(CountdownFormat.hours(manualHours)) to this intensity, so the model's own figure is not used here.", bundle: .recharge))
             return reasons
         }
 
         switch tier {
         case .standard:
-            reasons.append("Standard estimate at your training level, scored against your heart-rate range.")
+            reasons.append(String(localized: "Standard estimate at your training level, scored against your heart-rate range.", bundle: .recharge))
         case .personalized:
             if !baseline.hasEstablishedBaseline {
-                reasons.append("Still building your baseline from \(baseline.dayCount) recent training \(baseline.dayCount == 1 ? "day" : "days").")
+                reasons.append(String(localized: "Still building your baseline from \(baseline.dayCount) recent training days.", bundle: .recharge))
             }
             let percent = Int(((personalization.factor - 1) * 100).rounded())
             if percent <= -3 {
-                reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern shortens this by about \(abs(percent))%.")
+                reasons.append(String(localized: "Your own \(PersonalRecoveryModel.windowDays)-day pattern shortens this by about \(abs(percent))%.", bundle: .recharge))
             } else if percent >= 3 {
-                reasons.append("Your own \(PersonalRecoveryModel.windowDays)-day pattern lengthens this by about \(percent)%.")
+                reasons.append(String(localized: "Your own \(PersonalRecoveryModel.windowDays)-day pattern lengthens this by about \(percent)%.", bundle: .recharge))
             }
         }
 
@@ -555,86 +555,153 @@ public enum RecoveryCalculator {
         // habit is the one figure here the user can check against their own
         // calendar.
         if let observed {
-            let times = "\(observed.sampleCount) \(observed.sampleCount == 1 ? "time" : "times")"
+            let hours = CountdownFormat.hours(observed.hours)
+            let count = observed.sampleCount
             if observed.isBandSpecific {
-                reasons.append("After \(observed.band.sessionPhrase) you have usually gone again after about \(CountdownFormat.hours(observed.hours)) (\(times)).")
+                switch observed.band {
+                case .light:
+                    reasons.append(String(localized: "After a light session you have usually gone again after about \(hours) (\(count) times).", bundle: .recharge))
+                case .moderate:
+                    reasons.append(String(localized: "After a moderate session you have usually gone again after about \(hours) (\(count) times).", bundle: .recharge))
+                case .hard:
+                    reasons.append(String(localized: "After a hard session you have usually gone again after about \(hours) (\(count) times).", bundle: .recharge))
+                }
             } else {
-                reasons.append("You have usually gone again after about \(CountdownFormat.hours(observed.hours)) between sessions (\(times)).")
+                reasons.append(String(localized: "You have usually gone again after about \(hours) between sessions (\(count) times).", bundle: .recharge))
             }
         }
 
         let nights = includedNights(context, before: nightsBefore)
         let night = nights.last ?? context.nightBefore
-        let prefix = nights.isEmpty ? nil : (nights.count == 1 ? "since the session" : "over the \(nights.count) nights since")
+        let span: NightSpan = nights.isEmpty ? .none : (nights.count == 1 ? .session : .nights(nights.count))
         if adjustment > 0.02 {
-            reasons.append(contextSummary(night, context, lengthened: true, prefix: prefix))
+            reasons.append(contextSummary(night, context, lengthened: true, span: span))
         } else if adjustment < -0.02 {
-            reasons.append(contextSummary(night, context, lengthened: false, prefix: prefix))
+            reasons.append(contextSummary(night, context, lengthened: false, span: span))
         }
 
         return reasons.filter { !$0.isEmpty }
+    }
+
+    /// How many nights a context adjustment reads, as the sentence needs it.
+    enum NightSpan {
+        case none
+        case session
+        case nights(Int)
+    }
+
+    static func belowThresholdReason(
+        tier: RecoveryTier,
+        category: LoadCategory,
+        minutes: Int,
+        activity: String
+    ) -> String {
+        switch (tier, category) {
+        case (.standard, .easy): String(localized: "light session: a \(minutes)-minute \(activity) below the level that starts a countdown.", bundle: .recharge)
+        case (.standard, .typical): String(localized: "moderate session: a \(minutes)-minute \(activity) below the level that starts a countdown.", bundle: .recharge)
+        case (.standard, .hard): String(localized: "hard session: a \(minutes)-minute \(activity) below the level that starts a countdown.", bundle: .recharge)
+        case (.standard, .unusuallyHard): String(localized: "very hard session: a \(minutes)-minute \(activity) below the level that starts a countdown.", bundle: .recharge)
+        case (.personalized, .easy): String(localized: "light for you: a \(minutes)-minute \(activity) below your usual session load.", bundle: .recharge)
+        case (.personalized, .typical): String(localized: "moderate for you: a \(minutes)-minute \(activity) below your usual session load.", bundle: .recharge)
+        case (.personalized, .hard): String(localized: "hard for you: a \(minutes)-minute \(activity) below your usual session load.", bundle: .recharge)
+        case (.personalized, .unusuallyHard): String(localized: "very hard for you: a \(minutes)-minute \(activity) below your usual session load.", bundle: .recharge)
+        }
+    }
+
+    private static func overrideReason(_ override: SessionIntensity) -> String {
+        switch override {
+        case .light: String(localized: "You marked this session light, so that is what it was scored as.", bundle: .recharge)
+        case .moderate: String(localized: "You marked this session moderate, so that is what it was scored as.", bundle: .recharge)
+        case .hard: String(localized: "You marked this session hard, so that is what it was scored as.", bundle: .recharge)
+        }
+    }
+
+    private static func loadSourceReason(_ source: LoadSource) -> String {
+        switch source {
+        case .heartRate: String(localized: "Load estimated from heart rate.", bundle: .recharge)
+        case .reportedEffort: String(localized: "Load estimated from your effort rating.", bundle: .recharge)
+        case .energy: String(localized: "Load estimated from duration and energy.", bundle: .recharge)
+        case .duration: String(localized: "Load estimated from duration.", bundle: .recharge)
+        }
     }
 
     private static func contextSummary(
         _ night: RecoveryContext.Night,
         _ context: RecoveryContext,
         lengthened: Bool,
-        prefix: String?
+        span: NightSpan
     ) -> String {
         var signals: [String] = []
         if let sleep = night.sleepHours {
+            let hours = sleep.formatted(.number.precision(.fractionLength(1)))
             if lengthened, sleep < 6 {
-                signals.append("short sleep (\(String(format: "%.1f", sleep))h)")
+                signals.append(String(localized: "short sleep (\(hours)h)", bundle: .recharge))
             } else if !lengthened, sleep >= 7.5 {
-                signals.append("good sleep (\(String(format: "%.1f", sleep))h)")
+                signals.append(String(localized: "good sleep (\(hours)h)", bundle: .recharge))
             }
         }
         if let hrv = night.heartRateVariability,
            let base = context.heartRateVariabilityBaseline, base > 0 {
             let ratio = hrv / base
             if lengthened, ratio < 0.85 {
-                signals.append("HRV below your usual range")
+                signals.append(String(localized: "HRV below your usual range", bundle: .recharge))
             } else if !lengthened, ratio > 1.15 {
-                signals.append("HRV above your usual range")
+                signals.append(String(localized: "HRV above your usual range", bundle: .recharge))
             }
         }
         if let rhr = night.restingHeartRate,
            let base = context.restingHeartRateBaseline, base > 0 {
             if lengthened, rhr >= base + 5 {
-                signals.append("resting heart rate up \(Int((rhr - base).rounded())) bpm")
+                let rise = Int((rhr - base).rounded())
+                signals.append(String(localized: "resting heart rate up \(rise) bpm", bundle: .recharge))
             } else if !lengthened, rhr <= base - 2 {
-                signals.append("resting heart rate below your usual range")
+                signals.append(String(localized: "resting heart rate below your usual range", bundle: .recharge))
             }
         }
         if let rate = night.respiratoryRate,
            let base = context.respiratoryRateBaseline, base > 0 {
             if lengthened, rate >= base + 1.5 {
-                signals.append("breathing rate up overnight")
+                signals.append(String(localized: "breathing rate up overnight", bundle: .recharge))
             } else if !lengthened, rate <= base - 1 {
-                signals.append("breathing rate below your usual range")
+                signals.append(String(localized: "breathing rate below your usual range", bundle: .recharge))
             }
         }
-        let verb = lengthened ? "Extended slightly" : "Shortened slightly"
-        let lead = prefix.map { "\(verb) \($0)" } ?? verb
         guard !signals.isEmpty else {
             // Several nights can move the window between them without the last
             // one crossing a threshold on its own. Say so rather than nothing.
-            return prefix == nil ? "" : "\(lead): overnight readings against your usual range."
+            return unreadSignalsSummary(lengthened: lengthened, span: span)
         }
-        return "\(lead): \(ListFormatterShim.join(signals))."
+        let list = ListFormatterShim.join(signals)
+        return signalsSummary(list, lengthened: lengthened, span: span)
+    }
+
+    static func signalsSummary(_ list: String, lengthened: Bool, span: NightSpan) -> String {
+        switch (lengthened, span) {
+        case (true, .none): String(localized: "Extended slightly: \(list).", bundle: .recharge)
+        case (true, .session): String(localized: "Extended slightly since the session: \(list).", bundle: .recharge)
+        case (true, .nights(let n)): String(localized: "Extended slightly over the \(n) nights since: \(list).", bundle: .recharge)
+        case (false, .none): String(localized: "Shortened slightly: \(list).", bundle: .recharge)
+        case (false, .session): String(localized: "Shortened slightly since the session: \(list).", bundle: .recharge)
+        case (false, .nights(let n)): String(localized: "Shortened slightly over the \(n) nights since: \(list).", bundle: .recharge)
+        }
+    }
+
+    private static func unreadSignalsSummary(lengthened: Bool, span: NightSpan) -> String {
+        switch (lengthened, span) {
+        case (_, .none): ""
+        case (true, .session): String(localized: "Extended slightly since the session: overnight readings against your usual range.", bundle: .recharge)
+        case (true, .nights(let n)): String(localized: "Extended slightly over the \(n) nights since: overnight readings against your usual range.", bundle: .recharge)
+        case (false, .session): String(localized: "Shortened slightly since the session: overnight readings against your usual range.", bundle: .recharge)
+        case (false, .nights(let n)): String(localized: "Shortened slightly over the \(n) nights since: overnight readings against your usual range.", bundle: .recharge)
+        }
     }
 }
 
-/// `ListFormatter` is unavailable on watchOS in the shape we want and drags a
-/// locale dependency into a pure type, so joining is done by hand.
+/// Joins a list the way the reader's language does ("a, b, and c" in US
+/// English). Kept as a type of its own so the pure model never reaches for a
+/// formatter directly.
 enum ListFormatterShim {
     static func join(_ items: [String]) -> String {
-        switch items.count {
-        case 0: return ""
-        case 1: return items[0]
-        case 2: return "\(items[0]) and \(items[1])"
-        default:
-            return items.dropLast().joined(separator: ", ") + ", and " + (items.last ?? "")
-        }
+        ListFormatter.localizedString(byJoining: items)
     }
 }

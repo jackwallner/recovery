@@ -290,7 +290,7 @@ struct TodayView: View {
         .accessibilityIdentifier("today.hero")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
-        .accessibilityHint(explained == nil ? "" : "Opens the full explanation")
+        .accessibilityHint(explained == nil ? "" : String(localized: "Opens the full explanation", bundle: .recharge))
     }
 
     @ViewBuilder
@@ -348,9 +348,9 @@ struct TodayView: View {
     private var headline: String {
         switch phase {
         case .noRecentWorkout:
-            return "Finish a workout and Recharge will estimate a window here."
+            return String(localized: "Finish a workout and Recharge will estimate a window here.", bundle: .recharge)
         case .ready:
-            return "Recovery estimate complete."
+            return String(localized: "Recovery estimate complete.", bundle: .recharge)
         case .readySoon, .recovering:
             guard let explained else { return CountdownFormat.phaseDetail(phase) }
             // A low-confidence estimate should not print a minute-precise clock
@@ -360,48 +360,46 @@ struct TodayView: View {
                 : CountdownFormat.readyAt(explained.readyAt, now: now)
             // `time` already carries its own preposition ("today at 1:32 PM",
             // "tomorrow morning"), so "complete at" read "complete at tomorrow at".
-            return "Estimate complete \(time)"
+            return String(localized: "Estimate complete \(time)", bundle: .recharge)
         }
     }
 
     /// The sentence under the headline: which workout, how long ago, and what it
     /// cost. Every branch names a real session; there is no wording here for
     /// "nothing happened", because that case is the `nil` return.
-    private var sourceLine: String? {
-        guard let explained else { return nil }
-        let session = "\(CountdownFormat.hours(explained.recoveryCostHours)) from your \(explained.activityLabel) \(relativeSessionTime(explained))"
+    private var sourceLine: String? { sourceLineText(punctuated: false) }
 
+    private func sourceLineText(punctuated: Bool) -> String? {
+        guard let explained else { return nil }
+        let kind: SessionSourceCopy.Kind
         if explained.producesCountdown {
-            return explained.isStacked
-                ? "\(session), on top of \(CountdownFormat.hours(explained.carriedHours)) already owed"
-                : session
+            kind = explained.isStacked ? .stacked : .plain
+        } else if explained.profile == .easy {
+            // The two states that used to read "didn't start a countdown", which
+            // told the user what the app declined to do rather than what it found.
+            kind = .easy
+        } else {
+            kind = .notEnough
         }
-        // The two states that used to read "didn't start a countdown", which
-        // told the user what the app declined to do rather than what it found.
-        if explained.profile == .easy {
-            return "\(session) · active recovery, so nothing to wait out"
-        }
-        return "\(session) · not enough to start a countdown"
+        return SessionSourceCopy.line(
+            kind: kind,
+            costHours: explained.recoveryCostHours,
+            carriedHours: explained.carriedHours,
+            activityLabel: explained.activityLabel,
+            secondsSinceEnd: now.timeIntervalSince(explained.sessionEnd),
+            punctuated: punctuated
+        )
     }
 
     private var accessibilitySummary: String {
         var parts: [String] = []
         switch phase {
-        case .noRecentWorkout: parts.append("No recent workout.")
-        case .ready: parts.append("Recovery estimate complete.")
-        default: parts.append("\(CountdownFormat.remaining(remaining)) left. \(headline).")
+        case .noRecentWorkout: parts.append(String(localized: "No recent workout.", bundle: .recharge))
+        case .ready: parts.append(String(localized: "Recovery estimate complete.", bundle: .recharge))
+        default: parts.append(String(localized: "\(CountdownFormat.remaining(remaining)) left. \(headline).", bundle: .recharge))
         }
-        if let sourceLine { parts.append(sourceLine + ".") }
+        if let line = sourceLineText(punctuated: true) { parts.append(line) }
         return parts.joined(separator: " ")
-    }
-
-    /// "Just now" only for the first minute. It used to cover the first hour,
-    /// so a session that ended 59 minutes ago read "just now" beside a History
-    /// row stamped an hour earlier.
-    private func relativeSessionTime(_ estimate: RecoveryEstimate) -> String {
-        let elapsed = now.timeIntervalSince(estimate.sessionEnd)
-        if elapsed < 60 { return "just now" }
-        return "\(CountdownFormat.remaining(elapsed)) ago"
     }
 
     // MARK: - The one card
@@ -431,7 +429,7 @@ struct TodayView: View {
             Card {
                 VStack(alignment: .leading, spacing: Theme.Space.sm) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(store.isPro ? "Your recharge time" : "Your own recharge time")
+                        Text(store.isPro ? LocalizedStringKey("Your recharge time") : LocalizedStringKey("Your own recharge time"))
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
                         Spacer(minLength: Theme.Space.xs)
@@ -450,7 +448,7 @@ struct TodayView: View {
         }
         .pressable(.card)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(store.isPro ? "Your recharge time" : "Your own recharge time")
+        .accessibilityLabel(store.isPro ? LocalizedStringKey("Your recharge time") : LocalizedStringKey("Your own recharge time"))
         .accessibilityValue(personalizationAccessibilityValue)
         .accessibilityHint("Opens the explanation and upgrade options")
     }
@@ -459,9 +457,9 @@ struct TodayView: View {
         let preview = engine.personalizedPreview
         let usual = CountdownFormat.hours(preview.standardHours)
         guard store.isPro else {
-            return "Standard \(usual). Your \(RechargeConversionCopy.proName) time is hidden until you upgrade."
+            return String(localized: "Standard \(usual). Your Recharge+ time is hidden until you upgrade.", bundle: .recharge)
         }
-        return "Standard \(usual). \(RechargeConversionCopy.proName) \(CountdownFormat.hours(preview.personalizedHours))."
+        return String(localized: "Standard \(usual). Recharge+ \(CountdownFormat.hours(preview.personalizedHours)).", bundle: .recharge)
     }
 
     private var comparison: some View {
@@ -523,8 +521,8 @@ struct TodayView: View {
 
     private var comparisonCaption: String {
         let preview = engine.personalizedPreview
-        let subject = preview.isExample ? "A hard 60-minute session" : preview.label
-        return "\(subject). \(RechargeConversionCopy.comparisonCaption(hasPurchased: store.isPro))"
+        let subject = preview.isExample ? String(localized: "A hard 60-minute session", bundle: .recharge) : preview.label
+        return String(localized: "\(subject). \(RechargeConversionCopy.comparisonCaption(hasPurchased: store.isPro))", bundle: .recharge)
     }
 
     // MARK: - Transient prompts
@@ -544,7 +542,7 @@ struct TodayView: View {
                         // not the one the hero names: a morning lift with a
                         // patchy trace sat under "96h from your run" and read
                         // as a question about the run.
-                        Text("How hard was your \(engine.awaitingEffort?.activityLabel ?? "session")?")
+                        Text(effortQuestion)
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
                         // Not "your rating decides the estimate", which is what
@@ -635,12 +633,19 @@ struct TodayView: View {
     @ViewBuilder
     private var freshness: some View {
         if engine.isRefreshing {
-            freshnessLine("Checking Apple Health…", tint: Theme.textTertiary)
+            freshnessLine(String(localized: "Checking Apple Health…", bundle: .recharge), tint: Theme.textTertiary)
         } else if engine.lastImportFailed {
-            freshnessLine("Couldn't read Apple Health. Pull to retry.", tint: Theme.recovering)
+            freshnessLine(String(localized: "Couldn't read Apple Health. Pull to retry.", bundle: .recharge), tint: Theme.recovering)
         } else if let imported = engine.lastSuccessfulImport {
-            freshnessLine("Updated \(CountdownFormat.elapsed(since: imported, now: now))", tint: Theme.textTertiary)
+            freshnessLine(String(localized: "Updated \(CountdownFormat.elapsed(since: imported, now: now))", bundle: .recharge), tint: Theme.textTertiary)
         }
+    }
+
+    private var effortQuestion: String {
+        guard let label = engine.awaitingEffort?.activityLabel else {
+            return String(localized: "How hard was your session?", bundle: .recharge)
+        }
+        return String(localized: "How hard was your \(WorkoutClassifier.displayLabel(label))?", bundle: .recharge)
     }
 
     private func freshnessLine(_ text: String, tint: Color) -> some View {

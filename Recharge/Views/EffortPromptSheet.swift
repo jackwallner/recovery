@@ -21,9 +21,9 @@ struct EffortPromptSheet: View {
     /// Borg CR10 anchors, collapsed to the three bands people can actually
     /// distinguish after the fact.
     static let options: [(effort: Double, title: String, detail: String)] = [
-        (4, "Easy", "Could have kept going for a long time."),
-        (7, "Moderate", "Working, but in control throughout."),
-        (9, "Hard", "Near the limit. Little left at the end.")
+        (4, String(localized: "Easy", bundle: .recharge), String(localized: "Could have kept going for a long time.", bundle: .recharge)),
+        (7, String(localized: "Moderate", bundle: .recharge), String(localized: "Working, but in control throughout.", bundle: .recharge)),
+        (9, String(localized: "Hard", bundle: .recharge), String(localized: "Near the limit. Little left at the end.", bundle: .recharge))
     ]
 
     var body: some View {

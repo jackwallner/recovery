@@ -175,12 +175,12 @@ struct HistoryView: View {
 
     private var emptyMessage: String {
         if settings.hasDeferredHealthAccess {
-            return "Recharge is not connected to Apple Health yet. Connect it to import workouts and start a countdown."
+            return String(localized: "Recharge is not connected to Apple Health yet. Connect it to import workouts and start a countdown.", bundle: .recharge)
         }
         if engine.lastImportFailed {
-            return "Recharge couldn't read Apple Health. Connect again, then try another read."
+            return String(localized: "Recharge couldn't read Apple Health. Connect again, then try another read.", bundle: .recharge)
         }
-        return "Nothing in the last \(HealthKitService.importDays) days of Apple Health to score. Finish a workout and it will appear here."
+        return String(localized: "Nothing in the last \(HealthKitService.importDays) days of Apple Health to score. Finish a workout and it will appear here.", bundle: .recharge)
     }
 
     private func requestHealthAccess() async {
@@ -204,11 +204,11 @@ struct HistoryView: View {
             settings.hasDeferredHealthAccess = false
             await engine.refresh(force: true)
             healthMessage = engine.lastImportFailed
-                ? "Recharge still could not read Apple Health. Open the Health app, choose Sharing, then Apps, then Recharge."
-                : "Apple Health checked. Pull down to read it again at any time."
+                ? String(localized: "Recharge still could not read Apple Health. Open the Health app, choose Sharing, then Apps, then Recharge.", bundle: .recharge)
+                : String(localized: "Apple Health checked. Pull down to read it again at any time.", bundle: .recharge)
         } catch {
             settings.hasDeferredHealthAccess = true
-            healthMessage = "Recharge could not request access. Open the Health app, choose Sharing, then Apps, then Recharge."
+            healthMessage = String(localized: "Recharge could not request access. Open the Health app, choose Sharing, then Apps, then Recharge.", bundle: .recharge)
         }
     }
 
@@ -277,8 +277,8 @@ struct HistoryView: View {
 
     private func dayHeading(_ date: Date) -> String {
         let calendar = Calendar.current
-        if calendar.isDateInToday(date) { return "Today" }
-        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        if calendar.isDateInToday(date) { return String(localized: "Today", bundle: .recharge) }
+        if calendar.isDateInYesterday(date) { return String(localized: "Yesterday", bundle: .recharge) }
         let formatter = DateFormatter()
         formatter.setLocalizedDateFormatFromTemplate("EEEE d MMM")
         return formatter.string(from: date)
@@ -312,7 +312,7 @@ private struct HistoryRow: View {
                         .foregroundStyle(estimate.producesCountdown ? Theme.recovering : Theme.idle)
 
                     VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                        Text(estimate.activityLabel.asSessionTitle)
+                        Text(WorkoutClassifier.displayTitle(estimate.activityLabel))
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.textPrimary)
                         // An easy session's category is measured against the easy
@@ -320,7 +320,7 @@ private struct HistoryRow: View {
                         // golf read "Very hard" on a row that also says it started
                         // no countdown. The category answers a question nobody asked
                         // of an active-recovery session; say what the row means.
-                        Text("\(estimate.profile == .easy ? "Active recovery" : estimate.category.shortLabel) · \(timeLabel)")
+                        Text("\(categoryLabel) · \(timeLabel)")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
                     }
@@ -357,24 +357,28 @@ private struct HistoryRow: View {
     /// whole reason a cost and a countdown are separate numbers.
     private var subtitle: String {
         guard estimate.producesCountdown else {
-            return estimate.profile == .easy ? "no countdown" : "under the threshold"
+            return estimate.profile == .easy ? String(localized: "no countdown", bundle: .recharge) : String(localized: "under the threshold", bundle: .recharge)
         }
         if estimate.isStacked {
-            return "\(CountdownFormat.hours(estimate.totalHours)) countdown"
+            return String(localized: "\(CountdownFormat.hours(estimate.totalHours)) countdown", bundle: .recharge)
         }
-        return "countdown"
+        return String(localized: "countdown", bundle: .recharge)
     }
 
     private var accessibilityValue: String {
         let cost = CountdownFormat.hours(estimate.recoveryCostHours)
         guard estimate.producesCountdown else {
             return estimate.profile == .easy
-                ? "Cost \(cost). Active recovery, no countdown."
-                : "Cost \(cost). Below the threshold, no countdown."
+                ? String(localized: "Cost \(cost). Active recovery, no countdown.", bundle: .recharge)
+                : String(localized: "Cost \(cost). Below the threshold, no countdown.", bundle: .recharge)
         }
         return estimate.isStacked
-            ? "Cost \(cost). Countdown ran \(CountdownFormat.hours(estimate.totalHours)) including carried recovery."
-            : "Countdown \(cost)."
+            ? String(localized: "Cost \(cost). Countdown ran \(CountdownFormat.hours(estimate.totalHours)) including carried recovery.", bundle: .recharge)
+            : String(localized: "Countdown \(cost).", bundle: .recharge)
+    }
+
+    private var categoryLabel: String {
+        estimate.profile == .easy ? String(localized: "Active recovery", bundle: .recharge) : estimate.category.shortLabel
     }
 
     private var timeLabel: String {

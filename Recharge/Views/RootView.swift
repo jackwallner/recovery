@@ -228,19 +228,19 @@ struct RootView: View {
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            TabButton(icon: TabBarMetrics.Symbol.today, label: "Today", isSelected: selectedTab == .today) {
+            TabButton(icon: TabBarMetrics.Symbol.today, label: String(localized: "Today", bundle: .recharge), isSelected: selectedTab == .today) {
                 select(.today)
             }
             if split == nil {
                 TabButton(
                     icon: TabBarMetrics.Symbol.history,
-                    label: "History",
+                    label: String(localized: "History", bundle: .recharge),
                     isSelected: selectedTab == .history
                 ) { select(.history) }
             }
             TabButton(
                 icon: store.isPro ? TabBarMetrics.Symbol.plus : TabBarMetrics.Symbol.upgrade,
-                label: store.isPro ? "Recharge+" : "Upgrade",
+                label: store.isPro ? String(localized: "Recharge+", bundle: .recharge) : String(localized: "Upgrade", bundle: .recharge),
                 tint: Theme.pro,
                 isSelected: selectedTab == .plus
             ) {

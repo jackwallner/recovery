@@ -32,10 +32,10 @@ public enum TrainingExperience: Int, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .underOneYear: "Less than a year"
-        case .oneToThreeYears: "1 to 3 years"
-        case .threeToTenYears: "3 to 10 years"
-        case .tenYearsPlus: "10 years or more"
+        case .underOneYear: String(localized: "Less than a year", bundle: .recharge)
+        case .oneToThreeYears: String(localized: "1 to 3 years", bundle: .recharge)
+        case .threeToTenYears: String(localized: "3 to 10 years", bundle: .recharge)
+        case .tenYearsPlus: String(localized: "10 years or more", bundle: .recharge)
         }
     }
 
@@ -75,10 +75,10 @@ public enum BounceBackHabit: Int, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .nextDay: "Usually the next day"
-        case .aboutTwoDays: "About two days"
-        case .threeOrMoreDays: "Three days or more"
-        case .notSure: "I honestly don't know"
+        case .nextDay: String(localized: "Usually the next day", bundle: .recharge)
+        case .aboutTwoDays: String(localized: "About two days", bundle: .recharge)
+        case .threeOrMoreDays: String(localized: "Three days or more", bundle: .recharge)
+        case .notSure: String(localized: "I honestly don't know", bundle: .recharge)
         }
     }
 
@@ -105,10 +105,10 @@ public enum WeeklyVolume: Int, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .oneOrTwo: "1 to 2"
-        case .threeOrFour: "3 to 4"
-        case .fiveOrSix: "5 to 6"
-        case .sevenPlus: "7 or more"
+        case .oneOrTwo: String(localized: "1 to 2", bundle: .recharge)
+        case .threeOrFour: String(localized: "3 to 4", bundle: .recharge)
+        case .fiveOrSix: String(localized: "5 to 6", bundle: .recharge)
+        case .sevenPlus: String(localized: "7 or more", bundle: .recharge)
         }
     }
 
@@ -232,7 +232,7 @@ public struct AthleteProfile: Codable, Sendable, Equatable {
     /// Health stores an exact age, so a picker has to show the band an exact
     /// age falls in rather than look for a tag equal to it.
     public static let ageBands: [(label: String, midpoint: Int)] = [
-        ("Under 25", 21), ("25 to 34", 30), ("35 to 44", 40), ("45 to 54", 50), ("55 or over", 60)
+        (String(localized: "Under 25", bundle: .recharge), 21), (String(localized: "25 to 34", bundle: .recharge), 30), (String(localized: "35 to 44", bundle: .recharge), 40), (String(localized: "45 to 54", bundle: .recharge), 50), (String(localized: "55 or over", bundle: .recharge), 60)
     ]
 
     /// The midpoint of the band `age` falls in.
@@ -436,23 +436,23 @@ public enum ProfileQuestion: String, Codable, Sendable, CaseIterable, Identifiab
 
     public var title: String {
         switch self {
-        case .age: "How old are you?"
-        case .experience: "How long have you been training?"
-        case .weeklyVolume: "How many sessions in a typical week?"
-        case .bounceBack: "After a hard session, when do you feel ready again?"
+        case .age: String(localized: "How old are you?", bundle: .recharge)
+        case .experience: String(localized: "How long have you been training?", bundle: .recharge)
+        case .weeklyVolume: String(localized: "How many sessions in a typical week?", bundle: .recharge)
+        case .bounceBack: String(localized: "After a hard session, when do you feel ready again?", bundle: .recharge)
         }
     }
 
     public var detail: String {
         switch self {
         case .age:
-            "Sets the heart-rate ceiling every session is measured against, and how quickly the window closes."
+            String(localized: "Sets the heart-rate ceiling every session is measured against, and how quickly the window closes.", bundle: .recharge)
         case .experience:
-            "Years of consistent training change how the same relative load lands."
+            String(localized: "Years of consistent training change how the same relative load lands.", bundle: .recharge)
         case .weeklyVolume:
-            "Someone training six days a week is adapted to a shorter turnaround than someone training two."
+            String(localized: "Someone training six days a week is adapted to a shorter turnaround than someone training two.", bundle: .recharge)
         case .bounceBack:
-            "Your own read on it. Recharge starts here and replaces it with what your data shows."
+            String(localized: "Your own read on it. Recharge starts here and replaces it with what your data shows.", bundle: .recharge)
         }
     }
 }

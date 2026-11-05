@@ -112,10 +112,11 @@ public enum ScreenshotFixtures {
     /// describing some other session.
     public static func personalizedPreview() -> PersonalizedPreview {
         PersonalizedPreview(
-            label: "Your last run",
+            label: String(localized: "Your last \(WorkoutClassifier.displayLabel("run"))", bundle: .recharge),
             standardHours: leadRun.standard,
             personalizedHours: leadRun.personal,
-            isExample: false
+            isExample: false,
+            activityLabel: "run"
         )
     }
 
@@ -223,28 +224,41 @@ public enum ScreenshotFixtures {
             let hours = row.qualifies ? cost : 0
             let carried = row.qualifies ? (isPro ? row.personalCarried : row.standardCarried) : 0
             let label = row.category.label(for: tier)
-            var reasons = ["\(label): \(row.minutes)-minute \(row.label).", "Load estimated from heart rate."]
+            let activity = WorkoutClassifier.displayLabel(row.label)
+            let minutes = row.minutes
+            let patternHours = CountdownFormat.hours(30)
+            let patternCount = 14
+            let patternPercent = 14
+            let hardPattern = String(localized: "After a hard session you have usually gone again after about \(patternHours) (\(patternCount) times).", bundle: .recharge)
+            let sleepHours = 5.4.formatted(.number.precision(.fractionLength(1)))
+            let sleepSignal = String(localized: "short sleep (\(sleepHours)h)", bundle: .recharge)
+            let hrvSignal = String(localized: "HRV below your usual range", bundle: .recharge)
+            var reasons = [
+                String(localized: "\(label): \(minutes)-minute \(activity).", bundle: .recharge),
+                String(localized: "Load estimated from heart rate.", bundle: .recharge)
+            ]
             if row.profile == .easy {
                 reasons = [
-                    "\(row.minutes)-minute \(row.label) counts as active recovery.",
-                    "Light enough to leave the countdown where it is."
+                    String(localized: "\(minutes)-minute \(activity) counts as active recovery.", bundle: .recharge),
+                    String(localized: "Light enough to leave the countdown where it is.", bundle: .recharge)
                 ]
             } else if !row.qualifies {
-                let comparison = isPro ? "below your usual session load" : "below the level that starts a countdown"
                 reasons = [
-                    "\(label.lowercased()): a \(row.minutes)-minute \(row.label) \(comparison).",
-                    "Counted toward your training load, but no countdown started."
+                    RecoveryCalculator.belowThresholdReason(tier: tier, category: row.category, minutes: minutes, activity: activity),
+                    String(localized: "Counted toward your training load, but no countdown started.", bundle: .recharge)
                 ]
             } else if index == 0 {
                 reasons += isPro
                     ? [
-                        "Your own 30-day pattern shortens this by about 14%.",
-                        "After a hard session you have usually gone again after about 30h (14 times).",
-                        "Extended slightly: short sleep (5.4h) and HRV below your usual range."
+                        String(localized: "Your own \(PersonalRecoveryModel.windowDays)-day pattern shortens this by about \(patternPercent)%.", bundle: .recharge),
+                        hardPattern,
+                        RecoveryCalculator.signalsSummary(
+                            ListFormatterShim.join([sleepSignal, hrvSignal]), lengthened: true, span: .none
+                        )
                       ]
                     : [
-                        "Standard estimate at your training level, scored against your heart-rate range.",
-                        "After a hard session you have usually gone again after about 30h (14 times)."
+                        String(localized: "Standard estimate at your training level, scored against your heart-rate range.", bundle: .recharge),
+                        hardPattern
                       ]
             }
             // The countdown this session actually set, which is what `readyAt`

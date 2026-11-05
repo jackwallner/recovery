@@ -13,7 +13,7 @@ struct TrialOfferPage: View {
     /// "Not now" is right for a sheet that interrupted someone. At the end of
     /// onboarding it is wrong: declining there is not postponing anything, it is
     /// choosing the free tier and starting to use the app.
-    var declineTitle: String = "Not now"
+    var declineTitle: String = String(localized: "Not now", bundle: .recharge)
     @EnvironmentObject private var store: StoreService
     @State private var errorMessage: String?
     @State private var isRestoring = false
@@ -145,7 +145,7 @@ struct TrialOfferPage: View {
             .cardShape()
 
             Text(preview.isExample
-                 ? "For a hard 60-minute session. An example on the real curve until you have recorded one."
+                 ? String(localized: "For a hard 60-minute session. An example on the real curve until you have recorded one.", bundle: .recharge)
                  : preview.label)
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(Theme.textTertiary)
@@ -253,11 +253,11 @@ struct TrialOfferPage: View {
     /// that nothing is charged today, not a headline competing with the price.
     @ViewBuilder
     private var trialCallout: some View {
-        if let package, let trialLabel = store.eligibleIntroLabel(for: package) {
+        if let package, let trialLength = store.eligibleIntroLength(for: package) {
             HStack(spacing: Theme.Space.xs) {
                 Image(systemName: "gift.fill")
                     .font(.system(size: 12, weight: .semibold))
-                Text("\(trialLabel.replacingOccurrences(of: " free trial", with: " free")) · Nothing charged today")
+                Text(trialLength.badge)
                     .font(.system(.footnote, design: .rounded, weight: .semibold))
                     .multilineTextAlignment(.center)
             }
@@ -277,7 +277,7 @@ struct TrialOfferPage: View {
     private var price: some View {
         if let package {
             VStack(spacing: Theme.Space.xxs) {
-                Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
+                Text(package.rechargeBilledAmountLabel)
                     .font(.system(.title3, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .multilineTextAlignment(.center)
@@ -309,7 +309,7 @@ struct TrialOfferPage: View {
                 Text("Couldn't load the offer")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                Text(store.lastError ?? "Check your connection and try again.")
+                Text(store.lastError ?? String(localized: "Check your connection and try again.", bundle: .recharge))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -322,7 +322,7 @@ struct TrialOfferPage: View {
     }
 
     private var headline: String {
-        "Make it yours"
+        String(localized: "Make it yours", bundle: .recharge)
     }
 
     /// One line, and it has one job: say which figure is free and which is paid.
@@ -345,7 +345,7 @@ struct TrialOfferPage: View {
                 onPurchased()
             case .cancelled: errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending:
-                errorMessage = "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again."
+                errorMessage = String(localized: "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again.", bundle: .recharge)
             }
         } catch {
             Haptics.failure()
@@ -362,7 +362,7 @@ struct TrialOfferPage: View {
             onPurchased()
         } else {
             errorMessage = store.lastError
-                ?? "No active \(RechargeConversionCopy.proName) purchase was found for this Apple ID."
+                ?? String(localized: "No active Recharge+ purchase was found for this Apple ID.", bundle: .recharge)
         }
     }
 }

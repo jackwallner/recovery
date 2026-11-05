@@ -81,8 +81,8 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .neverSynced: return "Open"
-        case .unreadable: return "Retry"
+        case .neverSynced: return String(localized: "Open", bundle: .recharge)
+        case .unreadable: return String(localized: "Retry", bundle: .recharge)
         // `.stale` deliberately falls through: the countdown is still correct.
         case .synced, .stale: break
         }
@@ -90,7 +90,7 @@ public enum ComplicationCopy {
         case .noRecentWorkout:
             return "--"
         case .ready:
-            return style == .state ? "READY" : "Ready"
+            return style == .state ? String(localized: "READY", bundle: .recharge) : String(localized: "Ready", bundle: .recharge)
         case .readySoon, .recovering:
             switch style {
             case .countdown:
@@ -98,7 +98,7 @@ public enum ComplicationCopy {
             case .readyClock:
                 return readyAt.map(CountdownFormat.clock) ?? "--"
             case .state:
-                return phase == .readySoon ? "SOON" : "REC"
+                return phase == .readySoon ? String(localized: "SOON", bundle: .recharge) : String(localized: "REC", bundle: .recharge)
             }
         }
     }
@@ -116,24 +116,24 @@ public enum ComplicationCopy {
         // opened always live on the same device, whether that is the wrist or
         // the phone, so naming one would be wrong on the other.
         switch dataState {
-        case .stale: return "Apple Health unread - open Recharge"
-        case .neverSynced: return "Open Recharge to set up"
-        case .unreadable: return "Open Recharge to refresh"
+        case .stale: return String(localized: "Apple Health unread - open Recharge", bundle: .recharge)
+        case .neverSynced: return String(localized: "Open Recharge to set up", bundle: .recharge)
+        case .unreadable: return String(localized: "Open Recharge to refresh", bundle: .recharge)
         case .synced: break
         }
         switch phase {
         case .noRecentWorkout:
-            return "No workout"
+            return String(localized: "No workout", bundle: .recharge)
         case .ready:
-            return "Estimate complete"
+            return String(localized: "Estimate complete", bundle: .recharge)
         case .readySoon, .recovering:
             switch style {
             case .countdown:
-                return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
+                return readyAt.map { String(localized: "Ready \(dayClock($0, remaining: remaining))", bundle: .recharge) } ?? String(localized: "Recovering", bundle: .recharge)
             case .readyClock:
-                return CountdownFormat.compactRemaining(remaining) + " left"
+                return String(localized: "\(CountdownFormat.compactRemaining(remaining)) left", bundle: .recharge)
             case .state:
-                return CountdownFormat.compactRemaining(remaining) + " left"
+                return String(localized: "\(CountdownFormat.compactRemaining(remaining)) left", bundle: .recharge)
             }
         }
     }
@@ -148,22 +148,22 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .neverSynced: return "Open Recharge"
-        case .unreadable: return "Refresh Recharge"
+        case .neverSynced: return String(localized: "Open Recharge", bundle: .recharge)
+        case .unreadable: return String(localized: "Refresh Recharge", bundle: .recharge)
         // One line and no second slot, so the value stays: a warning here would
         // be the only thing the inline complication said.
         case .synced, .stale: break
         }
         switch phase {
-        case .noRecentWorkout: return "No workout"
+        case .noRecentWorkout: return String(localized: "No workout", bundle: .recharge)
         // The inline slot has room for one word, and "Ready" is the token every
         // other surface already uses for an expired estimate.
-        case .ready: return "Ready"
+        case .ready: return String(localized: "Ready", bundle: .recharge)
         case .readySoon, .recovering:
             switch style {
-            case .countdown: return "\(CountdownFormat.compactRemaining(remaining)) to ready"
-            case .readyClock: return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
-            case .state: return phase == .readySoon ? "Ready soon" : "Recovering"
+            case .countdown: return String(localized: "\(CountdownFormat.compactRemaining(remaining)) to ready", bundle: .recharge)
+            case .readyClock: return readyAt.map { String(localized: "Ready \(dayClock($0, remaining: remaining))", bundle: .recharge) } ?? String(localized: "Recovering", bundle: .recharge)
+            case .state: return phase == .readySoon ? String(localized: "Ready soon", bundle: .recharge) : String(localized: "Recovering", bundle: .recharge)
             }
         }
     }
@@ -176,17 +176,17 @@ public enum ComplicationCopy {
         dataState: DataState = .synced
     ) -> String {
         switch dataState {
-        case .neverSynced, .unreadable: return "Recharge"
+        case .neverSynced, .unreadable: return String(localized: "Recharge", bundle: .recharge)
         case .synced, .stale: break
         }
         switch phase {
-        case .noRecentWorkout: return "Recharge"
-        case .ready: return "Ready"
+        case .noRecentWorkout: return String(localized: "Recharge", bundle: .recharge)
+        case .ready: return String(localized: "Ready", bundle: .recharge)
         case .readySoon, .recovering:
             switch style {
-            case .countdown: return "Recover \(CountdownFormat.compactRemaining(remaining))"
-            case .readyClock: return readyAt.map { "Ready \(dayClock($0, remaining: remaining))" } ?? "Recovering"
-            case .state: return phase == .readySoon ? "READY SOON" : "RECOVERING"
+            case .countdown: return String(localized: "Recover \(CountdownFormat.compactRemaining(remaining))", bundle: .recharge)
+            case .readyClock: return readyAt.map { String(localized: "Ready \(dayClock($0, remaining: remaining))", bundle: .recharge) } ?? String(localized: "Recovering", bundle: .recharge)
+            case .state: return phase == .readySoon ? String(localized: "READY SOON", bundle: .recharge) : String(localized: "RECOVERING", bundle: .recharge)
             }
         }
     }

@@ -47,28 +47,28 @@ public enum WhatsNew {
     public static let items: [Item] = [
         Item(
             symbol: "gauge.with.needle",
-            title: "Standard is a recovery time again",
-            detail: "The free countdown scores each session at your training level, like a Garmin does, instead of repeating your usual gap between sessions. That gap is still shown beside it."
+            title: String(localized: "Standard is a recovery time again", bundle: .recharge),
+            detail: String(localized: "The free countdown scores each session at your training level, like a Garmin does, instead of repeating your usual gap between sessions. That gap is still shown beside it.", bundle: .recharge)
         ),
         Item(
             symbol: "flag.checkered",
-            title: "Up to four days after a race",
-            detail: "Countdowns now reach four days, so a half marathon or a marathon reads longer than a long run."
+            title: String(localized: "Up to four days after a race", bundle: .recharge),
+            detail: String(localized: "Countdowns now reach four days, so a half marathon or a marathon reads longer than a long run.", bundle: .recharge)
         ),
         Item(
             symbol: "waveform.path.ecg",
-            title: "Intervals count for what they were",
-            detail: "Recharge reads the time you spent at each heart rate, so hard repeats cost more than a steady run at the same average, and a long easy ride no longer outweighs a hard hour."
+            title: String(localized: "Intervals count for what they were", bundle: .recharge),
+            detail: String(localized: "Recharge reads the time you spent at each heart rate, so hard repeats cost more than a steady run at the same average, and a long easy ride no longer outweighs a hard hour.", bundle: .recharge)
         ),
         Item(
             symbol: "square.stack.3d.up.fill",
-            title: "Sessions close together add up",
-            detail: "Train again before a countdown ends and the two combine: the longer one counts in full, plus half of the shorter. Training twice a day still reaches Ready."
+            title: String(localized: "Sessions close together add up", bundle: .recharge),
+            detail: String(localized: "Train again before a countdown ends and the two combine: the longer one counts in full, plus half of the shorter. Training twice a day still reaches Ready.", bundle: .recharge)
         ),
         Item(
             symbol: "moon.zzz.fill",
-            title: "Updated by the nights after",
-            detail: "Recharge+ adjusts a running countdown after each night's sleep, HRV, and resting heart rate, not only the night before the session."
+            title: String(localized: "Updated by the nights after", bundle: .recharge),
+            detail: String(localized: "Recharge+ adjusts a running countdown after each night's sleep, HRV, and resting heart rate, not only the night before the session.", bundle: .recharge)
         )
     ]
 }

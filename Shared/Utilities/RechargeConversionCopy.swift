@@ -16,7 +16,7 @@ public enum RechargeConversionCopy {
     /// the thing they already had and which was the thing being sold. Naming the
     /// *tiers* answers that with no ambiguity and no claim about how either
     /// number was derived — that is what the caption underneath is for.
-    public static let standardColumn = "Standard"
+    public static var standardColumn: String { String(localized: "Standard", bundle: .recharge) }
     public static var proColumn: String { proName }
 
     /// The one line that has to sit under any pair of these figures, because the
@@ -27,7 +27,7 @@ public enum RechargeConversionCopy {
     /// training level, and the Recharge+ figure is the same session scored
     /// against their own baseline, their thirty-day pattern, and their sleep.
     public static func comparisonCaption(hasPurchased: Bool) -> String {
-        "Standard is the model at your training level. \(proName) scores this session against your own baseline, sleep, and heart rate."
+        String(localized: "Standard is the model at your training level. Recharge+ scores this session against your own baseline, sleep, and heart rate.", bundle: .recharge)
     }
 
     /// Primary button. Carries no pricing words at all: not the trial, not the
@@ -39,20 +39,13 @@ public enum RechargeConversionCopy {
     /// The parameters are retained so callers keep passing the real offer, and
     /// so re-introducing price wording stays a one-line change.
     public static func ctaLabel(trialLabel: String?, priceLabel: String, eligibleForTrial: Bool) -> String {
-        "Continue with \(proName)"
+        String(localized: "Continue with Recharge+", bundle: .recharge)
     }
 
     /// Short capsule CTA on locked cards. These sit far from any price and only
     /// route to a purchase surface, so they stay neutral for the same reason.
     public static func shortCTALabel(eligibleForTrial: Bool) -> String {
-        "Continue with \(proName)"
-    }
-
-    /// Apple 3.1.2(c): the amount the user will actually be billed, phrased as a
-    /// commitment rather than a rate. Every purchase surface renders this as its
-    /// largest pricing element.
-    public static func billedAmount(priceLabel: String) -> String {
-        priceLabel.replacingOccurrences(of: " / ", with: " per ")
+        String(localized: "Continue with Recharge+", bundle: .recharge)
     }
 
     /// Subordinate line under the billed amount.
@@ -65,44 +58,43 @@ public enum RechargeConversionCopy {
         eligibleForTrial: Bool,
         isRecurring: Bool = true
     ) -> String {
-        guard isRecurring else { return "One-time purchase · No subscription" }
+        guard isRecurring else { return String(localized: "One-time purchase · No subscription", bundle: .recharge) }
         if eligibleForTrial, let trialLabel, !trialLabel.isEmpty {
-            return "\(trialLabel.lowercased()) included · Cancel anytime"
+            return String(localized: "\(trialLabel) included · Cancel anytime", bundle: .recharge)
         }
-        return "Billed automatically · Cancel anytime"
+        return String(localized: "Billed automatically · Cancel anytime", bundle: .recharge)
     }
 
     /// Apple 3.1.2 disclosure adjacent to the purchase button.
     public static func disclosure(
         trialLabel: String?,
         priceLabel: String,
-        eligibleForTrial: Bool,
-        renewClause: String = "Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions."
+        eligibleForTrial: Bool
     ) -> String {
         if eligibleForTrial, let trialLabel, !trialLabel.isEmpty {
-            return "\(priceLabel) after the \(trialLabel.lowercased()). \(renewClause)"
+            return String(localized: "\(priceLabel) after the \(trialLabel). Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions.", bundle: .recharge)
         }
-        return "\(priceLabel). \(renewClause)"
+        return String(localized: "\(priceLabel). Auto-renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in Settings › Apple ID › Subscriptions.", bundle: .recharge)
     }
 
     /// Compact disclosure for the onboarding trial sheet footer.
     public static func sheetDisclosure(trialLabel: String?, priceLabel: String, eligibleForTrial: Bool) -> String {
         if eligibleForTrial, let trialLabel, !trialLabel.isEmpty {
-            return "\(priceLabel) after the \(trialLabel.lowercased()). Auto-renews unless cancelled at least 24 hours before the trial ends."
+            return String(localized: "\(priceLabel) after the \(trialLabel). Auto-renews unless cancelled at least 24 hours before the trial ends.", bundle: .recharge)
         }
-        return "\(priceLabel). Auto-renews unless cancelled 24h before the period ends."
+        return String(localized: "\(priceLabel). Auto-renews unless cancelled 24h before the period ends.", bundle: .recharge)
     }
 
     /// Cancel / failure copy — never blames a "trial" the user wasn't eligible for.
     public static func purchaseCancelledMessage(eligibleForTrial: Bool) -> String {
         eligibleForTrial
-            ? "Trial wasn't started. Tap again to continue."
-            : "Purchase wasn't completed. Tap again to continue."
+            ? String(localized: "Trial wasn't started. Tap again to continue.", bundle: .recharge)
+            : String(localized: "Purchase wasn't completed. Tap again to continue.", bundle: .recharge)
     }
 
     public static func purchaseFailedMessage(eligibleForTrial: Bool) -> String {
         eligibleForTrial
-            ? "Couldn't start your trial. Please try again."
-            : "Couldn't complete the purchase. Please try again."
+            ? String(localized: "Couldn't start your trial. Please try again.", bundle: .recharge)
+            : String(localized: "Couldn't complete the purchase. Please try again.", bundle: .recharge)
     }
 }

@@ -88,7 +88,7 @@ public enum NotificationService {
 
     /// "Ready" is the token every other surface uses for this moment, so the
     /// alert announcing it should not invent a third phrasing.
-    static let readyTitle = "Ready"
+    static var readyTitle: String { String(localized: "Ready", bundle: .recharge) }
 
     /// Names the session the countdown came from when there is one. The copy
     /// this replaced said the countdown was complete and then said it again
@@ -98,8 +98,8 @@ public enum NotificationService {
     /// Compliance: an estimate about training, never a claim about the body.
     static func readyBody(for snapshot: RecoverySnapshot) -> String {
         snapshot.activityLabel.isEmpty
-            ? "Your recovery countdown has finished."
-            : "Your countdown from that \(snapshot.activityLabel) has finished."
+            ? String(localized: "Your recovery countdown has finished.", bundle: .recharge)
+            : String(localized: "Your countdown from that \(WorkoutClassifier.displayLabel(snapshot.activityLabel)) has finished.", bundle: .recharge)
     }
 
     public static func cancelReadyNotification() {

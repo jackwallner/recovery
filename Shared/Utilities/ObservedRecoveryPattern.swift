@@ -34,9 +34,9 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
 
         public var label: String {
             switch self {
-            case .light: "Light"
-            case .moderate: "Moderate"
-            case .hard: "Hard"
+            case .light: String(localized: "Light", bundle: .recharge)
+            case .moderate: String(localized: "Moderate", bundle: .recharge)
+            case .hard: String(localized: "Hard", bundle: .recharge)
             }
         }
 
@@ -57,9 +57,9 @@ public struct ObservedRecoveryPattern: Sendable, Equatable {
         /// you usually go again after about 44h".
         public var sessionPhrase: String {
             switch self {
-            case .light: "a light session"
-            case .moderate: "a moderate session"
-            case .hard: "a hard session"
+            case .light: String(localized: "a light session", bundle: .recharge)
+            case .moderate: String(localized: "a moderate session", bundle: .recharge)
+            case .hard: String(localized: "a hard session", bundle: .recharge)
             }
         }
     }
