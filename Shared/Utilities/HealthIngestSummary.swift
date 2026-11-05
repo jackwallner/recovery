@@ -91,13 +91,21 @@ public struct HealthIngestSummary: Sendable, Equatable {
     static func receiptLine(readings: Readings, rowCount: Int) -> String? {
         guard rowCount > 0 else { return nil }
         guard readings.workoutCount > 0 else {
-            return "Read from Apple Health: \(rowCount) \(rowCount == 1 ? "reading" : "readings")."
+            return String(localized: "Read from Apple Health: \(rowCount) readings.", bundle: .recharge)
         }
-        let sessions = "\(readings.workoutCount) \(readings.workoutCount == 1 ? "workout" : "workouts")"
-        let span = readings.daysCovered > 0 ? " over \(readings.daysCovered) days" : ""
+        let workouts = readings.workoutCount
+        let days = readings.daysCovered
         let others = rowCount - 1
-        guard others > 0 else { return "Read from Apple Health: \(sessions)\(span)." }
-        return "Read from Apple Health: \(sessions)\(span), plus \(others) other \(others == 1 ? "signal" : "signals")."
+        switch (days > 0, others > 0) {
+        case (false, false):
+            return String(localized: "Read from Apple Health: \(workouts) workouts.", bundle: .recharge)
+        case (true, false):
+            return String(localized: "Read from Apple Health: \(workouts) workouts over \(days) days.", bundle: .recharge)
+        case (false, true):
+            return String(localized: "Read from Apple Health: \(workouts) workouts, plus \(others) other signals.", bundle: .recharge)
+        case (true, true):
+            return String(localized: "Read from Apple Health: \(workouts) workouts over \(days) days, plus \(others) other signals.", bundle: .recharge)
+        }
     }
 
     // MARK: - Building
@@ -108,13 +116,13 @@ public struct HealthIngestSummary: Sendable, Equatable {
         if readings.workoutCount > 0 {
             let types = readings.activityTypes
             let detail = types > 1
-                ? "Across \(types) activity types, over the last \(readings.daysCovered) days."
-                : "Over the last \(readings.daysCovered) days."
+                ? String(localized: "Across \(types) activity types, over the last \(readings.daysCovered) days.", bundle: .recharge)
+                : String(localized: "Over the last \(readings.daysCovered) days.", bundle: .recharge)
             rows.append(Row(
                 id: "workouts",
                 symbol: "figure.run",
                 value: "\(readings.workoutCount)",
-                title: "Workouts scored",
+                title: String(localized: "Workouts scored", bundle: .recharge),
                 detail: detail
             ))
         }
@@ -123,24 +131,24 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "maxHeartRate",
                 symbol: "heart.fill",
-                value: "\(Int(max.rounded())) bpm",
-                title: usesObservedMaxHeartRate ? "Your highest heart rate" : "Heart-rate ceiling",
+                value: String(localized: "\(Int(max.rounded())) bpm", bundle: .recharge),
+                title: usesObservedMaxHeartRate ? String(localized: "Your highest heart rate", bundle: .recharge) : String(localized: "Heart-rate ceiling", bundle: .recharge),
                 // The distinction matters enough to spend a line on. A measured
                 // ceiling is the difference between scoring somebody's intensity
                 // and guessing at it, and a user who has never gone truly
                 // maximal is being scored against a formula whatever this
                 // number says.
                 detail: usesObservedMaxHeartRate
-                    ? "Measured from \(readings.sessionsWithHeartRate) sessions. Every intensity reading is scored against it."
-                    : "Seen in your sessions, below what your age predicts, so the higher figure is used."
+                    ? String(localized: "Measured from \(readings.sessionsWithHeartRate) sessions. Every intensity reading is scored against it.", bundle: .recharge)
+                    : String(localized: "Seen in your sessions, below what your age predicts, so the higher figure is used.", bundle: .recharge)
             ))
         } else if let age = readings.age {
             rows.append(Row(
                 id: "age",
                 symbol: "heart.fill",
                 value: "\(age)",
-                title: "Age, from your Health profile",
-                detail: "Sets the heart-rate ceiling until your workouts show a higher one."
+                title: String(localized: "Age, from your Health profile", bundle: .recharge),
+                detail: String(localized: "Sets the heart-rate ceiling until your workouts show a higher one.", bundle: .recharge)
             ))
         }
 
@@ -148,9 +156,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "vo2Max",
                 symbol: "lungs.fill",
-                value: String(format: "%.0f", vo2),
-                title: "Cardio fitness (VO₂ max)",
-                detail: "Sets the training level your sessions are compared against."
+                value: vo2.formatted(.number.precision(.fractionLength(0))),
+                title: String(localized: "Cardio fitness (VO₂ max)", bundle: .recharge),
+                detail: String(localized: "Sets the training level your sessions are compared against.", bundle: .recharge)
             ))
         }
 
@@ -158,9 +166,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "restingHeartRate",
                 symbol: "bed.double.fill",
-                value: "\(Int(resting.rounded())) bpm",
-                title: "Resting heart rate",
-                detail: "Watched night to night for signs the last session is still with you."
+                value: String(localized: "\(Int(resting.rounded())) bpm", bundle: .recharge),
+                title: String(localized: "Resting heart rate", bundle: .recharge),
+                detail: String(localized: "Watched night to night for signs the last session is still with you.", bundle: .recharge)
             ))
         }
 
@@ -168,9 +176,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "hrv",
                 symbol: "waveform.path.ecg",
-                value: "\(Int(hrv.rounded())) ms",
-                title: "Heart rate variability",
-                detail: "The same, from the other direction."
+                value: String(localized: "\(Int(hrv.rounded())) ms", bundle: .recharge),
+                title: String(localized: "Heart rate variability", bundle: .recharge),
+                detail: String(localized: "The same, from the other direction.", bundle: .recharge)
             ))
         }
 
@@ -178,9 +186,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "heartRateRecovery",
                 symbol: "arrow.down.heart.fill",
-                value: "−\(Int(recovery.rounded())) bpm",
-                title: "One-minute recovery",
-                detail: "How far your heart rate falls in the minute after a session ends."
+                value: String(localized: "−\(Int(recovery.rounded())) bpm", bundle: .recharge),
+                title: String(localized: "One-minute recovery", bundle: .recharge),
+                detail: String(localized: "How far your heart rate falls in the minute after a session ends.", bundle: .recharge)
             ))
         }
 
@@ -188,9 +196,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "sleep",
                 symbol: "moon.stars.fill",
-                value: String(format: "%.1fh", sleep),
-                title: "Average sleep",
-                detail: "A short night lengthens the estimate a little; a long one shortens it."
+                value: String(localized: "\(sleep.formatted(.number.precision(.fractionLength(1))))h", bundle: .recharge),
+                title: String(localized: "Average sleep", bundle: .recharge),
+                detail: String(localized: "A short night lengthens the estimate a little; a long one shortens it.", bundle: .recharge)
             ))
         }
 
@@ -198,9 +206,9 @@ public struct HealthIngestSummary: Sendable, Equatable {
             rows.append(Row(
                 id: "respiratoryRate",
                 symbol: "wind",
-                value: String(format: "%.0f/min", rate),
-                title: "Overnight breathing rate",
-                detail: "Adds another overnight signal to the estimate alongside sleep, HRV, and resting heart rate."
+                value: String(localized: "\(rate.formatted(.number.precision(.fractionLength(0))))/min", bundle: .recharge),
+                title: String(localized: "Overnight breathing rate", bundle: .recharge),
+                detail: String(localized: "Adds another overnight signal to the estimate alongside sleep, HRV, and resting heart rate.", bundle: .recharge)
             ))
         }
 
@@ -209,8 +217,8 @@ public struct HealthIngestSummary: Sendable, Equatable {
                 id: "bodyMass",
                 symbol: "scalemass.fill",
                 value: MassFormatting.label(kilograms: mass),
-                title: "Body weight",
-                detail: "Corrects the calories-to-intensity estimate, which scales with weight."
+                title: String(localized: "Body weight", bundle: .recharge),
+                detail: String(localized: "Corrects the calories-to-intensity estimate, which scales with weight.", bundle: .recharge)
             ))
         }
 

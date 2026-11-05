@@ -21,9 +21,9 @@ struct EffortPromptSheet: View {
     /// Borg CR10 anchors, collapsed to the three bands people can actually
     /// distinguish after the fact.
     static let options: [(effort: Double, title: String, detail: String)] = [
-        (4, "Easy", "Could have kept going for a long time."),
-        (7, "Moderate", "Working, but in control throughout."),
-        (9, "Hard", "Near the limit. Little left at the end.")
+        (4, String(localized: "Easy", bundle: .recharge), String(localized: "Could have kept going for a long time.", bundle: .recharge)),
+        (7, String(localized: "Moderate", bundle: .recharge), String(localized: "Working, but in control throughout.", bundle: .recharge)),
+        (9, String(localized: "Hard", bundle: .recharge), String(localized: "Near the limit. Little left at the end.", bundle: .recharge))
     ]
 
     var body: some View {
@@ -40,7 +40,7 @@ struct EffortPromptSheet: View {
                         // Same correction as the card that opens this sheet: the
                         // rating joins the other signals and the highest one wins,
                         // so it can only ever lengthen the window, never shorten it.
-                        Text("Your \(Int(durationMinutes.rounded()))-minute \(activityLabel) didn't have usable heart-rate data. Your rating counts whenever it reads harder than the other signals.")
+                        Text(String(localized: "\(WorkoutClassifier.yourMinuteSession(Int(durationMinutes.rounded()), activityLabel)) didn't have usable heart-rate data. Your rating counts whenever it reads harder than the other signals.", bundle: .recharge))
                             .font(.system(.footnote, design: .rounded))
                             .foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center)
@@ -128,7 +128,7 @@ struct ReadinessFeedbackSheet: View {
                         .font(.system(.title2, design: .rounded, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                         .multilineTextAlignment(.center)
-                    Text("Your estimate after that \(estimate.activityLabel) ran out. Telling Recharge how it went tunes your own bands.")
+                    Text(String(localized: "\(WorkoutClassifier.estimateAfter(estimate.activityLabel)) Telling Recharge how it went tunes your own bands.", bundle: .recharge))
                         .font(.system(.footnote, design: .rounded))
                         .foregroundStyle(Theme.textSecondary)
                         .multilineTextAlignment(.center)

@@ -65,7 +65,7 @@ struct RechargePlusView: View {
                     .foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: Theme.Space.xxs) {
-                Text("\(RechargeConversionCopy.proName) active")
+                Text("Recharge+ active")
                     .font(.system(.title3, design: .rounded, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                 Text("Your countdowns are measured, not looked up.")
@@ -88,7 +88,7 @@ struct RechargePlusView: View {
         let preview = engine.personalizedPreview
         return Card {
             VStack(alignment: .leading, spacing: Theme.Space.sm) {
-                Text(preview.isExample ? "A hard 60-minute session" : preview.label)
+                Text(preview.isExample ? String(localized: "A hard 60-minute session", bundle: .recharge) : preview.label)
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
 
@@ -102,7 +102,7 @@ struct RechargePlusView: View {
                 }
 
                 Text(preview.isExample
-                     ? "An example on the real curve until you have recorded a qualifying session. The arithmetic is the same one your own sessions get."
+                     ? String(localized: "An example on the real curve until you have recorded a qualifying session. The arithmetic is the same one your own sessions get.", bundle: .recharge)
                      : RechargeConversionCopy.comparisonCaption(hasPurchased: true))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
@@ -159,8 +159,8 @@ struct RechargePlusView: View {
 
     private var factorLabel: String {
         let percent = analysis.percentDifference
-        if percent == 0 { return "No change from the model default" }
-        return percent > 0 ? "+\(percent)%" : "\(percent)%"
+        if percent == 0 { return String(localized: "No change from the model default", bundle: .recharge) }
+        return percent > 0 ? String(localized: "+\(percent)%", bundle: .recharge) : String(localized: "\(percent)%", bundle: .recharge)
     }
 
     // MARK: - Training load
@@ -173,8 +173,8 @@ struct RechargePlusView: View {
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 HStack(spacing: Theme.Space.lg) {
-                    figure("This week", "\(Int(balance.acute.rounded()))", Theme.textPrimary)
-                    figure("4-week avg", "\(Int(balance.chronic.rounded()))", Theme.textSecondary)
+                    figure(String(localized: "This week", bundle: .recharge), "\(Int(balance.acute.rounded()))", Theme.textPrimary)
+                    figure(String(localized: "4-week avg", bundle: .recharge), "\(Int(balance.chronic.rounded()))", Theme.textSecondary)
                     Spacer(minLength: 0)
                 }
                 Text("Load is a proxy built from your own sessions, not a measurement.")
@@ -223,11 +223,11 @@ struct RechargePlusView: View {
                         defer { isRestoring = false }
                         await store.restorePurchases()
                         restoreMessage = store.lastError
-                            ?? "Your \(RechargeConversionCopy.proName) purchase is active."
+                            ?? String(localized: "Your Recharge+ purchase is active.", bundle: .recharge)
                     }
                 } label: {
                     HStack {
-                        Text(isRestoring ? "Restoring…" : "Restore purchases")
+                        Text(isRestoring ? String(localized: "Restoring…", bundle: .recharge) : String(localized: "Restore purchases", bundle: .recharge))
                             .font(.system(.footnote, design: .rounded, weight: .semibold))
                             .foregroundStyle(Theme.pro)
                         Spacer()

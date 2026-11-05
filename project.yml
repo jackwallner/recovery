@@ -165,6 +165,9 @@ targets:
       - path: Shared/Services/NotificationService.swift
       - path: Shared/Models/RecoveryModels.swift
       - path: Shared/Models/RecoverySnapshot.swift
+      # The string catalog and the bundle lookup the copy resolves through.
+      - path: Shared/Localizable.xcstrings
+      - path: Shared/Utilities/Localization.swift
       # The SwiftData schema, so the persistence round-trip is testable. It was
       # out of the target and the gap showed: `carriedHours` was computed,
       # published, and rendered without ever being written to a record, and
@@ -179,9 +182,11 @@ targets:
       - path: Shared/Utilities/AthleteProfile.swift
       - path: Shared/Utilities/PersonalRecoveryModel.swift
       - path: Shared/Utilities/WorkoutClassifier.swift
+      - path: Shared/Utilities/ActivityPhrases.swift
       - path: Shared/Utilities/CountdownFormat.swift
       - path: Shared/Utilities/CountdownTimeline.swift
       - path: Shared/Utilities/ComplicationCopy.swift
+      - path: Shared/Utilities/IntroTrialLength.swift
       - path: Shared/Utilities/RechargeConversionCopy.swift
       # The receipt the app prints back to the user for every Health type it
       # asks for. In the target because it owns user-facing copy about what the

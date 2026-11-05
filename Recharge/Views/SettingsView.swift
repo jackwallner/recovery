@@ -70,8 +70,8 @@ struct SettingsView: View {
             .alert("Delete local health data?", isPresented: $showDeleteConfirmation) {
                 Button("Delete", role: .destructive) {
                     localDataMessage = engine.deleteLocalHealthData()
-                        ? "Recharge's local Health cache and estimates were deleted. Apple Health records and purchases were not changed."
-                        : "Recharge could not delete its local data. Try again."
+                        ? String(localized: "Recharge's local Health cache and estimates were deleted. Apple Health records and purchases were not changed.", bundle: .recharge)
+                        : String(localized: "Recharge could not delete its local data. Try again.", bundle: .recharge)
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -159,8 +159,11 @@ struct SettingsView: View {
     private var preview: PersonalizedPreview { engine.personalizedPreview }
 
     private var proPitchDetail: String {
-        let subject = preview.isExample ? "a hard 60-minute session" : preview.label.lowercased()
-        return "For \(subject). \(RechargeConversionCopy.comparisonCaption(hasPurchased: false))"
+        let caption = RechargeConversionCopy.comparisonCaption(hasPurchased: false)
+        guard !preview.isExample, let stored = preview.activityLabel else {
+            return String(localized: "For a hard 60-minute session. \(caption)", bundle: .recharge)
+        }
+        return WorkoutClassifier.lastSessionDetail(stored, caption: caption)
     }
 
     /// - Parameter blurred: this row only exists for a user who has not bought
@@ -210,10 +213,10 @@ struct SettingsView: View {
 
         var label: String {
             switch self {
-            case .notRequested: "Not connected"
-            case .reading: "Reading Apple Health"
-            case .failing: "Can't read Apple Health"
-            case .noDataYet: "Connected, no workouts found"
+            case .notRequested: String(localized: "Not connected", bundle: .recharge)
+            case .reading: String(localized: "Reading Apple Health", bundle: .recharge)
+            case .failing: String(localized: "Can't read Apple Health", bundle: .recharge)
+            case .noDataYet: String(localized: "Connected, no workouts found", bundle: .recharge)
             }
         }
 
@@ -238,17 +241,17 @@ struct SettingsView: View {
         var detail: String {
             switch self {
             case .notRequested:
-                "Recharge has not asked for Health access on this device yet."
+                String(localized: "Recharge has not asked for Health access on this device yet.", bundle: .recharge)
             case .reading(let date):
                 if let date {
-                    "Last read \(CountdownFormat.elapsed(since: date))."
+                    String(localized: "Last read \(CountdownFormat.elapsed(since: date)).", bundle: .recharge)
                 } else {
-                    "Recharge is checking Apple Health now."
+                    String(localized: "Recharge is checking Apple Health now.", bundle: .recharge)
                 }
             case .failing:
-                "The last read did not complete. Open the Health app, then Sharing, then Apps, then Recharge, and check that workouts are allowed."
+                String(localized: "The last read did not complete. Open the Health app, then Sharing, then Apps, then Recharge, and check that workouts are allowed.", bundle: .recharge)
             case .noDataYet:
-                "Health answered but returned no qualifying workouts. If you have trained recently, check that workouts are allowed for Recharge in the Health app."
+                String(localized: "Health answered but returned no qualifying workouts. If you have trained recently, check that workouts are allowed for Recharge in the Health app.", bundle: .recharge)
             }
         }
     }
@@ -281,7 +284,7 @@ struct SettingsView: View {
                 Task { await requestHealthAccess() }
             } label: {
                 HStack {
-                    Text(settings.hasDeferredHealthAccess ? "Connect Apple Health" : "Request Apple Health access")
+                    Text(settings.hasDeferredHealthAccess ? String(localized: "Connect Apple Health", bundle: .recharge) : String(localized: "Request Apple Health access", bundle: .recharge))
                     if isRequestingHealth {
                         Spacer()
                         ProgressView()
@@ -342,10 +345,10 @@ struct SettingsView: View {
             try await HealthKitService.shared.requestAuthorization()
             settings.hasDeferredHealthAccess = false
             await engine.refresh(force: true)
-            healthMessage = "Request complete. Apple keeps individual read choices private; manage them in the Health app."
+            healthMessage = String(localized: "Request complete. Apple keeps individual read choices private; manage them in the Health app.", bundle: .recharge)
         } catch {
             settings.hasDeferredHealthAccess = true
-            healthMessage = "Recharge couldn't request access. Open the Health app and choose Sharing, then Apps, then Recharge."
+            healthMessage = String(localized: "Recharge couldn't request access. Open the Health app and choose Sharing, then Apps, then Recharge.", bundle: .recharge)
         }
     }
 
@@ -408,7 +411,7 @@ struct SettingsView: View {
                     Text(personalFactorLabel)
                         .foregroundStyle(store.isPro ? Theme.textSecondary : Theme.pro)
                 }
-                Text("How quickly your last \(PersonalRecoveryModel.windowDays) days say you come back. It is one of the things \(RechargeConversionCopy.proName) changes, not the whole difference between the two figures above.")
+                Text("How quickly your last \(PersonalRecoveryModel.windowDays) days say you come back. It is one of the things Recharge+ changes, not the whole difference between the two figures above.")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                 ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).dropFirst(), id: \.self) { line in
@@ -425,15 +428,15 @@ struct SettingsView: View {
             Text("Recharge time")
         } footer: {
             Text(store.isPro
-                ? "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice."
-                : "The free estimate scores each session at your training level, the way a Garmin does before it knows you. Recharge+ scores it against your own sessions, sleep, and heart rate.")
+                ? String(localized: "Every session is scored against your own \(RecoveryBaseline.historyDays)-day baseline, then adjusted by what the last \(PersonalRecoveryModel.windowDays) days show about how quickly you come back. It is a cardiovascular training estimate, not medical advice.", bundle: .recharge)
+                : String(localized: "The free estimate scores each session at your training level, the way a Garmin does before it knows you. Recharge+ scores it against your own sessions, sleep, and heart rate.", bundle: .recharge))
         }
     }
 
     private var personalFactorLabel: String {
         let percent = engine.personalAnalysis.percentDifference
-        if percent == 0 { return "No change from the model default" }
-        return percent > 0 ? "+\(percent)% longer" : "\(percent)% shorter"
+        if percent == 0 { return String(localized: "No change from the model default", bundle: .recharge) }
+        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(percent)% shorter", bundle: .recharge)
     }
 
     // MARK: - About you
@@ -503,13 +506,19 @@ struct SettingsView: View {
 
     private var aboutYouFooter: String {
         let derived = settings.athleteProfile.healthDerivedFields
-        let base = "Age sets the heart-rate range every session is measured against. Sessions a week and how long you have been training set your training level, which both tiers use. Ready again after shapes your Recharge+ estimate until there is enough history to answer for itself."
-        guard !derived.isEmpty else { return base }
-        var found: [String] = []
-        if derived.contains(AthleteProfile.ageField) { found.append("your age") }
-        if derived.contains(AthleteProfile.weeklyVolumeField) { found.append("your weekly volume") }
-        guard !found.isEmpty else { return base }
-        return "Recharge read \(ListFormatterShim.join(found)) from Apple Health. \(base)"
+        let base = String(localized: "Age sets the heart-rate range every session is measured against. Sessions a week and how long you have been training set your training level, which both tiers use. Ready again after shapes your Recharge+ estimate until there is enough history to answer for itself.", bundle: .recharge)
+        let readAge = derived.contains(AthleteProfile.ageField)
+        let readVolume = derived.contains(AthleteProfile.weeklyVolumeField)
+        switch (readAge, readVolume) {
+        case (true, true):
+            return String(localized: "Recharge read your age and your weekly volume from Apple Health.", bundle: .recharge) + " " + base
+        case (true, false):
+            return String(localized: "Recharge read your age from Apple Health.", bundle: .recharge) + " " + base
+        case (false, true):
+            return String(localized: "Recharge read your weekly volume from Apple Health.", bundle: .recharge) + " " + base
+        case (false, false):
+            return base
+        }
     }
 
     private var modelSection: some View {
@@ -534,8 +543,8 @@ struct SettingsView: View {
                     .multilineTextAlignment(.trailing)
                     .frame(width: 80)
                     .accessibilityLabel("Maximum heart rate")
-                    .accessibilityValue(maxHeartRateText.isEmpty ? "Automatic" : "\(maxHeartRateText) beats per minute")
-                    .accessibilityHint("Enter a value from \(Int(Self.maxHeartRateRange.lowerBound)) to \(Int(Self.maxHeartRateRange.upperBound)) beats per minute, or leave blank for automatic.")
+                    .accessibilityValue(maxHeartRateText.isEmpty ? String(localized: "Automatic", bundle: .recharge) : String(localized: "\(maxHeartRateText) beats per minute", bundle: .recharge))
+                    .accessibilityHint(String(localized: "Enter a value from \(Int(Self.maxHeartRateRange.lowerBound)) to \(Int(Self.maxHeartRateRange.upperBound)) beats per minute, or leave blank for automatic.", bundle: .recharge))
                     .onChange(of: maxHeartRateText) { _, value in
                         let parsed = Double(value) ?? 0
                         let accepted = Self.maxHeartRateRange.contains(parsed) ? parsed : 0
@@ -592,23 +601,23 @@ struct SettingsView: View {
     /// has no reason to go and type a number in.
     private var maxHeartRateNote: String? {
         if maxHeartRateIsRejected {
-            return "Enter a value between 120 and 230 bpm. Recharge is using its own estimate until then."
+            return String(localized: "Enter a value between 120 and 230 bpm. Recharge is using its own estimate until then.", bundle: .recharge)
         }
         guard maxHeartRateText.isEmpty else { return nil }
         let profile = settings.athleteProfile
         if profile.usesObservedMaxHeartRate, let observed = profile.observedMaxHeartRate {
-            return "Auto is \(Int(observed.rounded())) bpm, the highest your own sessions have shown. Override it only if you have tested higher."
+            return String(localized: "Auto is \(Int(observed.rounded())) bpm, the highest your own sessions have shown. Override it only if you have tested higher.", bundle: .recharge)
         }
         if let predicted = profile.predictedMaxHeartRate {
-            return "Auto is \(Int(predicted.rounded())) bpm, predicted from your age. It becomes a measured figure once your sessions show a higher one."
+            return String(localized: "Auto is \(Int(predicted.rounded())) bpm, predicted from your age. It becomes a measured figure once your sessions show a higher one.", bundle: .recharge)
         }
-        return "Auto uses the model's own estimate. Set yours for a sharper heart-rate load."
+        return String(localized: "Auto uses the model's own estimate. Set yours for a sharper heart-rate load.", bundle: .recharge)
     }
 
     private var calibrationLabel: String {
         let percent = Int(((settings.calibrationFactor - 1) * 100).rounded())
-        if percent == 0 { return "Neutral" }
-        return percent > 0 ? "+\(percent)% longer" : "\(percent)% shorter"
+        if percent == 0 { return String(localized: "Neutral", bundle: .recharge) }
+        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(percent)% shorter", bundle: .recharge)
     }
 
     // MARK: - Context (Pro)
@@ -753,8 +762,8 @@ struct SettingsView: View {
                         restoreMessageIsError = true
                     } else {
                         restoreMessage = store.isPro
-                            ? "\(RechargeConversionCopy.proName) restored."
-                            : "No purchase to restore for this Apple ID."
+                            ? String(localized: "Recharge+ restored.", bundle: .recharge)
+                            : String(localized: "No purchase to restore for this Apple ID.", bundle: .recharge)
                     }
                 }
             } label: {
@@ -817,6 +826,7 @@ struct SettingsView: View {
     // MARK: - Debug
 
     #if DEBUG
+    // l10n-ignore-begin: developer-only section, compiled out of release builds
     private var debugSection: some View {
         Section("Debug") {
             Toggle("Pro unlocked (local)", isOn: Binding(
@@ -834,5 +844,6 @@ struct SettingsView: View {
             }
         }
     }
+    // l10n-ignore-end
     #endif
 }

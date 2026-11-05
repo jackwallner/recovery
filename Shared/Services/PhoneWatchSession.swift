@@ -148,7 +148,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
                 MessageKey.effort: effort,
                 MessageKey.sentAt: Date.now.timeIntervalSince1970
             ],
-            confirmation: "Saved."
+            confirmation: String(localized: "Saved.", bundle: .recharge)
         )
     }
 
@@ -176,7 +176,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         let session = WCSession.default
         guard session.activationState == .activated else {
             enqueue(payload)
-            confirm(confirmation.map { _ in "Saved. Will sync with iPhone." })
+            confirm(confirmation.map { _ in String(localized: "Saved. Will sync with iPhone.", bundle: .recharge) })
             return
         }
 
@@ -196,7 +196,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         } else {
             // FIFO, survives termination, drains when the phone reappears.
             session.transferUserInfo(payload)
-            confirm(confirmation.map { _ in "Saved. Will sync with iPhone." })
+            confirm(confirmation.map { _ in String(localized: "Saved. Will sync with iPhone.", bundle: .recharge) })
         }
     }
 

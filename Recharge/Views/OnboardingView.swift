@@ -134,9 +134,9 @@ struct OnboardingView: View {
         OnboardingPage(
             symbol: "hourglass",
             tint: Theme.recovering,
-            title: "Recovery time,\non the watch you own",
-            message: "Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete. Recharge reads Apple Health and never writes to it.",
-            primaryTitle: "Continue",
+            title: String(localized: "Recovery time,\non the watch you own", bundle: .recharge),
+            message: String(localized: "Finish a qualifying workout and Recharge starts a training-load countdown. When it runs out, the estimate is complete. Recharge reads Apple Health and never writes to it.", bundle: .recharge),
+            primaryTitle: String(localized: "Continue", bundle: .recharge),
             primaryAction: advance
         )
     }
@@ -147,13 +147,13 @@ struct OnboardingView: View {
         OnboardingPage(
             symbol: "heart.text.square.fill",
             tint: Theme.recoveringSecondary,
-            title: "Recharge reads\nApple Health",
-            message: "Your workouts and heart rate build the estimate. Your own highest heart rate sets the range intensity is measured against. Sleep, resting heart rate, HRV, breathing rate, cardio fitness, and weight sharpen it. Nothing is written back, and your Health data never leaves your devices.",
+            title: String(localized: "Recharge reads\nApple Health", bundle: .recharge),
+            message: String(localized: "Your workouts and heart rate build the estimate. Your own highest heart rate sets the range intensity is measured against. Sleep, resting heart rate, HRV, breathing rate, cardio fitness, and weight sharpen it. Nothing is written back, and your Health data never leaves your devices.", bundle: .recharge),
             // One way forward, and it is the system sheet. App Review rejected
             // a "Not now" here under 5.1.1(iv): an explanation before a
             // permission request may not offer a way to skip the request. The
             // choice belongs to the system sheet, where Turn Off All declines.
-            primaryTitle: isRequestingHealth ? "Requesting…" : "Continue",
+            primaryTitle: isRequestingHealth ? String(localized: "Requesting…", bundle: .recharge) : String(localized: "Continue", bundle: .recharge),
             primaryAction: requestHealthAccess,
             primaryDisabled: isRequestingHealth,
             isBusy: isRequestingHealth
@@ -224,9 +224,9 @@ struct OnboardingView: View {
         OnboardingPage(
             symbol: "info.circle.fill",
             tint: Theme.idle,
-            title: "What the number\nactually means",
-            message: "Recharge estimates a training-load recovery window from your recent workouts. It is not a measure of muscle repair, illness, injury risk, or whether you are fit to train, and it is not medical advice. Talk with a qualified health professional before making medical decisions.",
-            primaryTitle: "I understand",
+            title: String(localized: "What the number\nactually means", bundle: .recharge),
+            message: String(localized: "Recharge estimates a training-load recovery window from your recent workouts. It is not a measure of muscle repair, illness, injury risk, or whether you are fit to train, and it is not medical advice. Talk with a qualified health professional before making medical decisions.", bundle: .recharge),
+            primaryTitle: String(localized: "I understand", bundle: .recharge),
             primaryAction: advance
         )
     }
@@ -237,7 +237,7 @@ struct OnboardingView: View {
         TrialOfferPage(
             onDecline: finish,
             onPurchased: finish,
-            declineTitle: "Get Started"
+            declineTitle: String(localized: "Get Started", bundle: .recharge)
         )
         .environmentObject(store)
         .environmentObject(settings)
@@ -442,7 +442,7 @@ private struct OnboardingReadoutPage: View {
                     .padding(.top, Theme.Space.lg)
             }
 
-            OnboardingActions(primaryTitle: "Continue", primaryAction: primaryAction)
+            OnboardingActions(primaryTitle: String(localized: "Continue", bundle: .recharge), primaryAction: primaryAction)
         }
         .padding(.horizontal, Theme.Space.step(7))
         .padding(.bottom, Theme.Space.md)
@@ -450,9 +450,9 @@ private struct OnboardingReadoutPage: View {
 
     private var footer: String {
         switch remainingQuestions {
-        case 0: "That's everything Recharge needs."
-        case 1: "One question left. Health can't answer this one."
-        default: "\(remainingQuestions) short questions left, for the things Health can't answer."
+        case 0: String(localized: "That's everything Recharge needs.", bundle: .recharge)
+        case 1: String(localized: "One question left. Health can't answer this one.", bundle: .recharge)
+        default: String(localized: "\(remainingQuestions) short questions left, for the things Health can't answer.", bundle: .recharge)
         }
     }
 }
@@ -494,7 +494,7 @@ private struct ProfileQuestionPage: View {
             }
 
             OnboardingActions(
-                primaryTitle: hasAnswer ? "Continue" : "Skip this one",
+                primaryTitle: hasAnswer ? String(localized: "Continue", bundle: .recharge) : String(localized: "Skip this one", bundle: .recharge),
                 primaryAction: onAnswer,
                 tint: hasAnswer ? Theme.recovering : Theme.idle
             )

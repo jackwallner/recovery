@@ -696,10 +696,11 @@ public final class RecoveryEngine: ObservableObject {
             // recent session that produced a countdown either way.
             if standardEstimates[index].producesCountdown || personalized.producesCountdown {
                 preview = PersonalizedPreview(
-                    label: "Your last \(session.activityLabel)",
+                    label: WorkoutClassifier.lastSessionTitle(session.activityLabel),
                     standardHours: standardEstimates[index].hours,
                     personalizedHours: personalized.hours,
-                    isExample: false
+                    isExample: false,
+                    activityLabel: session.activityLabel
                 )
             }
 

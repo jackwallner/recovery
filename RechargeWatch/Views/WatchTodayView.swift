@@ -151,11 +151,11 @@ struct WatchTodayView: View {
     private var ringAccessibilityValue: String {
         switch phase {
         case .noRecentWorkout:
-            return "No countdown"
+            return String(localized: "No countdown", bundle: .recharge)
         case .ready:
-            return "Ready"
+            return String(localized: "Ready", bundle: .recharge)
         case .readySoon, .recovering:
-            return "\(CountdownFormat.compactRemaining(snapshot.remainingSeconds(at: now))) left"
+            return String(localized: "\(CountdownFormat.compactRemaining(snapshot.remainingSeconds(at: now))) left", bundle: .recharge)
         }
     }
 
@@ -186,7 +186,7 @@ struct WatchTodayView: View {
             // the headline says there is no recent workout, and naming the
             // session that no longer counts contradicts it.
             if phase != .noRecentWorkout, let category = snapshot.category {
-                Text("\(category.shortLabel) · \(snapshot.activityLabel)")
+                Text("\(category.shortLabel) · \(WorkoutClassifier.displayLabel(snapshot.activityLabel))")
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
             }
@@ -229,25 +229,25 @@ struct WatchTodayView: View {
         // costs is the certainty that nothing newer is missing, not the window
         // already on screen.
         if snapshot.healthDataState == .stale {
-            return "Your iPhone couldn't read Apple Health. Open Recharge there."
+            return String(localized: "Your iPhone couldn't read Apple Health. Open Recharge there.", bundle: .recharge)
         }
         guard let received = connectivity.lastSnapshotReceived else {
-            return "Open Recharge on your iPhone if this doesn't clear."
+            return String(localized: "Open Recharge on your iPhone if this doesn't clear.", bundle: .recharge)
         }
         guard Date.now.timeIntervalSince(received) > 6 * 3600 else { return nil }
-        return "Last synced \(CountdownFormat.remaining(Date.now.timeIntervalSince(received))) ago."
+        return String(localized: "Last synced \(CountdownFormat.remaining(Date.now.timeIntervalSince(received))) ago.", bundle: .recharge)
     }
 
     private var headline: String {
         // Cold start: the phone's snapshot takes a moment to arrive, and until
         // it does the Watch knows nothing. Announcing "No recent workout" in
         // that window tells the user their data is gone when it is merely late.
-        if !hasHeardFromPhone && !snapshot.hasSession { return "Syncing with iPhone" }
+        if !hasHeardFromPhone && !snapshot.hasSession { return String(localized: "Syncing with iPhone", bundle: .recharge) }
         switch phase {
-        case .noRecentWorkout: return "No recent workout"
-        case .ready: return "Recovery estimate complete"
+        case .noRecentWorkout: return String(localized: "No recent workout", bundle: .recharge)
+        case .ready: return String(localized: "Recovery estimate complete", bundle: .recharge)
         case .readySoon, .recovering:
-            return snapshot.readyAt.map { "Ready \(CountdownFormat.readyAt($0, now: now))" } ?? "Recovering"
+            return snapshot.readyAt.map { String(localized: "Ready \(CountdownFormat.readyAt($0, now: now))", bundle: .recharge) } ?? String(localized: "Recovering", bundle: .recharge)
         }
     }
 
@@ -269,10 +269,16 @@ struct WatchEffortPrompt: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    private var question: String {
+        activityLabel.isEmpty
+            ? String(localized: "How hard was that session?", bundle: .recharge)
+            : WorkoutClassifier.watchEffortQuestion(activityLabel)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
-                Text("How hard was that \(activityLabel.isEmpty ? "session" : activityLabel)?")
+                Text(question)
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -283,7 +289,7 @@ struct WatchEffortPrompt: View {
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 6) {
-                    ForEach([(4.0, "Easy"), (7.0, "Moderate"), (9.0, "Hard")], id: \.0) { effort, title in
+                    ForEach([(4.0, String(localized: "Easy", bundle: .recharge)), (7.0, String(localized: "Moderate", bundle: .recharge)), (9.0, String(localized: "Hard", bundle: .recharge))], id: \.0) { effort, title in
                         Button {
                             onSelect(effort)
                             dismiss()

@@ -178,10 +178,10 @@ public enum WorkoutProfile: String, Codable, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .endurance: "Endurance"
-        case .strength: "Strength"
-        case .mixed: "Mixed"
-        case .easy: "Easy"
+        case .endurance: String(localized: "Endurance", bundle: .recharge)
+        case .strength: String(localized: "Strength", bundle: .recharge)
+        case .mixed: String(localized: "Mixed", bundle: .recharge)
+        case .easy: String(localized: "sessionProfile.easy", defaultValue: "Easy", bundle: .recharge)
         }
     }
 
@@ -322,17 +322,17 @@ public enum SessionIntensity: String, Codable, Sendable, CaseIterable, Identifia
 
     public var label: String {
         switch self {
-        case .light: "Light"
-        case .moderate: "Moderate"
-        case .hard: "Hard"
+        case .light: String(localized: "Light", bundle: .recharge)
+        case .moderate: String(localized: "Moderate", bundle: .recharge)
+        case .hard: String(localized: "Hard", bundle: .recharge)
         }
     }
 
     public var detail: String {
         switch self {
-        case .light: "Could have kept going for a long time."
-        case .moderate: "Working, but in control throughout."
-        case .hard: "Near the limit. Little left at the end."
+        case .light: String(localized: "Could have kept going for a long time.", bundle: .recharge)
+        case .moderate: String(localized: "Working, but in control throughout.", bundle: .recharge)
+        case .hard: String(localized: "Near the limit. Little left at the end.", bundle: .recharge)
         }
     }
 
@@ -437,10 +437,10 @@ public enum LoadSource: String, Codable, Sendable {
 
     public var label: String {
         switch self {
-        case .heartRate: "heart rate"
-        case .reportedEffort: "your effort rating"
-        case .energy: "duration and energy"
-        case .duration: "duration"
+        case .heartRate: String(localized: "heart rate", bundle: .recharge)
+        case .reportedEffort: String(localized: "your effort rating", bundle: .recharge)
+        case .energy: String(localized: "duration and energy", bundle: .recharge)
+        case .duration: String(localized: "duration", bundle: .recharge)
         }
     }
 }
@@ -465,8 +465,12 @@ public struct PersonalizedPreview: Sendable, Equatable {
     /// so: "for example" is the difference between a projection and a claim
     /// about the user's own training.
     public let isExample: Bool
+    /// The stored activity label of the session behind a real preview, so a
+    /// surface can phrase it mid-sentence in the reader's language.
+    public let activityLabel: String?
 
-    public init(label: String, standardHours: Double, personalizedHours: Double, isExample: Bool) {
+    public init(label: String, standardHours: Double, personalizedHours: Double, isExample: Bool, activityLabel: String? = nil) {
+        self.activityLabel = activityLabel
         self.label = label
         self.standardHours = standardHours
         self.personalizedHours = personalizedHours
@@ -478,7 +482,7 @@ public struct PersonalizedPreview: Sendable, Equatable {
     public static func reference(factor: Double) -> PersonalizedPreview {
         let hours = RecoveryCalculator.referenceHardSessionHours
         return PersonalizedPreview(
-            label: "A hard 60-minute session",
+            label: String(localized: "A hard 60-minute session", bundle: .recharge),
             standardHours: hours,
             personalizedHours: hours * factor,
             isExample: true
@@ -508,10 +512,10 @@ public enum LoadCategory: String, Codable, Sendable {
     /// is what names the comparison.
     public var label: String {
         switch self {
-        case .easy: "Light for you"
-        case .typical: "Moderate for you"
-        case .hard: "Hard for you"
-        case .unusuallyHard: "Very hard for you"
+        case .easy: String(localized: "Light for you", bundle: .recharge)
+        case .typical: String(localized: "Moderate for you", bundle: .recharge)
+        case .hard: String(localized: "Hard for you", bundle: .recharge)
+        case .unusuallyHard: String(localized: "Very hard for you", bundle: .recharge)
         }
     }
 
@@ -522,19 +526,29 @@ public enum LoadCategory: String, Codable, Sendable {
     public func label(for tier: RecoveryTier) -> String {
         guard tier == .standard else { return label }
         switch self {
-        case .easy: return "Light session"
-        case .typical: return "Moderate session"
-        case .hard: return "Hard session"
-        case .unusuallyHard: return "Very hard session"
+        case .easy: return String(localized: "Light session", bundle: .recharge)
+        case .typical: return String(localized: "Moderate session", bundle: .recharge)
+        case .hard: return String(localized: "Hard session", bundle: .recharge)
+        case .unusuallyHard: return String(localized: "Very hard session", bundle: .recharge)
+        }
+    }
+
+    /// The category as a word inside a sentence ("Recharge read this as hard").
+    public var sentenceLabel: String {
+        switch self {
+        case .easy: String(localized: "light", bundle: .recharge)
+        case .typical: String(localized: "moderate", bundle: .recharge)
+        case .hard: String(localized: "hard", bundle: .recharge)
+        case .unusuallyHard: String(localized: "very hard", bundle: .recharge)
         }
     }
 
     public var shortLabel: String {
         switch self {
-        case .easy: "Light"
-        case .typical: "Moderate"
-        case .hard: "Hard"
-        case .unusuallyHard: "Very hard"
+        case .easy: String(localized: "Light", bundle: .recharge)
+        case .typical: String(localized: "Moderate", bundle: .recharge)
+        case .hard: String(localized: "Hard", bundle: .recharge)
+        case .unusuallyHard: String(localized: "Very hard", bundle: .recharge)
         }
     }
 
@@ -819,10 +833,10 @@ public enum RecoveryPhase: String, Codable, Sendable {
 
     public var label: String {
         switch self {
-        case .noRecentWorkout: "No recent workout"
-        case .ready: "Ready"
-        case .readySoon: "Ready soon"
-        case .recovering: "Recovering"
+        case .noRecentWorkout: String(localized: "No recent workout", bundle: .recharge)
+        case .ready: String(localized: "Ready", bundle: .recharge)
+        case .readySoon: String(localized: "Ready soon", bundle: .recharge)
+        case .recovering: String(localized: "Recovering", bundle: .recharge)
         }
     }
 }
@@ -848,19 +862,19 @@ public enum RecoveryConfidence: String, Codable, Sendable, Comparable {
 
     public var label: String {
         switch self {
-        case .buildingBaseline: "Building baseline"
-        case .low: "Low confidence"
-        case .medium: "Medium confidence"
-        case .high: "High confidence"
+        case .buildingBaseline: String(localized: "Building baseline", bundle: .recharge)
+        case .low: String(localized: "Low confidence", bundle: .recharge)
+        case .medium: String(localized: "Medium confidence", bundle: .recharge)
+        case .high: String(localized: "High confidence", bundle: .recharge)
         }
     }
 
     public var shortLabel: String {
         switch self {
-        case .buildingBaseline: "Building"
-        case .low: "Low"
-        case .medium: "Medium"
-        case .high: "High"
+        case .buildingBaseline: String(localized: "Building", bundle: .recharge)
+        case .low: String(localized: "Low", bundle: .recharge)
+        case .medium: String(localized: "Medium", bundle: .recharge)
+        case .high: String(localized: "High", bundle: .recharge)
         }
     }
 }
@@ -1076,9 +1090,9 @@ public enum ReadinessFeedback: String, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .feltReady: "Felt ready"
-        case .okayNotFresh: "Okay but not fresh"
-        case .notReady: "Not ready"
+        case .feltReady: String(localized: "Felt ready", bundle: .recharge)
+        case .okayNotFresh: String(localized: "Okay but not fresh", bundle: .recharge)
+        case .notReady: String(localized: "Not ready", bundle: .recharge)
         }
     }
 
@@ -1121,17 +1135,17 @@ public enum ComplicationStyle: Int, Codable, Sendable, CaseIterable {
 
     public var label: String {
         switch self {
-        case .countdown: "Countdown"
-        case .readyClock: "Ready at"
-        case .state: "State"
+        case .countdown: String(localized: "Countdown", bundle: .recharge)
+        case .readyClock: String(localized: "Ready at", bundle: .recharge)
+        case .state: String(localized: "State", bundle: .recharge)
         }
     }
 
     public var detail: String {
         switch self {
-        case .countdown: "Hours left, with a ring."
-        case .readyClock: "The clock time you are estimated to be ready."
-        case .state: "Recovering / Ready soon / Ready."
+        case .countdown: String(localized: "Hours left, with a ring.", bundle: .recharge)
+        case .readyClock: String(localized: "The clock time you are estimated to be ready.", bundle: .recharge)
+        case .state: String(localized: "Recovering / Ready soon / Ready.", bundle: .recharge)
         }
     }
 }

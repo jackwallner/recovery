@@ -67,7 +67,7 @@ struct ReviewPromptSheet: View {
                 feedbackError = nil
                 openURL(mailURL) { accepted in
                     guard accepted else {
-                        feedbackError = "Couldn't open Mail. Email \(AppStoreReviewLinks.supportEmail) directly."
+                        feedbackError = String(localized: "Couldn't open Mail. Email \(AppStoreReviewLinks.supportEmail) directly.", bundle: .recharge)
                         return
                     }
                     ReviewPromptTracker.markFeedbackSubmitted()
@@ -112,7 +112,7 @@ struct ReviewPromptSheet: View {
 
     // MARK: - Buttons
 
-    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+    private func primaryButton(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
                 .font(.system(.headline, design: .rounded))

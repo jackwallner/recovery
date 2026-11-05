@@ -177,6 +177,7 @@ public enum WorkoutClassifier {
 
     /// Human-readable session name for the "why" line. Falls back to a generic
     /// word rather than exposing a HealthKit enum name to the user.
+    // l10n-ignore-begin: stored English values, shown through displayLabel/displayTitle
     public static func label(activityCode: UInt) -> String {
         guard let code = ActivityCode(rawValue: activityCode) else { return "workout" }
         switch code {
@@ -210,6 +211,86 @@ public enum WorkoutClassifier {
         case .downhillSkiing: return "ski run"
         case .snowboarding: return "snowboard session"
         default: return "workout"
+        }
+    }
+    // l10n-ignore-end
+
+    /// The stored label, in the reader's language. `activityLabel` is written to
+    /// the store and the snapshot in English and is also what the symbol lookup
+    /// matches on, so it is never translated in place; screens call this to
+    /// show it. An unrecognised value (a label from a later version) is shown
+    /// as stored.
+    public static func displayLabel(_ stored: String) -> String {
+        switch stored {
+        case "workout": return String(localized: "workout", bundle: .recharge)
+        case "run": return String(localized: "run", bundle: .recharge)
+        case "ride": return String(localized: "ride", bundle: .recharge)
+        case "walk": return String(localized: "walk", bundle: .recharge)
+        case "swim": return String(localized: "swim", bundle: .recharge)
+        case "row": return String(localized: "row", bundle: .recharge)
+        case "hike": return String(localized: "hike", bundle: .recharge)
+        case "elliptical session": return String(localized: "elliptical session", bundle: .recharge)
+        case "stair session": return String(localized: "stair session", bundle: .recharge)
+        case "lifting session": return String(localized: "lifting session", bundle: .recharge)
+        case "functional session": return String(localized: "functional session", bundle: .recharge)
+        case "HIIT session": return String(localized: "HIIT session", bundle: .recharge)
+        case "core session": return String(localized: "core session", bundle: .recharge)
+        case "cross-training session": return String(localized: "cross-training session", bundle: .recharge)
+        case "yoga session": return String(localized: "yoga session", bundle: .recharge)
+        case "pilates session": return String(localized: "pilates session", bundle: .recharge)
+        case "barre session": return String(localized: "barre session", bundle: .recharge)
+        case "mobility session": return String(localized: "mobility session", bundle: .recharge)
+        case "boxing session": return String(localized: "boxing session", bundle: .recharge)
+        case "martial arts session": return String(localized: "martial arts session", bundle: .recharge)
+        case "tennis match": return String(localized: "tennis match", bundle: .recharge)
+        case "basketball game": return String(localized: "basketball game", bundle: .recharge)
+        case "soccer game": return String(localized: "soccer game", bundle: .recharge)
+        case "triathlon session": return String(localized: "triathlon session", bundle: .recharge)
+        case "cardio session": return String(localized: "cardio session", bundle: .recharge)
+        case "jump rope session": return String(localized: "jump rope session", bundle: .recharge)
+        case "climb": return String(localized: "climb", bundle: .recharge)
+        case "ski": return String(localized: "ski", bundle: .recharge)
+        case "ski run": return String(localized: "ski run", bundle: .recharge)
+        case "snowboard session": return String(localized: "snowboard session", bundle: .recharge)
+        default: return stored
+        }
+    }
+
+    /// `displayLabel` as a heading ("Run", "Lifting session"), with its own
+    /// wording per language rather than a case change applied afterwards.
+    public static func displayTitle(_ stored: String) -> String {
+        switch stored {
+        case "workout": return String(localized: "Workout", bundle: .recharge)
+        case "run": return String(localized: "Run", bundle: .recharge)
+        case "ride": return String(localized: "Ride", bundle: .recharge)
+        case "walk": return String(localized: "Walk", bundle: .recharge)
+        case "swim": return String(localized: "Swim", bundle: .recharge)
+        case "row": return String(localized: "Row", bundle: .recharge)
+        case "hike": return String(localized: "Hike", bundle: .recharge)
+        case "elliptical session": return String(localized: "Elliptical Session", bundle: .recharge)
+        case "stair session": return String(localized: "Stair Session", bundle: .recharge)
+        case "lifting session": return String(localized: "Lifting Session", bundle: .recharge)
+        case "functional session": return String(localized: "Functional Session", bundle: .recharge)
+        case "HIIT session": return String(localized: "HIIT Session", bundle: .recharge)
+        case "core session": return String(localized: "Core Session", bundle: .recharge)
+        case "cross-training session": return String(localized: "Cross-training Session", bundle: .recharge)
+        case "yoga session": return String(localized: "Yoga Session", bundle: .recharge)
+        case "pilates session": return String(localized: "Pilates Session", bundle: .recharge)
+        case "barre session": return String(localized: "Barre Session", bundle: .recharge)
+        case "mobility session": return String(localized: "Mobility Session", bundle: .recharge)
+        case "boxing session": return String(localized: "Boxing Session", bundle: .recharge)
+        case "martial arts session": return String(localized: "Martial Arts Session", bundle: .recharge)
+        case "tennis match": return String(localized: "Tennis Match", bundle: .recharge)
+        case "basketball game": return String(localized: "Basketball Game", bundle: .recharge)
+        case "soccer game": return String(localized: "Soccer Game", bundle: .recharge)
+        case "triathlon session": return String(localized: "Triathlon Session", bundle: .recharge)
+        case "cardio session": return String(localized: "Cardio Session", bundle: .recharge)
+        case "jump rope session": return String(localized: "Jump Rope Session", bundle: .recharge)
+        case "climb": return String(localized: "Climb", bundle: .recharge)
+        case "ski": return String(localized: "Ski", bundle: .recharge)
+        case "ski run": return String(localized: "Ski Run", bundle: .recharge)
+        case "snowboard session": return String(localized: "Snowboard Session", bundle: .recharge)
+        default: return stored.asSessionTitle
         }
     }
 

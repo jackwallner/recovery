@@ -61,35 +61,61 @@ public extension Package {
 
     var rechargeDisplayName: String {
         switch rechargePackageKind {
-        case .lifetime: "Lifetime"
-        case .yearly: "Yearly"
-        case .monthly: "Monthly"
+        case .lifetime: String(localized: "Lifetime", bundle: .recharge)
+        case .yearly: String(localized: "Yearly", bundle: .recharge)
+        case .monthly: String(localized: "Monthly", bundle: .recharge)
         case .other: storeProduct.localizedTitle
         }
     }
 
+    /// "$29.99 / year". Whole sentences per unit, so each language writes its own
+    /// order and plural; the price itself is StoreKit's.
     var rechargePriceLabel: String {
         guard let period = storeProduct.subscriptionPeriod else { return storeProduct.localizedPriceString }
-        let unit: String
-        switch period.unit {
-        case .day: unit = period.value == 1 ? "day" : "days"
-        case .week: unit = period.value == 1 ? "week" : "weeks"
-        case .month: unit = period.value == 1 ? "month" : "months"
-        case .year: unit = period.value == 1 ? "year" : "years"
-        @unknown default: unit = ""
+        let price = storeProduct.localizedPriceString
+        let n = period.value
+        switch (period.unit, n == 1) {
+        case (.day, true): return String(localized: "\(price) / day", bundle: .recharge)
+        case (.week, true): return String(localized: "\(price) / week", bundle: .recharge)
+        case (.month, true): return String(localized: "\(price) / month", bundle: .recharge)
+        case (.year, true): return String(localized: "\(price) / year", bundle: .recharge)
+        case (.day, false): return String(localized: "\(price) / \(n) days", bundle: .recharge)
+        case (.week, false): return String(localized: "\(price) / \(n) weeks", bundle: .recharge)
+        case (.month, false): return String(localized: "\(price) / \(n) months", bundle: .recharge)
+        case (.year, false): return String(localized: "\(price) / \(n) years", bundle: .recharge)
+        @unknown default: return price
         }
-        return period.value == 1
-            ? "\(storeProduct.localizedPriceString) / \(unit)"
-            : "\(storeProduct.localizedPriceString) / \(period.value) \(unit)"
     }
 
-    var rechargeIntroOfferLabel: String? {
+    /// The same amount phrased as a commitment: "$29.99 per year". Apple 3.1.2(c)
+    /// wants the billed amount to read as what will be charged, not as a rate.
+    var rechargeBilledAmountLabel: String {
+        guard let period = storeProduct.subscriptionPeriod else { return storeProduct.localizedPriceString }
+        let price = storeProduct.localizedPriceString
+        let n = period.value
+        switch (period.unit, n == 1) {
+        case (.day, true): return String(localized: "\(price) per day", bundle: .recharge)
+        case (.week, true): return String(localized: "\(price) per week", bundle: .recharge)
+        case (.month, true): return String(localized: "\(price) per month", bundle: .recharge)
+        case (.year, true): return String(localized: "\(price) per year", bundle: .recharge)
+        case (.day, false): return String(localized: "\(price) per \(n) days", bundle: .recharge)
+        case (.week, false): return String(localized: "\(price) per \(n) weeks", bundle: .recharge)
+        case (.month, false): return String(localized: "\(price) per \(n) months", bundle: .recharge)
+        case (.year, false): return String(localized: "\(price) per \(n) years", bundle: .recharge)
+        @unknown default: return price
+        }
+    }
+
+    /// The free trial's length, kept as numbers so every phrasing of it (label,
+    /// badge) is a whole sentence rather than a string edited after the fact.
+    var rechargeIntroTrialLength: IntroTrialLength? {
         guard let intro = storeProduct.introductoryDiscount, intro.paymentMode == .freeTrial else { return nil }
         let period = intro.subscriptionPeriod
-        if period.unit == .week { return "\(period.value * 7)-day free trial" }
-        if period.unit == .day { return "\(period.value)-day free trial" }
-        return "\(period.value)-month free trial"
+        if period.unit == .week { return .days(period.value * 7) }
+        if period.unit == .day { return .days(period.value) }
+        return .months(period.value)
     }
+
 }
 
 public extension CustomerInfo {
@@ -262,7 +288,7 @@ public final class StoreService: NSObject, ObservableObject {
             // comes back from StoreKit's own cache even when it does not.
             await hydrateDirectlyFromStore(reason: "offerings fetch failed")
             if products.isEmpty {
-                lastError = "Couldn't load subscription options. Check your connection and try again."
+                lastError = String(localized: "Couldn't load subscription options. Check your connection and try again.", bundle: .recharge)
             }
         }
     }
@@ -281,7 +307,7 @@ public final class StoreService: NSObject, ObservableObject {
             currentOffering = nil
             products = []
             usesOfferingPackages = false
-            lastError = "Subscription options aren't available right now. Please try again in a moment."
+            lastError = String(localized: "Subscription options aren't available right now. Please try again in a moment.", bundle: .recharge)
             return
         }
         currentOffering = nil
@@ -332,7 +358,7 @@ public final class StoreService: NSObject, ObservableObject {
     }
 
     public func isEligibleForIntroOffer(_ package: Package) -> Bool {
-        guard package.rechargeIntroOfferLabel != nil else { return false }
+        guard package.rechargeIntroTrialLength != nil else { return false }
         #if DEBUG
         if ScreenshotConfig.forceIntroIneligible { return false }
         #endif
@@ -340,8 +366,8 @@ public final class StoreService: NSObject, ObservableObject {
         return introEligibility[package.storeProduct.productIdentifier] ?? false
     }
 
-    public func eligibleIntroLabel(for package: Package) -> String? {
-        isEligibleForIntroOffer(package) ? package.rechargeIntroOfferLabel : nil
+    public func eligibleIntroLength(for package: Package) -> IntroTrialLength? {
+        isEligibleForIntroOffer(package) ? package.rechargeIntroTrialLength : nil
     }
 
     public var canPitchFreeTrial: Bool {
@@ -356,9 +382,9 @@ public final class StoreService: NSObject, ObservableObject {
     }
 
     public var onboardingTrialCTALabel: String {
-        guard let yearly = yearlyPackage else { return "Continue with \(RechargeConversionCopy.proName)" }
+        guard let yearly = yearlyPackage else { return String(localized: "Continue with Recharge+", bundle: .recharge) }
         return RechargeConversionCopy.ctaLabel(
-            trialLabel: yearly.rechargeIntroOfferLabel,
+            trial: yearly.rechargeIntroTrialLength,
             priceLabel: yearly.rechargePriceLabel,
             eligibleForTrial: isEligibleForIntroOffer(yearly)
         )
@@ -367,7 +393,7 @@ public final class StoreService: NSObject, ObservableObject {
     public var yearlyCTADisclosureText: String? {
         guard let yearly = yearlyPackage else { return nil }
         return RechargeConversionCopy.disclosure(
-            trialLabel: yearly.rechargeIntroOfferLabel,
+            trial: yearly.rechargeIntroTrialLength,
             priceLabel: yearly.rechargePriceLabel,
             eligibleForTrial: isEligibleForIntroOffer(yearly)
         )
@@ -376,7 +402,7 @@ public final class StoreService: NSObject, ObservableObject {
     public var yearlySheetDisclosureText: String? {
         guard let yearly = yearlyPackage else { return nil }
         return RechargeConversionCopy.sheetDisclosure(
-            trialLabel: yearly.rechargeIntroOfferLabel,
+            trial: yearly.rechargeIntroTrialLength,
             priceLabel: yearly.rechargePriceLabel,
             eligibleForTrial: isEligibleForIntroOffer(yearly)
         )
@@ -458,7 +484,7 @@ public final class StoreService: NSObject, ObservableObject {
             lastError = nil
         } catch {
             logger.error("Customer info refresh failed: \(String(describing: error), privacy: .private)")
-            lastError = "Couldn't refresh your subscription status. Check your connection and try again."
+            lastError = String(localized: "Couldn't refresh your subscription status. Check your connection and try again.", bundle: .recharge)
         }
     }
 
@@ -466,15 +492,15 @@ public final class StoreService: NSObject, ObservableObject {
         configureIfNeeded()
         lastError = nil
         #if targetEnvironment(simulator)
-        lastError = "Restore is unavailable in the simulator."
+        lastError = String(localized: "Restore is unavailable in the simulator.", bundle: .recharge)
         return
         #else
         do {
             apply(customerInfo: try await Purchases.shared.restorePurchases())
-            lastError = isPro ? nil : "No active \(RechargeConversionCopy.proName) purchase was found for this Apple ID."
+            lastError = isPro ? nil : String(localized: "No active Recharge+ purchase was found for this Apple ID.", bundle: .recharge)
         } catch {
             logger.error("Restore failed: \(String(describing: error), privacy: .private)")
-            lastError = "Couldn't restore purchases. Try again."
+            lastError = String(localized: "Couldn't restore purchases. Try again.", bundle: .recharge)
         }
         #endif
     }

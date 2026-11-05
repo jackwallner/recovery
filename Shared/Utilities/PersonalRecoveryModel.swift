@@ -482,33 +482,34 @@ public enum PersonalRecoveryModel {
 
         switch analysis.direction {
         case .shorter:
-            lines.append("Your windows run about \(abs(analysis.percentDifference))% shorter than the standard estimate.")
+            lines.append(String(localized: "Your windows run about \(abs(analysis.percentDifference))% shorter than the standard estimate.", bundle: .recharge))
         case .longer:
-            lines.append("Your windows run about \(analysis.percentDifference)% longer than the standard estimate.")
+            lines.append(String(localized: "Your windows run about \(analysis.percentDifference)% longer than the standard estimate.", bundle: .recharge))
         case .similar:
-            lines.append("Your windows land close to the standard estimate.")
+            lines.append(String(localized: "Your windows land close to the standard estimate.", bundle: .recharge))
         }
 
         if let rebound = analysis.reboundFactor, analysis.reboundSamples >= minimumReboundSamples {
             let count = analysis.reboundSamples
             lines.append(
                 rebound < 1
-                    ? "Resting heart rate and HRV settle back quickly after your hard sessions (\(count) measured)."
-                    : "Resting heart rate and HRV take their time settling after your hard sessions (\(count) measured)."
+                    ? String(localized: "Resting heart rate and HRV settle back quickly after your hard sessions (\(count) measured).", bundle: .recharge)
+                    : String(localized: "Resting heart rate and HRV take their time settling after your hard sessions (\(count) measured).", bundle: .recharge)
             )
         }
 
         if let tolerance = analysis.toleranceFactor, analysis.toleranceSamples >= minimumToleranceSamples {
             lines.append(
                 tolerance < 1
-                    ? "You have held your usual intensity training inside the estimated window."
-                    : "Sessions you started inside the window came in below your usual intensity."
+                    ? String(localized: "You have held your usual intensity training inside the estimated window.", bundle: .recharge)
+                    : String(localized: "Sessions you started inside the window came in below your usual intensity.", bundle: .recharge)
             )
         }
 
         if analysis.qualifyingSessions > 0 {
-            let perWeek = String(format: "%.1f", analysis.sessionsPerWeek)
-            lines.append("Based on \(analysis.qualifyingSessions) sessions in the last \(windowDays) days, about \(perWeek) a week.")
+            let perWeek = analysis.sessionsPerWeek.formatted(.number.precision(.fractionLength(1)))
+            let sessions = analysis.qualifyingSessions
+            lines.append(String(localized: "Based on \(sessions) sessions in the last \(windowDays) days, about \(perWeek) a week.", bundle: .recharge))
         }
 
         return lines

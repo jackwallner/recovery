@@ -10,9 +10,9 @@ public enum AppAppearance: Int, CaseIterable, Sendable {
 
     public var label: String {
         switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
+        case .system: String(localized: "System", bundle: .recharge)
+        case .light: String(localized: "appearance.light", defaultValue: "Light", bundle: .recharge)
+        case .dark: String(localized: "Dark", bundle: .recharge)
         }
     }
 

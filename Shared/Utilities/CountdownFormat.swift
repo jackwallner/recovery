@@ -14,15 +14,38 @@ public enum CountdownFormat {
 
     /// Full countdown: `2d 4h`, `18h 40m`, `1h 20m`, `18m`, `Ready`.
     public static func remaining(_ seconds: TimeInterval) -> String {
-        guard seconds > 0 else { return "Ready" }
+        guard seconds > 0 else { return String(localized: "Ready", bundle: .recharge) }
         let totalMinutes = Int((seconds / 60).rounded(.up))
         let days = totalMinutes / 1440
         let hours = (totalMinutes % 1440) / 60
         let minutes = totalMinutes % 60
 
-        if days > 0 { return hours > 0 ? "\(days)d \(hours)h" : "\(days)d" }
-        if hours > 0 { return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h" }
-        return "\(minutes)m"
+        if days > 0 { return hours > 0 ? daysAndHours(days, hours) : daysOnly(days) }
+        if hours > 0 { return minutes > 0 ? hoursAndMinutes(hours, minutes) : hoursOnly(hours) }
+        return minutesOnly(minutes)
+    }
+
+    // The five shapes a countdown takes. Each is a whole key so a language can
+    // choose its own unit letters and spacing; the compact complication format
+    // depends on them staying this short.
+    private static func daysAndHours(_ days: Int, _ hours: Int) -> String {
+        String(localized: "\(days)d \(hours)h", bundle: .recharge)
+    }
+
+    private static func daysOnly(_ days: Int) -> String {
+        String(localized: "\(days)d", bundle: .recharge)
+    }
+
+    private static func hoursAndMinutes(_ hours: Int, _ minutes: Int) -> String {
+        String(localized: "\(hours)h \(minutes)m", bundle: .recharge)
+    }
+
+    private static func hoursOnly(_ hours: Int) -> String {
+        String(localized: "\(hours)h", bundle: .recharge)
+    }
+
+    private static func minutesOnly(_ minutes: Int) -> String {
+        String(localized: "\(minutes)m", bundle: .recharge)
     }
 
     /// Complication-width countdown: `2d 23h`, `18h`, `1h 20m`, `18m`.
@@ -44,22 +67,22 @@ public enum CountdownFormat {
     /// Never longer than six characters, so a circular or corner slot does not
     /// truncate. `3d 23h` is the widest it gets, and only above 72 hours.
     public static func compactRemaining(_ seconds: TimeInterval) -> String {
-        guard seconds > 0 else { return "Ready" }
+        guard seconds > 0 else { return String(localized: "Ready", bundle: .recharge) }
         let totalMinutes = Int((seconds / 60).rounded(.up))
         let days = totalMinutes / 1440
         let hours = (totalMinutes % 1440) / 60
         let minutes = totalMinutes % 60
 
-        if days > 0 { return hours > 0 ? "\(days)d \(hours)h" : "\(days)d" }
-        if hours >= 2 { return "\(hours)h" }
-        if hours > 0 { return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h" }
-        return "\(minutes)m"
+        if days > 0 { return hours > 0 ? daysAndHours(days, hours) : daysOnly(days) }
+        if hours >= 2 { return hoursOnly(hours) }
+        if hours > 0 { return minutes > 0 ? hoursAndMinutes(hours, minutes) : hoursOnly(hours) }
+        return minutesOnly(minutes)
     }
 
     /// Hours-only, the way Garmin prints it at the end of an activity: `32h`.
     public static func hours(_ hours: Double) -> String {
-        guard hours > 0 else { return "0h" }
-        return "\(Int(hours.rounded()))h"
+        guard hours > 0 else { return hoursOnly(0) }
+        return hoursOnly(Int(hours.rounded()))
     }
 
     /// Why a stacked countdown is longer than the session on screen.
@@ -72,7 +95,7 @@ public enum CountdownFormat {
     /// Deliberately arithmetic and deliberately not a claim about the body: it
     /// names two figures the app has already shown and adds them.
     public static func stackedNote(sessionHours: Double, carriedHours: Double) -> String {
-        "\(hours(sessionHours)) for this session, on top of \(hours(carriedHours)) still to go"
+        String(localized: "\(hours(sessionHours)) for this session, on top of \(hours(carriedHours)) still to go", bundle: .recharge)
     }
 
     /// The bounded window, e.g. `18 to 28h`. Collapses to a single figure when
@@ -80,8 +103,8 @@ public enum CountdownFormat {
     public static func window(low: Double, high: Double) -> String {
         let lowRounded = Int(low.rounded())
         let highRounded = Int(high.rounded())
-        if lowRounded == highRounded { return "\(highRounded)h" }
-        return "\(lowRounded) to \(highRounded)h"
+        if lowRounded == highRounded { return hoursOnly(highRounded) }
+        return String(localized: "\(lowRounded) to \(highRounded)h", bundle: .recharge)
     }
 
     /// How long ago something happened: `just now`, `4m ago`, `2h 10m ago`.
@@ -89,12 +112,12 @@ public enum CountdownFormat {
     /// nobody reads as yesterday.
     public static func elapsed(since date: Date, now: Date = .now) -> String {
         let seconds = now.timeIntervalSince(date)
-        guard seconds >= 60 else { return "just now" }
+        guard seconds >= 60 else { return String(localized: "just now", bundle: .recharge) }
         if seconds >= 86_400 {
             let days = Int(seconds / 86_400)
-            return days == 1 ? "yesterday" : "\(days)d ago"
+            return days == 1 ? String(localized: "yesterday", bundle: .recharge) : String(localized: "\(days)d ago", bundle: .recharge)
         }
-        return "\(remaining(seconds)) ago"
+        return String(localized: "\(remaining(seconds)) ago", bundle: .recharge)
     }
 
     // MARK: - Ready time
@@ -102,12 +125,13 @@ public enum CountdownFormat {
     /// `today at 7:30 PM`, `tomorrow at 7:30 AM`, `Thu at 7:30 AM`.
     public static func readyAt(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
         let time = timeFormatter.string(from: date)
-        if calendar.isDate(date, inSameDayAs: now) { return "today at \(time)" }
+        if calendar.isDate(date, inSameDayAs: now) { return String(localized: "today at \(time)", bundle: .recharge) }
         if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
            calendar.isDate(date, inSameDayAs: tomorrow) {
-            return "tomorrow at \(time)"
+            return String(localized: "tomorrow at \(time)", bundle: .recharge)
         }
-        return "\(weekdayFormatter.string(from: date)) at \(time)"
+        let weekday = weekdayFormatter.string(from: date)
+        return String(localized: "\(weekday) at \(time)", bundle: .recharge)
     }
 
     /// Complication-width ready time: `7:30 AM`.
@@ -127,27 +151,63 @@ public enum CountdownFormat {
     ///   the timeline entry's date, never the wall clock.
     public static func clockWithDay(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
         if calendar.isDate(date, inSameDayAs: now) { return clock(date) }
-        return "\(weekdayFormatter.string(from: date)) \(clock(date))"
+        let weekday = weekdayFormatter.string(from: date)
+        return String(localized: "\(weekday) \(clock(date))", bundle: .recharge)
     }
 
     /// Coarse ready time for low-confidence estimates, where a minute-precise
     /// clock reading would overstate what the model knows.
     public static func readySoftly(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
         let hour = calendar.component(.hour, from: date)
-        let partOfDay: String
+        let partOfDay: PartOfDay
         switch hour {
-        case 0..<5: partOfDay = "overnight"
-        case 5..<12: partOfDay = "morning"
-        case 12..<17: partOfDay = "afternoon"
-        case 17..<21: partOfDay = "evening"
-        default: partOfDay = "late evening"
+        case 0..<5: partOfDay = .overnight
+        case 5..<12: partOfDay = .morning
+        case 12..<17: partOfDay = .afternoon
+        case 17..<21: partOfDay = .evening
+        default: partOfDay = .lateEvening
         }
-        if calendar.isDate(date, inSameDayAs: now) { return "this \(partOfDay)" }
+        if calendar.isDate(date, inSameDayAs: now) { return partOfDay.today }
         if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
            calendar.isDate(date, inSameDayAs: tomorrow) {
-            return "tomorrow \(partOfDay)"
+            return partOfDay.tomorrow
         }
-        return "\(weekdayFormatter.string(from: date)) \(partOfDay)"
+        return partOfDay.onWeekday(weekdayFormatter.string(from: date))
+    }
+
+    /// The coarse ready time, one whole phrase per day and part of the day.
+    private enum PartOfDay {
+        case overnight, morning, afternoon, evening, lateEvening
+
+        var today: String {
+            switch self {
+            case .overnight: String(localized: "this overnight", bundle: .recharge)
+            case .morning: String(localized: "this morning", bundle: .recharge)
+            case .afternoon: String(localized: "this afternoon", bundle: .recharge)
+            case .evening: String(localized: "this evening", bundle: .recharge)
+            case .lateEvening: String(localized: "this late evening", bundle: .recharge)
+            }
+        }
+
+        var tomorrow: String {
+            switch self {
+            case .overnight: String(localized: "tomorrow overnight", bundle: .recharge)
+            case .morning: String(localized: "tomorrow morning", bundle: .recharge)
+            case .afternoon: String(localized: "tomorrow afternoon", bundle: .recharge)
+            case .evening: String(localized: "tomorrow evening", bundle: .recharge)
+            case .lateEvening: String(localized: "tomorrow late evening", bundle: .recharge)
+            }
+        }
+
+        func onWeekday(_ weekday: String) -> String {
+            switch self {
+            case .overnight: String(localized: "\(weekday) overnight", bundle: .recharge)
+            case .morning: String(localized: "\(weekday) morning", bundle: .recharge)
+            case .afternoon: String(localized: "\(weekday) afternoon", bundle: .recharge)
+            case .evening: String(localized: "\(weekday) evening", bundle: .recharge)
+            case .lateEvening: String(localized: "\(weekday) late evening", bundle: .recharge)
+            }
+        }
     }
 
     // MARK: - Phase copy
@@ -155,23 +215,23 @@ public enum CountdownFormat {
     /// The one line under the countdown. Never a claim about the body.
     public static func phaseHeadline(_ phase: RecoveryPhase) -> String {
         switch phase {
-        case .noRecentWorkout: "No recent workout"
-        case .ready: "Ready"
-        case .readySoon: "Ready soon"
-        case .recovering: "Recovering"
+        case .noRecentWorkout: String(localized: "No recent workout", bundle: .recharge)
+        case .ready: String(localized: "Ready", bundle: .recharge)
+        case .readySoon: String(localized: "Ready soon", bundle: .recharge)
+        case .recovering: String(localized: "Recovering", bundle: .recharge)
         }
     }
 
     public static func phaseDetail(_ phase: RecoveryPhase) -> String {
         switch phase {
         case .noRecentWorkout:
-            "Finish a workout and Recharge will estimate a training-load window."
+            String(localized: "Finish a workout and Recharge will estimate a training-load window.", bundle: .recharge)
         case .ready:
-            "Recovery estimate complete. No countdown is active."
+            String(localized: "Recovery estimate complete. No countdown is active.", bundle: .recharge)
         case .readySoon:
-            "Less than two hours left on your current estimate."
+            String(localized: "Less than two hours left on your current estimate.", bundle: .recharge)
         case .recovering:
-            "Time left on the current training-load estimate."
+            String(localized: "Time left on the current training-load estimate.", bundle: .recharge)
         }
     }
 

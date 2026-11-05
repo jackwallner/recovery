@@ -24,23 +24,23 @@ enum ProFeature: CaseIterable {
 
     var title: String {
         switch self {
-        case .personalizedTime: "A recharge time built from your own history"
-        case .bodySignals: "Sleep, HRV, and resting heart rate"
-        case .weeklyLoad: "Weekly load against your 4-week average"
-        case .sessionOverrides: "Correct a session's intensity"
+        case .personalizedTime: String(localized: "A recharge time built from your own history", bundle: .recharge)
+        case .bodySignals: String(localized: "Sleep, HRV, and resting heart rate", bundle: .recharge)
+        case .weeklyLoad: String(localized: "Weekly load against your 4-week average", bundle: .recharge)
+        case .sessionOverrides: String(localized: "Correct a session's intensity", bundle: .recharge)
         }
     }
 
     var detail: String {
         switch self {
         case .personalizedTime:
-            "Every session scored against your own 42-day baseline and 30-day recovery pattern."
+            String(localized: "Every session scored against your own 42-day baseline and 30-day recovery pattern.", bundle: .recharge)
         case .bodySignals:
-            "The nights before and after a session move the countdown within a bounded range, as they do on Garmin."
+            String(localized: "The nights before and after a session move the countdown within a bounded range, as they do on Garmin.", bundle: .recharge)
         case .weeklyLoad:
-            "How hard this week has been compared with your own four-week average."
+            String(localized: "How hard this week has been compared with your own four-week average.", bundle: .recharge)
         case .sessionOverrides:
-            "Override Light, Moderate, or Hard and recalculate its estimate."
+            String(localized: "Override Light, Moderate, or Hard and recalculate its estimate.", bundle: .recharge)
         }
     }
 }
@@ -193,7 +193,7 @@ struct PaywallView: View {
                 Text("Couldn't load plans")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                Text(store.lastError ?? "Check your connection and try again.")
+                Text(store.lastError ?? String(localized: "Check your connection and try again.", bundle: .recharge))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -214,7 +214,7 @@ struct PaywallView: View {
 
     private func planCard(_ package: Package) -> some View {
         let isSelected = selected?.identifier == package.identifier
-        let trialLabel = store.eligibleIntroLabel(for: package)
+        let trial = store.eligibleIntroLength(for: package)
         let isPopular = package.rechargePackageKind == .yearly
 
         return Button {
@@ -242,12 +242,12 @@ struct PaywallView: View {
                     }
                     // Largest pricing element on the card: the amount actually
                     // billed, phrased as a commitment.
-                    Text(RechargeConversionCopy.billedAmount(priceLabel: package.rechargePriceLabel))
+                    Text(package.rechargeBilledAmountLabel)
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .foregroundStyle(Theme.textPrimary)
                     Text(RechargeConversionCopy.billedNote(
-                        trialLabel: trialLabel,
-                        eligibleForTrial: trialLabel != nil,
+                        trial: trial,
+                        eligibleForTrial: trial != nil,
                         isRecurring: package.storeProduct.subscriptionPeriod != nil
                     ))
                     .font(.system(.caption2, design: .rounded))
@@ -269,7 +269,7 @@ struct PaywallView: View {
         }
         .pressable(.card)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityValue(isSelected ? String(localized: "Selected", bundle: .recharge) : String(localized: "Not selected", bundle: .recharge))
     }
 
     // MARK: - CTA
@@ -321,9 +321,9 @@ struct PaywallView: View {
     }
 
     private var ctaLabel: String {
-        guard let selected else { return "Continue with \(RechargeConversionCopy.proName)" }
+        guard let selected else { return String(localized: "Continue with Recharge+", bundle: .recharge) }
         return RechargeConversionCopy.ctaLabel(
-            trialLabel: selected.rechargeIntroOfferLabel,
+            trial: selected.rechargeIntroTrialLength,
             priceLabel: selected.rechargePriceLabel,
             eligibleForTrial: store.isEligibleForIntroOffer(selected)
         )
@@ -334,10 +334,10 @@ struct PaywallView: View {
     private var disclosure: String? {
         guard let selected else { return nil }
         if selected.rechargePackageKind == .lifetime {
-            return "\(selected.storeProduct.localizedPriceString) once. No subscription, no renewal."
+            return String(localized: "\(selected.storeProduct.localizedPriceString) once. No subscription, no renewal.", bundle: .recharge)
         }
         return RechargeConversionCopy.disclosure(
-            trialLabel: selected.rechargeIntroOfferLabel,
+            trial: selected.rechargeIntroTrialLength,
             priceLabel: selected.rechargePriceLabel,
             eligibleForTrial: store.isEligibleForIntroOffer(selected)
         )
@@ -380,7 +380,7 @@ struct PaywallView: View {
                     dismiss()
                 } else {
                     errorMessage = store.lastError
-                        ?? "No active Recharge+ purchase was found for this Apple ID."
+                        ?? String(localized: "No active Recharge+ purchase was found for this Apple ID.", bundle: .recharge)
                 }
             }
         }
@@ -411,7 +411,7 @@ struct PaywallView: View {
             case .cancelled:
                 errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending:
-                errorMessage = "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again."
+                errorMessage = String(localized: "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again.", bundle: .recharge)
             }
         } catch {
             Haptics.failure()

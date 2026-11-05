@@ -180,7 +180,7 @@ struct OnboardingLegalSlot: View {
 
     @ViewBuilder
     private var links: some View {
-        Button(isRestoring ? "Restoring…" : "Restore") { onRestore?() }
+        Button(isRestoring ? String(localized: "Restoring…", bundle: .recharge) : String(localized: "Restore", bundle: .recharge)) { onRestore?() }
             .disabled(isRestoring || onRestore == nil)
             .frame(minHeight: 44)
         Link("Terms", destination: RechargeLinks.termsOfUse)

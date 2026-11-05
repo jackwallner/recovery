@@ -48,7 +48,7 @@ struct EstimateDetailView: View {
                 .padding(.bottom, Theme.Space.xl)
             }
             .background(Theme.background)
-            .navigationTitle(estimate.activityLabel.asSessionTitle)
+            .navigationTitle(WorkoutClassifier.displayTitle(estimate.activityLabel))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -138,22 +138,26 @@ struct EstimateDetailView: View {
     private var readyExplanation: String {
         let ran = CountdownFormat.hours(estimate.totalHours)
         let ago = CountdownFormat.elapsed(since: estimate.readyAt, now: .now)
-        let base = "Your \(estimate.activityLabel) set a \(ran) countdown. It ran out \(ago), so nothing is outstanding."
-        guard estimate.isStacked else { return base }
-        return "Your \(estimate.activityLabel) set a \(ran) countdown, including \(CountdownFormat.hours(estimate.carriedHours)) still owed from before it. It ran out \(ago), so nothing is outstanding."
+        let activity = WorkoutClassifier.sourceSubject(estimate.activityLabel)
+        guard estimate.isStacked else {
+            return String(localized: "\(activity) set a \(ran) countdown. It ran out \(ago), so nothing is outstanding.", bundle: .recharge)
+        }
+        let carried = CountdownFormat.hours(estimate.carriedHours)
+        return String(localized: "\(activity) set a \(ran) countdown, including \(carried) still owed from before it. It ran out \(ago), so nothing is outstanding.", bundle: .recharge)
     }
 
     private var costCaption: String {
         guard estimate.producesCountdown else {
             return estimate.profile == .easy
-                ? "Active recovery. Counted toward your training load, and it never starts or extends a countdown."
-                : "Counted toward your training load. Not enough on its own to start a countdown."
+                ? String(localized: "Active recovery. Counted toward your training load, and it never starts or extends a countdown.", bundle: .recharge)
+                : String(localized: "Counted toward your training load. Not enough on its own to start a countdown.", bundle: .recharge)
         }
         let window = CountdownFormat.window(low: estimate.windowLowHours, high: estimate.windowHighHours)
         // "Tomorrow" is read against today, not against the day of the session,
         // or an old session in History claims to be ready tomorrow.
-        guard !hasExpired else { return "Countdown ran \(window)." }
-        return "Countdown runs \(window), ready \(CountdownFormat.readyAt(estimate.readyAt, now: .now))."
+        guard !hasExpired else { return String(localized: "Countdown ran \(window).", bundle: .recharge) }
+        let ready = CountdownFormat.readyAt(estimate.readyAt, now: .now)
+        return String(localized: "Countdown runs \(window), ready \(ready).", bundle: .recharge)
     }
 
     // MARK: - Why
@@ -189,28 +193,30 @@ struct EstimateDetailView: View {
                 Text("Numbers")
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
-                detailRow("Session load", String(format: "%.0f", estimate.load.value))
+                detailRow(String(localized: "Session load", bundle: .recharge), estimate.load.value.formatted(.number.precision(.fractionLength(0))))
                 // Relative load is measured against the population reference on
                 // the free tier and against the person's own baseline on the
                 // paid one, both of which are about the *session's size*. It is
                 // not what the free countdown is built from any more — that is
                 // the observed gap — so the row says which comparison it is.
+                let relativeLoad = estimate.relativeLoad.formatted(.number.precision(.fractionLength(2)))
                 detailRow(
-                    estimate.tier == .standard ? "Compared to a typical session" : "Compared to your usual",
-                    String(format: "%.2f×", estimate.relativeLoad)
+                    estimate.tier == .standard ? String(localized: "Compared to a typical session", bundle: .recharge) : String(localized: "Compared to your usual", bundle: .recharge),
+                    String(localized: "\(relativeLoad)×", bundle: .recharge),
+                    spoken: String(localized: "\(relativeLoad) times", bundle: .recharge)
                 )
-                detailRow("Load from", estimate.load.source.label)
+                detailRow(String(localized: "Load from", bundle: .recharge), estimate.load.source.label)
                 if estimate.load.source == .heartRate {
-                    detailRow("Heart-rate coverage", "\(Int((estimate.load.heartRateCoverage * 100).rounded()))%")
+                    detailRow(String(localized: "Heart-rate coverage", bundle: .recharge), String(localized: "\(Int((estimate.load.heartRateCoverage * 100).rounded()))%", bundle: .recharge))
                 }
-                detailRow("Estimate", estimate.tier.label)
+                detailRow(String(localized: "Estimate", bundle: .recharge), estimate.tier.label)
                 if estimate.tier == .personalized, estimate.personalFactor != 1 {
                     detailRow(
-                        "\(PersonalRecoveryModel.windowDays)-day recovery rate",
-                        String(format: "%+.0f%%", (estimate.personalFactor - 1) * 100)
+                        String(localized: "\(PersonalRecoveryModel.windowDays)-day recovery rate", bundle: .recharge),
+                        (estimate.personalFactor - 1).formatted(.percent.precision(.fractionLength(0)).sign(strategy: .always()))
                     )
                 }
-                detailRow("Model version", "v\(estimate.modelVersion)")
+                detailRow(String(localized: "Model version", bundle: .recharge), String(localized: "v\(estimate.modelVersion)", bundle: .recharge))
 
                 if let reconciliation { comparisonNote(reconciliation) }
             }
@@ -254,8 +260,8 @@ struct EstimateDetailView: View {
         VStack(alignment: .leading, spacing: Theme.Space.xs) {
             Divider().overlay(Theme.textTertiary.opacity(0.3))
             detailRow(
-                "\(RechargeConversionCopy.standardColumn) → \(RechargeConversionCopy.proColumn)",
-                "\(CountdownFormat.hours(note.standardHours)) → \(CountdownFormat.hours(note.personalizedHours))"
+                String(localized: "\(RechargeConversionCopy.standardColumn) → \(RechargeConversionCopy.proColumn)", bundle: .recharge),
+                String(localized: "\(CountdownFormat.hours(note.standardHours)) → \(CountdownFormat.hours(note.personalizedHours))", bundle: .recharge)
             )
             Text(reconciliationDetail(note))
                 .font(.system(.caption2, design: .rounded))
@@ -267,15 +273,23 @@ struct EstimateDetailView: View {
     }
 
     private func reconciliationDetail(_ note: Reconciliation) -> String {
-        let direction = note.percent < 0 ? "shorter" : "longer"
+        let percent = abs(note.percent)
+        let days = PersonalRecoveryModel.windowDays
         let rate = Int(((estimate.personalFactor - 1) * 100).rounded())
-        let rateClause = rate == 0
-            ? "the \(PersonalRecoveryModel.windowDays)-day recovery rate above left it where it was"
-            : "the \(PersonalRecoveryModel.windowDays)-day recovery rate above is \(abs(rate))% of it"
-        return "\(abs(note.percent))% \(direction) overall, and \(rateClause). The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session."
+        let shorter = note.percent < 0
+        switch (shorter, rate == 0) {
+        case (true, true):
+            return String(localized: "\(percent)% shorter overall, and the \(days)-day recovery rate above left it where it was. The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session.", bundle: .recharge)
+        case (true, false):
+            return String(localized: "\(percent)% shorter overall, and the \(days)-day recovery rate above is \(abs(rate))% of it. The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session.", bundle: .recharge)
+        case (false, true):
+            return String(localized: "\(percent)% longer overall, and the \(days)-day recovery rate above left it where it was. The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session.", bundle: .recharge)
+        case (false, false):
+            return String(localized: "\(percent)% longer overall, and the \(days)-day recovery rate above is \(abs(rate))% of it. The rest is your own baseline standing in for the population reference, and your sleep and heart rate around the session.", bundle: .recharge)
+        }
     }
 
-    private func detailRow(_ label: String, _ value: String) -> some View {
+    private func detailRow(_ label: String, _ value: String, spoken: String? = nil) -> some View {
         HStack {
             Text(label)
                 .font(.system(.footnote, design: .rounded))
@@ -285,8 +299,7 @@ struct EstimateDetailView: View {
                 .font(.system(.footnote, design: .rounded, weight: .medium))
                 .monospacedDigit()
                 .foregroundStyle(Theme.textPrimary)
-                // "1.40×" is read as a symbol by VoiceOver.
-                .accessibilityLabel(value.replacingOccurrences(of: "×", with: " times"))
+                .accessibilityLabel(spoken ?? value)
         }
     }
 
@@ -300,8 +313,8 @@ struct EstimateDetailView: View {
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 HStack(spacing: Theme.Space.lg) {
-                    loadFigure("This week", balance.acute)
-                    loadFigure("4-week average", balance.chronic)
+                    loadFigure(String(localized: "This week", bundle: .recharge), balance.acute)
+                    loadFigure(String(localized: "4-week average", bundle: .recharge), balance.chronic)
                 }
                 Text("Load is a proxy built from your own sessions, not a measurement.")
                     .font(.system(.caption2, design: .rounded))
@@ -382,9 +395,13 @@ struct EstimateDetailView: View {
 
     private var intensityCaption: String {
         guard let override = engine.intensityOverride(forSessionID: capturedEstimate.sessionID) else {
-            return "Recharge read this as \(estimate.category.shortLabel.lowercased()) from \(estimate.load.source.label). Change it and the countdown is recalculated from your answer."
+            return String(localized: "Recharge read this as \(estimate.category.sentenceLabel) from \(estimate.load.source.label). Change it and the countdown is recalculated from your answer.", bundle: .recharge)
         }
-        return "You marked this \(override.label.lowercased()), so that is what the countdown was built from."
+        switch override {
+        case .light: return String(localized: "You marked this light, so that is what the countdown was built from.", bundle: .recharge)
+        case .moderate: return String(localized: "You marked this moderate, so that is what the countdown was built from.", bundle: .recharge)
+        case .hard: return String(localized: "You marked this hard, so that is what the countdown was built from.", bundle: .recharge)
+        }
     }
 
     private var proTeaser: some View {
