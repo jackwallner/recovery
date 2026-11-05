@@ -8,7 +8,7 @@ import XCTest
 final class LocalizationTests: XCTestCase {
     /// Languages that must ship. Only English until the translation runs land;
     /// extend it with `Tools/Localization/check.py`'s `LANGS`.
-    static let languages = ["en"]
+    static let languages = ["en", "fr", "cs", "th", "de", "es", "it", "zh-Hans"]
 
     func testEveryLanguageShips() {
         for language in Self.languages {
