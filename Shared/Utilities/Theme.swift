@@ -68,6 +68,9 @@ public enum Theme {
         : UIColor(red: 0.24, green: 0.30, blue: 0.78, alpha: 1) })
     #endif
 
+    /// Dark enough for white text on a filled Pro badge in either appearance.
+    public static let proBadge = Color(red: 0.24, green: 0.30, blue: 0.78)
+
     /// Pro accent for small bold text on its own 15% tint (the lock badge). The
     /// accessibility audit measured `pro` at 3.0:1 there at 10 pt.
     #if os(watchOS)

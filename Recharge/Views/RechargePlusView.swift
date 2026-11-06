@@ -92,14 +92,21 @@ struct RechargePlusView: View {
                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
 
-                HStack(alignment: .center, spacing: Theme.Space.md) {
-                    figure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Theme.textTertiary)
-                    figure(RechargeConversionCopy.proColumn, CountdownFormat.hours(preview.personalizedHours), Theme.pro)
-                    Spacer(minLength: 0)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .center, spacing: Theme.Space.md) {
+                        figure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                        comparisonArrow("arrow.right")
+                        figure(RechargeConversionCopy.proColumn, CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        figure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
+                        comparisonArrow("arrow.down")
+                        figure(RechargeConversionCopy.proColumn, CountdownFormat.hours(preview.personalizedHours), Theme.pro)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Text(preview.isExample
                      ? String(localized: "An example on the real curve until you have recorded a qualifying session. The arithmetic is the same one your own sessions get.", bundle: .recharge)
@@ -109,6 +116,12 @@ struct RechargePlusView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private func comparisonArrow(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(Theme.textTertiary)
     }
 
     private func figure(_ label: String, _ value: String, _ tint: Color) -> some View {

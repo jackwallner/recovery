@@ -236,7 +236,7 @@ struct PaywallView: View {
                                 .font(.system(size: 9, weight: .bold, design: .rounded))
                                 .padding(.horizontal, Theme.Space.xs)
                                 .padding(.vertical, Theme.Space.hair)
-                                .background(Theme.pro, in: Capsule())
+                                .background(Theme.proBadge, in: Capsule())
                                 .foregroundStyle(.white)
                         }
                     }
