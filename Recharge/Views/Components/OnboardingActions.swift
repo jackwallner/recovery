@@ -164,6 +164,7 @@ struct OnboardingLegalSlot: View {
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Theme.Space.md) { row }
+            HStack(spacing: Theme.Space.xxs) { row }
             VStack(spacing: Theme.Space.xs) { row }
         }
         .font(.system(.caption, design: .rounded))
