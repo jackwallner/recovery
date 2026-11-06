@@ -98,9 +98,10 @@ struct OnboardingView: View {
         }
         .frame(height: 4)
         .frame(minHeight: Theme.minimumTapTarget)
-        .padding(.vertical, -(Theme.minimumTapTarget - 4) / 2)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Step \(index + 1) of \(plannedStepCount)")
+        .padding(.vertical, -(Theme.minimumTapTarget - 4) / 2)
     }
 
     /// Until Health answers, the flow is measured against its longest possible
