@@ -13,15 +13,15 @@ import XCTest
 final class ReleaseJourneysUITests: XCTestCase {
 
     private static let bundle = "com.jackwallner.recovery"
-    private static let primaries = ["Continue", "Skip this one", "I understand"]
+    private static let primaries = ["Continue", "Weiter", "Skip this one", "Diese überspringen", "I understand", "Verstanden"]
 
     func test01OnboardingToOfferAndToday() {
         continueAfterFailure = false
         let app = launch(scene: "onboarding")
-        XCTAssertTrue(app.buttons["Continue"].firstMatch.waitForExistence(timeout: 20), "welcome never rendered")
+        XCTAssertTrue(button(app, "Continue", "Weiter").waitForExistence(timeout: 20), "welcome never rendered")
         QA.checkpoint(app, "welcome")
 
-        let offer = app.buttons["Continue with Recharge+"].firstMatch
+        let offer = button(app, "Continue with Recharge+", "Weiter mit Recharge+")
         for page in 1...12 {
             if offer.exists { break }
             guard let next = Self.primaries.map({ app.buttons[$0].firstMatch }).first(where: { $0.exists }) else { break }
@@ -33,10 +33,10 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(offer.waitForExistence(timeout: 10), "offer page never rendered")
         QA.checkpoint(app, "onboarding-offer", paywall: true)
 
-        let start = app.buttons["Get Started"].firstMatch
-        if !start.isHittable { app.swipeUp() }
+        let start = button(app, "Get Started", "Los geht's")
+        if !start.isHittable { QA.swipe(app, .up) }
         start.tap()
-        XCTAssertTrue(app.buttons["Today"].firstMatch.waitForExistence(timeout: 15), "free path never reached Today")
+        XCTAssertTrue(button(app, "Today", "Heute").waitForExistence(timeout: 15), "free path never reached Today")
         QA.checkpoint(app, "first-today", paywall: false)
     }
 
@@ -64,7 +64,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         upgrade.tap()
         QA.checkpoint(app, "upgrade", paywall: true)
 
-        app.buttons["Today"].firstMatch.tap()
+        button(app, "Today", "Heute").tap()
         QA.checkpoint(app, "today-after-upgrade", paywall: false)
     }
 
@@ -87,7 +87,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         QA.checkpoint(app, "history-after-interruption")
 
         QA.relaunch(app)
-        XCTAssertTrue(app.buttons["Today"].firstMatch.waitForExistence(timeout: 20))
+        XCTAssertTrue(button(app, "Today", "Heute").waitForExistence(timeout: 20))
         QA.checkpoint(app, "today-after-relaunch")
     }
 
@@ -140,12 +140,12 @@ final class ReleaseJourneysUITests: XCTestCase {
         app.terminate()
         QA.launch(app, environment: ["RECHARGE_SCREENSHOT_MODE": "1", "RECHARGE_SCREENSHOT_SCENE": "ready"])
         XCTAssertTrue(hero.waitForExistence(timeout: 20), "Today never rendered once the countdown expired")
-        XCTAssertTrue(hero.label.hasPrefix("Recovery estimate complete."), "an expired countdown is not Ready: \(hero.label)")
-        XCTAssertTrue(hero.label.contains("from your run"), "Ready does not name the run that set it: \(hero.label)")
+        XCTAssertTrue(hero.label.hasPrefix("Recovery estimate complete.") || hero.label.hasPrefix("Erholungsschätzung abgeschlossen."), "an expired countdown is not Ready: \(hero.label)")
+        XCTAssertTrue(hero.label.contains("from your run") || hero.label.contains("deinem Lauf"), "Ready does not name the run that set it: \(hero.label)")
         QA.checkpoint(app, "core-today-ready")
         hero.tap()
-        XCTAssertTrue(app.navigationBars["Run"].waitForExistence(timeout: 10), "the Ready explanation never opened")
-        let ranOut = NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "Your run set a", "ran out")
+        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", ["Run", "Lauf"])).firstMatch.waitForExistence(timeout: 10), "the Ready explanation never opened")
+        let ranOut = NSPredicate(format: "(label CONTAINS %@ AND label CONTAINS %@) OR (label CONTAINS %@ AND label CONTAINS %@)", "Your run set a", "ran out", "Lauf", "abgelaufen")
         XCTAssertTrue(app.descendants(matching: .any).matching(ranOut).firstMatch.exists,
                       "the explanation does not say the run's countdown ran out")
         QA.checkpoint(app, "core-ready-detail")
@@ -162,7 +162,8 @@ final class ReleaseJourneysUITests: XCTestCase {
     /// Reads the hero's summary, "18h 42m left. <headline>. 22h from your run 3h ago."
     private func countdown(_ hero: XCUIElement) -> Countdown {
         let label = hero.label
-        let pattern = #"^(.+?) left\..* (\d+)h from your (\w+) (.+?) ago"#
+        let german = label.hasPrefix("Noch ")
+        let pattern = german ? #"^Noch (.+?)\..* (\d+)\s*h von deinem (\w+) vor (.+?)\."# : #"^(.+?) left\..* (\d+)h from your (\w+) (.+?) ago"#
         guard let match = label.firstMatch(of: try! Regex(pattern)),
               let left = match.output[1].substring, let cost = match.output[2].substring,
               let session = match.output[3].substring, let ago = match.output[4].substring
@@ -171,28 +172,30 @@ final class ReleaseJourneysUITests: XCTestCase {
             return Countdown(leftMinutes: 0, cost: 0, session: "", agoMinutes: 0)
         }
         return Countdown(leftMinutes: minutes(String(left)), cost: Int(cost) ?? 0,
-                         session: String(session), agoMinutes: minutes(String(ago)))
+                         session: String(session).lowercased() == "lauf" ? "run" : String(session), agoMinutes: minutes(String(ago)))
     }
 
     /// `CountdownFormat.remaining`: "2d 3h", "18h 42m", "40m".
     private func minutes(_ text: String) -> Int {
-        let units: [Character: Int] = ["d": 1440, "h": 60, "m": 1]
-        return text.split(separator: " ").reduce(0) { total, part in
-            guard let unit = part.last, let scale = units[unit], let value = Int(part.dropLast()) else { return total }
+        let units: [String: Int] = ["d": 1440, "h": 60, "m": 1, "min": 1, "t": 1440]
+        let normalized = text.replacingOccurrences(of: #"(\d+)\s+([a-zA-Z]+)"#, with: "$1$2", options: .regularExpression)
+        return normalized.split(separator: " ").reduce(0) { total, part in
+            let digits = part.prefix(while: { $0.isNumber })
+            guard let scale = units[String(part.dropFirst(digits.count))], let value = Int(digits) else { return total }
             return total + value * scale
         }
     }
 
     private func assertDetail(_ app: XCUIApplication, session: String, cost: String,
                               file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertTrue(app.navigationBars[session].waitForExistence(timeout: 10),
+        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", [session, "Lauf"])).firstMatch.waitForExistence(timeout: 10),
                       "the \(session) explanation never opened", file: file, line: line)
-        XCTAssertTrue(app.staticTexts[cost].firstMatch.exists,
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label IN %@", [cost, "22 h"])).firstMatch.exists,
                       "the \(session) explanation does not show its \(cost) cost", file: file, line: line)
     }
 
     private func closeDetail(_ app: XCUIApplication) {
-        let done = app.buttons["Done"].firstMatch
+        let done = button(app, "Done", "Fertig")
         XCTAssertTrue(done.waitForExistence(timeout: 5), "the explanation has no Done")
         done.tap()
         XCTAssertTrue(app.buttons["today.hero"].waitForExistence(timeout: 10))
@@ -201,15 +204,19 @@ final class ReleaseJourneysUITests: XCTestCase {
     /// History is a tab when folded and the trailing pane on an unfolded
     /// iPhone Duo, where its tab button is hidden.
     private func showHistory(_ app: XCUIApplication) {
-        let tab = app.buttons["History"].firstMatch
+        let tab = button(app, "History", "Verlauf")
         if tab.exists && tab.isHittable { tab.tap() }
-        XCTAssertTrue(app.navigationBars["History"].waitForExistence(timeout: 10), "History never came forward")
+        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", ["History", "Verlauf"])).firstMatch.waitForExistence(timeout: 10), "History never came forward")
     }
 
     /// A History row is one button whose label carries the session title and
     /// the row's "Countdown 22h." value.
     private func historyRow(_ app: XCUIApplication, session: String, countdown: String) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", session, countdown)).firstMatch
+        app.buttons.matching(NSPredicate(format: "(label CONTAINS %@ AND label CONTAINS %@) OR (label CONTAINS %@ AND label CONTAINS %@)", session, countdown, "Lauf", "Countdown 22 h")).firstMatch
+    }
+
+    private func button(_ app: XCUIApplication, _ english: String, _ german: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label IN %@", [english, german])).firstMatch
     }
 
     private func launch(scene: String) -> XCUIApplication {

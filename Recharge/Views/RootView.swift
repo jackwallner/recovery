@@ -66,6 +66,12 @@ struct RootView: View {
             }
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: settings.hasCompletedSetup)
+        .transaction { transaction in
+            if reduceMotion {
+                transaction.animation = nil
+                transaction.disablesAnimations = true
+            }
+        }
     }
 
     /// A translucent capsule floating **over** the content, which is the shape

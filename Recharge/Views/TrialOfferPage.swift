@@ -260,6 +260,7 @@ struct TrialOfferPage: View {
                 Text(trialLength.badge)
                     .font(.system(.footnote, design: .rounded, weight: .semibold))
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(Theme.pro)
             .padding(.horizontal, Theme.Space.md)

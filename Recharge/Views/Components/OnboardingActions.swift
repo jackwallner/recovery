@@ -120,6 +120,8 @@ struct OnboardingPrimaryButton: View {
                     // outgrows the billed amount, and Apple 3.1.2(c) weighs
                     // pricing elements against each other.
                     .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .opacity(isBusy ? 0 : 1)
                 if isBusy {
                     ProgressView()
