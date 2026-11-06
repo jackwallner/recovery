@@ -4,10 +4,52 @@
     "NSHealthShareUsageDescription": {
       "extractionState": "manual",
       "localizations": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge z Apple Health čte tvoje tréninky, tepovou frekvenci, klidovou tepovou frekvenci, variabilitu srdečního tepu, aktivní energii, spánek, dechovou frekvenci, zotavení tepové frekvence, kardio kondici, tělesnou hmotnost, datum narození a pohlaví. Tyto údaje pomáhají odhadnout okno zotavení podle tréninkové zátěže. Recharge nikdy nezapisuje data do Health."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge liest deine Workouts, Herzfrequenz, Ruheherzfrequenz, Herzfrequenzvariabilität, aktive Energie, Schlaf, Atemfrequenz, Herzfrequenzerholung, Cardio-Fitness, Körpergewicht, dein Geburtsdatum und Geschlecht aus Apple Health. Diese Werte helfen, ein Erholungsfenster nach Trainingsbelastung zu schätzen. Recharge schreibt nie Health-Daten."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Recharge reads your workouts, heart rate, resting heart rate, heart rate variability, active energy, sleep, breathing rate, heart-rate recovery, cardio fitness, body mass, date of birth, and sex from Apple Health. These readings help estimate a training-load recovery window. Recharge never writes Health data."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge lee de Apple Health tus entrenamientos, frecuencia cardiaca, frecuencia cardiaca en reposo, variabilidad de la frecuencia cardiaca, energía activa, sueño, frecuencia respiratoria, recuperación de la frecuencia cardiaca, aptitud cardiovascular, masa corporal, fecha de nacimiento y sexo. Estas lecturas ayudan a estimar una ventana de recuperación según la carga de entrenamiento. Recharge nunca escribe datos de Health."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge lit dans Apple Health tes séances d'entraînement, ta fréquence cardiaque, ta fréquence cardiaque au repos, la variabilité de ta fréquence cardiaque, ton énergie active, ton sommeil, ta fréquence respiratoire, la récupération de ta fréquence cardiaque, ta capacité cardio, ta masse corporelle, ta date de naissance et ton sexe. Ces données aident à estimer une fenêtre de récupération liée à la charge d'entraînement. Recharge n'écrit jamais de données Health."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge legge da Apple Health i tuoi allenamenti, frequenza cardiaca, frequenza cardiaca a riposo, variabilità della frequenza cardiaca, energia attiva, sonno, frequenza respiratoria, recupero della frequenza cardiaca, fitness cardio, massa corporea, data di nascita e sesso. Queste letture aiutano a stimare una finestra di recupero in base al carico di allenamento. Recharge non scrive mai dati in Health."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge อ่านข้อมูลการออกกำลังกาย อัตราการเต้นของหัวใจ อัตราการเต้นของหัวใจขณะพัก ความแปรปรวนของอัตราการเต้นของหัวใจ พลังงานที่ใช้ขณะเคลื่อนไหว การนอนหลับ อัตราการหายใจ การฟื้นตัวของอัตราการเต้นของหัวใจ สมรรถภาพการทำงานของหัวใจ มวลร่างกาย วันเกิด และเพศของคุณจาก Apple Health ข้อมูลเหล่านี้ช่วยประมาณช่วงเวลาฟื้นตัวตามภาระการฝึก Recharge ไม่เขียนข้อมูล Health ใด ๆ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge 会从 Apple Health 读取你的体能训练、心率、静息心率、心率变异性、活动能量、睡眠、呼吸速率、心率恢复、心肺适能、身体质量、出生日期和性别。这些读数有助于估算基于训练负荷的恢复窗口。Recharge 绝不会写入 Health 数据。"
           }
         }
       }
@@ -15,10 +57,52 @@
     "NSHealthUpdateUsageDescription": {
       "extractionState": "manual",
       "localizations": {
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge nezapisuje do Apple Health žádná data."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge schreibt keine Daten in Apple Health."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Recharge does not write any data to Apple Health."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge no escribe ningún dato en Apple Health."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge n'écrit aucune donnée dans Apple Health."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge non scrive alcun dato in Apple Health."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge ไม่เขียนข้อมูลใด ๆ ลงใน Apple Health"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharge 不会向 Apple Health 写入任何数据。"
           }
         }
       }

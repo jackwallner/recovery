@@ -436,7 +436,7 @@ struct SettingsView: View {
     private var personalFactorLabel: String {
         let percent = engine.personalAnalysis.percentDifference
         if percent == 0 { return String(localized: "No change from the model default", bundle: .recharge) }
-        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(percent)% shorter", bundle: .recharge)
+        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(abs(percent))% shorter", bundle: .recharge)
     }
 
     // MARK: - About you
@@ -617,7 +617,7 @@ struct SettingsView: View {
     private var calibrationLabel: String {
         let percent = Int(((settings.calibrationFactor - 1) * 100).rounded())
         if percent == 0 { return String(localized: "Neutral", bundle: .recharge) }
-        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(percent)% shorter", bundle: .recharge)
+        return percent > 0 ? String(localized: "+\(percent)% longer", bundle: .recharge) : String(localized: "\(abs(percent))% shorter", bundle: .recharge)
     }
 
     // MARK: - Context (Pro)

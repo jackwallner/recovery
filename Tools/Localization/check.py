@@ -30,7 +30,7 @@ ROOT = os.getcwd()
 DIRS = ['Recharge', 'Shared', 'RechargeWatch', 'RechargeWidget', 'RechargeWatchWidget']
 SKIP_PATHS = ('Recharge/Debug/',)
 # Languages every key must carry. Empty until the translation runs land.
-LANGS = []
+LANGS = ['fr', 'cs', 'th', 'de', 'es', 'it', 'zh-Hans']
 UI_FUNCS = {'Text', 'Button', 'Label', 'Section', 'Toggle', 'TextField', 'navigationTitle', 'accessibilityLabel',
             'alert', 'DatePicker', 'Stepper', 'Link', 'configurationDisplayName', 'description', 'eyebrow',
             'confirmationDialog', 'Picker', 'LocalizedStringKey', 'accessibilityHint', 'accessibilityValue',
