@@ -144,7 +144,7 @@ final class ReleaseJourneysUITests: XCTestCase {
         XCTAssertTrue(hero.label.contains("from your run") || hero.label.contains("deinem Lauf"), "Ready does not name the run that set it: \(hero.label)")
         QA.checkpoint(app, "core-today-ready")
         hero.tap()
-        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", ["Run", "Lauf"])).firstMatch.waitForExistence(timeout: 10), "the Ready explanation never opened")
+        XCTAssertTrue(navigationBar(app, ["Run", "Lauf"]).waitForExistence(timeout: 10), "the Ready explanation never opened")
         let ranOut = NSPredicate(format: "(label CONTAINS %@ AND label CONTAINS %@) OR (label CONTAINS %@ AND label CONTAINS %@)", "Your run set a", "ran out", "Lauf", "abgelaufen")
         XCTAssertTrue(app.descendants(matching: .any).matching(ranOut).firstMatch.exists,
                       "the explanation does not say the run's countdown ran out")
@@ -188,7 +188,7 @@ final class ReleaseJourneysUITests: XCTestCase {
 
     private func assertDetail(_ app: XCUIApplication, session: String, cost: String,
                               file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", [session, "Lauf"])).firstMatch.waitForExistence(timeout: 10),
+        XCTAssertTrue(navigationBar(app, [session, "Lauf"]).waitForExistence(timeout: 10),
                       "the \(session) explanation never opened", file: file, line: line)
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label IN %@", [cost, "22 h"])).firstMatch.exists,
                       "the \(session) explanation does not show its \(cost) cost", file: file, line: line)
@@ -206,13 +206,18 @@ final class ReleaseJourneysUITests: XCTestCase {
     private func showHistory(_ app: XCUIApplication) {
         let tab = button(app, "History", "Verlauf")
         if tab.exists && tab.isHittable { tab.tap() }
-        XCTAssertTrue(app.navigationBars.matching(NSPredicate(format: "label IN %@", ["History", "Verlauf"])).firstMatch.waitForExistence(timeout: 10), "History never came forward")
+        XCTAssertTrue(navigationBar(app, ["History", "Verlauf"]).waitForExistence(timeout: 10), "History never came forward")
     }
 
     /// A History row is one button whose label carries the session title and
     /// the row's "Countdown 22h." value.
     private func historyRow(_ app: XCUIApplication, session: String, countdown: String) -> XCUIElement {
         app.buttons.matching(NSPredicate(format: "(label CONTAINS %@ AND label CONTAINS %@) OR (label CONTAINS %@ AND label CONTAINS %@)", session, countdown, "Lauf", "Countdown 22 h")).firstMatch
+    }
+
+    /// A navigation bar carries its title as the identifier and has no label.
+    private func navigationBar(_ app: XCUIApplication, _ titles: [String]) -> XCUIElement {
+        app.navigationBars.matching(NSPredicate(format: "identifier IN %@", titles)).firstMatch
     }
 
     private func button(_ app: XCUIApplication, _ english: String, _ german: String) -> XCUIElement {
