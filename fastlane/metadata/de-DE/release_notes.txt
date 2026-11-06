@@ -1,1 +1,1 @@
-Verbesserungen und Fehlerbehebungen im Hintergrund, damit Recharge reibungslos läuft. Danke, dass du dabei bist.
+Recharge ist jetzt auf Französisch, Tschechisch, Thailändisch, Deutsch, Spanisch, Italienisch und Chinesisch verfügbar. Außerdem gibt es Fehlerbehebungen und Verbesserungen.

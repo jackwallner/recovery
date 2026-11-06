@@ -1,1 +1,1 @@
-Mejoras internas y correcciones de errores para que Recharge funcione mejor. Gracias por estar aquí.
+Recharge ya está disponible en francés, checo, tailandés, alemán, español, italiano y chino. También incluye correcciones y mejoras.

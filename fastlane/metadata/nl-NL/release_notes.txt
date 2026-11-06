@@ -1,1 +1,1 @@
-Verbeteringen achter de schermen en bugfixes zodat Recharge soepel werkt. Bedankt dat je er bent.
+Recharge is nu beschikbaar in het Frans, Tsjechisch, Thais, Duits, Spaans, Italiaans en Chinees. Deze versie bevat ook oplossingen en verbeteringen.

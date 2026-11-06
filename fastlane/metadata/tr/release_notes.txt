@@ -1,1 +1,1 @@
-Recharge'ın sorunsuz çalışması için arka planda iyileştirmeler ve hata düzeltmeleri. Burada olduğun için teşekkürler.
+Recharge artık Fransızca, Çekçe, Tayca, Almanca, İspanyolca, İtalyanca ve Çince dillerinde kullanılabilir. Ayrıca düzeltmeler ve iyileştirmeler içerir.

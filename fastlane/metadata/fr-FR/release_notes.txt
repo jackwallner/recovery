@@ -1,1 +1,1 @@
-Améliorations en coulisses et corrections de bugs pour que Recharge reste fluide. Merci d'être là.
+Recharge est désormais disponible en français, tchèque, thaï, allemand, espagnol, italien et chinois. Cette version comprend aussi des corrections et des améliorations.

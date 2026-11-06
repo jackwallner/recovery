@@ -1,1 +1,1 @@
-Behind-the-scenes improvements and fixes to keep Recharge running smoothly. Thank you for being here.
+Recharge is now available in French, Czech, Thai, German, Spanish, Italian and Chinese. Also includes fixes and improvements.

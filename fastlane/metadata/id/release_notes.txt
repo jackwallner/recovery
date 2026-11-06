@@ -1,1 +1,1 @@
-Peningkatan di balik layar dan perbaikan bug agar Recharge berjalan lancar. Terima kasih telah hadir.
+Recharge kini tersedia dalam bahasa Prancis, Ceko, Thailand, Jerman, Spanyol, Italia dan Tionghoa. Juga mencakup perbaikan dan peningkatan.

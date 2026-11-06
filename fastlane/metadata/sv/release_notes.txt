@@ -1,1 +1,1 @@
-Förbättringar bakom kulisserna och buggfixar så att Recharge fungerar smidigt. Tack för att du är här.
+Recharge finns nu på franska, tjeckiska, thailändska, tyska, spanska, italienska och kinesiska. Innehåller även korrigeringar och förbättringar.

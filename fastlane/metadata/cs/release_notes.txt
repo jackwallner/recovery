@@ -1,1 +1,1 @@
-Vylepšení na pozadí a opravy chyb, aby Recharge běžel hladce. Děkujeme, že jste tu.
+Recharge je nyní k dispozici v těchto jazycích: francouzština, čeština, thajština, němčina, španělština, italština a čínština. Součástí jsou také opravy a vylepšení.
