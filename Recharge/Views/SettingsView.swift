@@ -409,11 +409,11 @@ struct SettingsView: View {
                     Text("\(PersonalRecoveryModel.windowDays)-day recovery rate")
                     Spacer()
                     Text(personalFactorLabel)
-                        .foregroundStyle(store.isPro ? Theme.textSecondary : Theme.pro)
+                        .foregroundStyle(store.isPro ? Theme.textPrimary : Theme.proText)
                 }
                 Text("How quickly your last \(PersonalRecoveryModel.windowDays) days say you come back. It is one of the things Recharge+ changes, not the whole difference between the two figures above.")
                     .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
+                    .foregroundStyle(Theme.textPrimary)
                 ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).dropFirst(), id: \.self) { line in
                     Text(line)
                         .font(.system(.caption, design: .rounded))

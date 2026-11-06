@@ -61,7 +61,6 @@ struct OnboardingActions: View {
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(secondaryAction == nil ? Theme.textTertiary : Theme.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, Theme.Space.xs)
 
             OnboardingPrimaryButton(
                 title: primaryTitle,
@@ -87,10 +86,15 @@ struct OnboardingActions: View {
     @ViewBuilder
     private var secondaryRow: some View {
         if let secondaryTitle {
-            Button(secondaryTitle) { secondaryAction?() }
-                .disabled(secondaryAction == nil)
+            Button { secondaryAction?() } label: {
+                Text(secondaryTitle)
+                    .frame(minWidth: Theme.minimumTapTarget, minHeight: Theme.minimumTapTarget)
+                    .contentShape(Rectangle())
+            }
+            .disabled(secondaryAction == nil)
         } else {
             Text(verbatim: "Not now")
+                .frame(minWidth: Theme.minimumTapTarget, minHeight: Theme.minimumTapTarget)
                 .hidden()
                 .accessibilityHidden(true)
         }
@@ -110,6 +114,10 @@ struct OnboardingPrimaryButton: View {
     var isDisabled = false
     var isBusy = false
 
+    private var labelColor: Color {
+        tint == Theme.recovering || tint == Theme.recoveringSecondary ? .black : .white
+    }
+
     var body: some View {
         Button(action: action) {
             ZStack {
@@ -125,7 +133,7 @@ struct OnboardingPrimaryButton: View {
                     .opacity(isBusy ? 0 : 1)
                 if isBusy {
                     ProgressView()
-                        .tint(.white)
+                        .tint(labelColor)
                         .controlSize(.small)
                 }
             }
@@ -135,7 +143,7 @@ struct OnboardingPrimaryButton: View {
                 tint.opacity(isDisabled ? 0.6 : 1),
                 in: RoundedRectangle(cornerRadius: Theme.Radius.control, style: .continuous)
             )
-            .foregroundStyle(.white)
+            .foregroundStyle(labelColor)
         }
         .pressable()
         .disabled(isDisabled)
@@ -182,14 +190,20 @@ struct OnboardingLegalSlot: View {
 
     @ViewBuilder
     private var links: some View {
-        Button(isRestoring ? String(localized: "Restoring…", bundle: .recharge) : String(localized: "Restore", bundle: .recharge)) { onRestore?() }
+        Button { onRestore?() } label: {
+            Text(isRestoring ? String(localized: "Restoring…", bundle: .recharge) : String(localized: "Restore", bundle: .recharge))
+                .frame(minWidth: Theme.minimumTapTarget, minHeight: Theme.minimumTapTarget)
+                .contentShape(Rectangle())
+        }
             .disabled(isRestoring || onRestore == nil)
-            .frame(minHeight: 44)
-        Link("Terms", destination: RechargeLinks.termsOfUse)
-            .frame(minHeight: 44)
-        Link("Apple EULA", destination: RechargeLinks.standardEULA)
-            .frame(minHeight: 44)
-        Link("Privacy", destination: RechargeLinks.privacyPolicy)
-            .frame(minHeight: 44)
+        Link(destination: RechargeLinks.termsOfUse) { legalLabel("Terms") }
+        Link(destination: RechargeLinks.standardEULA) { legalLabel("Apple EULA") }
+        Link(destination: RechargeLinks.privacyPolicy) { legalLabel("Privacy") }
+    }
+
+    private func legalLabel(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .frame(minWidth: Theme.minimumTapTarget, minHeight: Theme.minimumTapTarget)
+            .contentShape(Rectangle())
     }
 }

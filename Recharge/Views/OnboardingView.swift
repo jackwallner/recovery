@@ -63,12 +63,17 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $index) {
-                ForEach(Array(steps.enumerated()), id: \.offset) { position, step in
-                    page(for: step).tag(position)
+            if reduceMotion {
+                page(for: step)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                TabView(selection: $index) {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { position, step in
+                        page(for: step).tag(position)
+                    }
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
 
             progress
                 .padding(.horizontal, Theme.Space.step(7))
@@ -92,6 +97,8 @@ struct OnboardingView: View {
             }
         }
         .frame(height: 4)
+        .frame(minHeight: Theme.minimumTapTarget)
+        .padding(.vertical, -(Theme.minimumTapTarget - 4) / 2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Step \(index + 1) of \(plannedStepCount)")
     }
