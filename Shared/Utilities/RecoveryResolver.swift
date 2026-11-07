@@ -38,11 +38,16 @@ public enum RecoveryResolver {
     /// and none under the 96-hour one: a race countdown reached Ready at the
     /// four-day mark and went straight to "No workout".
     public static func isStale(sessionEnd: Date, readyAt: Date?, now: Date) -> Bool {
-        let staleFrom = max(
+        now > staleFrom(sessionEnd: sessionEnd, readyAt: readyAt)
+    }
+
+    /// The last instant a session is still worth talking about; `isStale` is
+    /// true for every instant after it.
+    public static func staleFrom(sessionEnd: Date, readyAt: Date?) -> Date {
+        max(
             sessionEnd.addingTimeInterval(stalenessCutoff),
             (readyAt ?? sessionEnd).addingTimeInterval(readyGrace)
         )
-        return now > staleFrom
     }
 
     /// Phase for a whole set of estimates.

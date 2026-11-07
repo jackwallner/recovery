@@ -9,6 +9,8 @@ import Foundation
 /// hour down to `readyAt`, a tighter cadence in the last two hours where the
 /// "Ready soon" state matters, an entry exactly at `readyAt`, and one after it
 /// so the face flips to Ready even if the system never gets round to refreshing.
+/// Then one more at the staleness cutoff, where Today stops naming the session
+/// and the face has to say No recent workout with it.
 ///
 /// WidgetKit budgets refreshes, so the timeline must remain correct without any:
 /// each entry carries the instant it represents and the view renders from that,
@@ -24,7 +26,7 @@ public enum CountdownTimeline {
     /// unless WidgetKit happened to grant a refresh. Derived from the ceiling
     /// now, so the next change to it cannot do the same thing silently.
     public static let maximumEntries = Int(RecoveryCalculator.maximumHours.rounded(.up)) + 12
-    private static let reservedFinalEntries = 2
+    private static let reservedFinalEntries = 3
 
     /// Instants the timeline should carry for a given snapshot.
     ///
@@ -33,10 +35,11 @@ public enum CountdownTimeline {
     ///   - now: the moment the timeline is being built.
     public static func entryDates(for snapshot: RecoverySnapshot, now: Date, calendar: Calendar = .current) -> [Date] {
         guard let readyAt = snapshot.readyAt, readyAt > now else {
-            // Nothing running: one entry now, and the caller sets a far-out
-            // refresh policy. The phone reloads timelines on every new estimate,
-            // so an idle face does not need to poll.
-            return [now]
+            // Nothing running: an entry now, one at the staleness cutoff, and
+            // the caller sets a far-out refresh policy. The phone reloads
+            // timelines on every new estimate, so an idle face does not need
+            // to poll, but nothing republishes when a session goes stale.
+            return [now] + staleEntry(for: snapshot, after: now)
         }
 
         var dates: [Date] = [now]
@@ -64,8 +67,19 @@ public enum CountdownTimeline {
         // lands on Ready rather than on a stale "1m".
         dates.append(readyAt)
         dates.append(readyAt.addingTimeInterval(60))
+        dates += staleEntry(for: snapshot, after: readyAt.addingTimeInterval(60))
 
         return Array(Set(dates)).sorted()
+    }
+
+    /// The first second at which `RecoverySnapshot.phase(at:)` reads the
+    /// session as stale, when that is still ahead of `date`. Built from
+    /// `RecoveryResolver.staleFrom` so the face and Today cannot disagree.
+    private static func staleEntry(for snapshot: RecoverySnapshot, after date: Date) -> [Date] {
+        guard let sessionEnd = snapshot.sessionEnd else { return [] }
+        let flip = RecoveryResolver.staleFrom(sessionEnd: sessionEnd, readyAt: snapshot.readyAt)
+            .addingTimeInterval(1)
+        return flip > date ? [flip] : []
     }
 
     /// When WidgetKit should come back for a fresh timeline.

@@ -110,4 +110,53 @@ final class StateMachineRegressionTests: XCTestCase {
         let running = estimate(run("running", endingHoursAgo: 1))
         XCTAssertNil(RecoveryResolver.readyMoment(in: [running], eligibleFrom: setup, now: now))
     }
+
+    // MARK: - B4: widget and complication timeline across the staleness cutoff
+
+    private func runningSnapshot() -> RecoverySnapshot {
+        RecoverySnapshot(
+            readyAt: now.addingTimeInterval(3 * 3600),
+            sessionEnd: now.addingTimeInterval(-3600),
+            hours: 4,
+            windowLowHours: 3,
+            windowHighHours: 5,
+            profile: .endurance,
+            activityLabel: "run",
+            calculatedAt: now
+        )
+    }
+
+    func testTheTimelineCarriesTheReadyToNoWorkoutFlip() {
+        let snapshot = runningSnapshot()
+        let readyAt = snapshot.readyAt!
+        let staleFrom = RecoveryResolver.staleFrom(sessionEnd: snapshot.sessionEnd!, readyAt: readyAt)
+        XCTAssertEqual(snapshot.phase(at: now), .recovering)
+        XCTAssertEqual(snapshot.phase(at: readyAt.addingTimeInterval(61)), .ready)
+
+        let dates = CountdownTimeline.entryDates(for: snapshot, now: now)
+        XCTAssertTrue(dates.contains(readyAt))
+        XCTAssertEqual(snapshot.phase(at: readyAt.addingTimeInterval(60)), .ready)
+        let last = dates.last!
+        XCTAssertGreaterThan(last, staleFrom)
+        XCTAssertEqual(snapshot.phase(at: last), .noRecentWorkout)
+        XCTAssertEqual(snapshot.phase(at: dates[dates.count - 2]), .ready, "Ready must hold until the cutoff")
+    }
+
+    func testAnIdleTimelineBuiltAfterReadyStillFlipsAtTheCutoff() {
+        let snapshot = runningSnapshot()
+        let staleFrom = RecoveryResolver.staleFrom(sessionEnd: snapshot.sessionEnd!, readyAt: snapshot.readyAt)
+        let built = staleFrom.addingTimeInterval(-60)
+        let dates = CountdownTimeline.entryDates(for: snapshot, now: built)
+        XCTAssertEqual(dates.map { snapshot.phase(at: $0) }, [.ready, .noRecentWorkout])
+
+        // A session with no countdown of its own reads Ready until it goes stale too.
+        var easy = snapshot
+        easy.readyAt = nil
+        let easyStale = RecoveryResolver.staleFrom(sessionEnd: easy.sessionEnd!, readyAt: nil)
+        XCTAssertEqual(CountdownTimeline.entryDates(for: easy, now: now), [now, easyStale.addingTimeInterval(1)])
+
+        // Past the cutoff, and with nothing at all, there is nothing left to flip.
+        XCTAssertEqual(CountdownTimeline.entryDates(for: snapshot, now: staleFrom.addingTimeInterval(1)), [staleFrom.addingTimeInterval(1)])
+        XCTAssertEqual(CountdownTimeline.entryDates(for: .empty, now: now), [now])
+    }
 }

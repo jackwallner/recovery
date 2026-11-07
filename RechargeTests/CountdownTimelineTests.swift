@@ -29,8 +29,13 @@ final class CountdownTimelineTests: XCTestCase {
         XCTAssertEqual(CountdownTimeline.entryDates(for: .empty, now: now), [now])
     }
 
-    func testAnExpiredCountdownProducesASingleEntry() {
-        XCTAssertEqual(CountdownTimeline.entryDates(for: snapshot(hoursRemaining: -2), now: now), [now])
+    func testAnExpiredCountdownCarriesOnlyNowAndTheStalenessFlip() {
+        let state = snapshot(hoursRemaining: -2)
+        let staleFrom = RecoveryResolver.staleFrom(sessionEnd: state.sessionEnd!, readyAt: state.readyAt)
+        XCTAssertEqual(
+            CountdownTimeline.entryDates(for: state, now: now),
+            [now, staleFrom.addingTimeInterval(1)]
+        )
     }
 
     func testEntriesAreStrictlyIncreasingAndDeduplicated() {
@@ -95,9 +100,11 @@ final class CountdownTimelineTests: XCTestCase {
     func testAnEntryAfterReadyAtRendersAsReady() {
         let state = snapshot(hoursRemaining: 3)
         let dates = CountdownTimeline.entryDates(for: state, now: now)
-        guard let last = dates.last else { return XCTFail("empty timeline") }
-        XCTAssertEqual(state.phase(at: last), .ready)
-        XCTAssertEqual(state.remainingSeconds(at: last), 0)
+        guard let readyAt = state.readyAt,
+              let afterFlip = dates.first(where: { $0 > readyAt })
+        else { return XCTFail("no entry after readyAt") }
+        XCTAssertEqual(state.phase(at: afterFlip), .ready)
+        XCTAssertEqual(state.remainingSeconds(at: afterFlip), 0)
     }
 
     // MARK: - Resolution
