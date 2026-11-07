@@ -102,6 +102,28 @@ public enum RecoveryResolver {
             .max { $0.readyAt < $1.readyAt }
     }
 
+    /// The countdown whose run-out counts towards the review ask, or `nil`.
+    ///
+    /// Bounded by setup like the readiness question (`eligibleFrom`, nil until
+    /// setup finishes), because onboarding imports the history in one go and
+    /// its newest session has usually run out long before: that import was
+    /// counting a Ready moment for a countdown nobody watched, before Today had
+    /// ever been shown. A countdown that ran out while the app was closed after
+    /// setup still counts; the user had it, and the Ready alert told them.
+    public static func readyMoment(
+        in estimates: [RecoveryEstimate],
+        eligibleFrom: Date?,
+        now: Date = .now
+    ) -> RecoveryEstimate? {
+        guard let eligibleFrom,
+              let estimate = current(in: estimates, now: now),
+              estimate.producesCountdown,
+              estimate.readyAt <= now,
+              estimate.readyAt >= eligibleFrom
+        else { return nil }
+        return estimate
+    }
+
     /// True when another countdown was already running past this one's
     /// `readyAt`, so the ring never showed this one expire. Same test as the
     /// stacking rule (`RecoveryCalculator.carriedHours`): a session ending

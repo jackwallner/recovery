@@ -1008,7 +1008,9 @@ public final class RecoveryEngine: ObservableObject {
 
         // The moment the countdown runs out is the app's one genuine win, and
         // the only honest place to open the review funnel from.
-        if let estimate = current, estimate.producesCountdown, estimate.readyAt <= .now {
+        if let estimate = RecoveryResolver.readyMoment(
+            in: estimates, eligibleFrom: RechargeSettings.shared.feedbackEligibleFrom
+        ) {
             ReviewPromptTracker.recordReadyMoment(sessionID: estimate.sessionID)
         }
         if !estimates.isEmpty { ReviewPromptTracker.recordEstimateAvailable() }
@@ -1241,10 +1243,9 @@ public final class RecoveryEngine: ObservableObject {
             eligibleFrom: feedbackEligibleFrom(RechargeSettings.shared),
             now: now
         )
-        guard let estimate = RecoveryResolver.current(in: estimates, now: now),
-              estimate.producesCountdown,
-              estimate.readyAt <= now
-        else { return }
+        guard let estimate = RecoveryResolver.readyMoment(
+            in: estimates, eligibleFrom: RechargeSettings.shared.feedbackEligibleFrom, now: now
+        ) else { return }
         ReviewPromptTracker.recordReadyMoment(sessionID: estimate.sessionID)
     }
 

@@ -87,4 +87,27 @@ final class StateMachineRegressionTests: XCTestCase {
         XCTAssertEqual(RecoveryResolver.awaitingFeedback(in: [first, later], answered: ["B"], now: afterLater)?.sessionID, "A")
         XCTAssertEqual(RecoveryResolver.awaitingFeedback(in: [first], answered: [], now: first.readyAt)?.sessionID, "A")
     }
+
+    // MARK: - B3: a Ready moment counted at the onboarding import
+
+    func testTheOnboardingImportDoesNotCountAReadyMoment() {
+        let old = estimate(run("old", endingHoursAgo: 30 * 24))
+        XCTAssertTrue(old.producesCountdown)
+        XCTAssertLessThanOrEqual(old.readyAt, now)
+        XCTAssertEqual(RecoveryResolver.current(in: [old], now: now)?.sessionID, "old")
+        // During onboarding setup has not stamped the window yet.
+        XCTAssertNil(RecoveryResolver.readyMoment(in: [old], eligibleFrom: nil, now: now))
+        // Once setup finishes, a countdown that ran out before it is still not one the user watched.
+        XCTAssertNil(RecoveryResolver.readyMoment(in: [old], eligibleFrom: now, now: now.addingTimeInterval(60)))
+    }
+
+    func testACountdownThatRanOutAfterSetupStillCounts() {
+        let setup = now.addingTimeInterval(-10 * 86_400)
+        let session = estimate(run("recent", endingHoursAgo: 40))
+        XCTAssertLessThanOrEqual(session.readyAt, now)
+        XCTAssertGreaterThan(session.readyAt, setup)
+        XCTAssertEqual(RecoveryResolver.readyMoment(in: [session], eligibleFrom: setup, now: now)?.sessionID, "recent")
+        let running = estimate(run("running", endingHoursAgo: 1))
+        XCTAssertNil(RecoveryResolver.readyMoment(in: [running], eligibleFrom: setup, now: now))
+    }
 }
