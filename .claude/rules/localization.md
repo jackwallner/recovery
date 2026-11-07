@@ -111,3 +111,13 @@ Mail subject "Recharge feedback" (read by the developer), SF Symbol and route
 strings, StoreKit screenshot fixtures (`StoreService.screenshotPackages`) and
 the two StoreKit Testing diagnostics, `Recharge/Debug/**`, the Settings DEBUG
 section, and the hidden measuring `Text(verbatim:)` in `OnboardingActions`.
+
+## Language row
+Settings, in the About section just above Version, has a "Language" row. It
+shows the language the app is running in (`Bundle.main.preferredLocalizations`,
+named in its own language) and opens the app's page in iOS Settings, where
+iOS 13+ lists a per-app Language picker. `UIPrefersShowingLanguageSettings` =
+YES in `Recharge/Info.plist` makes that picker appear even when the user has
+only one preferred language. The app never switches language itself. The keys
+"Language" and "Opens iOS Settings" (the row's accessibility hint) are in the
+catalog in every shipped language.

@@ -57,6 +57,8 @@
 	     then fails at upload, which is a slow way to find out. -->
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Recharge does not write any data to Apple Health.</string>
+	<key>UIPrefersShowingLanguageSettings</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
