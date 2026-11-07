@@ -69,6 +69,13 @@ public enum RecoveryResolver {
     /// Estimates whose countdown has expired since they were last acknowledged.
     /// These are the ones eligible for the one-tap readiness question.
     ///
+    /// Only a countdown the user saw run out is asked about. A session that
+    /// ended inside an earlier one's window stacks on it and takes over the
+    /// ring, so the earlier `readyAt` passes with a later countdown still on
+    /// screen. Asking about it then put "Your estimate after that run ran out"
+    /// over a running ring, and asked again straight after the later one was
+    /// answered, while the user was still under the later session's load.
+    ///
     /// - Parameter eligibleFrom: the earliest `readyAt` worth asking about — in
     ///   practice the moment setup finished. Onboarding imports a hundred and
     ///   twenty days of history at once, so every countdown in it has already
@@ -91,6 +98,20 @@ public enum RecoveryResolver {
                 guard let eligibleFrom else { return true }
                 return estimate.readyAt >= eligibleFrom
             }
+            .filter { !isSuperseded($0, in: estimates) }
             .max { $0.readyAt < $1.readyAt }
+    }
+
+    /// True when another countdown was already running past this one's
+    /// `readyAt`, so the ring never showed this one expire. Same test as the
+    /// stacking rule (`RecoveryCalculator.carriedHours`): a session ending
+    /// before the earlier `readyAt` carries its residual.
+    static func isSuperseded(_ estimate: RecoveryEstimate, in estimates: [RecoveryEstimate]) -> Bool {
+        estimates.contains { other in
+            other.sessionID != estimate.sessionID
+                && other.producesCountdown
+                && other.sessionEnd < estimate.readyAt
+                && other.readyAt > estimate.readyAt
+        }
     }
 }
