@@ -120,6 +120,7 @@ public final class HealthKitService: ObservableObject {
     public static let importDays = 120
 
     private var installedObserverTypes: Set<String> = []
+    private var observerQueries: [HKObserverQuery] = []
     private var pendingRefreshTask: Task<Void, Never>?
     private var pendingObserverCompletions: [ObserverCompletion] = []
     private var pendingObserverForce = false
@@ -839,7 +840,24 @@ public final class HealthKitService: ObservableObject {
                 }
                 #endif
             }
+            observerQueries.append(query)
             store.execute(query)
+        }
+    }
+
+    /// Stops every observer query and background delivery, for a user who
+    /// deleted the local cache. `enableBackgroundDelivery` installs them again
+    /// when Health is reconnected.
+    public func disableBackgroundDelivery() {
+        if ScreenshotConfig.isEnabled { return }
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        for query in observerQueries { store.stop(query) }
+        observerQueries.removeAll()
+        installedObserverTypes.removeAll()
+        store.disableAllBackgroundDelivery { _, error in
+            if let error {
+                healthLogger.error("Disabling background delivery failed: \(String(describing: error), privacy: .private)")
+            }
         }
     }
 }

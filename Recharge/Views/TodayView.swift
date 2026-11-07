@@ -601,6 +601,9 @@ struct TodayView: View {
         // again and, if that still fails, go where the choices now live.
         if await HealthKitService.shared.authorizationRequestStatus() == .unnecessary {
             settings.hasDeferredHealthAccess = false
+            // Deleting the local cache stopped the observers; this path never
+            // reaches `requestAuthorization`, which is what restarts them.
+            HealthKitService.shared.enableBackgroundDelivery()
             await engine.refresh(force: true)
             if engine.lastImportFailed || engine.lastSuccessfulImport == nil {
                 openHealthApp()

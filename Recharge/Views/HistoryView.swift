@@ -153,10 +153,13 @@ struct HistoryView: View {
                 .disabled(isRequestingHealth)
             }
 
-            Button("Try again") {
-                Task { await engine.refresh(force: true) }
+            // A disconnected app does not read Health, so only Connect can help.
+            if !settings.hasDeferredHealthAccess {
+                Button("Try again") {
+                    Task { await engine.refresh(force: true) }
+                }
+                .disabled(isRequestingHealth)
             }
-            .disabled(isRequestingHealth)
 
             if let healthMessage {
                 Text(healthMessage)
@@ -192,6 +195,9 @@ struct HistoryView: View {
         // if that still fails, since that is where the choices live now.
         if await HealthKitService.shared.authorizationRequestStatus() == .unnecessary {
             settings.hasDeferredHealthAccess = false
+            // Deleting the local cache stopped the observers; this path never
+            // reaches `requestAuthorization`, which is what restarts them.
+            HealthKitService.shared.enableBackgroundDelivery()
             await engine.refresh(force: true)
             if engine.lastImportFailed || engine.lastSuccessfulImport == nil,
                let url = URL(string: "x-apple-health://") {

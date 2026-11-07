@@ -390,6 +390,57 @@ final class SeededWalkthroughTests: XCTestCase {
         attach(app, named: "10-history-pro")
     }
 
+    /// Delete local health data has to hold with Health access still granted.
+    /// It did not: the observer queries kept running and re-imported the whole
+    /// history on the next sample, so the data the user deleted came back with
+    /// no action of theirs. The follow-up workout reaches the app only through
+    /// an observer, so it is the wake that used to undo the deletion. Needs the
+    /// local simulator pool: on GitHub's runner the Health sheet never appears.
+    func testDeletedHealthDataStaysDeletedWhenAWorkoutArrives() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["RECHARGE_SEED_HEALTH"] = "1"
+        app.launchEnvironment["RECHARGE_SEED_DAYS"] = "30"
+        // One hard run, written 180 s after the launch import finishes.
+        app.launchEnvironment["RECHARGE_SEED_FOLLOWUP_SECONDS"] = "180"
+        app.launch()
+        allowHealthAccess()
+
+        let today = app.buttons["Today"]
+        XCTAssertTrue(today.waitForExistence(timeout: 300), "the tab bar never appeared")
+        dismissInterrupts(in: app)
+        sleepForImport()
+        dismissInterrupts(in: app)
+        let hero = app.descendants(matching: .any).matching(identifier: "today.hero").firstMatch
+        XCTAssertTrue(hero.waitForExistence(timeout: 30))
+
+        let gear = app.buttons["Settings"]
+        waitUntilHittable(gear, timeout: 30)
+        gear.tap()
+        let delete = app.buttons["Delete local health data"]
+        for _ in 0..<25 where !(delete.exists && delete.isHittable) { app.swipeUp() }
+        delete.tap()
+        app.alerts.buttons["Delete"].tap()
+        XCTAssertTrue(
+            app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'were deleted'"))
+                .firstMatch.waitForExistence(timeout: 10)
+        )
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(hero.label.hasPrefix("No recent workout"))
+
+        let deadline = Date().addingTimeInterval(330)
+        var latest = hero.label
+        while Date() < deadline, latest.hasPrefix("No recent workout") {
+            Thread.sleep(forTimeInterval: 5)
+            dismissInterrupts(in: app)
+            latest = hero.label
+        }
+        attach(app, named: "deleted-data-after-follow-up")
+        XCTAssertTrue(
+            latest.hasPrefix("No recent workout"),
+            "deleted Health data came back with no user action: hero now reads \(latest)"
+        )
+    }
+
     /// The import is asynchronous and finishes without changing any element the
     /// test can wait on — the ring is on screen throughout, it just changes what
     /// it says. A fixed pause is the honest version of that.

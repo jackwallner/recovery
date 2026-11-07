@@ -111,6 +111,12 @@ public final class RecoveryEngine: ObservableObject {
             await running.value
             return
         }
+        // Every Health read goes through here (the observer queries, the
+        // background task, the scene, pull to refresh), so this is the one
+        // place the deferred flag can hold for all of them. Delete local health
+        // data sets it, and a refresh that ignored it re-imported the whole
+        // history on the next heart-rate sample or background wake.
+        guard mayReadHealth else { return }
         if !force, let lastRefresh, Date.now.timeIntervalSince(lastRefresh) < 30 { return }
 
         // Cleared inside the task rather than after the await below, so no
@@ -124,9 +130,12 @@ public final class RecoveryEngine: ObservableObject {
             }
             repeat {
                 refreshAgain = false
+                guard mayReadHealth else { return }
                 await importWorkouts()
                 await importContext()
                 await updateAthleteProfileFromHealth()
+                // A deletion can land while the reads above are suspended.
+                guard mayReadHealth else { return }
                 guard rescore() else { return }
                 publish()
                 lastRefresh = .now
@@ -139,6 +148,11 @@ public final class RecoveryEngine: ObservableObject {
     private var runningRefresh: Task<Void, Never>?
     private var refreshAgain = false
 
+    /// False once the user deleted the local cache or Health access was never
+    /// granted. Checked again after every suspended Health read, because a
+    /// deletion made while a refresh is reading must not be written back over.
+    private var mayReadHealth: Bool { !RechargeSettings.shared.hasDeferredHealthAccess }
+
     /// Fills in everything about the person that Health can answer, so
     /// onboarding only ever asks for the rest.
     ///
@@ -150,14 +164,17 @@ public final class RecoveryEngine: ObservableObject {
         let derived = derivedTrainingProfile()
         async let vo2 = HealthKitService.shared.fetchVO2Max()
         async let mass = HealthKitService.shared.fetchBodyMass()
+        let vo2Max = await vo2
+        let bodyMass = await mass
+        guard mayReadHealth else { return }
         RechargeSettings.shared.mergeHealthDerivedProfile(
             age: characteristics.age,
             sex: characteristics.sex,
             weeklyVolume: derived.volume,
             primaryProfile: derived.primaryProfile,
-            vo2Max: await vo2,
+            vo2Max: vo2Max,
             observedMaxHeartRate: observedMaxHeartRate(),
-            bodyMassKilograms: await mass
+            bodyMassKilograms: bodyMass
         )
     }
 
@@ -336,6 +353,10 @@ public final class RecoveryEngine: ObservableObject {
             }
         }
 
+        guard mayReadHealth else {
+            context.rollback()
+            return
+        }
         guard saveContext(reason: "workout import") else {
             lastImportFailed = true
             context.rollback()
@@ -434,6 +455,10 @@ public final class RecoveryEngine: ObservableObject {
                 context.insert(record)
                 byKey[key] = record
             }
+        }
+        guard mayReadHealth else {
+            context.rollback()
+            return
         }
         guard saveContext(reason: "context import") else {
             lastImportFailed = true
@@ -1018,6 +1043,10 @@ public final class RecoveryEngine: ObservableObject {
         settings.answeredFeedbackSessions = []
         settings.declinedEffortSessions = []
         HealthKitService.shared.resetWorkoutAnchor()
+        // Deleting does not revoke Health access, so without this the observer
+        // queries and background delivery keep waking the app for every
+        // heart-rate sample. Reconnecting turns them back on.
+        HealthKitService.shared.disableBackgroundDelivery()
         DataService.deleteQuarantinedStores()
 
         let defaults = UserDefaults(suiteName: rechargeAppGroupID)
@@ -1036,6 +1065,15 @@ public final class RecoveryEngine: ObservableObject {
         RecoverySnapshotStore.clear()
         NotificationService.cancelReadyNotification()
         WidgetCenter.shared.reloadAllTimelines()
+        // The Watch keeps its own copy of the snapshot, so the wrist would go
+        // on counting down a deleted session until the next publish.
+        #if os(iOS)
+        PhoneWatchSession.shared.sendSnapshot(
+            .empty,
+            pendingEffortSessionID: nil,
+            complicationStyle: settings.complicationStyle.rawValue
+        )
+        #endif
         return true
     }
 
