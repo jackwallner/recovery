@@ -273,9 +273,13 @@ final class SeededWalkthroughTests: XCTestCase {
     /// same reason.
     private static let screenTransition: TimeInterval = 120
 
+    /// `isHittable` fails the test, rather than returning false, for an element
+    /// with no usable frame, which is what the Health sheet's first cell has
+    /// while the sheet is still sliding in. So the frame is checked first.
     private func waitUntilHittable(_ element: XCUIElement, timeout: TimeInterval = 20) {
         let deadline = Date().addingTimeInterval(timeout)
-        while !element.isHittable, Date() < deadline {
+        while Date() < deadline {
+            if !element.frame.isEmpty, element.isHittable { return }
             Thread.sleep(forTimeInterval: 0.25)
         }
     }
