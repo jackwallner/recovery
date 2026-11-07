@@ -228,6 +228,11 @@ App Group key, because the Watch has no workout history of its own.
   Ready under the 72h ceiling and none under the 96h one, so a race went from
   "3d 23h" straight to "No workout". Past the cutoff `progress` is 0, so the
   ring is empty beside "No workout" rather than full.
+  `CountdownTimeline` carries an entry one second past
+  `RecoveryResolver.staleFrom`, for running and idle timelines alike: nothing
+  republishes when a session goes stale, so a timeline that ended at
+  `readyAt + 60 s` kept Ready on the face for up to six hours after Today said
+  No workout (audit B4, 2026-11-06).
 
 ### Notification center calls never run on the main actor
 `removePendingNotificationRequests` is a synchronous XPC round trip to

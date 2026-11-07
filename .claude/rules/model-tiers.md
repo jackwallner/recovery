@@ -261,6 +261,15 @@ for anyone upgrading into this build), and `RecoveryResolver.awaitingFeedback`
 takes it as a bound. Nil means unbounded, which is what every test written before
 it assumes.
 
+Nor about a countdown the ring never showed ending. A session that ends inside
+an earlier window stacks on it and takes over the ring, so the earlier `readyAt`
+passes with a countdown still running; `awaitingFeedback` skips any estimate a
+stacked successor outlasts (`RecoveryResolver.isSuperseded`, the same test as
+`carriedHours`). Before that, the question appeared over a running ring and again
+straight after the later session was answered (audit B1, 2026-11-06). The review
+ask's Ready moment takes the same setup bound (`RecoveryResolver.readyMoment`), so
+the onboarding import no longer counts one.
+
 ### The Ready alert is not a Recharge+ feature
 It was, and that was the wrong side of the paywall for the one event the whole
 app exists to report. The countdown runs out while the app is closed; without an
