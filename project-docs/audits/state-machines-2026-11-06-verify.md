@@ -82,3 +82,7 @@ Only the History empty state changed visibly (Try again hidden while `hasDeferre
 
 - Narrow race, pre-existing and not made worse: if the user deletes and then reconnects while a refresh from before the delete is still suspended in a Health read, that refresh passes its guards again (the flag is false by then) and can commit an anchor fetched before the reset. The re-import would then skip the history. It needs both taps inside one in-flight read, and before the fix the same refresh re-imported without any reconnect at all.
 - A fetch that fails after a delete sets `lastImportFailed` (`RecoveryEngine.swift:242`) even though the user is now disconnected. That is cosmetic and can only happen mid-refresh.
+
+## Resolved after this check
+
+Both must-change items are closed: the B2 UI test passes on HEAD and fails with `6ab56eb`'s app code reversed, and the fixes doc now cites the real commits. Results are in the fixes doc. The verdict line above records this check as it ran.
