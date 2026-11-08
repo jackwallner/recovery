@@ -187,6 +187,8 @@ targets:
       - path: Shared/Utilities/CountdownTimeline.swift
       - path: Shared/Utilities/ComplicationCopy.swift
       - path: Shared/Utilities/IntroTrialLength.swift
+      # How a thrown RevenueCat purchase error reads to the paywall.
+      - path: Shared/Utilities/PurchaseOutcome.swift
       - path: Shared/Utilities/RechargeConversionCopy.swift
       # The receipt the app prints back to the user for every Health type it
       # asks for. In the target because it owns user-facing copy about what the

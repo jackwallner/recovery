@@ -24,12 +24,6 @@ public enum RevenueCatConfig {
     public static let apiKey = "appl_RECHARGE_PLACEHOLDER"
 }
 
-public enum PurchaseState {
-    case purchased
-    case cancelled
-    case pending
-}
-
 public enum RevenueCatPackageKind: Int {
     case yearly = 0
     case monthly = 1
@@ -442,9 +436,23 @@ public final class StoreService: NSObject, ObservableObject {
             return .purchased
         }
         #endif
-        let result = usesOfferingPackages
-            ? try await Purchases.shared.purchase(package: product)
-            : try await Purchases.shared.purchase(product: product.storeProduct)
+        assert(
+            ErrorCode.errorDomain == PurchaseErrorOutcome.revenueCatDomain
+                && ErrorCode.purchaseCancelledError.rawValue == PurchaseErrorOutcome.cancelledCode
+                && ErrorCode.paymentPendingError.rawValue == PurchaseErrorOutcome.pendingCode,
+            "PurchaseErrorOutcome no longer matches RevenueCat's ErrorCode"
+        )
+        let result: PurchaseResultData
+        do {
+            result = usesOfferingPackages
+                ? try await Purchases.shared.purchase(package: product)
+                : try await Purchases.shared.purchase(product: product.storeProduct)
+        } catch {
+            // A closed App Store sheet and an Ask to Buy request arrive as
+            // thrown errors, not as `userCancelled`. See `PurchaseErrorOutcome`.
+            if let state = PurchaseErrorOutcome.state(for: error) { return state }
+            throw error
+        }
         apply(customerInfo: result.customerInfo)
         if result.userCancelled { return .cancelled }
         if result.customerInfo.hasRechargeProEntitlement {
