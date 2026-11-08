@@ -55,6 +55,8 @@ def main():
     for _, _, args in p:
         cmd += ["--screen", args]
     r = subprocess.run(cmd)
+    if not idf.exists():
+        sys.exit(f"gh-sim exited {r.returncode} before starting a run")
     rid = idf.read_text().strip()
     res = Path.home() / ".gh-sim/results" / rid
     print("result", res, "exit", r.returncode)
