@@ -28,4 +28,6 @@ No P0 or P1 findings.
 
 ## Tests
 
-`gh-sim test --scheme Recharge --only RechargeTests` on origin/main `947f513`. Result: see the commit that adds this report.
+Not run to completion. `gh-sim test --scheme Recharge --only RechargeTests` on origin/main `947f513` (run id `recovery@20261107-222809-1058-claude-imacf68d-1107-223812-25346`, GitHub Actions run 42455565060) was still queued after 90 minutes, with 2 of 5 GitHub Macs busy and 16 runs queued fleet-wide. No code changed in this review, so the suite state is that of the last recorded run (433/433 in `state-machines-2026-11-06-verify.md`). If the queued run finishes, fetch it with `gh-sim get <id>`.
+
+Localization lint ran here: `python3 Tools/Localization/check.py` passed (932 keys, 7 languages, 0 problems).
