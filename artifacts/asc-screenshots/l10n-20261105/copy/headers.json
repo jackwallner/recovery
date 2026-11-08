@@ -1,4 +1,10 @@
 {
+ "en-US": {
+  "01-countdown.png": "Know when it completes",
+  "02-ready.png": "A clear completion state",
+  "03-history.png": "Every session, explained",
+  "05-settings.png": "Built around your training"
+ },
  "cs": {
   "01-countdown.png": "Víš, kdy je\nregenerace hotová",
   "02-ready.png": "Poznáš to hned:\nPřipraveno",
