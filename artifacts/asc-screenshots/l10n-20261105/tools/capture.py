@@ -19,7 +19,7 @@ def targets(only):
     t = [(x["store_locale"], x["apple_languages"], x["apple_locale"]) for x in app["targets"]]
     if only:
         t = [x for x in t if x[0] in only]
-    return [("en-US", "(en)", "en_US")] + t
+    return t if only else [("en-US", "(en)", "en_US")] + t
 
 
 def plan(only):
