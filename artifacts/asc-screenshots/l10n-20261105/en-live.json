@@ -1,0 +1,49 @@
+{
+ "phone": {
+  "display_type": "APP_IPHONE_67",
+  "frames": [
+   {
+    "file": "01-countdown.png",
+    "md5": "7c47c767a6ae36a77d2620a307394bc9",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/8ON_J2O6EKHqYce3f4fvyA/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "02-ready.png",
+    "md5": "df7e56773a2d2cb03f51b4e3a144851b",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/7oGZXXDZn001JlYqev6LrQ/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "03-history.png",
+    "md5": "feb1d2b991fbd85835dc98390dd2f6b9",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/MhqpLHo-ftbsz1fJVm0p2A/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "04-pro.png",
+    "md5": "79f0c8f8f5ebcc19997bdf3797903454",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/h3HxN60UGuok5GvpMgT5MA/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "05-settings.png",
+    "md5": "b67e71d4acd7b7f6862a7c872b27f155",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/aIDtaRj2Oj-Sj-eeytnXKg/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   },
+   {
+    "file": "06-watch.png",
+    "md5": "a04643514c46d0a73d331b178f5392d1",
+    "url": "https://is1-ssl.mzstatic.com/image/thumb/XyGI637iEUGc1gffOUDHWw/1320x2868bb.png",
+    "w": 1320,
+    "h": 2868
+   }
+  ]
+ }
+}

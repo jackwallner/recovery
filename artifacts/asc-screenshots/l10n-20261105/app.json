@@ -1,0 +1,75 @@
+{
+ "repo": "recovery",
+ "github": "jackwallner/recovery",
+ "bundle": "com.jackwallner.recovery",
+ "family": "scene",
+ "asc_id": "6797089337",
+ "live_version": "1.1.3",
+ "targets": [
+  {
+   "rank": 1,
+   "store_locale": "cs",
+   "lang": "cs",
+   "apple_languages": "(cs)",
+   "apple_locale": "cs_CZ",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 2,
+   "store_locale": "de-DE",
+   "lang": "de",
+   "apple_languages": "(de)",
+   "apple_locale": "de_DE",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 3,
+   "store_locale": "es-MX",
+   "lang": "es",
+   "apple_languages": "(es)",
+   "apple_locale": "es_MX",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 4,
+   "store_locale": "fr-FR",
+   "lang": "fr",
+   "apple_languages": "(fr)",
+   "apple_locale": "fr_FR",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 5,
+   "store_locale": "it",
+   "lang": "it",
+   "apple_languages": "(it)",
+   "apple_locale": "it_IT",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 6,
+   "store_locale": "th",
+   "lang": "th",
+   "apple_languages": "(th)",
+   "apple_locale": "th_TH",
+   "regions": [],
+   "customers": 0
+  },
+  {
+   "rank": 7,
+   "store_locale": "zh-Hans",
+   "lang": "zh-Hans",
+   "apple_languages": "(zh-Hans)",
+   "apple_locale": "zh_CN",
+   "regions": [],
+   "customers": 0
+  }
+ ],
+ "store_locales_missing": [],
+ "dest": "artifacts/asc-screenshots/l10n-20261105"
+}
