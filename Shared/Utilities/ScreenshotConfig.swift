@@ -26,9 +26,16 @@ public enum ScreenshotConfig {
 #if DEBUG
     private static let logger = Logger(subsystem: "com.jackwallner.recovery", category: "screenshot")
 
-    public static let isEnabled = ProcessInfo.processInfo.environment["RECHARGE_SCREENSHOT_MODE"] == "1"
+    /// Reads the environment first, then launch arguments
+    /// (`-RECHARGE_SCREENSHOT_MODE 1 -RECHARGE_SCREENSHOT_SCENE ready`), so
+    /// `gh-sim launch --screen` can capture every scene and locale in one job.
+    private static func setting(_ key: String) -> String? {
+        ProcessInfo.processInfo.environment[key] ?? UserDefaults.standard.string(forKey: key)
+    }
+
+    public static let isEnabled = setting("RECHARGE_SCREENSHOT_MODE") == "1"
     public static let scene = isEnabled
-        ? ScreenshotScene(rawValue: ProcessInfo.processInfo.environment["RECHARGE_SCREENSHOT_SCENE"] ?? "")
+        ? ScreenshotScene(rawValue: setting("RECHARGE_SCREENSHOT_SCENE") ?? "")
         : nil
     /// Force intro-offer ineligible so used-trial copy can be verified across
     /// onboarding, the trial sheet, and the paywall.
