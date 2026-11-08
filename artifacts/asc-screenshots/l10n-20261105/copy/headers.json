@@ -1,44 +1,44 @@
 {
  "cs": {
-  "01_countdown.png": "Víš, kdy je\nregenerace hotová",
-  "02_ready.png": "Poznáš to hned:\nPřipraveno",
-  "03_history.png": "Každý trénink\ns vysvětlením",
-  "05_settings.png": "Přizpůsobeno\ntvému tréninku"
+  "01-countdown.png": "Víš, kdy je\nregenerace hotová",
+  "02-ready.png": "Poznáš to hned:\nPřipraveno",
+  "03-history.png": "Každý trénink\ns vysvětlením",
+  "05-settings.png": "Přizpůsobeno\ntvému tréninku"
  },
  "de-DE": {
-  "01_countdown.png": "Sieh, wann deine\nErholung endet",
-  "02_ready.png": "Ein klares Signal:\nBereit",
-  "03_history.png": "Jede Einheit\nverständlich erklärt",
-  "05_settings.png": "Abgestimmt auf\ndein Training"
+  "01-countdown.png": "Sieh, wann deine\nErholung endet",
+  "02-ready.png": "Ein klares Signal:\nBereit",
+  "03-history.png": "Jede Einheit\nverständlich erklärt",
+  "05-settings.png": "Abgestimmt auf\ndein Training"
  },
  "es-MX": {
-  "01_countdown.png": "Saber cuándo termina\ntu recuperación",
-  "02_ready.png": "Un aviso claro:\nListo",
-  "03_history.png": "Cada sesión,\ncon su explicación",
-  "05_settings.png": "Hecho a la medida\nde tu entrenamiento"
+  "01-countdown.png": "Saber cuándo termina\ntu recuperación",
+  "02-ready.png": "Un aviso claro:\nListo",
+  "03-history.png": "Cada sesión,\ncon su explicación",
+  "05-settings.png": "Hecho a la medida\nde tu entrenamiento"
  },
  "fr-FR": {
-  "01_countdown.png": "Sache quand ta\nrécupération se termine",
-  "02_ready.png": "Un signal clair:\nPrêt",
-  "03_history.png": "Chaque séance\nexpliquée",
-  "05_settings.png": "Adapté à\nton entraînement"
+  "01-countdown.png": "Sache quand ta\nrécupération se termine",
+  "02-ready.png": "Un signal clair:\nPrêt",
+  "03-history.png": "Chaque séance\nexpliquée",
+  "05-settings.png": "Adapté à\nton entraînement"
  },
  "it": {
-  "01_countdown.png": "Scopri quando finisce\nil tuo recupero",
-  "02_ready.png": "Un segnale chiaro:\nPronto",
-  "03_history.png": "Ogni allenamento,\nspiegato",
-  "05_settings.png": "Su misura per\nil tuo allenamento"
+  "01-countdown.png": "Scopri quando finisce\nil tuo recupero",
+  "02-ready.png": "Un segnale chiaro:\nPronto",
+  "03-history.png": "Ogni allenamento,\nspiegato",
+  "05-settings.png": "Su misura per\nil tuo allenamento"
  },
  "th": {
-  "01_countdown.png": "รู้ว่าเมื่อไร\nที่คุณฟื้นตัวครบ",
-  "02_ready.png": "สถานะชัดเจน\nเมื่อพร้อมแล้ว",
-  "03_history.png": "ทุกการออกกำลังกาย\nอธิบายให้เข้าใจ",
-  "05_settings.png": "ปรับให้เข้ากับ\nการฝึกของคุณ"
+  "01-countdown.png": "รู้ว่าเมื่อไร\nที่คุณฟื้นตัวครบ",
+  "02-ready.png": "สถานะชัดเจน\nเมื่อพร้อมแล้ว",
+  "03-history.png": "ทุกการออกกำลังกาย\nอธิบายให้เข้าใจ",
+  "05-settings.png": "ปรับให้เข้ากับ\nการฝึกของคุณ"
  },
  "zh-Hans": {
-  "01_countdown.png": "随时知道\n恢复何时结束",
-  "02_ready.png": "完成状态清晰可见\n就绪一目了然",
-  "03_history.png": "每次训练\n都有清晰说明",
-  "05_settings.png": "围绕你的训练\n量身打造"
+  "01-countdown.png": "随时知道\n恢复何时结束",
+  "02-ready.png": "完成状态清晰可见\n就绪一目了然",
+  "03-history.png": "每次训练\n都有清晰说明",
+  "05-settings.png": "围绕你的训练\n量身打造"
  }
 }

@@ -1,0 +1,121 @@
+{
+ "english_locale": "en-US",
+ "sets": {
+  "phone": {
+   "canvas": [
+    1320,
+    2868
+   ],
+   "frames": [
+    {
+     "file": "01-countdown.png",
+     "base": "en-live/phone/01-countdown.png",
+     "raw": "01-countdown",
+     "screen": [
+      156,
+      515,
+      1007,
+      2223
+     ],
+     "radius": 84,
+     "header_box": [
+      40,
+      100,
+      1240,
+      250
+     ],
+     "font": "ArialRoundedMTBold",
+     "color": [
+      21,
+      21,
+      25
+     ],
+     "max_size": 96,
+     "min_size": 56,
+     "align": "center"
+    },
+    {
+     "file": "02-ready.png",
+     "base": "en-live/phone/02-ready.png",
+     "raw": "02-ready",
+     "screen": [
+      156,
+      515,
+      1007,
+      2223
+     ],
+     "radius": 84,
+     "header_box": [
+      40,
+      100,
+      1240,
+      250
+     ],
+     "font": "ArialRoundedMTBold",
+     "color": [
+      21,
+      21,
+      25
+     ],
+     "max_size": 96,
+     "min_size": 56,
+     "align": "center"
+    },
+    {
+     "file": "03-history.png",
+     "base": "en-live/phone/03-history.png",
+     "raw": "03-history",
+     "screen": [
+      156,
+      515,
+      1007,
+      2223
+     ],
+     "radius": 84,
+     "header_box": [
+      40,
+      100,
+      1240,
+      250
+     ],
+     "font": "ArialRoundedMTBold",
+     "color": [
+      21,
+      21,
+      25
+     ],
+     "max_size": 96,
+     "min_size": 56,
+     "align": "center"
+    },
+    {
+     "file": "05-settings.png",
+     "base": "en-live/phone/05-settings.png",
+     "raw": "05-settings",
+     "screen": [
+      156,
+      515,
+      1007,
+      2223
+     ],
+     "radius": 84,
+     "header_box": [
+      40,
+      100,
+      1240,
+      250
+     ],
+     "font": "ArialRoundedMTBold",
+     "color": [
+      21,
+      21,
+      25
+     ],
+     "max_size": 96,
+     "min_size": 56,
+     "align": "center"
+    }
+   ]
+  }
+ }
+}
