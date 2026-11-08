@@ -312,6 +312,8 @@ struct TodayView: View {
                     .foregroundStyle(Theme.ready)
                 Text("Ready")
                     .countdownNumber(numberSize * 0.78)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .foregroundStyle(Theme.textPrimary)
             case .readySoon, .recovering:
                 Text(CountdownFormat.remaining(remaining))
