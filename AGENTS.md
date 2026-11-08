@@ -85,6 +85,7 @@ These files load automatically when you read a file matching their `paths:`. Age
 | `.claude/rules/iphone-duo.md` | Unfolded split, trailing-pane panels, Duo capture tour | `RootView`, the pane screens, `UnfoldedSplit`, iPhone Duo captures |
 | `.claude/rules/localization.md` | Setup; Adding or changing copy; Left in English on purpose | Any user-facing string, `Localizable.xcstrings`, `Tools/Localization/check.py`, plurals, stored activity labels |
 | `.claude/rules/android.md` | Native Android port, parity fixtures, Health Connect, signing and Pro isolation | `android/**` |
+| `.claude/rules/screenshots.md` | Localized store sets | `artifacts/asc-screenshots/**`, `fastlane/screenshots/**`, recapturing localized store frames |
 
 ## App-specific notes
 - **Compliance is enforced in tests.** `testReasonsNeverMakeAMedicalClaim` and
