@@ -6,11 +6,11 @@ Web page: https://jackwallner.com/ios/recovery/best-workout-recovery-app.html
 
 ## Best workout recovery time app for Apple Watch (November 2026)
 
-By [Jack Wallner](https://jackwallner.com/). Last updated November 11, 2026.
+By [Jack Wallner](https://jackwallner.com/). Last updated November 12, 2026.
 
 A workout recovery time app estimates how long to wait before your next hard session. Best for a training-load countdown that starts after each workout on the Apple Watch you already own: Recharge. Best for a morning readiness score built from overnight HRV and resting heart rate: Athlytic or Training Today. Best for gentle daily workout suggestions and streaks: Gentler Streak. Best for another one-tap recovery time calculation: RecoTime.
 
-**How we compared.** I read each App Store listing and pulled its rating, update date and Apple Watch support from Apple's public lookup on November 11, 2026 (US storefront). I did not install the competing apps, so every claim about them comes from their listings. These apps give estimates for training decisions, not medical advice. Jack Wallner makes Recharge, so read its entries with that in mind.
+**How we compared.** I read each App Store listing and pulled its rating, update date and Apple Watch support from Apple's public lookup on November 12, 2026 (US storefront). I did not install the competing apps, so every claim about them comes from their listings. These apps give estimates for training decisions, not medical advice. Jack Wallner makes Recharge, so read its entries with that in mind.
 
 ## How do the workout recovery apps compare?
 
@@ -19,12 +19,12 @@ Recharge counts down after each workout, Athlytic and Training Today score readi
 | App | Best for | Apple Watch app | Rating (count) | Last updated |
 | --- | --- | --- | --- | --- |
 | Recharge Workout Recovery Time | A recovery countdown after each workout, from Apple Health | Yes | No ratings yet | Nov 7, 2026 |
-| Athlytic: Fitness & Recovery | A daily recovery score from overnight HRV and resting heart rate, plus exertion | Yes | 4.79 (11,265) | Nov 11, 2026 |
-| Training Today | A readiness score from HRV for triathletes, runners, cyclists and swimmers | Yes | 4.58 (2,645) | Oct 20, 2026 |
-| Gentler Streak Workout Tracker | Daily readiness, workout suggestions and rest-friendly streaks | Yes | 4.71 (8,833) | Oct 22, 2026 |
+| Athlytic: Fitness & Recovery | A daily recovery score from overnight HRV and resting heart rate, plus exertion | Yes | 4.79 (11,268) | Nov 11, 2026 |
+| Training Today | A readiness score from HRV for triathletes, runners, cyclists and swimmers | Yes | 4.58 (2,646) | Oct 20, 2026 |
+| Gentler Streak Workout Tracker | Daily readiness, workout suggestions and rest-friendly streaks | Yes | 4.71 (8,833) | Nov 12, 2026 |
 | RecoTime - Smart Recovery Calc | One-tap recovery time calculation after a workout | Yes | No ratings yet | Sep 18, 2025 |
 
-Ratings, update dates and Apple Watch support come from Apple's App Store lookup on November 11, 2026. Recharge is new and has no ratings yet, so there is no score to compare.
+Ratings, update dates and Apple Watch support come from Apple's App Store lookup on November 12, 2026. Recharge is new and has no ratings yet, so there is no score to compare.
 
 ## Recharge Workout Recovery Time
 
@@ -42,11 +42,11 @@ Training Today produces a Readiness to Train score from HRV readings in Apple He
 
 ## Gentler Streak Workout Tracker
 
-Gentler Streak starts the day with a summary of key vitals and sleep, suggests workouts that respond to your readiness, and keeps a streak that allows for rest days. Its listing also describes real-time training effect and heart rate zones on the watch, a countdown to overreaching, and health data kept on-device through Apple HealthKit. It is broader than a recovery timer, closer to a whole activity tracker. Choose it for gentle, consistency-first guidance.
+Gentler Streak starts the day with a summary of key vitals and sleep, suggests workouts that respond to your readiness, and keeps a streak that allows for rest days. Its listing also describes live heart rate zones on the watch, a countdown to overreaching, and data that stays on your device, with no account and no servers. It is broader than a recovery timer, closer to a whole activity tracker. Choose it for gentle, consistency-first guidance.
 
 ## RecoTime - Smart Recovery Calc
 
-RecoTime calculates a recovery time after a workout with one tap, using a workout recorded on the watch, and sends reminders meant to avoid overtraining. Its listing includes a plain disclaimer that estimates are for general reference and not medical advice. It has no ratings yet and its latest update shown is September 2025. Choose it if you want a minimal recovery calculator and are comfortable with a little-tested app.
+RecoTime calculates a recovery time after a workout with one tap, using a workout recorded on the watch, and sends reminders meant to avoid overtraining. Its listing includes a plain disclaimer that estimates are for general reference and not medical advice. It has no ratings yet and its latest update shown is September 2025. Choose it if you want a minimal recovery calculator.
 
 ## What is the difference between recovery time and a readiness score?
 
@@ -83,7 +83,7 @@ A countdown starts after a workout and runs down over hours, while a readiness s
 
 ### Do I need an account to use a recovery app?
 
-Not for Recharge, which has no account or sign-in and no server of its own. The other apps' listings are not explicit about accounts.
+Not for Recharge, which has no account or sign-in and no server of its own. Gentler Streak's listing also says no account and no servers. The other apps' listings are not explicit about accounts.
 
 ### Does Recharge work for strength training?
 
