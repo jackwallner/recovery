@@ -21,6 +21,10 @@ done
 echo "==> Design audit"
 ./scripts/design-audit.sh
 
+# RECHARGE_SKIP_TESTS=1 skips both local test passes, for a run whose suites
+# already passed on GitHub's Macs (gh-sim) and that holds no simulator lease.
+# The archive still runs here: the production RevenueCat key is substituted below.
+if [[ -z "${RECHARGE_SKIP_TESTS:-}" ]]; then
 echo "==> Unit tests"
 TEST_UDID="${RECHARGE_TEST_UDID:-$(agent-sim udid recharge)}"
 xcodebuild test \
@@ -38,6 +42,7 @@ xcodebuild test \
   -destination "id=$TEST_UDID" \
   -derivedDataPath "/tmp/recharge-testflight-ui" \
   -parallel-testing-enabled NO
+fi
 
 CURRENT_BUILD=$(grep -E '^\s*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*CURRENT_PROJECT_VERSION:[[:space:]]*"?([0-9]+)"?.*/\1/')
 NEXT_BUILD=$((CURRENT_BUILD + 1))
