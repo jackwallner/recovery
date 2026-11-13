@@ -64,6 +64,7 @@ struct WhatsNewSheet: View {
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "whats_new")
                     .environmentObject(store)
+                    .iPadSheet()
             }
         }
     }

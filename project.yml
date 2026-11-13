@@ -71,7 +71,7 @@ targets:
         INFOPLIST_FILE: Recharge/Info.plist
         CODE_SIGN_ENTITLEMENTS: Recharge/Recharge.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
     dependencies:
       - package: RevenueCat
         product: RevenueCat
@@ -125,6 +125,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.jackwallner.recovery.widget
         INFOPLIST_FILE: RechargeWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RechargeWidget/RechargeWidget.entitlements
+        TARGETED_DEVICE_FAMILY: "1,2"
 
   RechargeWatchWidget:
     type: app-extension

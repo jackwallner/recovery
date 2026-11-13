@@ -39,6 +39,13 @@ struct OnboardingView: View {
     /// What Health handed over, captured at the moment the flow was frozen.
     @State private var ingest = HealthIngestSummary()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// A regular window (iPad full screen, large Split View) gets one centred
+    /// column instead of copy and a button stretched across 1000+ points. Every
+    /// page gets the same frame, so the primary button still never moves.
+    private var isRegularWindow: Bool { horizontalSizeClass == .regular && verticalSizeClass == .regular }
 
     private enum Step: Hashable {
         case welcome
@@ -64,12 +71,12 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             if reduceMotion {
-                page(for: step)
+                column(for: step)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 TabView(selection: $index) {
                     ForEach(Array(steps.enumerated()), id: \.offset) { position, step in
-                        page(for: step).tag(position)
+                        column(for: step).tag(position)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -78,10 +85,22 @@ struct OnboardingView: View {
             progress
                 .padding(.horizontal, Theme.Space.step(7))
                 .padding(.bottom, Theme.Space.sm)
+                .frame(maxWidth: isRegularWindow ? 560 + Theme.Space.step(7) * 2 : .infinity)
         }
         .background(Theme.background)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: index)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: steps.count)
+    }
+
+    @ViewBuilder
+    private func column(for step: Step) -> some View {
+        if isRegularWindow {
+            page(for: step)
+                .frame(maxWidth: 560, maxHeight: 780)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            page(for: step)
+        }
     }
 
     /// A bar rather than dots, because the number of steps is not known until

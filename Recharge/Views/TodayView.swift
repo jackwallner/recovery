@@ -81,7 +81,7 @@ struct TodayView: View {
         NavigationStack {
             GeometryReader { geometry in
                 ScrollView(showsIndicators: false) {
-                    content(availableHeight: geometry.size.height)
+                    content(availableHeight: geometry.size.height, width: geometry.size.width)
                         .frame(minHeight: geometry.size.height)
                 }
                 .refreshable { await engine.refresh(force: true) }
@@ -190,13 +190,16 @@ struct TodayView: View {
     /// own. A fixed 236pt frame reads as a small object on a Pro Max and clips
     /// its own number at an accessibility content size; measuring means the one
     /// figure this screen exists to show is always the biggest thing on it.
-    private func content(availableHeight: CGFloat) -> some View {
-        let ringSize = min(max(availableHeight * 0.34, 200), 300)
+    private func content(availableHeight: CGFloat, width: CGFloat) -> some View {
+        // A phone tops out at 300. An iPad pane is wider and taller than any
+        // phone, so the ring grows with it until the pane's width stops it.
+        let ringLimit: CGFloat = Device.isPad ? min(440, width * 0.7) : 300
+        let ringSize = min(max(availableHeight * 0.34, 200), ringLimit)
 
         return VStack(spacing: 0) {
             header
                 .padding(.horizontal, Theme.Space.xl)
-                .padding(.top, unfoldedPane == nil ? Theme.Space.sm : Theme.Space.step(7))
+                .padding(.top, unfoldedPane == nil ? Theme.Space.sm : (Device.isPad ? Theme.Space.step(9) : Theme.Space.step(7)))
 
             // A failed read only raises the access card when there is nothing
             // else to show. Over a running countdown it said Recharge "needs
@@ -326,6 +329,10 @@ struct TodayView: View {
             }
         }
         .padding(.horizontal, ringSize * 0.14)
+        // Measured against the ring, not the pane: without a width here the
+        // label is offered the whole pane, so `minimumScaleFactor` never
+        // engaged and "18h 43m" ran over the stroke.
+        .frame(width: ringSize)
     }
 
     private var progress: Double {

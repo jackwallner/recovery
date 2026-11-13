@@ -209,6 +209,7 @@ struct RootView: View {
                 )
                 .presentationDragIndicator(.visible)
                 .presentationContentInteraction(.scrolls)
+                .iPadSheet()
                 .onAppear {
                     if dynamicTypeSize.isAccessibilitySize {
                         trialOfferDetent = .large
@@ -218,6 +219,7 @@ struct RootView: View {
         .sheet(isPresented: $showPaywall) {
             PaywallView(source: "root")
                 .environmentObject(store)
+                .iPadSheet()
         }
         #if DEBUG
         .onAppear {

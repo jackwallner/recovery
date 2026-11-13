@@ -63,6 +63,7 @@ struct SettingsView: View {
             .sheet(isPresented: $showPaywall) {
                 PaywallView(source: "settings")
                     .environmentObject(store)
+                    .iPadSheet()
             }
             .sheet(isPresented: $showFeedback) {
                 ReviewPromptSheet()
