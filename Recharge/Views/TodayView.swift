@@ -471,7 +471,10 @@ struct TodayView: View {
 
     private var comparison: some View {
         let preview = engine.personalizedPreview
-        return HStack(alignment: .center, spacing: Theme.Space.md) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Space.xs))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Space.md))
+        return layout {
             figureColumn(
                 label: RechargeConversionCopy.standardColumn,
                 text: CountdownFormat.hours(preview.standardHours),

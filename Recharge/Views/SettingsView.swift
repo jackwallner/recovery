@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: RechargeSettings
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
@@ -132,7 +133,7 @@ struct SettingsView: View {
                             .foregroundStyle(Theme.textTertiary)
                     }
 
-                    HStack(alignment: .center, spacing: Theme.Space.md) {
+                    comparisonLayout {
                         settingsFigure(RechargeConversionCopy.standardColumn, CountdownFormat.hours(preview.standardHours), Theme.textSecondary)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 12, weight: .bold))
@@ -158,6 +159,14 @@ struct SettingsView: View {
     }
 
     private var preview: PersonalizedPreview { engine.personalizedPreview }
+
+    /// Side by side normally; stacked at accessibility sizes so a column label
+    /// like STANDARD is never broken mid-word.
+    private var comparisonLayout: AnyLayout {
+        typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Space.xs))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Space.md))
+    }
 
     private var proPitchDetail: String {
         let caption = RechargeConversionCopy.comparisonCaption(hasPurchased: false)
@@ -414,7 +423,7 @@ struct SettingsView: View {
                 }
                 Text("How quickly your last \(PersonalRecoveryModel.windowDays) days say you come back. It is one of the things Recharge+ changes, not the whole difference between the two figures above.")
                     .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(Theme.textSecondary)
                 ForEach(PersonalRecoveryModel.summary(engine.personalAnalysis).dropFirst(), id: \.self) { line in
                     Text(line)
                         .font(.system(.caption, design: .rounded))
