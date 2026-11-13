@@ -424,6 +424,7 @@ struct SettingsView: View {
 
             if !store.isPro {
                 Button("See Recharge+") { showPaywall = true }
+                    .foregroundStyle(Theme.proText)
             }
         } header: {
             Text("Recharge time")
