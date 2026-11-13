@@ -384,10 +384,11 @@ struct PaywallView: View {
                 }
             }
         }
+        .legalTapTarget()
         .disabled(isRestoring)
-        Link("Terms", destination: RechargeLinks.termsOfUse)
-        Link("Apple EULA", destination: RechargeLinks.standardEULA)
-        Link("Privacy", destination: RechargeLinks.privacyPolicy)
+        Link("Terms", destination: RechargeLinks.termsOfUse).legalTapTarget()
+        Link("Apple EULA", destination: RechargeLinks.standardEULA).legalTapTarget()
+        Link("Privacy", destination: RechargeLinks.privacyPolicy).legalTapTarget()
     }
 
     // MARK: - Actions
@@ -417,5 +418,12 @@ struct PaywallView: View {
             Haptics.failure()
             errorMessage = store.purchaseFailedMessage(for: package)
         }
+    }
+}
+
+private extension View {
+    func legalTapTarget() -> some View {
+        frame(minWidth: Theme.minimumTapTarget, minHeight: Theme.minimumTapTarget)
+            .contentShape(Rectangle())
     }
 }

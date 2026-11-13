@@ -645,7 +645,7 @@ private struct TabButton: View {
                 Text(label)
                     .font(.caption2.weight(.semibold))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: true, vertical: false)
                     .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
             }
             // `TabBarMetrics` promises one bar height at every text size. At AX3
@@ -657,7 +657,7 @@ private struct TabButton: View {
             .accessibilityShowsLargeContentViewer {
                 Label(label, systemImage: icon)
             }
-            .frame(minWidth: 78, minHeight: TabBarMetrics.buttonHeight)
+            .frame(minWidth: 96, minHeight: TabBarMetrics.buttonHeight)
             .background(
                 isSelected ? tint.opacity(0.14) : .clear,
                 in: Capsule()

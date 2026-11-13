@@ -116,6 +116,8 @@ struct ProBadge: View {
         HStack(spacing: Theme.Space.xxs) {
             Image(systemName: "lock.fill")
             Text("Recharge+")
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .font(.system(.caption2, design: .rounded, weight: .bold))
         .padding(.horizontal, Theme.Space.xs)

@@ -246,6 +246,8 @@ struct RechargePlusView: View {
                         Spacer()
                         if isRestoring { ProgressView() }
                     }
+                    .frame(minHeight: Theme.minimumTapTarget)
+                    .contentShape(Rectangle())
                 }
                 .pressable()
                 .disabled(isRestoring)
@@ -254,7 +256,8 @@ struct RechargePlusView: View {
                     Text("Manage subscription")
                         .font(.system(.footnote, design: .rounded, weight: .semibold))
                         .foregroundStyle(Theme.pro)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: Theme.minimumTapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
             }
         }
