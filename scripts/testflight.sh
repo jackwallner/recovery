@@ -144,6 +144,8 @@ echo "==> Upload build $NEXT_BUILD"
 
 git add project.yml
 git commit -m "chore: bump build $CURRENT_BUILD to $NEXT_BUILD for TestFlight"
-# The release gate maps the uploaded build to this commit.
+# The release gate maps the uploaded build to this commit. Put the placeholder back first, or the
+# swapped key leaves StoreService.swift dirty and the build is recorded as uncommitted work.
+restore_placeholder
 python3 "$HOME/ios/qa/qa_gate.py" record-build "$ROOT" "$NEXT_BUILD" || true
 echo "==> Build $NEXT_BUILD uploaded"
