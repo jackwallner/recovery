@@ -33,7 +33,7 @@ enum TabBarMetrics {
     enum Symbol {
         static let today = "hourglass"
         static let history = "list.bullet.rectangle"
-        static let plus = "sparkles"
+        static let plus = "bolt.fill"
         static let upgrade = "lock.fill"
         static let all = [today, history, plus, upgrade]
     }

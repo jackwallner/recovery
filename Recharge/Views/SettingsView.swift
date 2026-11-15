@@ -432,8 +432,10 @@ struct SettingsView: View {
             }
 
             if !store.isPro {
-                Button("See Recharge+") { showPaywall = true }
-                    .foregroundStyle(Theme.proText)
+                Button { showPaywall = true } label: {
+                    Text("See Recharge+").foregroundStyle(Theme.proText)
+                }
+                .tint(Theme.proText)
             }
         } header: {
             Text("Recharge time")
