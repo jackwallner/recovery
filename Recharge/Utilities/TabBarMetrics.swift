@@ -26,7 +26,7 @@ enum TabBarMetrics {
     /// shorter than `hourglass`), and a centred icon-over-label stack moved
     /// each label's baseline by the difference.
     static let iconPointSize: CGFloat = 18
-    static let iconSlotHeight: CGFloat = 24
+    static let iconSlotHeight: CGFloat = 26
     static let labelSpacing: CGFloat = 4
 
     /// The glyphs the bar draws, named once so the test measures the same ones.
