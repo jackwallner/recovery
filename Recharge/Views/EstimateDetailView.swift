@@ -20,6 +20,8 @@ struct EstimateDetailView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.dismiss) private var dismiss
+    /// Read once, so a re-render at a minute boundary cannot change "8 h 1 min ago".
+    @State private var openedAt = Date.now
 
     /// Closes the detail when it fills the trailing pane of the unfolded iPhone
     /// Duo rather than a sheet, where `dismiss` has nothing to dismiss.
@@ -71,7 +73,7 @@ struct EstimateDetailView: View {
     /// is "ready from what, and why". Leading with the session's cost answered a
     /// question the user had not asked and left the one they had unanswered.
     private var hasExpired: Bool {
-        estimate.producesCountdown && estimate.readyAt <= .now
+        estimate.producesCountdown && estimate.readyAt <= openedAt
     }
 
     private var header: some View {
@@ -137,7 +139,7 @@ struct EstimateDetailView: View {
 
     private var readyExplanation: String {
         let ran = CountdownFormat.hours(estimate.totalHours)
-        let ago = CountdownFormat.elapsed(since: estimate.readyAt, now: .now)
+        let ago = CountdownFormat.elapsed(since: estimate.readyAt, now: openedAt)
         let activity = WorkoutClassifier.sourceSubject(estimate.activityLabel)
         guard estimate.isStacked else {
             return String(localized: "\(activity) set a \(ran) countdown. It ran out \(ago), so nothing is outstanding.", bundle: .recharge)
@@ -156,7 +158,7 @@ struct EstimateDetailView: View {
         // "Tomorrow" is read against today, not against the day of the session,
         // or an old session in History claims to be ready tomorrow.
         guard !hasExpired else { return String(localized: "Countdown ran \(window).", bundle: .recharge) }
-        let ready = CountdownFormat.readyAt(estimate.readyAt, now: .now)
+        let ready = CountdownFormat.readyAt(estimate.readyAt, now: openedAt)
         return String(localized: "Countdown runs \(window), ready \(ready).", bundle: .recharge)
     }
 
