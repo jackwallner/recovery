@@ -68,7 +68,7 @@ if [[ -z "${RC_PUBLIC_KEY:-}" ]]; then
   exit 1
 fi
 restore_placeholder() {
-  sed -i '' -E "s/appl_[A-Za-z0-9]+/appl_RECHARGE_PLACEHOLDER/" "$STORE_SERVICE"
+  sed -i '' -E "s/appl_[A-Za-z0-9_]+/appl_RECHARGE_PLACEHOLDER/" "$STORE_SERVICE"
 }
 trap restore_placeholder EXIT
 echo "==> Substitute production RevenueCat key"
