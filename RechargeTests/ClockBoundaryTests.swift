@@ -294,3 +294,174 @@ final class ClockBoundaryTests: XCTestCase {
         XCTAssertEqual(balance.chronic, (10 + 20 + 40) / 4, accuracy: 1e-9)
     }
 }
+
+/// Probes for the "time, data and state" proof pass. Each test says in its name
+/// whether it asserts the correct behaviour (fails if the bug is there) or pins
+/// the wrong behaviour (passes while the bug exists).
+final class TimeDataStateProofTests: XCTestCase {
+    private static let calendarIDs: [Calendar.Identifier] = [
+        .gregorian, .buddhist, .japanese, .republicOfChina, .hebrew, .islamicUmmAlQura,
+        .islamicCivil, .persian, .indian, .chinese, .coptic, .ethiopicAmeteMihret,
+    ]
+
+    private func calendar(_ id: Calendar.Identifier, zone: String = "America/Los_Angeles") -> Calendar {
+        var calendar = Calendar(identifier: id)
+        calendar.timeZone = TimeZone(identifier: zone)!
+        return calendar
+    }
+
+    /// The body of `RecoveryEngine.date(fromDayKey:)` (private), copied with the
+    /// calendar made a parameter. Used to turn a stored `dateKey` back into a date.
+    private func date(fromDayKey key: String, calendar: Calendar) -> Date? {
+        let parts = key.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3 else { return nil }
+        var components = DateComponents()
+        components.year = parts[0]
+        components.month = parts[1]
+        components.day = parts[2]
+        return calendar.date(from: components)
+    }
+
+    private func instant(_ y: Int, _ m: Int, _ d: Int, _ h: Int = 12) -> Date {
+        var gregorian = Calendar(identifier: .gregorian)
+        gregorian.timeZone = TimeZone(identifier: "America/Los_Angeles")!
+        return gregorian.date(from: DateComponents(year: y, month: m, day: d, hour: h))!
+    }
+
+    // PROBE (asserts correct behaviour): a day key written by DailyContextRecord
+    // must turn back into the same local day for every calendar a device can use.
+    func testDayKeyRoundTripsInEveryDeviceCalendar() {
+        let days = [instant(2026, 11, 20), instant(2026, 11, 1), instant(2027, 3, 14), instant(2026, 1, 1), instant(2026, 12, 31)]
+        var broken: [String] = []
+        for id in Self.calendarIDs {
+            let cal = calendar(id)
+            for day in days {
+                let key = DateHelpers.dayKey(for: day, calendar: cal)
+                let back = date(fromDayKey: key, calendar: cal)
+                if back != cal.startOfDay(for: day) {
+                    broken.append("\(id) \(key) -> \(String(describing: back)) expected \(cal.startOfDay(for: day))")
+                }
+            }
+        }
+        XCTAssertTrue(broken.isEmpty, "day key does not round trip: \(broken.joined(separator: " | "))")
+    }
+
+    // PROBE (asserts correct behaviour): History sorts its day groups by the
+    // string key, so keys must sort in date order across a year of days.
+    func testDayKeysSortInDateOrderInEveryDeviceCalendar() {
+        var broken: [String] = []
+        for id in Self.calendarIDs {
+            let cal = calendar(id)
+            let start = instant(2026, 6, 1)
+            let dates = (0..<420).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
+            let byKey = dates.map { DateHelpers.dayKey(for: $0, calendar: cal) }
+            let sortedKeys = byKey.sorted()
+            if sortedKeys != byKey { broken.append("\(id)") }
+        }
+        XCTAssertTrue(broken.isEmpty, "string day keys sort out of date order in: \(broken.joined(separator: ", "))")
+    }
+
+    // PROBE (asserts correct behaviour): the 14-day load bars keep one bar per
+    // local day with the right total through a 23 and a 25 hour day, in each calendar.
+    func testDailyLoadBarsKeepEachDayThroughDstInEveryCalendar() {
+        var broken: [String] = []
+        for id in Self.calendarIDs {
+            let cal = calendar(id)
+            let now = instant(2026, 11, 3, 9)
+            let entries: [LoadSeries.Entry] = (0..<14).map { offset in
+                let day = cal.date(byAdding: .day, value: -offset, to: now)!
+                return (end: cal.startOfDay(for: day).addingTimeInterval(23 * 3600 + 30 * 60), load: 10)
+            }
+            let series = LoadSeries.daily(entries, days: 14, now: now, calendar: cal)
+            if series.count != 14 || series.contains(where: { $0.load != 10 }) {
+                broken.append("\(id): \(series.map(\.load))")
+            }
+        }
+        XCTAssertTrue(broken.isEmpty, "daily load bars wrong: \(broken.joined(separator: " | "))")
+    }
+
+    // PINS WRONG BEHAVIOUR: the max heart rate field does Double(text). A number
+    // pad that types Arabic-Indic or Persian digits produces text Double() rejects,
+    // so SettingsView treats a valid 185 as 0 and shows the "rejected" note.
+    func testMaxHeartRateFieldParseRejectsLocalDigits() {
+        XCTAssertEqual(Double("185"), 185)
+        XCTAssertNil(Double("\u{0661}\u{0668}\u{0665}"), "Arabic-Indic 185")
+        XCTAssertNil(Double("\u{06F1}\u{06F8}\u{06F5}"), "Persian 185")
+        // A locale-aware parse reads all three, which is what the field should use.
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "ar_SA")
+        formatter.numberStyle = .decimal
+        XCTAssertEqual(formatter.number(from: "\u{0661}\u{0668}\u{0665}")?.doubleValue, 185)
+    }
+
+    // PINS WRONG BEHAVIOUR: CountdownFormat keeps its DateFormatters in statics for
+    // the life of the process. A formatter built before a time zone change keeps
+    // printing the old zone's clock. This uses NSTimeZone.default as the stand-in
+    // for the system zone changing mid-process.
+    func testStaticTimeFormatterKeepsOldTimeZoneAfterZoneChange() {
+        let original = NSTimeZone.default
+        defer { NSTimeZone.default = original }
+        NSTimeZone.default = TimeZone(identifier: "America/Los_Angeles")!
+        let moment = instant(2026, 11, 20, 19)
+        let before = CountdownFormat.clock(moment)   // creates the static formatter
+        NSTimeZone.default = TimeZone(identifier: "Asia/Tokyo")!
+        let after = CountdownFormat.clock(moment)
+        let fresh = DateFormatter()
+        fresh.dateStyle = .none
+        fresh.timeStyle = .short
+        let expectedNow = fresh.string(from: moment)
+        print("PROOF-TZ before=\(before) after=\(after) freshFormatter=\(expectedNow)")
+        XCTAssertEqual(after, expectedNow, "static formatter did not follow the zone change")
+    }
+
+    // PINS WRONG BEHAVIOUR (12/24 hour half of B7): a formatter built before the
+    // user flips the 24-hour setting keeps the old style. Uses the Foundation
+    // override key the Settings toggle writes as the stand-in.
+    func testStaticTimeFormatterKeepsOldClockStyleAfterHourSettingChange() {
+        let defaults = UserDefaults.standard
+        let key = "AppleICUForce24HourTime"
+        let prior = defaults.object(forKey: key)
+        defer {
+            if let prior { defaults.set(prior, forKey: key) } else { defaults.removeObject(forKey: key) }
+        }
+        defaults.set(false, forKey: key)
+        let moment = instant(2026, 11, 20, 19)
+        let before = CountdownFormat.clock(moment)
+        defaults.set(true, forKey: key)
+        let after = CountdownFormat.clock(moment)
+        let fresh = DateFormatter()
+        fresh.dateStyle = .none
+        fresh.timeStyle = .short
+        print("PROOF-24H before=\(before) staticAfter=\(after) freshAfter=\(fresh.string(from: moment))")
+        XCTAssertEqual(after, fresh.string(from: moment), "static formatter did not follow the 24-hour change")
+    }
+
+    // PROBE (asserts correct behaviour): a hard run's countdown runs out; an easy
+    // walk that ended inside its window is the newest session. The run's Ready
+    // moment should still count (the user watched it run out); `readyMoment`
+    // resolves `current`, which is the walk, and the walk has no countdown.
+    func testReadyMomentStillCountsWhenAnEasySessionEndedInsideTheCountdown() throws {
+        let now = Date(timeIntervalSince1970: 1_795_000_000)
+        let runEnd = now.addingTimeInterval(-30 * 3600)
+        func input(_ id: String, _ profile: WorkoutProfile, minutes: Double, end: Date, hr: Double) -> SessionInput {
+            SessionInput(
+                id: id, profile: profile,
+                startDate: end.addingTimeInterval(-minutes * 60), endDate: end,
+                averageHeartRate: hr, restingHeartRate: 52, maxHeartRate: 188,
+                heartRateCoverage: 0.97, activeEnergyKilocalories: 700, activityLabel: id
+            )
+        }
+        let run = input("run", .endurance, minutes: 90, end: runEnd, hr: 172)
+        let walk = input("walk", .easy, minutes: 30, end: runEnd.addingTimeInterval(4 * 3600), hr: 105)
+        let runEstimate = RecoveryCalculator.estimate(for: run, baseline: .standard(for: .endurance), now: run.endDate)
+        let walkEstimate = RecoveryCalculator.estimate(for: walk, baseline: .standard(for: .easy), now: walk.endDate)
+        try XCTSkipUnless(runEstimate.producesCountdown && runEstimate.readyAt < now && runEstimate.readyAt > walk.endDate,
+                          "setup: run must expire after the walk and before now, got ready \(runEstimate.readyAt)")
+        XCTAssertFalse(walkEstimate.producesCountdown, "setup: the walk must not start a countdown")
+        let moment = RecoveryResolver.readyMoment(
+            in: [runEstimate, walkEstimate], eligibleFrom: runEnd.addingTimeInterval(-3600), now: now
+        )
+        print("PROOF-READY runReadyAt=\(runEstimate.readyAt) walkEnd=\(walk.endDate) moment=\(String(describing: moment?.sessionID))")
+        XCTAssertEqual(moment?.sessionID, "run", "the run's Ready moment was dropped because the walk is newest")
+    }
+}
