@@ -77,6 +77,9 @@ struct PaywallView: View {
     @State private var selected: Package?
     @State private var errorMessage: String?
     @State private var didPurchase = false
+    /// Apple is holding the purchase (Ask to Buy). The approval flips `isPro`
+    /// later, and the paywall closes then as it would after a purchase.
+    @State private var awaitingApproval = false
     @State private var isRestoring = false
 
     var body: some View {
@@ -137,7 +140,7 @@ struct PaywallView: View {
             }
             .onChange(of: store.products.count) { _, _ in selectDefaultPackage() }
             .onChange(of: store.isPro) { _, isPro in
-                if isPro, didPurchase { dismiss() }
+                if isPro, didPurchase || awaitingApproval { dismiss() }
             }
         }
     }
@@ -412,6 +415,7 @@ struct PaywallView: View {
             case .cancelled:
                 errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending:
+                awaitingApproval = true
                 errorMessage = String(localized: "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again.", bundle: .recharge)
             }
         } catch {

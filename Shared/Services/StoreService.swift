@@ -423,6 +423,26 @@ public final class StoreService: NSObject, ObservableObject {
         configureIfNeeded()
         purchaseInFlight = true
         defer { purchaseInFlight = false }
+        do {
+            return try await runPurchase(product)
+        } catch where Self.isDeferredPurchase(error) {
+            // RevenueCat throws for Ask to Buy and every other purchase StoreKit
+            // holds as pending, rather than returning it. Reported as a failure,
+            // it told somebody waiting on a parent's approval to try again.
+            // The approval arrives later through the delegate and flips `isPro`.
+            return .pending
+        }
+    }
+
+    /// Whether a thrown purchase error is StoreKit deferring the transaction
+    /// (Ask to Buy, Strong Customer Authentication).
+    nonisolated static func isDeferredPurchase(_ error: Error) -> Bool {
+        if let code = error as? ErrorCode { return code == .paymentPendingError }
+        let nsError = error as NSError
+        return nsError.domain == ErrorCode.errorDomain && nsError.code == ErrorCode.paymentPendingError.rawValue
+    }
+
+    private func runPurchase(_ product: Package) async throws -> PurchaseState {
         let startedTrial = isEligibleForIntroOffer(product)
         #if targetEnvironment(simulator)
         // No RevenueCat on simulator. Flip the local override so the post-purchase
