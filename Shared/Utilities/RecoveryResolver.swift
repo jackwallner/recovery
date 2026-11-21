@@ -115,15 +115,20 @@ public enum RecoveryResolver {
     /// counting a Ready moment for a countdown nobody watched, before Today had
     /// ever been shown. A countdown that ran out while the app was closed after
     /// setup still counts; the user had it, and the Ready alert told them.
+    ///
+    /// Chosen from the countdowns only, the one that ran out last, and only once
+    /// none is still running. It used to be `current`, which falls back to the
+    /// newest session by end time whether or not it started a countdown, so an
+    /// easy walk after a hard run hid the run's Ready moment for good.
     public static func readyMoment(
         in estimates: [RecoveryEstimate],
         eligibleFrom: Date?,
         now: Date = .now
     ) -> RecoveryEstimate? {
-        guard let eligibleFrom,
-              let estimate = current(in: estimates, now: now),
-              estimate.producesCountdown,
-              estimate.readyAt <= now,
+        guard let eligibleFrom, active(in: estimates, now: now) == nil else { return nil }
+        guard let estimate = estimates
+            .filter({ $0.producesCountdown && $0.readyAt <= now })
+            .max(by: { $0.readyAt < $1.readyAt }),
               estimate.readyAt >= eligibleFrom
         else { return nil }
         return estimate
