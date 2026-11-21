@@ -20,12 +20,17 @@ struct RechargeApp: App {
     /// this is a ceiling, not a budget to plan around.
     private static let activationTimeout: TimeInterval = 5
 
+    /// Whether this process has counted its launch. A launch is counted the
+    /// first time a scene becomes active, not in `init`: HealthKit background
+    /// delivery and the refresh task relaunch the process with no scene, and
+    /// counting those let the review ask and the conversion record reach their
+    /// thresholds without the user ever opening the app.
+    @MainActor private static var hasCountedLaunch = false
+
     init() {
         UNUserNotificationCenter.current().delegate = RechargeNotificationDelegate.shared
         // The delegate itself knows nothing about the engine; see its comment.
         RechargeNotificationDelegate.onTap.value = { RecoveryEngine.shared.publish() }
-        ReviewPromptTracker.recordAppLaunch()
-        ConversionDiagnostics.recordAppOpen()
         #if DEBUG
         if RevenueCatProbe.isEnabled {
             // Same entry point the paywall calls, so what this proves is the
@@ -224,6 +229,12 @@ struct RechargeApp: App {
                     #endif
 
                     await requestReadyNotificationsIfNeeded()
+                }
+                .onChange(of: scenePhase, initial: true) { _, phase in
+                    guard phase == .active, !Self.hasCountedLaunch else { return }
+                    Self.hasCountedLaunch = true
+                    ReviewPromptTracker.recordAppLaunch()
+                    ConversionDiagnostics.recordAppOpen()
                 }
                 .onChange(of: scenePhase) { _, phase in
                     guard phase == .active,

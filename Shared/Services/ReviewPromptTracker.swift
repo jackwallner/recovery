@@ -130,7 +130,8 @@ public enum ReviewPromptTracker {
         set { defaults.set(newValue, forKey: hasSeenEstimateKey) }
     }
 
-    /// Call once per process launch.
+    /// Call once per process, when it first comes to the foreground. A
+    /// background relaunch is not a launch the user made.
     public static func recordAppLaunch(now: Date = .now) {
         if firstAppOpenDate == nil { firstAppOpenDate = now }
         appLaunchCount += 1
