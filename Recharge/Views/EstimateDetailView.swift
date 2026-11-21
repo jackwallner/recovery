@@ -27,6 +27,12 @@ struct EstimateDetailView: View {
     /// Duo rather than a sheet, where `dismiss` has nothing to dismiss.
     var onDone: (() -> Void)?
 
+    /// Set by the Recharge+ card. The upgrade request is posted once this view
+    /// has gone, not when the card is tapped: `RootView` holds back any offer
+    /// while a sheet is still up, and a sheet that is only starting to close
+    /// still counts as up, so a request posted from the tap was dropped.
+    @State private var requestsUpgradeOnClose = false
+
     private var estimate: RecoveryEstimate {
         engine.estimates.first { $0.sessionID == capturedEstimate.sessionID } ?? capturedEstimate
     }
@@ -57,6 +63,11 @@ struct EstimateDetailView: View {
                     Button("Done") { close() }
                 }
             }
+        }
+        .onDisappear {
+            guard requestsUpgradeOnClose else { return }
+            requestsUpgradeOnClose = false
+            NotificationCenter.default.post(name: .rechargeUpgradeRequested, object: nil)
         }
     }
 
@@ -408,8 +419,8 @@ struct EstimateDetailView: View {
 
     private var proTeaser: some View {
         Button {
+            requestsUpgradeOnClose = true
             close()
-            NotificationCenter.default.post(name: .rechargeUpgradeRequested, object: nil)
         } label: {
             Card {
                 HStack(spacing: Theme.Space.sm) {
