@@ -38,7 +38,17 @@ struct TodayView: View {
 
     @State private var now = Date.now
     @State private var showSettings = false
-    @State private var showEffortSheet = false
+    /// The session the effort question is about, captured when the sheet
+    /// opens, for the same reason as `feedbackTarget`: answering clears
+    /// `engine.awaitingEffort`, and a sheet reading it live redrew as an empty
+    /// sheet while it slid away.
+    @State private var effortTarget: EffortTarget?
+
+    private struct EffortTarget: Identifiable {
+        let id: String
+        let activityLabel: String
+        let durationMinutes: Double
+    }
     @State private var showDetail = false
 
     /// The estimate the readiness question is about, **captured** rather than
@@ -138,17 +148,15 @@ struct TodayView: View {
                         .environmentObject(engine)
                 }
             }
-            .sheet(isPresented: $showEffortSheet) {
-                if let workout = engine.awaitingEffort {
-                    EffortPromptSheet(
-                        activityLabel: workout.activityLabel,
-                        durationMinutes: workout.durationMinutes
-                    ) { effort in
-                        if let effort {
-                            engine.recordEffort(effort, forSessionID: workout.healthKitUUID)
-                        } else {
-                            engine.declineEffort(forSessionID: workout.healthKitUUID)
-                        }
+            .sheet(item: $effortTarget) { target in
+                EffortPromptSheet(
+                    activityLabel: target.activityLabel,
+                    durationMinutes: target.durationMinutes
+                ) { effort in
+                    if let effort {
+                        engine.recordEffort(effort, forSessionID: target.id)
+                    } else {
+                        engine.declineEffort(forSessionID: target.id)
                     }
                 }
             }
@@ -179,7 +187,7 @@ struct TodayView: View {
             }
             .onChange(of: showSettings) { _, _ in publishSheetState() }
             .onChange(of: showDetail) { _, _ in publishSheetState() }
-            .onChange(of: showEffortSheet) { _, _ in publishSheetState() }
+            .onChange(of: effortTarget?.id) { _, _ in publishSheetState() }
             .onChange(of: feedbackTarget?.sessionID) { _, _ in publishSheetState() }
         }
     }
@@ -543,7 +551,14 @@ struct TodayView: View {
     /// disappears the moment it is answered. Everything else that used to live
     /// down here was permanent furniture, which is why it moved to Settings.
     private var effortPrompt: some View {
-        Button { showEffortSheet = true } label: {
+        Button {
+            guard let workout = engine.awaitingEffort else { return }
+            effortTarget = EffortTarget(
+                id: workout.healthKitUUID,
+                activityLabel: workout.activityLabel,
+                durationMinutes: workout.durationMinutes
+            )
+        } label: {
             Card(padding: 14) {
                 HStack(spacing: Theme.Space.sm) {
                     Image(systemName: "hand.raised.fill")
@@ -688,6 +703,6 @@ struct TodayView: View {
     }
 
     private func publishSheetState() {
-        isPresentingSheet = showSettings || showDetail || showEffortSheet || feedbackTarget != nil
+        isPresentingSheet = showSettings || showDetail || effortTarget != nil || feedbackTarget != nil
     }
 }
