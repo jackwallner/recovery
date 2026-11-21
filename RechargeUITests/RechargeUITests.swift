@@ -396,7 +396,7 @@ final class RechargeUITests: XCTestCase {
     func testTheTrialOfferIsLegibleAtTheLargestTextSize() {
         let app = launch(
             scene: "onboarding",
-            contentSize: "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+            contentSize: "UICTContentSizeCategoryAccessibilityXXXL"
         )
 
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
