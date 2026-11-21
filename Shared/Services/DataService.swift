@@ -12,6 +12,16 @@ import os
 public enum DataService {
     public static let appGroupID = rechargeAppGroupID
 
+    /// The App Group key of the HealthKit workout anchor. It lives here because
+    /// it is the store's bookmark: it records how much of Health this store has
+    /// already seen, so it is only true for the store it was written against.
+    nonisolated public static let workoutAnchorKey = "healthKitWorkoutAnchor"
+
+    /// False when the store could not be opened at all and this process runs on
+    /// an in-memory container. Nothing imported then survives a relaunch, so the
+    /// workout anchor must not be advanced past it.
+    public private(set) static var isPersistent = true
+
     public static var sharedModelContainer: ModelContainer = {
         let schema = Schema([WorkoutRecord.self, RecoveryStateRecord.self, DailyContextRecord.self])
         let url = containerURL
@@ -28,12 +38,17 @@ public enum DataService {
         // HealthKit repopulates a fresh cache for this launch.
         logger.error("ModelContainer failed to open; quarantining the store and retrying")
         quarantinePersistentStore(at: url)
+        // The anchor describes the store that was just moved aside. Kept, it
+        // asks Health only for what is newer than everything that store held,
+        // and the empty store replacing it would stay empty.
+        forgetWorkoutAnchor()
         if let container = makeContainer(schema: schema, url: url) {
             markLocalOnlyStorage()
             return container
         }
 
         logger.critical("ModelContainer could not be recreated; falling back to an in-memory store")
+        isPersistent = false
         let inMemory = ModelConfiguration("Recharge", schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         // Force-try is the last resort: an in-memory container with a schema the
         // app itself declares has no remaining failure mode, and there is
@@ -42,6 +57,10 @@ public enum DataService {
     }()
 
     private static let logger = Logger(subsystem: "com.jackwallner.recovery", category: "DataService")
+
+    private static func forgetWorkoutAnchor() {
+        UserDefaults(suiteName: appGroupID)?.removeObject(forKey: workoutAnchorKey)
+    }
 
     private static func makeContainer(schema: Schema, url: URL) -> ModelContainer? {
         let config = ModelConfiguration("Recharge", schema: schema, url: url, cloudKitDatabase: .none)

@@ -235,6 +235,10 @@ public final class RecoveryEngine: ObservableObject {
     // MARK: - Import
 
     private func importWorkouts() async {
+        // Open the store before the query reads the anchor: an open that has to
+        // quarantine the store clears the anchor, and a query that already read
+        // it would bring back only what is newer than the store just lost.
+        _ = context
         // `nil` is a read that did not happen. An anchored result may contain
         // no additions while still carrying deletions, or no changes at all;
         // only explicit deletion IDs may remove cached workouts.
