@@ -198,6 +198,7 @@ targets:
       # surface area.
       - path: Shared/Utilities/HealthIngestSummary.swift
       - path: Shared/Utilities/DateHelpers.swift
+      - path: Shared/Utilities/TypedNumber.swift
       # The iPhone Duo pane math, without the views that use it.
       - path: Recharge/Utilities/UnfoldedSplit.swift
       # The tab bar's slots, measured against the glyphs it draws.

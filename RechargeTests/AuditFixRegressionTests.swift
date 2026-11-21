@@ -184,3 +184,32 @@ final class StoreQuarantineTests: XCTestCase {
         )
     }
 }
+
+// MARK: - B10: the max heart rate field in local digits
+
+final class TypedNumberTests: XCTestCase {
+
+    /// What the field used to parse with. Kept as the record of the bug: both
+    /// spellings of 185 read as nothing, so the field rejected them.
+    func testDoubleReadsOnlyASCIIDigits() {
+        XCTAssertNil(Double("\u{0661}\u{0668}\u{0665}"))
+        XCTAssertNil(Double("\u{06F1}\u{06F8}\u{06F5}"))
+    }
+
+    func testAMaxHeartRateTypedInArabicIndicOrPersianDigitsReadsAsItsValue() {
+        XCTAssertEqual(TypedNumber.value(of: "\u{0661}\u{0668}\u{0665}"), 185)
+        XCTAssertEqual(TypedNumber.value(of: "\u{06F1}\u{06F8}\u{06F5}"), 185)
+        XCTAssertEqual(TypedNumber.value(of: "\u{0967}\u{096E}\u{096B}"), 185)
+    }
+
+    func testASCIIInputReadsExactlyAsBefore() {
+        for text in ["185", "185.5", "0", "", "abc", "18a", "-5"] {
+            XCTAssertEqual(TypedNumber.value(of: text), Double(text), "\(text)")
+        }
+    }
+
+    func testAnythingThatIsNotAWholeNumberIsRejected() {
+        XCTAssertNil(TypedNumber.value(of: "\u{0661}\u{0668}x"))
+        XCTAssertNil(TypedNumber.value(of: "\u{0661}\u{0668}\u{0665}\u{0661}\u{0668}\u{0665}\u{0661}"))
+    }
+}

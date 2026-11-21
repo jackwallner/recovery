@@ -559,7 +559,7 @@ struct SettingsView: View {
                     .accessibilityValue(maxHeartRateText.isEmpty ? String(localized: "Automatic", bundle: .recharge) : String(localized: "\(maxHeartRateText) beats per minute", bundle: .recharge))
                     .accessibilityHint(String(localized: "Enter a value from \(Int(Self.maxHeartRateRange.lowerBound)) to \(Int(Self.maxHeartRateRange.upperBound)) beats per minute, or leave blank for automatic.", bundle: .recharge))
                     .onChange(of: maxHeartRateText) { _, value in
-                        let parsed = Double(value) ?? 0
+                        let parsed = TypedNumber.value(of: value) ?? 0
                         let accepted = Self.maxHeartRateRange.contains(parsed) ? parsed : 0
                         guard accepted != settings.maxHeartRate else { return }
                         settings.maxHeartRate = accepted
