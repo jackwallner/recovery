@@ -115,7 +115,7 @@ final class AuditFixesUITests: XCTestCase {
     func testEveryControlOnTheOnboardingOfferIsReachableAtTheLargestTextSize() {
         let app = launch(
             scene: "onboarding",
-            contentSize: "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+            contentSize: "UICTContentSizeCategoryAccessibilityXXXL"
         )
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
         advanceToTheOffer(app)
@@ -181,7 +181,10 @@ final class AuditFixesUITests: XCTestCase {
         gear.tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 15))
 
-        app.open(URL(string: "recharge://today")!)
+        // Through the system, as a widget tap arrives: the running app gets the
+        // URL in `onOpenURL` with its state intact. `XCUIApplication.open`
+        // brought the app back without the sheet and proved nothing.
+        XCUIDevice.shared.system.open(URL(string: "recharge://today")!)
         // iOS may ask before a URL opens an app. Answer it if it does.
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let open = springboard.buttons["Open"]
