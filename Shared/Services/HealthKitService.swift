@@ -67,7 +67,7 @@ public final class HealthKitService: ObservableObject {
         let value: Int
     }
 
-    private static let workoutAnchorKey = "healthKitWorkoutAnchor"
+    private static let workoutAnchorKey = DataService.workoutAnchorKey
 
     private let store = HKHealthStore()
     @Published public private(set) var isAuthorized: Bool = false
@@ -379,6 +379,10 @@ public final class HealthKitService: ObservableObject {
     /// corresponding changes. If the save fails, the next refresh replays the
     /// same HealthKit delta instead of losing it between processes.
     public func commitWorkoutAnchor(_ data: Data) {
+        // An in-memory store forgets everything at the next launch, so an
+        // anchor advanced past it would hide that history from every later
+        // import.
+        guard DataService.isPersistent else { return }
         UserDefaults(suiteName: rechargeAppGroupID)?.set(data, forKey: Self.workoutAnchorKey)
     }
 
