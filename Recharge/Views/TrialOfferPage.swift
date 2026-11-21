@@ -17,6 +17,7 @@ struct TrialOfferPage: View {
     @EnvironmentObject private var store: StoreService
     @State private var errorMessage: String?
     @State private var isRestoring = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var package: Package? { store.yearlyPackage }
 
@@ -35,28 +36,35 @@ struct TrialOfferPage: View {
     /// *above* the button. The only thing below the button is the legal slot
     /// that every other page also reserves, so this CTA lands in the identical
     /// frame the Continue buttons before it occupied.
+    ///
+    /// **Except at an accessibility text size**, where the terms and buttons
+    /// alone can be taller than a short screen. Pinned there, they squeezed the
+    /// pitch to nothing and clipped the purchase button, Restore and the legal
+    /// links with nothing to scroll, so the whole page scrolls as one.
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                pitch
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Theme.Space.xs)
-            }
-            .scrollBounceBehavior(.basedOnSize)
+        Group {
+            if typeSize.isAccessibilitySize {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        pitch
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.Space.xs)
+                        actions
+                    }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+            } else {
+                VStack(spacing: 0) {
+                    ScrollView {
+                        pitch
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.Space.xs)
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
 
-            OnboardingActions(
-                primaryTitle: store.onboardingTrialCTALabel,
-                primaryAction: { Task { await purchase() } },
-                tint: Theme.pro,
-                primaryDisabled: package == nil || store.purchaseInFlight,
-                isBusy: store.purchaseInFlight,
-                secondaryTitle: declineTitle,
-                secondaryAction: onDecline,
-                above: AnyView(purchaseTerms),
-                showsLegalLinks: true,
-                isRestoring: isRestoring,
-                onRestore: { Task { await restore() } }
-            )
+                    actions
+                }
+            }
         }
         .padding(.horizontal, Theme.Space.step(7))
         .padding(.bottom, Theme.Space.md)
@@ -103,6 +111,22 @@ struct TrialOfferPage: View {
 
             features.padding(.top, Theme.Space.lg)
         }
+    }
+
+    private var actions: some View {
+        OnboardingActions(
+            primaryTitle: store.onboardingTrialCTALabel,
+            primaryAction: { Task { await purchase() } },
+            tint: Theme.pro,
+            primaryDisabled: package == nil || store.purchaseInFlight,
+            isBusy: store.purchaseInFlight,
+            secondaryTitle: declineTitle,
+            secondaryAction: onDecline,
+            above: AnyView(purchaseTerms),
+            showsLegalLinks: true,
+            isRestoring: isRestoring,
+            onRestore: { Task { await restore() } }
+        )
     }
 
     // MARK: - The two numbers
