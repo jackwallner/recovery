@@ -185,11 +185,11 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: NotificationService.routeRequested)) { note in
             guard (note.userInfo?[NotificationService.routeKey] as? String)
                     == NotificationService.readyRouteValue else { return }
-            selectedTab = .today
+            showCountdown()
         }
         .onOpenURL { url in
             guard url.scheme == "recharge" else { return }
-            selectedTab = .today
+            showCountdown()
         }
         .sheet(isPresented: $showWhatsNew) {
             WhatsNewSheet()
@@ -261,6 +261,23 @@ struct RootView: View {
         .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
         .overlay(Capsule().stroke(Color(.separator).opacity(0.3), lineWidth: 0.5))
         .padding(.bottom, TabBarMetrics.bottomPadding)
+    }
+
+    /// Where a Ready alert or a widget tap lands: Today, with nothing in front
+    /// of it. Sheets stay presented across a trip to the background, so
+    /// selecting the tab alone left Settings or a session's detail covering the
+    /// answer. The readiness and effort questions stay: they are questions
+    /// about the countdown, not somewhere the user went. So does an offer with
+    /// a purchase in flight.
+    private func showCountdown() {
+        showWhatsNew = false
+        if !store.purchaseInFlight {
+            showTrialOffer = false
+            showPaywall = false
+        }
+        showPanel(nil)
+        NotificationCenter.default.post(name: .rechargeCountdownRequested, object: nil)
+        selectedTab = .today
     }
 
     /// Every tab change goes through here so the tap is confirmed in the hand
@@ -571,6 +588,9 @@ extension Notification.Name {
     /// The subscriber's version of the same tap: show them what they bought
     /// rather than a pitch for it.
     static let rechargePlusRequested = Notification.Name("rechargePlusRequested")
+    /// A Ready alert or widget tap: Today and History close whatever sheet
+    /// they have up, so the countdown the tap promised is what is on screen.
+    static let rechargeCountdownRequested = Notification.Name("rechargeCountdownRequested")
 }
 
 extension View {
