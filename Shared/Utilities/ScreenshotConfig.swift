@@ -41,10 +41,15 @@ public enum ScreenshotConfig {
     /// onboarding, the trial sheet, and the paywall.
     public static let forceIntroIneligible =
         ProcessInfo.processInfo.environment["RECHARGE_FORCE_INTRO_INELIGIBLE"] == "1"
+    /// Makes the simulator purchase behave like Ask to Buy: RevenueCat's
+    /// pending error now, the entitlement a few seconds later.
+    public static let defersPurchase =
+        ProcessInfo.processInfo.environment["RECHARGE_DEFER_PURCHASE"] == "1"
 #else
     public static let isEnabled = false
     public static let scene: ScreenshotScene? = nil
     public static let forceIntroIneligible = false
+    public static let defersPurchase = false
 #endif
 
 #if DEBUG

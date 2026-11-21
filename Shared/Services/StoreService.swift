@@ -437,6 +437,17 @@ public final class StoreService: NSObject, ObservableObject {
         #else
         let probing = false
         #endif
+        #if DEBUG
+        if ScreenshotConfig.defersPurchase {
+            // Ask to Buy as RevenueCat reports it: the purchase throws, and the
+            // approval arrives later through the delegate.
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(4))
+                setLocalOverride(isPro: true)
+            }
+            throw ErrorCode.paymentPendingError
+        }
+        #endif
         if !probing {
             setLocalOverride(isPro: true)
             return .purchased
