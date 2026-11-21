@@ -18,6 +18,11 @@ struct TrialOfferPage: View {
     @State private var errorMessage: String?
     @State private var isRestoring = false
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// Apple is holding the purchase (Ask to Buy). The approval arrives later
+    /// through RevenueCat's delegate and flips `isPro`.
+    @State private var awaitingApproval = false
+    /// `onPurchased` runs once: an approval and a restore can both land.
+    @State private var hasFinished = false
 
     private var package: Package? { store.yearlyPackage }
 
@@ -71,6 +76,18 @@ struct TrialOfferPage: View {
         .task {
             if store.products.isEmpty { await store.fetchProducts() }
         }
+        // An Ask to Buy approval arrives later, through RevenueCat's delegate,
+        // with this page possibly still up. Somebody who now has Recharge+ must
+        // not be left in front of a live purchase button.
+        .onChange(of: store.isPro) { _, isPro in
+            if isPro, awaitingApproval { finishPurchased() }
+        }
+    }
+
+    private func finishPurchased() {
+        guard !hasFinished else { return }
+        hasFinished = true
+        onPurchased()
     }
 
     /// **One thing on this page is large, and it is the pair of numbers.**
@@ -367,9 +384,10 @@ struct TrialOfferPage: View {
             switch try await store.purchase(package) {
             case .purchased:
                 Haptics.success()
-                onPurchased()
+                finishPurchased()
             case .cancelled: errorMessage = store.purchaseCancelledMessage(for: package)
             case .pending:
+                awaitingApproval = true
                 errorMessage = String(localized: "Apple has marked this purchase as pending. It may finish later. Restore purchases or reopen Recharge to check again.", bundle: .recharge)
             }
         } catch {
@@ -384,7 +402,7 @@ struct TrialOfferPage: View {
         await store.restorePurchases()
         isRestoring = false
         if store.isPro {
-            onPurchased()
+            finishPurchased()
         } else {
             errorMessage = store.lastError
                 ?? String(localized: "No active Recharge+ purchase was found for this Apple ID.", bundle: .recharge)
