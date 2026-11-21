@@ -301,3 +301,57 @@ public enum RecoverySnapshotStore {
         (defaults ?? .standard).removeObject(forKey: key)
     }
 }
+
+// MARK: - The effort question on the Watch
+
+/// The session the phone wants an effort answer for, as the Watch reads it.
+///
+/// The Watch has no workout history, so the phone names the session and the
+/// activity together. The snapshot's own `activityLabel` belongs to whichever
+/// session owns the countdown, which is often a later one: a morning lift that
+/// needs an answer and an evening run with a good heart-rate trace. A prompt
+/// worded from the snapshot asked about the run and saved the answer to the
+/// lift.
+public struct PendingEffortRequest: Equatable, Identifiable, Sendable {
+    public static let sessionIDKey = "pendingEffortSessionID"
+    public static let activityLabelKey = "pendingEffortActivityLabel"
+
+    public let sessionID: String
+    /// The stored English label ("lifting session"). Empty when the phone did
+    /// not send one (an older build), which words the question generically.
+    public let activityLabel: String
+
+    public var id: String { sessionID }
+
+    public init(sessionID: String, activityLabel: String) {
+        self.sessionID = sessionID
+        self.activityLabel = activityLabel
+    }
+
+    public static func load(
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) -> PendingEffortRequest? {
+        let defaults = defaults ?? .standard
+        guard let sessionID = defaults.string(forKey: sessionIDKey) else { return nil }
+        return PendingEffortRequest(
+            sessionID: sessionID,
+            activityLabel: defaults.string(forKey: activityLabelKey) ?? ""
+        )
+    }
+
+    /// Writes both keys or clears both, so a label can never outlive the
+    /// session it names.
+    public static func save(
+        _ request: PendingEffortRequest?,
+        defaults: UserDefaults? = UserDefaults(suiteName: rechargeAppGroupID)
+    ) {
+        let defaults = defaults ?? .standard
+        if let request {
+            defaults.set(request.sessionID, forKey: sessionIDKey)
+            defaults.set(request.activityLabel, forKey: activityLabelKey)
+        } else {
+            defaults.removeObject(forKey: sessionIDKey)
+            defaults.removeObject(forKey: activityLabelKey)
+        }
+    }
+}

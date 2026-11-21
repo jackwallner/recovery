@@ -49,6 +49,9 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         public static let sentAt = "sentAt"
         public static let snapshot = "snapshot"
         public static let pendingEffortSessionID = "pendingEffortSessionID"
+        /// The activity of that session, so the Watch can word the question
+        /// about the session the answer is saved to.
+        public static let pendingEffortActivityLabel = "pendingEffortActivityLabel"
         public static let complicationStyle = "complicationStyle"
     }
 
@@ -156,7 +159,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// request locally straight away so the button disappears on the tap rather
     /// than on the round trip.
     public func declineEffort(forSessionID sessionID: String) {
-        UserDefaults(suiteName: rechargeAppGroupID)?.removeObject(forKey: "pendingEffortSessionID")
+        PendingEffortRequest.save(nil)
         snapshotRevision &+= 1
         send(
             payload: [
@@ -302,6 +305,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     private nonisolated static func receiveSnapshotReply(_ payload: [String: Any]) {
         let data = payload[MessageKey.snapshot] as? Data
         let pending = payload[MessageKey.pendingEffortSessionID] as? String
+        let pendingLabel = payload[MessageKey.pendingEffortActivityLabel] as? String
         let style = payload[MessageKey.complicationStyle] as? Int
         let sentAt = payload[MessageKey.sentAt] as? TimeInterval
         Task { @MainActor in
@@ -310,6 +314,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
             var narrowed: [String: Any] = [:]
             narrowed[MessageKey.snapshot] = data
             narrowed[MessageKey.pendingEffortSessionID] = pending
+            narrowed[MessageKey.pendingEffortActivityLabel] = pendingLabel
             narrowed[MessageKey.complicationStyle] = style
             narrowed[MessageKey.sentAt] = sentAt
             // A direct answer to "send me the current model" is current by
@@ -371,10 +376,15 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         // a wrist that has heard nothing new since yesterday still runs this
         // path on each background wake, and `reloadAllTimelines` spends
         // WidgetKit's refresh budget whether or not anything moved.
-        let pendingSessionID = payload[MessageKey.pendingEffortSessionID] as? String
+        let pendingEffort = (payload[MessageKey.pendingEffortSessionID] as? String).map {
+            PendingEffortRequest(
+                sessionID: $0,
+                activityLabel: payload[MessageKey.pendingEffortActivityLabel] as? String ?? ""
+            )
+        }
         let style = payload[MessageKey.complicationStyle] as? Int
         let isUnchanged = RecoverySnapshotStore.loadIfPresent(defaults: defaults) == snapshot
-            && pendingSessionID == defaults.string(forKey: "pendingEffortSessionID")
+            && pendingEffort == PendingEffortRequest.load(defaults: defaults)
             && (style == nil || style == defaults.integer(forKey: SettingsKeys.complicationStyle))
 
         RecoverySnapshotStore.save(snapshot, defaults: defaults)
@@ -383,11 +393,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         // undated delivery would start rejecting dated ones.
         if let sentAt { defaults.set(sentAt, forKey: Self.lastAcceptedSentAtKey) }
 
-        if let pendingSessionID {
-            defaults.set(pendingSessionID, forKey: "pendingEffortSessionID")
-        } else {
-            defaults.removeObject(forKey: "pendingEffortSessionID")
-        }
+        PendingEffortRequest.save(pendingEffort, defaults: defaults)
         if let style {
             defaults.set(style, forKey: SettingsKeys.complicationStyle)
         }
@@ -457,7 +463,7 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
     /// `updateApplicationContext` is free to no-op on an unchanged payload.
     public func sendSnapshot(
         _ snapshot: RecoverySnapshot,
-        pendingEffortSessionID: String?,
+        pendingEffort: PendingEffortRequest?,
         complicationStyle: Int
     ) {
         guard WCSession.isSupported() else { return }
@@ -470,8 +476,9 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
             MessageKey.complicationStyle: complicationStyle,
             MessageKey.sentAt: Date.now.timeIntervalSince1970
         ]
-        if let pendingEffortSessionID {
-            payload[MessageKey.pendingEffortSessionID] = pendingEffortSessionID
+        if let pendingEffort {
+            payload[MessageKey.pendingEffortSessionID] = pendingEffort.sessionID
+            payload[MessageKey.pendingEffortActivityLabel] = pendingEffort.activityLabel
         }
 
         do {
@@ -499,8 +506,9 @@ public final class PhoneWatchSession: NSObject, ObservableObject {
         if let data = try? JSONEncoder().encode(RecoverySnapshotStore.load(defaults: defaults)) {
             payload[MessageKey.snapshot] = data
         }
-        if let pending = defaults?.string(forKey: "pendingEffortSessionID") {
-            payload[MessageKey.pendingEffortSessionID] = pending
+        if let pending = PendingEffortRequest.load(defaults: defaults) {
+            payload[MessageKey.pendingEffortSessionID] = pending.sessionID
+            payload[MessageKey.pendingEffortActivityLabel] = pending.activityLabel
         }
         return payload
     }
@@ -563,6 +571,7 @@ extension PhoneWatchSession: WCSessionDelegate {
     private nonisolated func forwardSnapshot(_ payload: [String: Any]) {
         let data = payload[MessageKey.snapshot] as? Data
         let pending = payload[MessageKey.pendingEffortSessionID] as? String
+        let pendingLabel = payload[MessageKey.pendingEffortActivityLabel] as? String
         let style = payload[MessageKey.complicationStyle] as? Int
         let sentAt = payload[MessageKey.sentAt] as? TimeInterval
         guard data != nil else { return }
@@ -575,6 +584,7 @@ extension PhoneWatchSession: WCSessionDelegate {
             var narrowed: [String: Any] = [:]
             narrowed[MessageKey.snapshot] = data
             narrowed[MessageKey.pendingEffortSessionID] = pending
+            narrowed[MessageKey.pendingEffortActivityLabel] = pendingLabel
             narrowed[MessageKey.complicationStyle] = style
             narrowed[MessageKey.sentAt] = sentAt
             self?.applyInboundSnapshot(narrowed)

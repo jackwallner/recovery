@@ -9,7 +9,10 @@ import WatchKit
 struct WatchTodayView: View {
     @State private var snapshot = WatchTodayView.currentSnapshot()
     @State private var now = Date.now
-    @State private var showEffort = false
+    /// The session the open effort sheet is asking about, captured when it
+    /// opens. Reading the App Group at answer time let a snapshot that arrived
+    /// while the sheet was up send the answer to a different session.
+    @State private var effortTarget: PendingEffortRequest?
 
     /// Screenshot runs have no paired phone to write the App Group, so the
     /// capture scene supplies the snapshot instead.
@@ -62,7 +65,12 @@ struct WatchTodayView: View {
                 // The `watchEffort` capture scene raises the prompt the same
                 // way a tap on "Rate effort" does, after the first frame.
                 if ScreenshotConfig.wantsEffortPrompt {
-                    DispatchQueue.main.async { showEffort = true }
+                    DispatchQueue.main.async {
+                        effortTarget = PendingEffortRequest(
+                            sessionID: "screenshot-0",
+                            activityLabel: snapshot.activityLabel
+                        )
+                    }
                 }
                 ScreenshotConfig.markReady()
                 #endif
@@ -78,16 +86,17 @@ struct WatchTodayView: View {
             // `navigationDestination(isPresented:)` spun the NavigationStack
             // coordinator in an update loop at 100% CPU: the screen froze on
             // the countdown and the answer could never be given.
-            .sheet(isPresented: $showEffort) {
-                WatchEffortPrompt(activityLabel: snapshot.activityLabel) { effort in
-                    showEffort = false
-                    guard let sessionID = pendingEffortSessionID else { return }
+            .sheet(item: $effortTarget) { request in
+                // Worded from the pending session itself, never the snapshot:
+                // the snapshot names the session that owns the countdown.
+                WatchEffortPrompt(activityLabel: request.activityLabel) { effort in
+                    effortTarget = nil
                     if let effort {
-                        connectivity.sendEffort(effort, forSessionID: sessionID)
+                        connectivity.sendEffort(effort, forSessionID: request.sessionID)
                     } else {
                         // A decline is an answer. Without this the request stays
                         // pending and the button comes back on every launch.
-                        connectivity.declineEffort(forSessionID: sessionID)
+                        connectivity.declineEffort(forSessionID: request.sessionID)
                     }
                 }
                 .navigationTitle("Rate effort")
@@ -163,7 +172,13 @@ struct WatchTodayView: View {
 
     private var effortButton: some View {
         Button {
-            showEffort = true
+            #if DEBUG
+            if ScreenshotConfig.wantsEffortPrompt {
+                effortTarget = PendingEffortRequest(sessionID: "screenshot-0", activityLabel: snapshot.activityLabel)
+                return
+            }
+            #endif
+            effortTarget = PendingEffortRequest.load()
         } label: {
             Label("Rate effort", systemImage: "hand.raised.fill")
                 .font(.system(.caption, design: .rounded, weight: .semibold))
@@ -208,7 +223,7 @@ struct WatchTodayView: View {
         // feature it was created for.
         if ScreenshotConfig.wantsEffortPrompt { return true }
         #endif
-        return pendingEffortSessionID != nil
+        return PendingEffortRequest.load() != nil
     }
 
     /// An empty ring means "no workout" only if the phone has actually said so.
@@ -251,12 +266,6 @@ struct WatchTodayView: View {
         }
     }
 
-    /// The Watch only knows about a pending effort question through the
-    /// snapshot: the phone sets `pendingEffortSessionID` when it imports a
-    /// session it cannot score confidently.
-    private var pendingEffortSessionID: String? {
-        UserDefaults(suiteName: rechargeAppGroupID)?.string(forKey: "pendingEffortSessionID")
-    }
 }
 
 /// Three taps, matched to the phone's bands so the same answer means the same

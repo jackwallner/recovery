@@ -974,12 +974,10 @@ public final class RecoveryEngine: ObservableObject {
 
         // The Watch cannot work out on its own which session needs an effort
         // answer — it has no workout history — so the phone names it here.
-        let defaults = UserDefaults(suiteName: rechargeAppGroupID)
-        if let pending = awaitingEffort {
-            defaults?.set(pending.healthKitUUID, forKey: "pendingEffortSessionID")
-        } else {
-            defaults?.removeObject(forKey: "pendingEffortSessionID")
+        let pendingEffort = awaitingEffort.map {
+            PendingEffortRequest(sessionID: $0.healthKitUUID, activityLabel: $0.activityLabel)
         }
+        PendingEffortRequest.save(pendingEffort)
 
         WidgetCenter.shared.reloadAllTimelines()
 
@@ -990,7 +988,7 @@ public final class RecoveryEngine: ObservableObject {
         #if os(iOS)
         PhoneWatchSession.shared.sendSnapshot(
             snapshot,
-            pendingEffortSessionID: awaitingEffort?.healthKitUUID,
+            pendingEffort: pendingEffort,
             complicationStyle: RechargeSettings.shared.complicationStyle.rawValue
         )
         #endif
@@ -1053,7 +1051,7 @@ public final class RecoveryEngine: ObservableObject {
 
         let defaults = UserDefaults(suiteName: rechargeAppGroupID)
         defaults?.removeObject(forKey: Self.lastSuccessfulImportKey)
-        defaults?.removeObject(forKey: "pendingEffortSessionID")
+        PendingEffortRequest.save(nil, defaults: defaults)
         lastSuccessfulImport = nil
         lastImportFailed = false
         estimates = []
@@ -1072,7 +1070,7 @@ public final class RecoveryEngine: ObservableObject {
         #if os(iOS)
         PhoneWatchSession.shared.sendSnapshot(
             .empty,
-            pendingEffortSessionID: nil,
+            pendingEffort: nil,
             complicationStyle: settings.complicationStyle.rawValue
         )
         #endif
@@ -1360,7 +1358,9 @@ public final class RecoveryEngine: ObservableObject {
         #if os(iOS)
         PhoneWatchSession.shared.sendSnapshot(
             snapshot,
-            pendingEffortSessionID: ScreenshotConfig.wantsEffortPrompt ? "screenshot-0" : nil,
+            pendingEffort: ScreenshotConfig.wantsEffortPrompt
+                ? PendingEffortRequest(sessionID: "screenshot-0", activityLabel: snapshot.activityLabel)
+                : nil,
             complicationStyle: RechargeSettings.shared.complicationStyle.rawValue
         )
         #endif
