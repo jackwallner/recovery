@@ -84,6 +84,60 @@ final class AuditFixRegressionTests: XCTestCase {
     }
 }
 
+// MARK: - B2: the Watch effort question names the session it saves to
+
+final class PendingEffortRequestTests: XCTestCase {
+
+    private var defaults: UserDefaults!
+    private let suite = "PendingEffortRequestTests"
+
+    override func setUp() {
+        defaults = UserDefaults(suiteName: suite)
+        defaults.removePersistentDomain(forName: suite)
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suite)
+    }
+
+    /// A morning lift wants an effort answer and an evening run owns the
+    /// countdown, so the snapshot says "run". What the Watch reads for the
+    /// question has to be the lift, both its ID and its activity.
+    func testTheWatchReadsTheLabelOfTheSessionTheAnswerIsSavedTo() {
+        let snapshot = RecoverySnapshot(
+            readyAt: RecoveryFixtures.now.addingTimeInterval(20 * 3600),
+            sessionEnd: RecoveryFixtures.now.addingTimeInterval(-3600),
+            hours: 21,
+            windowLowHours: 18,
+            windowHighHours: 24,
+            profile: .endurance,
+            activityLabel: "run",
+            calculatedAt: RecoveryFixtures.now
+        )
+        RecoverySnapshotStore.save(snapshot, defaults: defaults)
+        PendingEffortRequest.save(
+            PendingEffortRequest(sessionID: "lift", activityLabel: "lifting session"),
+            defaults: defaults
+        )
+
+        let pending = PendingEffortRequest.load(defaults: defaults)
+        XCTAssertEqual(pending?.sessionID, "lift")
+        XCTAssertEqual(pending?.activityLabel, "lifting session")
+        XCTAssertNotEqual(pending?.activityLabel, RecoverySnapshotStore.load(defaults: defaults).activityLabel)
+    }
+
+    /// Clearing the request clears its label too, so a later request from an
+    /// older phone build (ID only) cannot inherit a stale activity.
+    func testClearingTheRequestClearsItsLabel() {
+        PendingEffortRequest.save(PendingEffortRequest(sessionID: "lift", activityLabel: "lifting session"), defaults: defaults)
+        PendingEffortRequest.save(nil, defaults: defaults)
+        XCTAssertNil(PendingEffortRequest.load(defaults: defaults))
+
+        defaults.set("older", forKey: PendingEffortRequest.sessionIDKey)
+        XCTAssertEqual(PendingEffortRequest.load(defaults: defaults)?.activityLabel, "")
+    }
+}
+
 // MARK: - B3: a quarantined store and the Health anchor
 
 /// When the SwiftData store cannot be opened, `DataService` moves it aside and
