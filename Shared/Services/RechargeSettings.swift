@@ -43,7 +43,16 @@ public final class RechargeSettings: ObservableObject {
     /// this prevents the app from asking again on the next launch and gives the
     /// main UI a stable state from which to offer reconnection.
     @Published public var hasDeferredHealthAccess: Bool {
-        didSet { defaults.set(hasDeferredHealthAccess, forKey: "hasDeferredHealthAccess") }
+        didSet {
+            defaults.set(hasDeferredHealthAccess, forKey: "hasDeferredHealthAccess")
+            // Delete local health data closes the readiness window along with
+            // the history. Reconnecting re-imports that history, so the window
+            // reopens here exactly as it opens at setup: from now, so nothing
+            // the import brings back is asked about. Without this it stayed shut
+            // until the next cold launch, and the readiness question and the
+            // Ready-moment count were silently off until then.
+            if !hasDeferredHealthAccess, hasCompletedSetup { openFeedbackWindowIfNeeded() }
+        }
     }
 
     @Published public var lastWhatsNewVersionShown: String? {
