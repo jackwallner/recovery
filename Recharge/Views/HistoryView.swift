@@ -90,6 +90,9 @@ struct HistoryView: View {
                 selected = nil
                 openInTrailingPane(.estimate(estimate))
             }
+            .onReceive(NotificationCenter.default.publisher(for: .rechargeCountdownRequested)) { _ in
+                selected = nil
+            }
             .sheet(item: $selected) { estimate in
                 EstimateDetailView(capturedEstimate: estimate)
                     .environmentObject(store)

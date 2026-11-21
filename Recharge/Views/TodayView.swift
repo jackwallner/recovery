@@ -185,6 +185,10 @@ struct TodayView: View {
                     openDetail()
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .rechargeCountdownRequested)) { _ in
+                showSettings = false
+                showDetail = false
+            }
             .onChange(of: showSettings) { _, _ in publishSheetState() }
             .onChange(of: showDetail) { _, _ in publishSheetState() }
             .onChange(of: effortTarget?.id) { _, _ in publishSheetState() }
