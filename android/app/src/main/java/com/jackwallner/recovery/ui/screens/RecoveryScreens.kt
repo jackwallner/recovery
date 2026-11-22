@@ -87,11 +87,11 @@ const val COMPARISON_CAPTION="Standard is the model at your training level. Rech
         health.scored.awaitingEffort?.let{w->CardBlock(onClick=effort){Title("How hard was your "+WorkoutClassifier.label(w.activityCode)+"?");Small("Heart rate was patchy. Your rating counts whenever it reads harder than the sensors did.")}}
         ComparisonCard(health.scored.preview,isPro,upgrade)
         health.error?.let{Text(it,color=MaterialTheme.colorScheme.error)}
-        TextButton(onClick={graph.scope.launch{graph.health.refresh()}}){Text("Refresh Health Connect")}
+        if(graph.settings.mayReadHealth)TextButton(onClick={graph.scope.launch{graph.health.refresh()}}){Text("Refresh Health Connect")}
     }
 }
 @Composable fun HistoryScreen(graph: AppGraph,health: HealthState,detail: (String)->Unit,connect: ()->Unit) {
-    if(health.scored.estimates.isEmpty()) {Page{Title(if(health.refreshing)"Reading your history"else"No estimates yet");Text(if(health.refreshing)"Recharge is scoring shared workouts from Health Connect."else"Nothing shared with Recharge to score yet. Finish a workout in a compatible fitness app and share it with Health Connect.");Button(onClick=connect){Text("Connect Health Connect")};TextButton(onClick={graph.scope.launch{graph.health.refresh()}}){Text("Try again")};health.error?.let{Text(it)}};return}
+    if(health.scored.estimates.isEmpty()) {Page{Title(if(health.refreshing)"Reading your history"else"No estimates yet");Text(if(health.refreshing)"Recharge is scoring shared workouts from Health Connect."else"Nothing shared with Recharge to score yet. Finish a workout in a compatible fitness app and share it with Health Connect.");Button(onClick=connect){Text("Connect Health Connect")};if(graph.settings.mayReadHealth)TextButton(onClick={graph.scope.launch{graph.health.refresh()}}){Text("Try again")};health.error?.let{Text(it)}};return}
     val groups=health.scored.estimates.groupBy{it.sessionEnd.atZone(ZoneId.systemDefault()).toLocalDate()}.entries.sortedByDescending{it.key}
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(horizontal=16.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         groups.forEach{(day,estimates)->

@@ -63,7 +63,7 @@ class HealthService(private val context: Context,private val settings: Settings,
         return records
     }
     suspend fun refresh(background: Boolean=false,cachedOnly: Boolean=false): Unit=mutex.withLock {
-        if(automation)return@withLock
+        if(automation||!settings.mayReadHealth)return@withLock
         if(sdkStatus!=HealthConnectClient.SDK_AVAILABLE){clear("Health Connect needs to be installed or updated");return@withLock}
         mutable.value=mutable.value.copy(refreshing=true,error=null)
         try {
@@ -152,7 +152,7 @@ class HealthService(private val context: Context,private val settings: Settings,
         val p=settings.profile;settings.updateProfile(p.copy(vo2Max=if(has(Vo2MaxRecord::class))p.vo2Max else null,bodyMassKilograms=if(has(WeightRecord::class))p.bodyMassKilograms else null,observedMaxHeartRate=if(has(HeartRateRecord::class))p.observedMaxHeartRate else null),fromHealth=true)
         publish(workouts,days,granted,s.updated,true)
     }
-    suspend fun deleteLocalData(): Unit=mutex.withLock {clear("Local health data deleted. Connect to import again.")}
+    suspend fun deleteLocalData(): Unit=mutex.withLock {settings.markLocalDataDeleted();clear("Local health data deleted. Connect to import again.")}
     private suspend fun clear(status: String,granted: Set<String> = emptySet()) {
         withContext(Dispatchers.IO){cache.delete();java.io.File(cache.parentFile,"recovery-cache.tmp").delete()}
         loaded=false;settings.clearHealthDerivedProfile();settings.values.put("healthReadWindowStart","")
