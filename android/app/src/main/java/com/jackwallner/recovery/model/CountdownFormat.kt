@@ -53,6 +53,11 @@ object RecoveryResolver {
         return if(isStale(current.sessionEnd,current.readyAt,now))RecoveryPhase.noRecentWorkout else current.phase(now)
     }
     fun explanation(estimates: List<RecoveryEstimate>,now: Instant=Instant.now())=if(phase(estimates,now)==RecoveryPhase.noRecentWorkout)null else current(estimates,now)
+    /** The countdown whose run-out counts towards the review ask, or null. Bounded by setup like the readiness question (`eligibleFrom` is null until setup finishes), because onboarding imports the history in one go and its newest session has long since run out. Taken from the countdowns only, the one that ran out last, and only once none is still running: `current` falls back to the newest session of any kind, so an easy walk after a hard run hid the run's Ready moment for good. */
+    fun readyMoment(estimates: List<RecoveryEstimate>,eligibleFrom: Instant?,now: Instant=Instant.now()): RecoveryEstimate? {
+        if(eligibleFrom==null||active(estimates,now)!=null)return null
+        return estimates.filter{it.producesCountdown&&it.readyAt<=now}.maxByOrNull{it.readyAt}?.takeIf{it.readyAt>=eligibleFrom}
+    }
     /** True when another countdown was already running past this one's `readyAt`, so the ring never showed this one expire. Same test as the stacking rule in `RecoveryCalculator.carriedHours`. */
     fun isSuperseded(estimate: RecoveryEstimate,estimates: List<RecoveryEstimate>)=estimates.any{it.sessionID!=estimate.sessionID&&it.producesCountdown&&it.sessionEnd<estimate.readyAt&&it.readyAt>estimate.readyAt}
     fun awaitingFeedback(estimates: List<RecoveryEstimate>,answered: Set<String>,eligibleFrom: Instant?=null,now: Instant=Instant.now())=estimates.filter{it.producesCountdown&&it.readyAt<=now&&it.sessionID !in answered&&now.hoursSince(it.readyAt)<48&&(eligibleFrom==null||it.readyAt>=eligibleFrom)&&!isSuperseded(it,estimates)}.maxByOrNull{it.readyAt}

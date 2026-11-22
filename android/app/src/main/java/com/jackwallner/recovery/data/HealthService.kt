@@ -131,7 +131,7 @@ class HealthService(private val context: Context,private val settings: Settings,
         if(!automation)withContext(Dispatchers.IO){save(next)}
         mutable.value=next
         if(scored.estimates.isNotEmpty())review.hasSeenEstimate=true
-        RecoveryResolver.current(scored.estimates)?.takeIf{it.producesCountdown&&it.readyAt<=Instant.now()}?.let{review.recordReadyMoment(it.sessionID)}
+        RecoveryResolver.readyMoment(scored.estimates,settings.feedbackEligibleFrom)?.let{review.recordReadyMoment(it.sessionID)}
         onPublished(next)
     }
     suspend fun rescore(unfreezeAll: Boolean=false): Unit=mutex.withLock {val s=mutable.value;if(!automation&&!s.granted.containsAll(corePermissions))return@withLock;publish(s.workouts,s.days,s.granted,s.updated,unfreezeAll)}
@@ -139,7 +139,7 @@ class HealthService(private val context: Context,private val settings: Settings,
         val s=mutable.value;val now=Instant.now()
         val feedback=if(isPro())RecoveryResolver.awaitingFeedback(s.scored.estimates,settings.answeredFeedback,settings.feedbackEligibleFrom?:Instant.MAX,now)else null
         mutable.value=s.copy(scored=s.scored.copy(awaitingFeedback=feedback))
-        RecoveryResolver.current(s.scored.estimates,now)?.takeIf{it.producesCountdown&&it.readyAt<=now}?.let{review.recordReadyMoment(it.sessionID)}
+        RecoveryResolver.readyMoment(s.scored.estimates,settings.feedbackEligibleFrom,now)?.let{review.recordReadyMoment(it.sessionID)}
     }
     suspend fun recordEffort(id: String,effort: Double): Unit=mutex.withLock {val s=mutable.value;publish(s.workouts.map{if(it.id==id)it.copy(reportedEffort=effort.coerceIn(1.0,10.0))else it},s.days,s.granted,s.updated,true)}
     suspend fun overrideIntensity(id: String,intensity: SessionIntensity?): Unit=mutex.withLock {if(!isPro())return@withLock;val s=mutable.value;publish(s.workouts.map{if(it.id==id)it.copy(intensityOverride=intensity)else it},s.days,s.granted,s.updated,true)}
