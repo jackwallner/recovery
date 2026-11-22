@@ -108,7 +108,7 @@ const val COMPARISON_CAPTION="Standard is the model at your training level. Rech
 @Composable fun SessionDetailScreen(graph: AppGraph,health: HealthState,id: String?,isPro: Boolean,upgrade: ()->Unit) {
     val e=health.scored.estimates.find{it.sessionID==id}
     if(e==null){Page{Title("Session unavailable");Text("This session is no longer in the local health cache.")};return}
-    val now=Instant.now();val expired=e.producesCountdown&&e.readyAt<=now
+    val now=remember(id){Instant.now()};val expired=e.producesCountdown&&e.readyAt<=now
     Page {
         CardBlock {
             Text(CountdownFormat.hours(e.recoveryCostHours),fontSize=46.sp,fontWeight=FontWeight.Bold)
