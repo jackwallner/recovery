@@ -12,6 +12,7 @@ Developer notes and historical audits for this repository. The published site re
 - [state-machines-2026-11-06-verify.md](audits/state-machines-2026-11-06-verify.md): independent verification of those fixes (FAIL: B2's added UI test has no passing run; B1, B3, B4 proved by revert, 433/433 unit tests pass)
 - [presubmit-review-2026-11-07.md](audits/presubmit-review-2026-11-07.md): pre-submit review of 1.1.4 against live 1.1.2 (0 P0, 0 P1, 5 P2 left as noted)
 - [2026-11-20-bug-ux.html](audits/2026-11-20-bug-ux.html): Bug and UX catalog, 2026-11-20: 11 bugs (1 high, 2 medium, 8 low; 7 confirmed), 16 UX items, October audit items rechecked. Catalog only, nothing fixed.
+- [2026-11-20-bug-fixes.md](audits/2026-11-20-bug-fixes.md): fix status for that catalog after independent review (11 of 11 verified, 0 reverted; 442 unit and 38 UI tests green at `b286f33`)
 
 ## Design
 
