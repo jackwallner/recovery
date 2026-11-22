@@ -21,6 +21,9 @@ class Settings(val values: Values) {
     var onModelChange: ()->Unit={}
     var hasCompletedSetup by mutableStateOf(values.bool("hasCompletedSetup"));private set
     var hasDeferredHealthAccess by mutableStateOf(values.bool("hasDeferredHealthAccess"));private set
+    /** Set by "Delete local health data", cleared only when the user connects Health Connect again. While it is set nothing reads Health Connect, or the next resume or background refresh brings the deleted history straight back. */
+    var hasDeletedLocalData by mutableStateOf(values.bool("hasDeletedLocalData"));private set
+    val mayReadHealth get()=!hasDeletedLocalData
     var appearance by mutableStateOf(values.int("appearance").coerceIn(0,2));private set
     var profile by mutableStateOf(runCatching{CacheCodec.profile(JSONObject(values.string("athleteProfile")?:"{}"))}.getOrDefault(AthleteProfile()));private set
     var ambiguousProfile by mutableStateOf(runCatching{WorkoutProfile.valueOf(values.string("ambiguousProfile")?:"mixed")}.getOrDefault(WorkoutProfile.mixed));private set
@@ -47,6 +50,10 @@ class Settings(val values: Values) {
     fun declineEffort(id: String){declinedEffort=declinedEffort+id;writeSet("declinedEffortSessions",declinedEffort)}
     fun completeSetup(now: Instant=Instant.now()){hasCompletedSetup=true;values.put("hasCompletedSetup","true");values.put("hasAnsweredProfileQuestions","true");values.put("lastTrialOfferShownDate",now.toEpochMilli().toString());openFeedbackWindow(now);onModelChange()}
     fun openFeedbackWindow(now: Instant=Instant.now()){if(feedbackEligibleFrom==null)values.put("feedbackEligibleFrom",now.toEpochMilli().toString())}
+    /** Deleting closes the readiness window along with the history. */
+    fun markLocalDataDeleted(){hasDeletedLocalData=true;values.put("hasDeletedLocalData","true");values.put("feedbackEligibleFrom","")}
+    /** Connecting again re-imports that history, so the window reopens from now exactly as it does at setup: nothing the import brings back is asked about. */
+    fun reconnectHealth(now: Instant=Instant.now()){hasDeletedLocalData=false;values.put("hasDeletedLocalData","false");if(hasCompletedSetup)openFeedbackWindow(now)}
     fun setDeferredHealth(value: Boolean){hasDeferredHealthAccess=value;values.put("hasDeferredHealthAccess",value.toString())}
     fun passiveTrialOfferAllowed(now: Instant=Instant.now())=values.long("lastTrialOfferShownDate")?.let{now.toEpochMilli()-it>=14*86_400_000L}?:true
     fun clearHealthDerivedProfile() {

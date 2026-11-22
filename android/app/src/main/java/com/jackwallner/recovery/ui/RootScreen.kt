@@ -46,7 +46,7 @@ import com.jackwallner.recovery.ui.theme.*
     var afterPermission by remember{mutableStateOf<(() ->Unit)?>(null)}
     var requestingPermission by remember{mutableStateOf(false)}
     val permissionLauncher=rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) {
-        scope.launch{graph.health.refresh();requestingPermission=false;val done=afterPermission;afterPermission=null;done?.invoke()}
+        graph.settings.reconnectHealth();scope.launch{graph.health.refresh();requestingPermission=false;val done=afterPermission;afterPermission=null;done?.invoke()}
     }
     val requestHealth: (Boolean,()->Unit)->Unit={background,done->
         if(!requestingPermission) {
