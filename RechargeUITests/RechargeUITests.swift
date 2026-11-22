@@ -237,8 +237,11 @@ final class RechargeUITests: XCTestCase {
     /// it is the only CTA in the flow with legal text anywhere near it.
     private static let offerPrimary = "Continue with Recharge+"
 
+    /// `measuringOffer` false skips the offer CTA's frame: at an accessibility
+    /// text size the whole offer page scrolls, so its CTA starts below the fold
+    /// and only a test that scrolls to it can reach it.
     @discardableResult
-    private func advanceToTheOffer(_ app: XCUIApplication) -> [CGRect] {
+    private func advanceToTheOffer(_ app: XCUIApplication, measuringOffer: Bool = true) -> [CGRect] {
         var primaryFrames: [CGRect] = []
 
         for _ in 0..<12 {
@@ -272,7 +275,7 @@ final class RechargeUITests: XCTestCase {
         // the only page in the flow with anything underneath its CTA. The bug it
         // was written to catch had moved onto the page it could not see.
         let offer = app.buttons[Self.offerPrimary].firstMatch
-        if offer.waitForExistence(timeout: 10) {
+        if measuringOffer, offer.waitForExistence(timeout: 10) {
             wait(
                 for: [expectation(for: NSPredicate(format: "hittable == true"), evaluatedWith: offer)],
                 timeout: 10
@@ -400,7 +403,7 @@ final class RechargeUITests: XCTestCase {
         )
 
         XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 20))
-        advanceToTheOffer(app)
+        advanceToTheOffer(app, measuringOffer: false)
 
         let cta = app.buttons["Continue with Recharge+"].firstMatch
         XCTAssertTrue(cta.waitForExistence(timeout: 10), "the trial page never appeared")
@@ -408,7 +411,7 @@ final class RechargeUITests: XCTestCase {
 
         // Existence is not enough: an element the layout has pushed off the
         // screen still exists. It has to be scrollable into reach and pressable.
-        if !cta.isHittable { app.swipeUp() }
+        for _ in 0..<8 where !cta.isHittable { app.swipeUp() }
         XCTAssertTrue(cta.isHittable, "the purchase button cannot be reached")
 
         let price = app.staticTexts.containing(
