@@ -39,7 +39,7 @@ android {
         applicationId = "com.jackwallner.recovery"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
+        versionCode = 2
         versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Every connected test starts from a clean install: no saved data, no purchase.
