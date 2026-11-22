@@ -184,3 +184,19 @@ saved. The permission classifier refused the IARC terms tick; Jack completes
 the rating. Reviewer code: `play_handoff.py review-codes recovery` (the sign-in
 entry has instructions and no code yet). Then Jack sends for review from
 Publishing overview with managed publishing off.
+
+## iOS fix port, 2026-11-22
+
+Ported from the iOS bug-fix wave (commits 6ab41fd to 581c950): the readiness
+question skips a countdown a later stacked session superseded
+(`RecoveryResolver.isSuperseded`); `RecoveryResolver.readyMoment` bounds the
+review ask's Ready moments by `feedbackEligibleFrom` and picks the countdown
+that ran out last; Delete local health data sets `Settings.hasDeletedLocalData`,
+which `HealthService.refresh` honours until the Health Connect permission result
+calls `reconnectHealth` (that also reopens the readiness window from now); a
+Play pending purchase (`PaymentPendingError`) is `PurchaseOutcome.PENDING`, not
+a failure; `TypedNumber` reads the Max heart rate field in any decimal digits.
+Already fine on Android: model profile is classified on every score (no stored
+profile to go stale), `recoveryProCached` seeds the tier for background wakes,
+the review launch count lives in `MainActivity`, DST timeline cases are pinned
+in `ClockBoundaryTest`.
