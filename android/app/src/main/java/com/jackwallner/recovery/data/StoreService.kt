@@ -12,6 +12,7 @@ import com.revenuecat.purchases.PackageType
 import com.revenuecat.purchases.PurchaseParams
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesConfiguration
+import com.revenuecat.purchases.PurchasesErrorCode
 import com.revenuecat.purchases.PurchasesTransactionException
 import com.revenuecat.purchases.awaitCustomerInfo
 import com.revenuecat.purchases.awaitOfferings
@@ -41,6 +42,18 @@ data class PlanOption(val id: String, val displayName: String, val priceLabel: S
 }
 
 enum class PurchaseOutcome { PURCHASED, PENDING, CANCELLED }
+
+/**
+ * What a thrown purchase error means, or null for a real failure. RevenueCat throws
+ * for a purchase Google Play holds as pending (slow payment methods, cash, approval)
+ * rather than returning it, and it used to read as "Couldn't complete the purchase".
+ * Pending never unlocks: the later `PURCHASED` arrives through the customer info listener.
+ */
+internal fun outcomeOf(error: PurchasesTransactionException): PurchaseOutcome? = when {
+    error.userCancelled -> PurchaseOutcome.CANCELLED
+    error.code == PurchasesErrorCode.PaymentPendingError -> PurchaseOutcome.PENDING
+    else -> null
+}
 
 data class StoreState(
     val isPro: Boolean = false,
@@ -157,7 +170,7 @@ class StoreService(private val context: Context, private val diagnostics: Conver
                 PurchaseOutcome.PENDING
             }
         } catch (error: PurchasesTransactionException) {
-            if (error.userCancelled) return PurchaseOutcome.CANCELLED
+            outcomeOf(error)?.let { return it }
             val message = "Couldn't complete the purchase. Please try again."
             _state.update { it.copy(lastError = message) }
             throw IllegalStateException(message)
