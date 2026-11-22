@@ -135,6 +135,37 @@ final class AuditFixesUITests: XCTestCase {
         attach(app, named: "b4-offer-ax5-bottom")
     }
 
+    /// The same page as a sheet, raised from the detail's upgrade card. The
+    /// sheet carries its own Close button and the same terms and buttons.
+    func testEveryControlOnTheOfferSheetIsReachableAtTheLargestTextSize() {
+        let app = launch(scene: "recovering", contentSize: "UICTContentSizeCategoryAccessibilityXXXL")
+        let hero = app.buttons["today.hero"]
+        XCTAssertTrue(hero.waitForExistence(timeout: 15))
+        hero.tap()
+
+        let teaser = app.buttons.containing(
+            NSPredicate(format: "label CONTAINS[c] %@", "Correct this session")
+        ).firstMatch
+        XCTAssertTrue(teaser.waitForExistence(timeout: 15), "the upgrade card is missing from the detail sheet")
+        for _ in 0..<14 where !teaser.isHittable { app.swipeUp() }
+        XCTAssertTrue(teaser.isHittable, "the upgrade card cannot be reached")
+        teaser.tap()
+
+        XCTAssertTrue(
+            app.buttons["Continue with Recharge+"].firstMatch.waitForExistence(timeout: 10),
+            "the offer sheet did not appear"
+        )
+        attach(app, named: "b4-offer-sheet-ax5-top")
+        XCTAssertTrue(app.buttons["Close"].firstMatch.isHittable, "the sheet's Close button is not reachable")
+        for title in ["Not now", "Continue with Recharge+", "Restore", "Terms", "Privacy"] {
+            let control = app.descendants(matching: .any).matching(identifier: title).firstMatch
+            XCTAssertTrue(control.exists, "\(title) is missing from the offer sheet")
+            for _ in 0..<8 where !control.isHittable { app.swipeUp() }
+            XCTAssertTrue(control.isHittable, "\(title) cannot be reached at the largest text size")
+        }
+        attach(app, named: "b4-offer-sheet-ax5-bottom")
+    }
+
     // MARK: - B5: a purchase Apple holds as pending
 
     /// Ask to Buy: RevenueCat throws `paymentPendingError`, and the page has to
