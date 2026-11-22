@@ -185,6 +185,11 @@ uses `PhoneWatchSession` (ported from the retired Headache Logger): `sendMessage
 when reachable, `transferUserInfo` otherwise, plus an App Group backstop queue.
 The phone names the session needing an answer via the `pendingEffortSessionID`
 App Group key, because the Watch has no workout history of its own.
+`PendingEffortRequest` carries that session's `activityLabel` beside the ID
+(`pendingEffortActivityLabel`), and the Watch words its question from it and
+captures the request when the sheet opens. The snapshot's label names the
+session that owns the countdown, often a later one, so a prompt worded from it
+asked about one session and saved the answer to another (audit B2, 2026-11-20).
 
 ### Staleness on the glance surfaces
 
