@@ -119,6 +119,12 @@ struct TrialOfferPage: View {
             comparison
                 .padding(.bottom, Theme.Space.md)
 
+            // At an accessibility size the terms sit a screen below the pitch,
+            // so the billed amount leads instead of waiting for a scroll.
+            if typeSize.isAccessibilitySize {
+                price.padding(.bottom, Theme.Space.md)
+            }
+
             Text(subheadline)
                 .font(.system(.subheadline, design: .rounded))
                 .multilineTextAlignment(.center)
@@ -267,7 +273,7 @@ struct TrialOfferPage: View {
     private var purchaseTerms: some View {
         VStack(spacing: Theme.Space.sm) {
             trialCallout
-            price
+            if !typeSize.isAccessibilitySize { price }
 
             if let errorMessage {
                 Text(errorMessage)
