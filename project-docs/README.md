@@ -22,3 +22,7 @@ Developer notes and historical audits for this repository. The published site re
 ## Android
 
 - [Android](android/README.md): native port verification evidence.
+
+## Marketing
+
+- [new-year-event-2027](marketing/new-year-event-2027/README.md): New Year 2027 in-app event: copy, media, schedule and review status
