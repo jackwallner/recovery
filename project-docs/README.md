@@ -4,6 +4,7 @@ Developer notes and historical audits for this repository. The published site re
 
 ## Audits
 
+- [rollout-2026-11-24.md](audits/rollout-2026-11-24.md): star prompt at a good moment and the remote config reader (`trial_cta` arms held for Jack); test run ids inside
 - [ios27Recharge.md](audits/ios27Recharge.md): iOS 27 compatibility audit: Recharge
 - [lsa817.md](audits/lsa817.md): Recharge target-user release audit
 - [state-machines-2026-11-06.md](audits/state-machines-2026-11-06.md): state machine audit: Recharge (4 bugs, 2 proved by test; repro suite beside it)
