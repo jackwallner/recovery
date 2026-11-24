@@ -1,72 +1,80 @@
 import Foundation
 
 public extension Notification.Name {
-    /// Posted when a countdown reaches Ready — the app's one genuinely good
-    /// moment. The host may call Apple's review prompt shortly afterwards.
+    /// Posted at a good moment (see `ReviewMoment`). The host may call Apple's
+    /// review prompt a few seconds afterwards, if nothing else is on screen.
     static let rechargePositiveMomentForReview =
         Notification.Name("com.jackwallner.recovery.positiveMomentForReview")
 }
 
-/// How the user last resolved the review / feedback prompt.
+/// What the user did about a review. Only opening the write-review page ends
+/// the passive asks: someone who sent feedback can still rate later.
 public enum ReviewPromptOutcome: String, Sendable {
     case openedWriteReview
+    /// Written by builds before the star prompt moved to good moments. Kept so
+    /// those installs decode it; it no longer stops anything.
     case submittedFeedback
 }
 
-/// Pure eligibility rules for Apple's review prompt, kept free of `UserDefaults`
-/// so the thresholds can be unit-tested directly.
-public struct ReviewPromptEligibility: Sendable {
-    /// Countdowns the user has watched run out. The moment the app exists for.
-    public var readyMomentCount: Int
-    public var appLaunchCount: Int
-    public var daysSinceFirstOpen: Int
-    /// True once at least one estimate has been produced.
-    public var hasSeenEstimate: Bool
+/// The moments this app asks at, and whether each one is a good result.
+///
+/// The app's one win is a countdown running out into Ready. Two things can
+/// follow it, and each is its own moment:
+/// - the countdown reached Ready and no readiness question is owed (free tier,
+///   or the question was already answered), so nothing else is competing;
+/// - the readiness question was answered "Felt ready", the clearest good
+///   result the app ever records.
+/// "Okay but not fresh" and "Not ready" are not good results, and neither is
+/// a Ready whose question is still waiting: that answer is the next moment.
+public enum ReviewMoment: Equatable, Sendable {
+    case countdownReady(questionPending: Bool)
+    case readinessAnswered(ReadinessFeedback)
 
-    public enum Trigger: Equatable, Sendable {
-        case readyMoment
-        case engagedUse
-    }
-
-    public static let minimumLaunchCount = 3
-    public static let minimumDaysSinceFirstOpen = 3
-    /// Two completed countdowns means the loop has actually paid off twice,
-    /// which is a much better moment to ask than the first one.
-    public static let minimumReadyMoments = 2
-
-    public static let engagedLaunchCount = 6
-    public static let engagedDaysSinceFirstOpen = 7
-
-    public init(
-        readyMomentCount: Int,
-        appLaunchCount: Int,
-        daysSinceFirstOpen: Int,
-        hasSeenEstimate: Bool
-    ) {
-        self.readyMomentCount = readyMomentCount
-        self.appLaunchCount = appLaunchCount
-        self.daysSinceFirstOpen = daysSinceFirstOpen
-        self.hasSeenEstimate = hasSeenEstimate
-    }
-
-    public var trigger: Trigger? {
-        if readyMomentCount >= Self.minimumReadyMoments,
-           appLaunchCount >= Self.minimumLaunchCount,
-           daysSinceFirstOpen >= Self.minimumDaysSinceFirstOpen {
-            return .readyMoment
+    public var isGoodResult: Bool {
+        switch self {
+        case .countdownReady(let questionPending): !questionPending
+        case .readinessAnswered(let answer): answer == .feltReady
         }
-        // No point asking someone who has never seen a countdown to rate an
-        // app whose whole job is showing one.
-        if hasSeenEstimate,
-           appLaunchCount >= Self.engagedLaunchCount,
-           daysSinceFirstOpen >= Self.engagedDaysSinceFirstOpen {
-            return .engagedUse
-        }
-        return nil
     }
 }
 
-/// Persists launch counts, Ready moments, and prompt eligibility in the App Group.
+/// Pure rules for Apple's rating prompt, free of `UserDefaults` so the gates
+/// can be tested directly.
+///
+/// No question goes in front of the prompt: asking "Enjoying Recharge?" and
+/// sending only the yeses to a rating is review gating (App Review 5.6.1).
+/// The job is to ask early and often enough inside Apple's limits: from the
+/// second launch on, at a good moment, at most once every 30 days. Apple shows
+/// the prompt at most three times a year and decides each time; a call it
+/// swallows costs nothing.
+public struct ReviewPromptGate: Sendable {
+    /// Not in the first session: a second cold start is the only tenure gate.
+    public static let minimumLaunchCount = 2
+    /// Days between our calls. Paces the asks, not the user's answers.
+    public static let cooldownDays = 30
+
+    public var launchCount: Int
+    public var lastAsked: Date?
+    public var openedWriteReview: Bool
+
+    public init(launchCount: Int, lastAsked: Date?, openedWriteReview: Bool) {
+        self.launchCount = launchCount
+        self.lastAsked = lastAsked
+        self.openedWriteReview = openedWriteReview
+    }
+
+    public func allows(_ moment: ReviewMoment, now: Date = .now) -> Bool {
+        guard moment.isGoodResult else { return false }
+        guard !openedWriteReview else { return false }
+        guard launchCount >= Self.minimumLaunchCount else { return false }
+        // A stamp from a clock that ran ahead is in the future: it is no
+        // evidence of an ask, and would hold the cooldown shut for as long.
+        guard let last = lastAsked, last <= now else { return true }
+        return now.timeIntervalSince(last) >= TimeInterval(Self.cooldownDays) * 86_400
+    }
+}
+
+/// Persists the launch count and the last ask in the App Group.
 @MainActor
 public enum ReviewPromptTracker {
     private static let defaults = UserDefaults(suiteName: rechargeAppGroupID) ?? .standard
@@ -75,16 +83,8 @@ public enum ReviewPromptTracker {
     private static let firstOpenKey = "reviewPrompt.firstAppOpenDate"
     private static let lastShownKey = "reviewPrompt.lastShownDate"
     private static let outcomeKey = "reviewPrompt.outcome"
-    private static let readyMomentCountKey = "reviewPrompt.readyMomentCount"
-    private static let pendingReadyMomentKey = "reviewPrompt.pendingReadyMoment"
-    private static let softDeferKey = "reviewPrompt.softDefer"
-    private static let hasSeenEstimateKey = "reviewPrompt.hasSeenEstimate"
+    public static let momentUserInfoKey = "moment"
     private static let seenReadySessionsKey = "reviewPrompt.seenReadySessions"
-
-    public static let cooldownDays = 120
-    /// Shorter cooldown after "Maybe later" — Apple's `requestReview()` often
-    /// shows nothing, so a 120-day jail burns asks for free.
-    public static let softDeferCooldownDays = 30
 
     public static var appLaunchCount: Int {
         get { max(defaults.integer(forKey: launchCountKey), 0) }
@@ -115,21 +115,6 @@ public enum ReviewPromptTracker {
         }
     }
 
-    public static var readyMomentCount: Int {
-        get { max(defaults.integer(forKey: readyMomentCountKey), 0) }
-        set { defaults.set(newValue, forKey: readyMomentCountKey) }
-    }
-
-    public static var hasPendingReadyMoment: Bool {
-        get { defaults.bool(forKey: pendingReadyMomentKey) }
-        set { defaults.set(newValue, forKey: pendingReadyMomentKey) }
-    }
-
-    public static var hasSeenEstimate: Bool {
-        get { defaults.bool(forKey: hasSeenEstimateKey) }
-        set { defaults.set(newValue, forKey: hasSeenEstimateKey) }
-    }
-
     /// Call once per process, when it first comes to the foreground. A
     /// background relaunch is not a launch the user made.
     public static func recordAppLaunch(now: Date = .now) {
@@ -137,93 +122,58 @@ public enum ReviewPromptTracker {
         appLaunchCount += 1
     }
 
-    /// Records that a specific countdown has run out. Keyed on the session so
-    /// re-opening the app during the same Ready state cannot inflate the count.
-    public static func recordReadyMoment(sessionID: String) {
+    /// Whether a moment right now may call `requestReview()`.
+    public static func shouldRequestReview(
+        for moment: ReviewMoment,
+        hasCompletedSetup: Bool,
+        now: Date = .now
+    ) -> Bool {
+        guard !ScreenshotConfig.isEnabled, hasCompletedSetup else { return false }
+        return ReviewPromptGate(
+            launchCount: appLaunchCount,
+            lastAsked: lastShownDate,
+            openedWriteReview: outcome == .openedWriteReview
+        ).allows(moment, now: now)
+    }
+
+    /// A countdown has run out. Keyed on the session so re-opening the app
+    /// during the same Ready state cannot announce it twice.
+    public static func recordReadyMoment(sessionID: String, questionPending: Bool) {
         var seen = Set(defaults.stringArray(forKey: seenReadySessionsKey) ?? [])
         guard !seen.contains(sessionID) else { return }
         seen.insert(sessionID)
         // Bound the set; only recency matters and this lives in the App Group.
         if seen.count > 200 { seen = Set(seen.prefix(200)) }
         defaults.set(Array(seen), forKey: seenReadySessionsKey)
-        readyMomentCount += 1
-        hasPendingReadyMoment = true
-        NotificationCenter.default.post(name: .rechargePositiveMomentForReview, object: nil)
+        recordMoment(.countdownReady(questionPending: questionPending))
     }
 
-    public static func recordEstimateAvailable() {
-        guard !hasSeenEstimate else { return }
-        hasSeenEstimate = true
+    /// Announces a moment. The host asks only for a good result (`allows`
+    /// refuses the rest), a few seconds later and only if the screen is still
+    /// clear.
+    public static func recordMoment(_ moment: ReviewMoment) {
+        NotificationCenter.default.post(
+            name: .rechargePositiveMomentForReview,
+            object: nil,
+            userInfo: [Self.momentUserInfoKey: moment]
+        )
     }
 
-    public static func consumePendingReadyMoment() {
-        hasPendingReadyMoment = false
-    }
-
-    public static func passivePromptAllowed(now: Date = .now) -> Bool {
-        guard outcome == nil else { return false }
-        guard let last = lastShownDate else { return true }
-        let days = defaults.bool(forKey: softDeferKey) ? softDeferCooldownDays : cooldownDays
-        return now.timeIntervalSince(last) >= TimeInterval(days) * 86_400
-    }
-
-    public static func eligibilityTrigger(
-        hasCompletedSetup: Bool,
-        now: Date = .now
-    ) -> ReviewPromptEligibility.Trigger? {
-        guard !ScreenshotConfig.isEnabled else { return nil }
-        guard hasCompletedSetup else { return nil }
-        guard passivePromptAllowed(now: now) else { return nil }
-        guard let first = firstAppOpenDate else { return nil }
-        return ReviewPromptEligibility(
-            readyMomentCount: readyMomentCount,
-            appLaunchCount: appLaunchCount,
-            daysSinceFirstOpen: Int(now.timeIntervalSince(first) / 86_400),
-            hasSeenEstimate: hasSeenEstimate
-        ).trigger
-    }
-
-    public static func canRequestReview(hasCompletedSetup: Bool, now: Date = .now) -> Bool {
-        eligibilityTrigger(hasCompletedSetup: hasCompletedSetup, now: now) != nil
-    }
-
-    public static func shouldShowAfterReadyMoment(hasCompletedSetup: Bool, now: Date = .now) -> Bool {
-        guard hasPendingReadyMoment else { return false }
-        return eligibilityTrigger(hasCompletedSetup: hasCompletedSetup, now: now) == .readyMoment
-    }
-
-    /// For users who keep coming back without accumulating Ready moments. There
-    /// is no pending token to consume here, so the host must call `markShown()`
-    /// when it presents or a swipe-away re-prompts on every launch.
-    public static func shouldShowForEngagedUse(hasCompletedSetup: Bool, now: Date = .now) -> Bool {
-        guard !hasPendingReadyMoment else { return false }
-        return eligibilityTrigger(hasCompletedSetup: hasCompletedSetup, now: now) == .engagedUse
-    }
-
+    /// Recorded when the call is made: Apple may show nothing, and there is no
+    /// answer to wait for.
     public static func markShown(now: Date = .now) {
         lastShownDate = now
-        defaults.set(false, forKey: softDeferKey)
-        consumePendingReadyMoment()
     }
 
-    /// True after "Maybe later" until the next hard `markShown` / outcome. Hosts
-    /// must not call `markShown()` on sheet dismiss while this holds — that
-    /// would clear the flag and apply the 120-day cooldown instead.
-    public static var isSoftDeferred: Bool { defaults.bool(forKey: softDeferKey) }
-
-    public static func markSoftDeferred(now: Date = .now) {
-        lastShownDate = now
-        defaults.set(true, forKey: softDeferKey)
-        consumePendingReadyMoment()
-    }
-
+    /// Settings > Write a review. The one thing that ends the passive asks.
     public static func markOpenedWriteReview() {
         outcome = .openedWriteReview
         markShown()
     }
 
-    public static func markFeedbackSubmitted() {
-        outcome = .submittedFeedback
-        markShown()
+    /// For tests: clears everything this type stores.
+    public static func resetForTesting() {
+        [launchCountKey, firstOpenKey, lastShownKey, outcomeKey, seenReadySessionsKey]
+            .forEach(defaults.removeObject(forKey:))
     }
 }

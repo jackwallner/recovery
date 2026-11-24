@@ -324,11 +324,12 @@ struct PaywallView: View {
     }
 
     private var ctaLabel: String {
-        guard let selected else { return String(localized: "Continue with Recharge+", bundle: .recharge) }
+        guard let selected else { return store.trialCTA.title(trialEligible: false) }
         return RechargeConversionCopy.ctaLabel(
             trial: selected.rechargeIntroTrialLength,
             priceLabel: selected.rechargePriceLabel,
-            eligibleForTrial: store.isEligibleForIntroOffer(selected)
+            eligibleForTrial: store.isEligibleForIntroOffer(selected),
+            cta: store.trialCTA
         )
     }
 

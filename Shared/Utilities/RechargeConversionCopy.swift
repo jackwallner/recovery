@@ -38,8 +38,13 @@ public enum RechargeConversionCopy {
     ///
     /// The parameters are retained so callers keep passing the real offer, and
     /// so re-introducing price wording stays a one-line change.
-    public static func ctaLabel(trial: IntroTrialLength?, priceLabel: String, eligibleForTrial: Bool) -> String {
-        String(localized: "Continue with Recharge+", bundle: .recharge)
+    public static func ctaLabel(
+        trial: IntroTrialLength?,
+        priceLabel: String,
+        eligibleForTrial: Bool,
+        cta: TrialCTA = .control
+    ) -> String {
+        cta.title(trialEligible: eligibleForTrial)
     }
 
     /// Short capsule CTA on locked cards. These sit far from any price and only

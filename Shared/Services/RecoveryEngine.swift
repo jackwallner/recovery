@@ -1009,13 +1009,15 @@ public final class RecoveryEngine: ObservableObject {
         }
 
         // The moment the countdown runs out is the app's one genuine win, and
-        // the only honest place to open the review funnel from.
+        // one of the two places the review ask can start from.
         if let estimate = RecoveryResolver.readyMoment(
             in: estimates, eligibleFrom: RechargeSettings.shared.feedbackEligibleFrom
         ) {
-            ReviewPromptTracker.recordReadyMoment(sessionID: estimate.sessionID)
+            ReviewPromptTracker.recordReadyMoment(
+                sessionID: estimate.sessionID,
+                questionPending: awaitingFeedback != nil
+            )
         }
-        if !estimates.isEmpty { ReviewPromptTracker.recordEstimateAvailable() }
     }
 
     // MARK: - User input
@@ -1135,6 +1137,8 @@ public final class RecoveryEngine: ObservableObject {
         awaitingFeedback = nil
         guard rescore() else { return }
         publish()
+        // "Felt ready" is the clearest good result the app ever records.
+        ReviewPromptTracker.recordMoment(.readinessAnswered(feedback))
     }
 
     public func dismissFeedback(forSessionID sessionID: String) {
@@ -1248,7 +1252,10 @@ public final class RecoveryEngine: ObservableObject {
         guard let estimate = RecoveryResolver.readyMoment(
             in: estimates, eligibleFrom: RechargeSettings.shared.feedbackEligibleFrom, now: now
         ) else { return }
-        ReviewPromptTracker.recordReadyMoment(sessionID: estimate.sessionID)
+        ReviewPromptTracker.recordReadyMoment(
+            sessionID: estimate.sessionID,
+            questionPending: awaitingFeedback != nil
+        )
     }
 
     // MARK: - Weekly load (Pro)

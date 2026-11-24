@@ -146,6 +146,10 @@ public final class StoreService: NSObject, ObservableObject {
 
     @Published public private(set) var products: [Package] = []
     @Published public private(set) var currentOffering: Offering?
+    /// `offerings.current.metadata` from the last successful fetch: the one
+    /// place a running RevenueCat Experiment's variant shows up. Nil reads as
+    /// the control everywhere. See `RemoteConfig`.
+    @Published public private(set) var remoteMetadata: [String: Any]?
     @Published public private(set) var customerInfo: CustomerInfo?
     @Published public private(set) var isPro: Bool = false {
         didSet {
@@ -262,6 +266,7 @@ public final class StoreService: NSObject, ObservableObject {
         #endif
         do {
             let offerings = try await Purchases.shared.offerings()
+            remoteMetadata = offerings.current?.metadata
             let offering = offerings.rechargePaywallOffering
             let packages = offering?.rechargeSortedPackages ?? []
             guard !packages.isEmpty else {
@@ -382,12 +387,20 @@ public final class StoreService: NSObject, ObservableObject {
     }
 
     public var onboardingTrialCTALabel: String {
-        guard let yearly = yearlyPackage else { return String(localized: "Continue with Recharge+", bundle: .recharge) }
+        guard let yearly = yearlyPackage else { return trialCTA.title(trialEligible: false) }
         return RechargeConversionCopy.ctaLabel(
             trial: yearly.rechargeIntroTrialLength,
             priceLabel: yearly.rechargePriceLabel,
-            eligibleForTrial: isEligibleForIntroOffer(yearly)
+            eligibleForTrial: isEligibleForIntroOffer(yearly),
+            cta: trialCTA
         )
+    }
+
+    /// The trial button's wording arm for this customer.
+    public var trialCTA: TrialCTA { TrialCTA.from(metadata: remoteMetadata) }
+
+    public func isOn(_ remoteSwitch: RemoteSwitch) -> Bool {
+        RemoteConfig.isOn(remoteSwitch, in: remoteMetadata)
     }
 
     public var yearlyCTADisclosureText: String? {
@@ -588,8 +601,11 @@ public final class StoreService: NSObject, ObservableObject {
     /// has to background the app before reading anything back.
     public func syncConversionAttributes() {
         guard isConfigured else { return }
-        let attributes = ConversionDiagnostics.subscriberAttributes
+        var attributes = ConversionDiagnostics.subscriberAttributes
         guard !attributes.isEmpty else { return }
+        // The arm this customer saw, so a wording test can be read by attribute
+        // as well as by Experiment.
+        attributes[TrialCTA.metadataKey] = trialCTA.rawValue
         Purchases.shared.attribution.setAttributes(attributes)
     }
 
