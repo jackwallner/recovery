@@ -756,7 +756,12 @@ struct SettingsView: View {
 
     private var aboutSection: some View {
         Section {
-            Link("Write a review on the App Store", destination: AppStoreReviewLinks.writeReviewURL)
+            // Opening the write-review page is the one thing that ends the
+            // automatic star prompt.
+            Button("Write a review on the App Store") {
+                ReviewPromptTracker.markOpenedWriteReview()
+                openURL(AppStoreReviewLinks.writeReviewURL)
+            }
             Button("Send feedback") { showFeedback = true }
 
             // Restore used to be a button that produced no visible change at

@@ -94,13 +94,23 @@ These files load automatically when you read a file matching their `paths:`. Age
   "injury", "your body", "cure", "diagnos". The output is a *cardiovascular
   training estimate*, always. Health & Fitness category, so the **Regulated
   Medical Device declaration must be set in the ASC UI** or submission blocks.
-- **Review funnel trigger:** a countdown reaching Ready
-  (`ReviewPromptTracker.recordReadyMoment`), gated at two Ready moments so the
-  loop has paid off twice before the ask.
-- **`RootView` is the only place that may interrupt.** What's New, the review
-  ask, and the passive trial offer are evaluated in that order and stop at the
-  first one that fires; all of them yield to a sheet Today is already showing,
-  which it reports through `isPresentingSheet`. SwiftUI silently drops a second
+- **Star prompt:** Apple's native prompt, with no question first (5.6.1), and
+  only at a good result (`ReviewMoment`): a countdown reaching Ready with no
+  readiness question owed (free tier), or the readiness question answered
+  "Felt ready" (Recharge+). Never at launch, a tab, or a count of opens. It
+  waits 3 seconds, then skips itself if the app is not in front or any sheet,
+  pane or question is up. Gates (`ReviewPromptGate`): from the 2nd cold launch,
+  30 days between calls (stamped when the call is made), never after the
+  Settings write-review row is opened; sending feedback never stops it.
+  `rating_prompt` = `off` in offering metadata pauses it.
+- **Remote config:** `Shared/Services/RemoteConfig.swift` reads
+  `offerings.current.metadata`. Wording tests go through the `trial_cta` key;
+  only the control ("Continue with Recharge+", no trial words on the button,
+  3.1.2(c)) ships. A switch key must be set the same on every offering.
+- **`RootView` is the only place that may interrupt.** What's New and the passive
+  trial offer are evaluated at launch in that order and stop at the first one
+  that fires, and the star prompt starts only from a good moment, never at
+  launch; all of them yield to a sheet Today is already showing, which it reports through `isPresentingSheet`. SwiftUI silently drops a second
   present, and a review prompt that never appeared has still spent the one
   chance the funnel gets. The trial offer additionally needs the 14-day
   `passiveTrialOfferAllowed` cooldown, a resolved `customerInfo`, and a loaded

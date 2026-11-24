@@ -5,6 +5,7 @@ struct RootView: View {
     @EnvironmentObject private var store: StoreService
     @EnvironmentObject private var engine: RecoveryEngine
     @Environment(\.requestReview) private var requestReview
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -162,8 +163,9 @@ struct RootView: View {
         }
         #endif
         .task { await evaluateLaunchSurfaces() }
-        .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { _ in
-            Task { await evaluateReadyMomentSurfaces() }
+        .onReceive(NotificationCenter.default.publisher(for: .rechargePositiveMomentForReview)) { note in
+            guard let moment = note.userInfo?[ReviewPromptTracker.momentUserInfoKey] as? ReviewMoment else { return }
+            Task { await evaluateMoment(moment) }
         }
         .onChange(of: store.customerInfo != nil) { _, resolved in
             if resolved { evaluateTrialOffer() }
@@ -309,35 +311,47 @@ struct RootView: View {
             settings.lastWhatsNewVersionShown = WhatsNew.currentVersion
             return
         }
-        if await !requestReviewIfEligible(afterReadyMoment: false) { evaluateTrialOffer() }
+        evaluateTrialOffer()
     }
 
-    /// A countdown reaching Ready is the app's one genuine win, and the only
-    /// honest place to ask for anything. Two things want that moment, and the
-    /// readiness question owns it first, so they run in priority order and stop
-    /// at the first one that fires.
-    private func evaluateReadyMomentSurfaces() async {
-        if await !requestReviewIfEligible(afterReadyMoment: true) { evaluateTrialOffer() }
+    /// A good moment (see `ReviewMoment`) is the only thing that ever asks for
+    /// a rating: never a launch, a tab, or a count of opens. The readiness
+    /// question owns the moment first when it is owed, so the two never talk
+    /// over each other. The trial offer follows a Ready only when nothing
+    /// asked, and an answer to the question never raises it.
+    private func evaluateMoment(_ moment: ReviewMoment) async {
+        let asked = await requestReviewIfEligible(after: moment)
+        if case .countdownReady = moment, !asked { evaluateTrialOffer() }
     }
 
-    /// Apple's own prompt, asked of everyone who qualifies, with no question
-    /// first (guideline 5.6.1). Returns whether it asked, so the trial offer
-    /// does not land in the same moment.
-    private func requestReviewIfEligible(afterReadyMoment: Bool) async -> Bool {
-        guard !isPresentingSomething else { return false }
-        let eligible = afterReadyMoment
-            ? ReviewPromptTracker.shouldShowAfterReadyMoment(hasCompletedSetup: settings.hasCompletedSetup)
-            : ReviewPromptTracker.shouldShowForEngagedUse(hasCompletedSetup: settings.hasCompletedSetup)
-        guard eligible else { return false }
-        // A beat after the Ready state lands, so the win registers first.
-        try? await Task.sleep(for: .seconds(afterReadyMoment ? 1.2 : 0.6))
-        // The sleep is long enough for the readiness sheet to have appeared in
-        // the meantime, so the guard has to be re-checked, not just entered.
-        guard !isPresentingSomething else { return false }
+    /// Apple's own prompt, with no question first (guideline 5.6.1). Waits a
+    /// few seconds so the result registers, then checks again that the app is
+    /// in front and nothing is up: the wait is long enough for a sheet, the
+    /// background, or the readiness question to appear. If anything is, this
+    /// moment is skipped and the next good one asks. Returns whether it asked.
+    private func requestReviewIfEligible(after moment: ReviewMoment) async -> Bool {
+        // What can be known now, before the wait. The sheet the user just
+        // closed to cause this moment may still be animating away, so what is
+        // on screen is judged only after the wait.
+        guard store.isOn(.ratingPrompt),
+              ReviewPromptTracker.shouldRequestReview(for: moment, hasCompletedSetup: settings.hasCompletedSetup)
+        else { return false }
+        try? await Task.sleep(for: .seconds(Self.reviewDelay))
+        guard !Task.isCancelled,
+              scenePhase == .active,
+              store.isOn(.ratingPrompt),
+              engine.awaitingFeedback == nil,
+              !isPresentingSomething,
+              trailingPanel == nil,
+              ReviewPromptTracker.shouldRequestReview(for: moment, hasCompletedSetup: settings.hasCompletedSetup)
+        else { return false }
         ReviewPromptTracker.markShown()
         requestReview()
         return true
     }
+
+    /// How long a good result is left alone before the ask.
+    private static let reviewDelay = 3.0
 
     /// The passive trial offer: the same single decision from onboarding, shown
     /// again to someone who skipped it and has since seen the app work.

@@ -70,7 +70,6 @@ struct ReviewPromptSheet: View {
                         feedbackError = String(localized: "Couldn't open Mail. Email \(AppStoreReviewLinks.supportEmail) directly.", bundle: .recharge)
                         return
                     }
-                    ReviewPromptTracker.markFeedbackSubmitted()
                     stage = .thanks
                 }
             }
