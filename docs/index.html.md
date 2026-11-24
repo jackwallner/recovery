@@ -61,10 +61,23 @@ just the state.
 ## Honest by design
 
 - A bounded window, not a false-precision number.
-- It tells you when it is still building your baseline.
+- With Recharge+, it tells you when it is still building your baseline.
 - It shows which signal produced the estimate, and how confident it is.
-- When a countdown ends it asks how you actually felt, and tunes your
-  own bands from your answer.
+- With Recharge+, when a countdown ends it asks how you actually felt,
+  and tunes your own bands from your answer.
+
+## Free, and Recharge+
+
+The standard estimate is free: Apple Health workout import, the
+countdown and its completion state, the Apple Watch app, all four
+complication families and an iPhone explanation of your latest
+estimate. It is one shared table, set to your training level.
+
+Recharge+ replaces that table with you. Every session is scored
+against your own 42-day baseline, and the last 30 days set how fast
+your countdowns run. It folds sleep, resting heart rate and HRV into
+each estimate, shows weekly load against your own four-week average,
+and lets you correct a session to Light, Moderate or Hard.
 
 ## Private
 
